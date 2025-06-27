@@ -341,4 +341,4 @@ curl -X POST "http://localhost:5236/api/auth/approve-user/user123" \
 
 ## 라이선스
 
-이 프로젝트는 MIT 라이선스 하에 배포됩니다. 
+--수정예정--
