@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "J8jwS53835Y=",
+  "dgSpecHash": "hijPTjcelEA=",
   "success": true,
-  "projectFilePath": "/Users/simjimin/PWD/FullAuthSystem/FullAuthSystem.csproj",
+  "projectFilePath": "/Users/simjimin/PWD/backend/FullAuthSystem/FullAuthSystem.csproj",
   "expectedPackageFiles": [
     "/Users/simjimin/.nuget/packages/humanizer.core/2.14.1/humanizer.core.2.14.1.nupkg.sha512",
     "/Users/simjimin/.nuget/packages/microsoft.aspnetcore.authentication.jwtbearer/8.0.6/microsoft.aspnetcore.authentication.jwtbearer.8.0.6.nupkg.sha512",
