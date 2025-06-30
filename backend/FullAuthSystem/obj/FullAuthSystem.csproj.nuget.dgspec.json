@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/simjimin/PWD/FullAuthSystem/FullAuthSystem.csproj": {}
+    "/Users/simjimin/PWD/backend/FullAuthSystem/FullAuthSystem.csproj": {}
   },
   "projects": {
-    "/Users/simjimin/PWD/FullAuthSystem/FullAuthSystem.csproj": {
+    "/Users/simjimin/PWD/backend/FullAuthSystem/FullAuthSystem.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/simjimin/PWD/FullAuthSystem/FullAuthSystem.csproj",
+        "projectUniqueName": "/Users/simjimin/PWD/backend/FullAuthSystem/FullAuthSystem.csproj",
         "projectName": "FullAuthSystem",
-        "projectPath": "/Users/simjimin/PWD/FullAuthSystem/FullAuthSystem.csproj",
+        "projectPath": "/Users/simjimin/PWD/backend/FullAuthSystem/FullAuthSystem.csproj",
         "packagesPath": "/Users/simjimin/.nuget/packages/",
-        "outputPath": "/Users/simjimin/PWD/FullAuthSystem/obj/",
+        "outputPath": "/Users/simjimin/PWD/backend/FullAuthSystem/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/simjimin/.nuget/NuGet/NuGet.Config"
