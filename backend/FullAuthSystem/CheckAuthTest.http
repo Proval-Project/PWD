@@ -1,0 +1,64 @@
+### FullAuthSystem - check-auth 엔드포인트 테스트
+
+### 1. 관리자 로그인
+POST http://localhost:5236/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "Admin123!",
+  "rememberMe": false
+}
+
+### 2. 관리자 check-auth 테스트
+GET http://localhost:5236/api/auth/check-auth
+Authorization: Bearer {{adminToken}}
+
+### 3. Customer 사용자 등록
+POST http://localhost:5236/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "customer@example.com",
+  "password": "Customer123!",
+  "confirmPassword": "Customer123!",
+  "firstName": "고객",
+  "lastName": "테스트",
+  "role": "Customer",
+  "companyName": "고객기업",
+  "businessNumber": "987-65-43210",
+  "address": "서울시 서초구 고객로 456",
+  "companyPhone": "02-9876-5432",
+  "department": "구매부",
+  "position": "대리",
+  "contactPhone": "010-9876-5432"
+}
+
+### 4. Customer 사용자 승인 (관리자 권한 필요)
+POST http://localhost:5236/api/auth/approve-user/{{customerUserId}}
+Authorization: Bearer {{adminToken}}
+
+### 5. Customer 로그인
+POST http://localhost:5236/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "customer@example.com",
+  "password": "Customer123!",
+  "rememberMe": false
+}
+
+### 6. Customer check-auth 테스트
+GET http://localhost:5236/api/auth/check-auth
+Authorization: Bearer {{customerToken}}
+
+### 7. 토큰 없이 check-auth 테스트 (401 Unauthorized 예상)
+GET http://localhost:5236/api/auth/check-auth
+
+### 8. 잘못된 토큰으로 check-auth 테스트 (401 Unauthorized 예상)
+GET http://localhost:5236/api/auth/check-auth
+Authorization: Bearer invalid_token_here
+
+### 9. 만료된 토큰으로 check-auth 테스트 (401 Unauthorized 예상)
+GET http://localhost:5236/api/auth/check-auth
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIxIiwiZXhwIjoxNzUxMjQyNjk3fQ.expired_token_here 

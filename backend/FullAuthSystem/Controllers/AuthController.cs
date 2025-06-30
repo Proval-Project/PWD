@@ -199,6 +199,51 @@ namespace FullAuthSystem.Controllers
             });
         }
 
+        // 인증 상태 확인
+        [HttpGet("check-auth")]
+        [Authorize]
+        public async Task<IActionResult> CheckAuth()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value;
+            var userRole = User.FindFirst("Role")?.Value;
+            
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { 
+                    message = "인증되지 않은 사용자입니다.",
+                    isAuthenticated = false
+                });
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return Unauthorized(new { 
+                    message = "사용자를 찾을 수 없습니다.",
+                    isAuthenticated = false
+                });
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+
+            return Ok(new { 
+                message = "인증된 사용자입니다.",
+                isAuthenticated = true,
+                user = new
+                {
+                    id = user.Id,
+                    email = user.Email,
+                    firstName = user.FirstName,
+                    lastName = user.LastName,
+                    role = user.Role,
+                    roles = roles,
+                    isApproved = user.IsApproved,
+                    isActive = user.IsActive
+                }
+            });
+        }
+
         // 승인 대기 중인 사용자 목록 조회 (관리자만)
         [HttpGet("pending-users")]
         [Authorize(Roles = "Admin")]

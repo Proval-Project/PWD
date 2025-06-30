@@ -53,7 +53,7 @@ FullAuthSystem/
 - **ASP.NET Core Identity**
 - **JWT Bearer Authentication**
 - **MySQL** (개발 환경: localhost, root 계정)
-- **이메일 서비스** (개발 환경: 콘솔 출력)
+- **이메일 서비스** (Gmail SMTP를 통한 실제 이메일 발송)
 
 ## 설치 및 실행
 
@@ -140,6 +140,7 @@ FullAuthSystem/
 - `PUT /api/sales/leads/{id}` - 리드 수정
 - `GET /api/sales/sales-report` - 매출 보고서
 - `GET /api/sales/performance` - 개인 성과 조회
+- `GET /api/sales/pending-customers` - 승인 대기 고객 목록 조회
 
 ### 히스토리 관리 (UserHistoryController) - 인증 필요
 
@@ -201,6 +202,13 @@ curl -X POST "http://localhost:5236/api/auth/login" \
 
 ```bash
 curl -X GET "http://localhost:5236/api/admin/users" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+### 3-1. 인증 상태 확인
+
+```bash
+curl -X GET "http://localhost:5236/api/auth/check-auth" \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
@@ -306,6 +314,14 @@ curl -X POST "http://localhost:5236/api/auth/approve-user/user123" \
     "Issuer": "FullAuthSystem",
     "Audience": "FullAuthSystemUsers",
     "ExpirationInMinutes": 60
+  },
+  "Email": {
+    "SmtpServer": "smtp.gmail.com",
+    "SmtpPort": 587,
+    "SmtpUser": "your-email@gmail.com",
+    "SmtpPass": "your-app-password",
+    "From": "your-email@gmail.com",
+    "EnableSsl": true
   }
 }
 ```
@@ -328,8 +344,9 @@ curl -X POST "http://localhost:5236/api/auth/approve-user/user123" \
 - 파일명 난독화 (원본명 + 타임스탬프)
 
 ### 4. 이메일 서비스
-- 개발 환경: 콘솔에 이메일 내용 출력
-- 프로덕션 환경: SMTP 설정 필요
+- Gmail SMTP를 통한 실제 이메일 발송
+- 비밀번호 재설정, 사용자 승인 등에 활용
+- appsettings.json에서 SMTP 설정 관리
 
 ## 보안 고려사항
 
@@ -341,4 +358,4 @@ curl -X POST "http://localhost:5236/api/auth/approve-user/user123" \
 
 ## 라이선스
 
---수정예정--
+MIT License
