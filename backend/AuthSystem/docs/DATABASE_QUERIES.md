@@ -31,7 +31,7 @@ CREATE TABLE `Users` (
     `CompanyPhone` varchar(20) NULL,          -- 회사전화
     `Department` varchar(50) NULL,            -- 부서
     `Position` varchar(50) NULL,              -- 직책
-    `ContactPhone` varchar(20) NULL,          -- 연락처
+    `PhoneNumber` varchar(20) NULL,           -- 연락처
     PRIMARY KEY (`UserID`),
     FOREIGN KEY (`RoleID`) REFERENCES `Roles` (`RoleID`) ON DELETE CASCADE
 );

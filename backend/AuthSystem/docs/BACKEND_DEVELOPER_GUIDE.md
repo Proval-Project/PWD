@@ -74,7 +74,7 @@
 - `Email`, `Password`, `FirstName`, `LastName`
 - `RoleID`, `IsApproved`, `IsActive`
 - `CompanyName`, `BusinessNumber`, `Address`
-- `Department`, `Position`, `ContactPhone`
+- `Department`, `Position`, `PhoneNumber`
 - `CreatedAt`, `UpdatedAt`, `ApprovedAt`, `ApprovedBy`
 
 #### Role.cs

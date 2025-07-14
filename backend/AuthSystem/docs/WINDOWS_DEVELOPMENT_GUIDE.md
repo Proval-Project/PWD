@@ -216,7 +216,7 @@ curl -X POST "http://localhost:5236/api/auth/login" \
 # 1. 회원가입
 curl -X POST "http://localhost:5236/api/auth/register" \
   -H "Content-Type: application/json" \
-  -d '{"email": "test@example.com", "password": "Test123!", "confirmPassword": "Test123!", "firstName": "테스트", "lastName": "사용자", "roleID": 3, "companyName": "테스트기업", "businessNumber": "123-45-67890", "address": "서울시 강남구", "companyPhone": "02-1234-5678", "department": "개발부", "position": "사원", "contactPhone": "010-1234-5678"}'
+  -d '{"email": "test@example.com", "password": "Test123!", "confirmPassword": "Test123!", "firstName": "테스트", "lastName": "사용자", "roleID": 3, "companyName": "테스트기업", "businessNumber": "123-45-67890", "address": "서울시 강남구", "companyPhone": "02-1234-5678", "department": "개발부", "position": "사원", "phoneNumber": "010-1234-5678"}'
 
 # 2. 관리자 로그인 (승인용)
 curl -X POST "http://localhost:5236/api/auth/login" \

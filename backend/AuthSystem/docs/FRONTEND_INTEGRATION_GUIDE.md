@@ -108,7 +108,7 @@ const register = async (userData) => {
       companyPhone: userData.companyPhone,
       department: userData.department,
       position: userData.position,
-      contactPhone: userData.contactPhone
+      phoneNumber: userData.phoneNumber
     })
   });
 
@@ -265,7 +265,7 @@ interface User {
   companyPhone?: string;
   department?: string;
   position?: string;
-  contactPhone?: string;
+  phoneNumber?: string;
 }
 ```
 

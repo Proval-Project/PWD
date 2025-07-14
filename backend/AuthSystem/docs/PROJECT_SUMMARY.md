@@ -65,7 +65,7 @@ CREATE TABLE Users (
     -- 담당자정보
     Department VARCHAR(50) NULL,
     Position VARCHAR(50) NULL,
-    phoneNumber VARCHAR(20) NULL,                 -- 개인 연락처 (ContactPhone)
+    phoneNumber VARCHAR(20) NULL,                 -- 개인 연락처
     
     FOREIGN KEY (RoleID) REFERENCES Roles(RoleID)
 );
