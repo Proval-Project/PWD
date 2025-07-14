@@ -555,6 +555,29 @@ namespace FullAuthSystem.Controllers
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
         }
+
+        [HttpPost("find-id")]
+        [AllowAnonymous]
+        public async Task<IActionResult> FindId([FromBody] FindIdRequestDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Email))
+                return BadRequest(new { message = "이메일을 입력해 주세요." });
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
+            if (user == null)
+                return NotFound(new { message = "해당 이메일로 가입된 사용자가 없습니다." });
+
+            var result = await _emailService.SendIdInfoEmailAsync(dto.Email);
+            if (!result)
+                return StatusCode(500, new { message = "이메일 전송에 실패했습니다." });
+
+            return Ok(new { message = "아이디 안내 메일이 발송되었습니다." });
+        }
+
+        public class FindIdRequestDto
+        {
+            public string Email { get; set; }
+        }
     }
 
     public class LoginModel
