@@ -274,3 +274,15 @@ dotnet run
 **최종 업데이트**: 2024년 12월 14일  
 **프로젝트 버전**: 2.0  
 **주요 변경**: FirstName/LastName → Name 통합 
+
+# 주요 변경사항 (2024년 7월 14일)
+
+## ✅ 비밀번호 재설정 토큰 만료 자동 삭제
+- 만료된 인증코드(PasswordResetToken)는 BackgroundService(TokenCleanupService)에서 10분마다 자동 삭제됨
+- 사용된 토큰은 즉시 삭제, 만료만 된 토큰은 주기적으로 정리
+- 운영자가 직접 쿼리로 삭제할 필요 없음
+- 실제 모델에는 UsedAt 필드 없음, 삭제 기준은 CreatedAt
+
+## ✅ 기타 정책 및 구조 최신화
+- PasswordResetToken 관리 정책, DB 구조, 쿼리, API 가이드 등 최신화
+- docs 내 모든 토큰 관리/정책/운영 방식 최신화 

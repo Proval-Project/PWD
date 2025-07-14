@@ -86,9 +86,10 @@
 #### PasswordResetToken.cs
 **기능**: 비밀번호 재설정 토큰 모델
 **주요 필드**:
-- `TokenID` (Primary Key)
-- `Email`, `VerificationCode`, `ExpiresAt`
+- `Id` (Primary Key)
+- `Email`, `VerificationCode`, `ExpiresAt`, `CreatedAt`, `IsUsed`
 - `UserID` (외래키, 사용 후 즉시 삭제)
+- `IsValid()` 메서드
 
 ### 🔧 CommonDbLib/
 #### AppDbContext.cs
@@ -189,6 +190,8 @@ dotnet ef database drop --force
 
 ### 4. 토큰 관리
 - PasswordResetToken은 사용 후 즉시 삭제
+- 만료된 토큰은 BackgroundService(TokenCleanupService)에서 10분마다 자동 삭제됨
+- 운영자가 직접 쿼리로 삭제할 필요 없음
 - JWT 토큰은 설정된 만료 시간 후 자동 만료
 
 ## 🧪 테스트 방법

@@ -213,23 +213,7 @@ ORDER BY RoleID;
 
 ### 3. 비밀번호 재설정 토큰 관련 쿼리
 
-#### 유효한 토큰 조회
-```sql
-SELECT 
-    Id,
-    Email,
-    UserID,
-    VerificationCode,
-    CreatedAt,
-    ExpiresAt,
-    IsUsed
-FROM PasswordResetTokens
-WHERE Email = 'user@example.com'
-  AND IsUsed = 0
-  AND ExpiresAt > NOW()
-ORDER BY CreatedAt DESC
-LIMIT 1;
-```
+> ⚠️ 운영자가 직접 만료된 토큰을 삭제할 필요 없음. BackgroundService(TokenCleanupService)에서 10분마다 자동 삭제됨.
 
 #### 만료된 토큰 조회
 ```sql
@@ -240,6 +224,14 @@ SELECT
     ExpiresAt
 FROM PasswordResetTokens
 WHERE ExpiresAt < NOW()
+  AND IsUsed = 0;
+```
+
+#### 만료된 토큰 삭제 (자동 처리)
+```sql
+-- 아래 쿼리는 참고용이며, 실제로는 BackgroundService가 주기적으로 자동 삭제함
+DELETE FROM PasswordResetTokens 
+WHERE ExpiresAt < NOW() 
   AND IsUsed = 0;
 ```
 

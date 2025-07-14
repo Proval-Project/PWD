@@ -136,6 +136,12 @@
 - 데이터베이스 스키마 정확성 확보
 - **사용자 이름 필드 통합 (FirstName/LastName → Name)**
 
+### 🆕 최근 주요 변경사항
+- 비밀번호 재설정 토큰(VerificationCode) 만료 시 DB에서 자동 삭제 (BackgroundService)
+- 운영자가 직접 쿼리로 삭제할 필요 없음
+- PasswordResetToken 모델 UsedAt 필드 없음, 삭제 기준은 CreatedAt
+- docs 내 모든 토큰 관리/정책/운영 방식 최신화
+
 ## 🔗 **관련 링크**
 
 - **GitHub 저장소**: https://github.com/Proval-Project/PWD.git

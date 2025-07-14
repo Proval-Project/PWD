@@ -93,10 +93,10 @@
 
 #### ✅ PasswordResetToken.cs
 - `Id` (Primary Key) ✅
-- `Email`, `VerificationCode` ✅
-- `CreatedAt`, `ExpiresAt` ✅
-- `IsUsed`, `UsedAt` ✅
+- `Email`, `VerificationCode`, `CreatedAt`, `ExpiresAt`, `IsUsed` ✅
 - `IsValid()`, `MarkAsUsed()` 메서드 ✅
+- **UsedAt 필드 없음, 삭제 기준은 CreatedAt**
+- **만료된 토큰은 BackgroundService(TokenCleanupService)에서 10분마다 자동 삭제됨**
 
 ### 6. DbContext 검증
 
