@@ -1,6 +1,6 @@
 # FullAuthSystem
 
-ASP.NET Core 8.0을 사용한 완전한 인증 시스템입니다. JWT 토큰 기반 인증과 역할 기반 권한 관리를 제공합니다.
+ASP.NET Core 8.0을 사용한 완전한 인증 시스템입니다. JWT 토큰 기반 인증과 역할 기반 권한 관리를 제공합니다. Identity 의존성을 제거하고 커스텀 인증 시스템으로 구현했습니다.
 
 ## 기능
 
@@ -12,37 +12,42 @@ ASP.NET Core 8.0을 사용한 완전한 인증 시스템입니다. JWT 토큰 �
 - **비밀번호 변경**: 사용자 비밀번호 변경
 - **비밀번호 재설정**: 이메일 인증을 통한 비밀번호 재설정
 - **사용자 승인 시스템**: 관리자 승인 후 로그인 가능
-- **사용자 히스토리 관리**: 역할별 권한이 분리된 히스토리 시스템
 - **기업 정보 관리**: 회사명, 사업자번호, 주소 등 기업 정보
 - **담당자 정보 관리**: 부서, 직책, 연락처 등 담당자 정보
 
 ## 프로젝트 구조
 
 ```
-FullAuthSystem/
-├── Controllers/
-│   ├── AdminController.cs          # 관리자 기능
-│   ├── AuthController.cs           # 인증 관련 기능
-│   ├── CustomerController.cs       # 고객 기능
-│   ├── SalesController.cs          # 영업 기능
-│   └── UserHistoryController.cs    # 히스토리 관리
-├── Data/
-│   └── ApplicationDbContext.cs     # Entity Framework 컨텍스트
-├── Models/
-│   ├── ApplicationUser.cs          # 사용자 모델
-│   ├── UserHistory.cs              # 히스토리 모델
-│   └── PasswordResetToken.cs       # 비밀번호 재설정 토큰
-├── Models/DTOs/
-│   ├── RegisterRequest.cs          # 회원가입 요청
-│   ├── UserProfileDto.cs           # 사용자 프로필
-│   ├── UserHistoryDto.cs           # 히스토리 DTO
-│   └── PasswordResetDto.cs         # 비밀번호 재설정 DTO
-├── Services/
-│   ├── IEmailService.cs            # 이메일 서비스 인터페이스
-│   └── EmailService.cs             # 이메일 서비스 구현
-├── appsettings.json               # 설정 파일
-├── Program.cs                     # 애플리케이션 진입점
-└── FullAuthSystem.csproj          # 프로젝트 파일
+backend/
+├── AuthSystem/
+│   ├── Controllers/
+│   │   ├── AdminController.cs          # 관리자 기능
+│   │   ├── AuthController.cs           # 인증 관련 기능
+│   │   ├── CustomerController.cs       # 고객 기능
+│   │   └── SalesController.cs          # 영업 기능
+│   ├── Models/
+│   │   ├── DTOs/                      # 데이터 전송 객체
+│   │   │   ├── RegisterRequest.cs
+│   │   │   ├── UserProfileDto.cs
+│   │   │   └── PasswordResetDto.cs
+│   │   └── PasswordResetToken.cs       # 비밀번호 재설정 토큰
+│   ├── Services/
+│   │   ├── IEmailService.cs            # 이메일 서비스 인터페이스
+│   │   └── EmailService.cs             # 이메일 서비스 구현
+│   ├── Migrations/                     # Entity Framework 마이그레이션
+│   ├── appsettings.json               # 설정 파일
+│   ├── Program.cs                     # 애플리케이션 진입점
+│   └── AuthSystem.csproj              # 프로젝트 파일
+├── CommonDbLib/
+│   ├── User.cs                        # 사용자 모델
+│   ├── Role.cs                        # 역할 모델
+│   ├── AppDbContext.cs                # Entity Framework 컨텍스트
+│   ├── PasswordResetToken.cs          # 비밀번호 재설정 토큰
+│   ├── EstimateSheetLv1.cs           # 견적서 모델
+│   ├── ItemList.cs                    # 품목 모델
+│   ├── DataSheetLv3.cs               # 데이터시트 모델
+│   └── CommonDbLib.csproj            # 공통 라이브러리 프로젝트
+└── frontend/                          # 프론트엔드 프로젝트
 ```
 
 ## 기술 스택
@@ -50,10 +55,10 @@ FullAuthSystem/
 - **.NET 8.0**
 - **ASP.NET Core Web API**
 - **Entity Framework Core**
-- **ASP.NET Core Identity**
 - **JWT Bearer Authentication**
 - **MySQL** (개발 환경: localhost, root 계정)
 - **이메일 서비스** (Gmail SMTP를 통한 실제 이메일 발송)
+- **커스텀 인증 시스템** (Identity 제거, 직접 구현)
 
 ## 설치 및 실행
 
@@ -66,7 +71,7 @@ FullAuthSystem/
 
 1. 프로젝트 디렉토리로 이동:
    ```bash
-   cd FullAuthSystem
+   cd AuthSystem
    ```
 
 2. 의존성 복원:
@@ -120,10 +125,6 @@ FullAuthSystem/
 - `GET /api/customer/profile` - 프로필 조회
 - `PUT /api/customer/profile` - 프로필 수정
 - `POST /api/customer/change-password` - 비밀번호 변경
-- `GET /api/customer/my-history` - 본인 히스토리 조회
-- `POST /api/customer/my-history` - 본인 히스토리 생성
-- `PUT /api/customer/my-history/{id}` - 본인 히스토리 수정
-- `DELETE /api/customer/my-history/{id}` - 본인 히스토리 삭제
 - `GET /api/customer/orders` - 주문 내역 조회
 - `GET /api/customer/support-tickets` - 고객 지원 티켓 조회
 
@@ -131,28 +132,12 @@ FullAuthSystem/
 
 - `GET /api/sales/customers` - 고객 목록 조회
 - `GET /api/sales/customers/{id}` - 특정 고객 조회
-- `GET /api/sales/customers/{id}/history` - 고객 히스토리 조회
-- `POST /api/sales/customers/{id}/history` - 고객 히스토리 생성
-- `PUT /api/sales/customers/{customerId}/history/{historyId}` - 고객 히스토리 수정
-- `DELETE /api/sales/customers/{customerId}/history/{historyId}` - 고객 히스토리 삭제
 - `GET /api/sales/leads` - 리드 목록 조회
 - `POST /api/sales/leads` - 리드 생성
 - `PUT /api/sales/leads/{id}` - 리드 수정
 - `GET /api/sales/sales-report` - 매출 보고서
 - `GET /api/sales/performance` - 개인 성과 조회
 - `GET /api/sales/pending-customers` - 승인 대기 고객 목록 조회
-
-### 히스토리 관리 (UserHistoryController) - 인증 필요
-
-- `GET /api/userhistory` - 모든 히스토리 조회 (Admin, Sales만)
-- `GET /api/userhistory/{id}` - 특정 히스토리 조회
-- `GET /api/userhistory/user/{userId}` - 특정 사용자 히스토리 조회
-- `POST /api/userhistory` - 히스토리 생성 (Admin, Sales만)
-- `POST /api/userhistory/my-history` - 본인 히스토리 생성 (Customer만)
-- `PUT /api/userhistory/{id}` - 히스토리 수정
-- `DELETE /api/userhistory/{id}` - 히스토리 삭제
-- `GET /api/userhistory/category/{category}` - 카테고리별 조회 (Admin, Sales만)
-- `GET /api/userhistory/status/{status}` - 상태별 조회 (Admin, Sales만)
 
 ## 기본 사용자
 
@@ -245,22 +230,7 @@ curl -X POST "http://localhost:5236/api/auth/reset-password" \
   }'
 ```
 
-### 5. 히스토리 생성
-
-```bash
-curl -X POST "http://localhost:5236/api/userhistory" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "userId": "user123",
-    "title": "상품 문의",
-    "description": "A제품의 가격과 배송일정에 대해 문의드립니다.",
-    "category": "문의",
-    "status": "진행중"
-  }'
-```
-
-### 6. 사용자 승인 (관리자)
+### 5. 사용자 승인 (관리자)
 
 ```bash
 curl -X POST "http://localhost:5236/api/auth/approve-user/user123" \
@@ -269,35 +239,37 @@ curl -X POST "http://localhost:5236/api/auth/approve-user/user123" \
 
 ## 데이터 모델
 
-### 사용자 정보 (ApplicationUser)
+### 사용자 정보 (User)
 - 기본 정보: 이메일, 이름, 역할
 - 기업 정보: 회사명, 사업자번호, 주소, 회사전화
 - 담당자 정보: 부서, 직책, 연락처
 - 상태 정보: 승인여부, 활성화여부, 생성/수정시간
 
-### 히스토리 정보 (UserHistory)
-- 기본 정보: 제목, 설명, 카테고리, 상태
-- 시간 정보: 생성시간, 수정시간
-- 사용자 정보: 생성자, 수정자
-- 권한: 역할별 접근 제어
+### 역할 정보 (Role)
+- 역할 ID, 역할명, 설명
+- 활성화 상태
+- 사용자와의 관계
+
+### 비밀번호 재설정 토큰 (PasswordResetToken)
+- 이메일, 인증 코드
+- 생성시간, 만료시간
+- 사용 여부
 
 ## 권한 체계
 
 ### 고객 (Customer)
 - 본인 프로필 조회/수정
-- 본인 히스토리 조회/생성/수정/삭제
 - 본인 주문/문의 조회
+- 비밀번호 변경
 
 ### 영업부 (Sales)
 - 모든 고객 정보 조회
-- 모든 고객 히스토리 관리
 - 리드 관리
 - 매출/성과 조회
 
 ### 관리자 (Admin)
 - 모든 사용자 관리
 - 사용자 승인/거부
-- 모든 히스토리 관리
 - 시스템 통계 조회
 
 ## 설정
@@ -338,12 +310,7 @@ curl -X POST "http://localhost:5236/api/auth/approve-user/user123" \
 - API 호출 전 클라이언트 측 권한 확인
 - 권한 없는 기능 접근 시 에러 처리
 
-### 3. 파일 업로드 (향후 구현 예정)
-- PDF, XML, CSV 파일 업로드 지원
-- 이메일 해시 기반 폴더 구조
-- 파일명 난독화 (원본명 + 타임스탬프)
-
-### 4. 이메일 서비스
+### 3. 이메일 서비스
 - Gmail SMTP를 통한 실제 이메일 발송
 - 비밀번호 재설정, 사용자 승인 등에 활용
 - appsettings.json에서 SMTP 설정 관리
@@ -354,7 +321,20 @@ curl -X POST "http://localhost:5236/api/auth/approve-user/user123" \
 2. **HTTPS**: 프로덕션 환경에서는 HTTPS를 사용하세요.
 3. **비밀번호 정책**: 강력한 비밀번호 정책을 적용하세요.
 4. **CORS**: 필요한 도메인만 허용하도록 CORS를 설정하세요.
-5. **파일 업로드**: 파일 타입, 크기 제한 및 바이러스 스캔을 적용하세요.
+5. **커스텀 인증**: Identity 대신 직접 구현한 인증 시스템의 보안 검토
+
+## 주요 변경사항
+
+### Identity 제거
+- ASP.NET Core Identity 의존성 완전 제거
+- UserManager, SignInManager 등 Identity 관련 클래스 제거
+- 커스텀 비밀번호 해시/검증 함수 구현
+- DbContext 기반 직접 인증 로직 구현
+
+### 보안 강화
+- PasswordResetToken 테이블에 UserID 외래키 추가
+- 토큰 사용 후 즉시 삭제하는 방식으로 보안 강화
+- UserHistories 테이블 및 관련 기능 제거
 
 ## 라이선스
 
