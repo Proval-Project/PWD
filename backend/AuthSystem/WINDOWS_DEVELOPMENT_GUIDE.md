@@ -29,8 +29,8 @@ dotnet --version
 
 ### 1. 프로젝트 클론
 ```bash
-git clone https://github.com/your-username/FullAuthSystem.git
-cd FullAuthSystem
+git clone https://github.com/Proval-Project/PWD.git
+cd backend/AuthSystem
 ```
 
 ### 2. 데이터베이스 설정
@@ -66,7 +66,7 @@ http://localhost:5236/swagger
 ## 🔧 **개발 팁**
 
 ### Visual Studio에서 실행
-1. `FullAuthSystem.sln` 파일 열기
+1. `AuthSystem.sln` 파일 열기
 2. **F5** 키로 디버그 실행
 3. **Ctrl + F5** 키로 디버그 없이 실행
 
@@ -128,13 +128,30 @@ net start MySQL80
 ## 📁 **프로젝트 구조**
 
 ```
-FullAuthSystem/
-├── Controllers/          # API 컨트롤러
-├── Models/              # 데이터 모델
-├── Data/                # 데이터베이스 컨텍스트
-├── Services/            # 비즈니스 로직
-├── Migrations/          # 데이터베이스 마이그레이션
-└── appsettings.json    # 설정 파일
+backend/
+├── AuthSystem/
+│   ├── Controllers/          # API 컨트롤러
+│   │   ├── AuthController.cs
+│   │   ├── AdminController.cs
+│   │   ├── CustomerController.cs
+│   │   └── SalesController.cs
+│   ├── Models/              # 데이터 모델
+│   │   ├── DTOs/           # 데이터 전송 객체
+│   │   └── PasswordResetToken.cs
+│   ├── Services/            # 비즈니스 로직
+│   ├── Migrations/          # 데이터베이스 마이그레이션
+│   ├── appsettings.json    # 설정 파일
+│   └── Program.cs          # 애플리케이션 진입점
+├── CommonDbLib/
+│   ├── User.cs             # 사용자 모델
+│   ├── Role.cs             # 역할 모델
+│   ├── AppDbContext.cs     # Entity Framework 컨텍스트
+│   ├── PasswordResetToken.cs
+│   ├── EstimateSheetLv1.cs
+│   ├── ItemList.cs
+│   ├── DataSheetLv3.cs
+│   └── CommonDbLib.csproj
+└── frontend/               # 프론트엔드 프로젝트
 ```
 
 ## 🔐 **보안 설정**
@@ -185,6 +202,37 @@ dotnet test
 - Postman 사용
 - HTTP 파일 사용 (`CheckAuthTest.http`)
 
+### 3. 기본 테스트 시나리오
+
+#### 관리자 로그인
+```bash
+curl -X POST "http://localhost:5236/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@example.com", "password": "Admin123!", "rememberMe": false}'
+```
+
+#### 회원가입 → 승인 → 로그인 플로우
+```bash
+# 1. 회원가입
+curl -X POST "http://localhost:5236/api/auth/register" \
+  -H "Content-Type: application/json" \
+  -d '{"email": "test@example.com", "password": "Test123!", "confirmPassword": "Test123!", "firstName": "테스트", "lastName": "사용자", "roleID": 3, "companyName": "테스트기업", "businessNumber": "123-45-67890", "address": "서울시 강남구", "companyPhone": "02-1234-5678", "department": "개발부", "position": "사원", "contactPhone": "010-1234-5678"}'
+
+# 2. 관리자 로그인 (승인용)
+curl -X POST "http://localhost:5236/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@example.com", "password": "Admin123!"}'
+
+# 3. 사용자 승인
+curl -X POST "http://localhost:5236/api/auth/approve-user/test@example.com" \
+  -H "Authorization: Bearer {JWT_TOKEN}"
+
+# 4. 승인된 사용자 로그인
+curl -X POST "http://localhost:5236/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"email": "test@example.com", "password": "Test123!"}'
+```
+
 ## 📚 **유용한 링크**
 
 - [ASP.NET Core 공식 문서](https://docs.microsoft.com/ko-kr/aspnet/core/)
@@ -198,4 +246,21 @@ dotnet test
 1. 로그 확인
 2. Stack Overflow 검색
 3. GitHub Issues 등록
-4. 팀 리드에게 문의 
+4. 팀 리드에게 문의
+
+## ⚠️ **주의사항**
+
+### 1. Identity 제거
+- ASP.NET Core Identity 의존성 완전 제거됨
+- 커스텀 인증 시스템 사용
+- UserManager, SignInManager 등 사용하지 않음
+
+### 2. 프로젝트 구조
+- `backend/AuthSystem/` - 메인 애플리케이션
+- `backend/CommonDbLib/` - 공통 라이브러리
+- `backend/frontend/` - 프론트엔드 프로젝트
+
+### 3. 데이터베이스
+- MySQL 사용
+- 기본 관리자 계정: admin@example.com / Admin123!
+- 회원가입 시 승인 대기 상태 (IsApproved=false) 
