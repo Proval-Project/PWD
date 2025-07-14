@@ -185,7 +185,7 @@
 ```
 
 ### 6. 인증 코드 검증
-**Endpoint**: `POST /api/auth/verify-code`
+**Endpoint**: `POST /api/auth/verify-reset-code`
 **권한**: 없음
 
 **Request Body**:
@@ -199,19 +199,18 @@
 **Response (성공 - 200)**:
 ```json
 {
-  "message": "인증 코드가 확인되었습니다.",
-  "token": "reset-token-here"
+  "message": "인증 코드가 확인되었습니다."
 }
 ```
 
 **Response (실패 - 400)**:
 ```json
 {
-  "message": "잘못된 인증 코드입니다."
+  "message": "인증 코드가 올바르지 않습니다."
 }
 ```
 
-### 7. 비밀번호 재설정
+### 7. 새 비밀번호 설정
 **Endpoint**: `POST /api/auth/reset-password`
 **권한**: 없음
 
@@ -236,6 +235,33 @@
 ```json
 {
   "message": "비밀번호가 일치하지 않습니다."
+}
+```
+
+### 8. 인증 상태 확인
+**Endpoint**: `GET /api/auth/check-auth`
+**권한**: 인증 필요
+
+**Response (성공 - 200)**:
+```json
+{
+  "message": "인증이 유효합니다.",
+  "user": {
+    "userID": "user@example.com",
+    "email": "user@example.com",
+    "firstName": "홍",
+    "lastName": "길동",
+    "roleID": 3,
+    "roleName": "Customer",
+    "isApproved": true
+  }
+}
+```
+
+**Response (실패 - 401)**:
+```json
+{
+  "message": "인증이 필요합니다."
 }
 ```
 
@@ -446,16 +472,15 @@
 **Request Body**:
 ```json
 {
-  "currentPassword": "CurrentPassword123!",
-  "newPassword": "NewPassword123!",
-  "confirmPassword": "NewPassword123!"
+  "currentPassword": "OldPassword123!",
+  "newPassword": "NewPassword123!"
 }
 ```
 
 **Response (성공 - 200)**:
 ```json
 {
-  "message": "비밀번호가 성공적으로 변경되었습니다."
+  "message": "비밀번호가 변경되었습니다."
 }
 ```
 
