@@ -50,6 +50,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // 이메일 서비스 등록
 builder.Services.AddScoped<IEmailService, EmailService>();
 
+// Background Service 등록
+builder.Services.AddHostedService<TokenCleanupService>();
+
 // JWT 인증 설정
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var key = Encoding.ASCII.GetBytes(jwtSettings["SecretKey"] ?? "YourSuperSecretKeyHere12345678901234567890");
@@ -112,7 +115,15 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<AppDbContext>();
-        context.Database.Migrate();
+        try
+        {
+            context.Database.Migrate();
+        }
+        catch (Exception migrationEx)
+        {
+            var logger = services.GetRequiredService<ILogger<Program>>();
+            logger.LogWarning(migrationEx, "마이그레이션 중 오류가 발생했지만 애플리케이션을 계속 실행합니다.");
+        }
         // 기본 역할 시드
         if (!context.Roles.Any())
         {
@@ -143,7 +154,8 @@ using (var scope = app.Services.CreateScope())
                 IsApproved = true,
                 IsActive = true,
                 Password = adminPasswordHash,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                RoleID = 1
             });
             context.SaveChanges();
         }
