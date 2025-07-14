@@ -49,7 +49,7 @@ namespace FullAuthSystem.Models.DTOs
 
         [Required]
         [Phone]
-        public string ContactPhone { get; set; }
+        public string PhoneNumber { get; set; }
 
         [Required]
         [MaxLength(50)]

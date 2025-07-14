@@ -40,8 +40,7 @@ namespace CommonDbLib
         public string? Department { get; set; }
         [MaxLength(50)]
         public string? Position { get; set; }
-        [MaxLength(20)]
-        public string? ContactPhone { get; set; }
+
         public string FullName => Name;
     }
 } 

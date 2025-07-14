@@ -44,7 +44,7 @@ namespace FullAuthSystem.Controllers
                     CompanyPhone = u.CompanyPhone,
                     Department = u.Department,
                     Position = u.Position,
-                    ContactPhone = u.PhoneNumber
+                    PhoneNumber = u.PhoneNumber
                 })
                 .ToListAsync();
             return Ok(users);
@@ -74,7 +74,7 @@ namespace FullAuthSystem.Controllers
                 CompanyPhone = user.CompanyPhone,
                 Department = user.Department,
                 Position = user.Position,
-                ContactPhone = user.PhoneNumber
+                PhoneNumber = user.PhoneNumber
             };
             return Ok(new { user = userProfile, roles = new[]{ user.Role.RoleName } });
         }
@@ -87,7 +87,7 @@ namespace FullAuthSystem.Controllers
                 return NotFound(new { message = "사용자를 찾을 수 없습니다." });
             // 기본 정보 업데이트
             user.Name = model.Name;
-            user.PhoneNumber = model.ContactPhone;
+            user.PhoneNumber = model.PhoneNumber;
             user.UpdatedAt = DateTime.UtcNow;
             // 기업정보 업데이트
             user.CompanyName = model.CompanyName;
@@ -183,7 +183,7 @@ namespace FullAuthSystem.Controllers
                     CompanyPhone = u.CompanyPhone,
                     Department = u.Department,
                     Position = u.Position,
-                    ContactPhone = u.PhoneNumber
+                    PhoneNumber = u.PhoneNumber
                 })
                 .ToListAsync();
             return Ok(pendingUsers);
@@ -226,6 +226,6 @@ namespace FullAuthSystem.Controllers
         public string? CompanyPhone { get; set; }
         public string? Department { get; set; }
         public string? Position { get; set; }
-        public string? ContactPhone { get; set; }
+        public string? PhoneNumber { get; set; }
     }
 } 

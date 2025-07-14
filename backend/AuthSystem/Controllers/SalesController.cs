@@ -39,7 +39,7 @@ namespace FullAuthSystem.Controllers
                     CompanyPhone = c.CompanyPhone,
                     Department = c.Department,
                     Position = c.Position,
-                    ContactPhone = c.PhoneNumber
+                    PhoneNumber = c.PhoneNumber
                 }).ToListAsync();
             return Ok(customers);
         }
@@ -64,7 +64,7 @@ namespace FullAuthSystem.Controllers
                 CompanyPhone = customer.CompanyPhone,
                 Department = customer.Department,
                 Position = customer.Position,
-                ContactPhone = customer.PhoneNumber
+                PhoneNumber = customer.PhoneNumber
             };
             return Ok(customerProfile);
         }
@@ -187,7 +187,7 @@ namespace FullAuthSystem.Controllers
                     CompanyPhone = u.CompanyPhone,
                     Department = u.Department,
                     Position = u.Position,
-                    ContactPhone = u.PhoneNumber
+                    PhoneNumber = u.PhoneNumber
                 })
                 .ToListAsync();
             return Ok(pendingCustomers);

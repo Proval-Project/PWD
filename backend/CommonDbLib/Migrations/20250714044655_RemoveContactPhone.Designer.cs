@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CommonDbLib.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250714042925_InitWithNameOnly")]
-    partial class InitWithNameOnly
+    [Migration("20250714044655_RemoveContactPhone")]
+    partial class RemoveContactPhone
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -191,10 +191,6 @@ namespace CommonDbLib.Migrations
                         .HasColumnType("varchar(100)");
 
                     b.Property<string>("CompanyPhone")
-                        .HasMaxLength(20)
-                        .HasColumnType("varchar(20)");
-
-                    b.Property<string>("ContactPhone")
                         .HasMaxLength(20)
                         .HasColumnType("varchar(20)");
 

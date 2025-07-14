@@ -22,7 +22,7 @@ namespace FullAuthSystem.Models.DTOs
         // 담당자정보
         public string? Department { get; set; }
         public string? Position { get; set; }
-        public string? ContactPhone { get; set; }
+        public string? PhoneNumber { get; set; }
 
         // 계산된 속성
         public string Name { get; set; }

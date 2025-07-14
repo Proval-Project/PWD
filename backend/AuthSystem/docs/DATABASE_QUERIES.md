@@ -16,7 +16,7 @@ CREATE TABLE `Users` (
     `UserID` varchar(50) NOT NULL,           -- Primary Key (Email과 동일)
     `Password` varchar(100) NOT NULL,         -- SHA256 해시된 비밀번호
     `Name` varchar(50) NOT NULL,              -- 사용자 이름
-    `PhoneNumber` varchar(20) NULL,           -- 전화번호
+    `PhoneNumber` varchar(20) NULL,           -- 개인 연락처
     `RoleID` int NOT NULL,                    -- 역할 ID (FK)
     `Email` varchar(100) NOT NULL,            -- 이메일 (UserID와 동일)
     `IsApproved` tinyint(1) NOT NULL,        -- 승인 여부 (기본값: false)

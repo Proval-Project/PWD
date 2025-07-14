@@ -22,7 +22,7 @@
     "companyPhone": "02-1234-5678",
     "department": "개발팀",
     "position": "개발자",
-    "contactPhone": "010-1234-5678"     // 개인 연락처
+    "phoneNumber": "010-1234-5678"     // 개인 연락처
 }
 ```
 
@@ -210,7 +210,7 @@
         "companyPhone": "02-1234-5678",
         "department": "관리팀",
         "position": "관리자",
-        "contactPhone": "010-1234-5678"     // 개인 연락처
+        "phoneNumber": "010-1234-5678"     // 개인 연락처
     }
 ]
 ```
@@ -231,7 +231,7 @@
     "companyPhone": "02-9876-5432",
     "department": "수정된 부서",
     "position": "수정된 직책",
-    "contactPhone": "010-9876-5432"         // 개인 연락처
+    "phoneNumber": "010-9876-5432"         // 개인 연락처
 }
 ```
 
@@ -288,7 +288,7 @@
     "companyPhone": "02-1234-5678",
     "department": "구매팀",
     "position": "대리",
-    "contactPhone": "010-1234-5678"         // 개인 연락처
+    "phoneNumber": "010-1234-5678"         // 개인 연락처
 }
 ```
 
@@ -308,7 +308,7 @@
     "companyPhone": "02-9876-5432",
     "department": "수정된 부서",
     "position": "수정된 직책",
-    "contactPhone": "010-9876-5432"         // 개인 연락처
+    "phoneNumber": "010-9876-5432"         // 개인 연락처
 }
 ```
 
@@ -424,7 +424,7 @@
         "companyPhone": "02-1234-5678",
         "department": "구매팀",
         "position": "대리",
-        "contactPhone": "010-1234-5678"       // 개인 연락처
+        "phoneNumber": "010-1234-5678"       // 개인 연락처
     }
 ]
 ```

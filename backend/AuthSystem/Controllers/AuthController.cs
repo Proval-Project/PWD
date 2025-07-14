@@ -86,7 +86,7 @@ namespace FullAuthSystem.Controllers
                 // 담당자정보
                 Department = model.Department,
                 Position = model.Position,
-                PhoneNumber = model.ContactPhone,
+                PhoneNumber = model.PhoneNumber,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -290,7 +290,7 @@ namespace FullAuthSystem.Controllers
                     CompanyPhone = u.CompanyPhone,
                     Department = u.Department,
                     Position = u.Position,
-                    ContactPhone = u.PhoneNumber
+                    PhoneNumber = u.PhoneNumber
                 })
                 .ToListAsync();
 

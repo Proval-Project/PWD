@@ -65,7 +65,7 @@ CREATE TABLE Users (
     -- 담당자정보
     Department VARCHAR(50) NULL,
     Position VARCHAR(50) NULL,
-    PhoneNumber VARCHAR(20) NULL,                 -- 개인 연락처 (ContactPhone)
+    phoneNumber VARCHAR(20) NULL,                 -- 개인 연락처 (ContactPhone)
     
     FOREIGN KEY (RoleID) REFERENCES Roles(RoleID)
 );
@@ -75,7 +75,7 @@ CREATE TABLE Users (
 - ❌ `FirstName VARCHAR(50)` 제거
 - ❌ `LastName VARCHAR(50)` 제거  
 - ✅ `Name VARCHAR(50)` 유지 (통합된 이름 필드)
-- ✅ `PhoneNumber` 필드 유지 (개인 연락처용)
+- ✅ `phoneNumber` 필드 유지 (개인 연락처용)
 
 ## 🔐 **인증 플로우**
 
@@ -92,7 +92,7 @@ POST /api/auth/register
     "companyPhone": "02-1234-5678",
     "department": "개발팀",
     "position": "개발자",
-    "contactPhone": "010-1234-5678"     // 개인 연락처
+    "phoneNumber": "010-1234-5678"     // 개인 연락처
 }
 ```
 
@@ -193,7 +193,7 @@ curl -X POST http://localhost:5236/api/auth/register \
     "password": "Test123!",
     "name": "테스트 사용자",
     "companyName": "테스트 회사",
-    "contactPhone": "010-1234-5678"
+    "phoneNumber": "010-1234-5678"
   }'
 
 # 2. 관리자 로그인
