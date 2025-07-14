@@ -13,6 +13,7 @@
 - `POST /api/auth/forgot-password` - 비밀번호 재설정 요청
 - `POST /api/auth/reset-password` - 비밀번호 재설정
 - `POST /api/auth/verify-code` - 인증 코드 검증
+- `POST /api/auth/find-id` - 아이디 찾기(이메일 입력 시 해당 이메일로 아이디 안내 메일 발송)
 
 **핵심 로직**:
 - 커스텀 비밀번호 해시/검증 (SHA256)
