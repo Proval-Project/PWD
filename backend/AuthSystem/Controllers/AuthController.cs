@@ -315,6 +315,10 @@ namespace FullAuthSystem.Controllers
             user.ApprovedBy = User.Identity?.Name ?? "Admin";
 
             await _context.SaveChangesAsync();
+
+            // 승인 안내 메일 발송
+            _ = _emailService.SendApprovalEmailAsync(user.Email);
+
             return Ok(new { message = "사용자가 승인되었습니다." });
         }
 

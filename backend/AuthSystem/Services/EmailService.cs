@@ -112,5 +112,25 @@ namespace FullAuthSystem.Services
 FullAuthSystem 팀
 ";
         }
+
+        public async Task<bool> SendApprovalEmailAsync(string email)
+        {
+            try
+            {
+                var subject = "회원가입 승인 안내";
+                var body = GenerateApprovalEmailBody();
+                return await SendEmailAsync(email, subject, body);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "회원가입 승인 안내 이메일 전송 중 오류 발생: {Email}", email);
+                return false;
+            }
+        }
+
+        private string GenerateApprovalEmailBody()
+        {
+            return @"안녕하세요,\n\n회원가입이 관리자에 의해 승인되었습니다.\n이제 로그인이 가능합니다.\n\n감사합니다.\nFullAuthSystem 팀";
+        }
     }
 } 
