@@ -3,19 +3,16 @@ using System;
 using CommonDbLib;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace AuthSystem.Migrations
+namespace CommonDbLib.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250714010929_InitCustomUser")]
-    partial class InitCustomUser
+    partial class AppDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -128,6 +125,10 @@ namespace AuthSystem.Migrations
                     b.Property<bool>("IsUsed")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<string>("UserID")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
                     b.Property<string>("VerificationCode")
                         .IsRequired()
                         .HasMaxLength(6)
@@ -206,21 +207,11 @@ namespace AuthSystem.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("IsApproved")
                         .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -251,60 +242,6 @@ namespace AuthSystem.Migrations
                     b.HasIndex("RoleID");
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("CommonDbLib.UserHistory", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<string>("Category")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("varchar(1000)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("UpdatedBy")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<string>("UserID")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserID");
-
-                    b.ToTable("UserHistories");
                 });
 
             modelBuilder.Entity("CommonDbLib.DataSheetLv3", b =>
@@ -348,25 +285,9 @@ namespace AuthSystem.Migrations
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("CommonDbLib.UserHistory", b =>
-                {
-                    b.HasOne("CommonDbLib.User", "User")
-                        .WithMany("UserHistories")
-                        .HasForeignKey("UserID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("CommonDbLib.Role", b =>
                 {
                     b.Navigation("Users");
-                });
-
-            modelBuilder.Entity("CommonDbLib.User", b =>
-                {
-                    b.Navigation("UserHistories");
                 });
 #pragma warning restore 612, 618
         }

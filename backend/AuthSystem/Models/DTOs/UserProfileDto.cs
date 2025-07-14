@@ -4,8 +4,7 @@ namespace FullAuthSystem.Models.DTOs
     {
         public string UserID { get; set; }
         public string Email { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
+
         public string Role { get; set; }
         public bool IsApproved { get; set; }
         public DateTime? ApprovedAt { get; set; }
@@ -26,7 +25,8 @@ namespace FullAuthSystem.Models.DTOs
         public string? ContactPhone { get; set; }
 
         // 계산된 속성
-        public string FullName => $"{FirstName} {LastName}";
+        public string Name { get; set; }
+        public string FullName => Name;
         public string Status => IsActive ? "활성" : "비활성";
         public string ApprovalStatus => IsApproved ? "승인됨" : "대기중";
     }

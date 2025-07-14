@@ -139,10 +139,7 @@ using (var scope = app.Services.CreateScope())
             {
                 UserID = "admin@example.com",
                 Email = "admin@example.com",
-                Name = "admin@example.com",
-                FirstName = "관리자",
-                LastName = "계정",
-                RoleID = 1,
+                Name = "관리자 계정",
                 IsApproved = true,
                 IsActive = true,
                 Password = adminPasswordHash,

@@ -29,8 +29,7 @@ namespace FullAuthSystem.Controllers
                 {
                     UserID = c.UserID,
                     Email = c.Email,
-                    FirstName = c.FirstName,
-                    LastName = c.LastName,
+                    Name = c.Name,
                     IsApproved = c.IsApproved,
                     IsActive = c.IsActive,
                     CreatedAt = c.CreatedAt,
@@ -55,8 +54,7 @@ namespace FullAuthSystem.Controllers
             {
                 UserID = customer.UserID,
                 Email = customer.Email,
-                FirstName = customer.FirstName,
-                LastName = customer.LastName,
+                Name = customer.Name,
                 IsApproved = customer.IsApproved,
                 IsActive = customer.IsActive,
                 CreatedAt = customer.CreatedAt,
@@ -180,8 +178,7 @@ namespace FullAuthSystem.Controllers
                 {
                     UserID = u.UserID,
                     Email = u.Email,
-                    FirstName = u.FirstName,
-                    LastName = u.LastName,
+                    Name = u.Name,
                     IsApproved = u.IsApproved,
                     CreatedAt = u.CreatedAt,
                     CompanyName = u.CompanyName,

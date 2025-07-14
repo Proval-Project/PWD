@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CommonDbLib")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+612737508b4ecf5715b97bcc8f4ec45ab58321a4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+03cee99c72562f3b51ab2d7eedb3791929b91882")]
 [assembly: System.Reflection.AssemblyProductAttribute("CommonDbLib")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CommonDbLib")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -20,10 +20,7 @@ namespace CommonDbLib
         [Required]
         [MaxLength(100)]
         public string Email { get; set; }
-        [MaxLength(50)]
-        public string FirstName { get; set; }
-        [MaxLength(50)]
-        public string LastName { get; set; }
+
         public bool IsApproved { get; set; } = false;
         public DateTime? ApprovedAt { get; set; }
         [MaxLength(50)]
@@ -45,6 +42,6 @@ namespace CommonDbLib
         public string? Position { get; set; }
         [MaxLength(20)]
         public string? ContactPhone { get; set; }
-        public string FullName => $"{FirstName} {LastName}".Trim();
+        public string FullName => Name;
     }
 } 

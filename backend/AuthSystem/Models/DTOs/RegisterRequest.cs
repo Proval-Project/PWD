@@ -16,13 +16,7 @@ namespace FullAuthSystem.Models.DTOs
         [Compare("Password")]
         public string ConfirmPassword { get; set; }
 
-        [Required]
-        [MaxLength(50)]
-        public string FirstName { get; set; }
 
-        [Required]
-        [MaxLength(50)]
-        public string LastName { get; set; }
 
         [Required]
         public int RoleID { get; set; } // Admin(1), Sales(2), Customer(3) 중 선택
@@ -56,5 +50,9 @@ namespace FullAuthSystem.Models.DTOs
         [Required]
         [Phone]
         public string ContactPhone { get; set; }
+
+        [Required]
+        [MaxLength(50)]
+        public string Name { get; set; }
     }
 } 

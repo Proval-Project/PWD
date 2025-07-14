@@ -71,10 +71,9 @@ namespace FullAuthSystem.Controllers
             var user = new User
             {
                 UserID = model.Email, // UserID를 이메일로 설정
-                Name = model.Email,
+                Name = model.Name,
                 Email = model.Email,
-                FirstName = model.FirstName,
-                LastName = model.LastName,
+
                 RoleID = model.RoleID,
                 IsApproved = false, // 무조건 승인 대기 상태로 생성
                 IsActive = true,
@@ -153,8 +152,7 @@ namespace FullAuthSystem.Controllers
                 {
                     userId = user.UserID,
                     email = user.Email,
-                    firstName = user.FirstName,
-                    lastName = user.LastName,
+                    name = user.Name,
                     roleId = user.RoleID,
                     roleName = userRole?.RoleName,
                     roles = roles,
@@ -262,8 +260,7 @@ namespace FullAuthSystem.Controllers
                 {
                     userId = user.UserID,
                     email = user.Email,
-                    firstName = user.FirstName,
-                    lastName = user.LastName,
+                    name = user.Name,
                     role = user.Role.RoleName,
                     roles = roles,
                     isApproved = user.IsApproved,
@@ -283,8 +280,7 @@ namespace FullAuthSystem.Controllers
                 {
                     UserID = u.UserID,
                     Email = u.Email,
-                    FirstName = u.FirstName,
-                    LastName = u.LastName,
+                    Name = u.Name,
                     Role = u.Role.RoleName,
                     IsApproved = u.IsApproved,
                     CreatedAt = u.CreatedAt,
@@ -530,9 +526,7 @@ namespace FullAuthSystem.Controllers
             {
                 new Claim(ClaimTypes.NameIdentifier, user.UserID),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Name, user.FullName),
-                new Claim("FirstName", user.FirstName),
-                new Claim("LastName", user.LastName),
+                new Claim("Name", user.Name),
                 new Claim("RoleID", user.RoleID.ToString()),
                 new Claim("RoleName", userRole?.RoleName ?? ""),
                 new Claim("IsApproved", user.IsApproved.ToString())

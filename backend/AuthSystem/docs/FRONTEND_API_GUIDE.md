@@ -1,596 +1,604 @@
-# 프론트엔드 개발자 API 가이드
+# 🌐 프론트엔드 API 가이드
+
+## 📋 개요
+
+이 문서는 프론트엔드 개발자를 위한 FullAuthSystem API 사용 가이드입니다. 모든 API 요청/응답 형식과 에러 처리를 포함합니다.
 
 ## 🔐 인증 API
 
 ### 1. 회원가입
-**Endpoint**: `POST /api/auth/register`
-**권한**: 없음
 
-**Request Body**:
+**엔드포인트**: `POST /api/auth/register`
+
+**요청 바디**:
 ```json
 {
-  "email": "user@example.com",
-  "password": "Password123!",
-  "confirmPassword": "Password123!",
-  "firstName": "홍",
-  "lastName": "길동",
-  "roleID": 3,
-  "companyName": "테스트기업",
-  "businessNumber": "123-45-67890",
-  "address": "서울시 강남구 테스트로 123",
-  "companyPhone": "02-1234-5678",
-  "department": "개발부",
-  "position": "사원",
-  "contactPhone": "010-1234-5678"
-}
-```
-
-**Response (성공 - 200)**:
-```json
-{
-  "message": "회원가입이 완료되었습니다. 관리자 승인을 기다려주세요.",
-  "user": {
-    "userID": "user@example.com",
     "email": "user@example.com",
-    "firstName": "홍",
-    "lastName": "길동",
-    "roleID": 3,
-    "isApproved": false,
-    "companyName": "테스트기업",
+    "password": "Password123!",
+    "name": "홍길동",                    // 통합된 이름 필드
+    "companyName": "테스트 회사",
     "businessNumber": "123-45-67890",
-    "address": "서울시 강남구 테스트로 123",
+    "address": "서울시 강남구",
     "companyPhone": "02-1234-5678",
-    "department": "개발부",
-    "position": "사원",
-    "contactPhone": "010-1234-5678"
-  }
+    "department": "개발팀",
+    "position": "개발자",
+    "contactPhone": "010-1234-5678"     // 개인 연락처
 }
 ```
 
-**Response (실패 - 400)**:
+**응답** (성공):
 ```json
 {
-  "message": "이미 등록된 이메일입니다."
+    "message": "회원가입이 완료되었습니다. 관리자 승인 후 로그인이 가능합니다.",
+    "userId": "user@example.com"
+}
+```
+
+**응답** (실패):
+```json
+{
+    "message": "이미 존재하는 이메일입니다.",
+    "errors": {
+        "email": ["이미 사용 중인 이메일입니다."]
+    }
 }
 ```
 
 ### 2. 로그인
-**Endpoint**: `POST /api/auth/login`
-**권한**: 없음
 
-**Request Body**:
+**엔드포인트**: `POST /api/auth/login`
+
+**요청 바디**:
 ```json
 {
-  "email": "user@example.com",
-  "password": "Password123!",
-  "rememberMe": false
-}
-```
-
-**Response (성공 - 200)**:
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "userID": "user@example.com",
     "email": "user@example.com",
-    "firstName": "홍",
-    "lastName": "길동",
-    "roleID": 3,
-    "roleName": "Customer",
-    "isApproved": true,
-    "companyName": "테스트기업",
-    "businessNumber": "123-45-67890",
-    "address": "서울시 강남구 테스트로 123",
-    "companyPhone": "02-1234-5678",
-    "department": "개발부",
-    "position": "사원",
-    "contactPhone": "010-1234-5678"
-  }
+    "password": "Password123!"
 }
 ```
 
-**Response (실패 - 400)**:
+**응답** (성공):
 ```json
 {
-  "message": "관리자 승인이 필요한 계정입니다."
+    "message": "로그인 성공",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+        "userId": "user@example.com",
+        "email": "user@example.com",
+        "name": "홍길동",                    // 통합된 이름
+        "roleId": 2,
+        "roleName": "Customer",
+        "roles": ["Customer"],
+        "isApproved": true
+    }
 }
 ```
 
-**Response (실패 - 401)**:
+**응답** (실패 - 승인 대기):
 ```json
 {
-  "message": "이메일 또는 비밀번호가 올바르지 않습니다."
+    "message": "관리자 승인이 필요한 계정입니다. 승인 후 로그인이 가능합니다."
 }
 ```
 
-### 3. 사용자 승인 (관리자 전용)
-**Endpoint**: `POST /api/auth/approve-user/{userId}`
-**권한**: Admin
+### 3. 인증 상태 확인
 
-**Request Body**: 없음
+**엔드포인트**: `GET /api/auth/check-auth`
 
-**Response (성공 - 200)**:
+**헤더**: `Authorization: Bearer {token}`
+
+**응답** (성공):
 ```json
 {
-  "message": "사용자가 승인되었습니다.",
-  "user": {
-    "userID": "user@example.com",
+    "message": "인증된 사용자입니다.",
+    "isAuthenticated": true,
+    "user": {
+        "userId": "user@example.com",
+        "email": "user@example.com",
+        "name": "홍길동",                    // 통합된 이름
+        "role": "Customer",
+        "roles": ["Customer"],
+        "isApproved": true,
+        "isActive": true
+    }
+}
+```
+
+### 4. 로그아웃
+
+**엔드포인트**: `POST /api/auth/logout`
+
+**헤더**: `Authorization: Bearer {token}`
+
+**응답**:
+```json
+{
+    "message": "로그아웃되었습니다.",
+    "userId": "user@example.com",
+    "logoutTime": "2024-12-14T10:30:00Z"
+}
+```
+
+### 5. 비밀번호 재설정
+
+#### 5.1 비밀번호 재설정 요청
+
+**엔드포인트**: `POST /api/auth/forgot-password`
+
+**요청 바디**:
+```json
+{
+    "email": "user@example.com"
+}
+```
+
+**응답**:
+```json
+{
+    "success": true,
+    "message": "비밀번호 재설정 이메일이 전송되었습니다.",
+    "email": "user@example.com"
+}
+```
+
+#### 5.2 인증 코드 확인
+
+**엔드포인트**: `POST /api/auth/verify-reset-code`
+
+**요청 바디**:
+```json
+{
     "email": "user@example.com",
-    "firstName": "홍",
-    "lastName": "길동",
-    "isApproved": true,
-    "approvedAt": "2024-01-15T10:30:00Z",
-    "approvedBy": "admin@example.com"
-  }
+    "verificationCode": "123456"
 }
 ```
 
-**Response (실패 - 404)**:
+**응답** (성공):
 ```json
 {
-  "message": "사용자를 찾을 수 없습니다."
+    "success": true,
+    "message": "인증 코드가 확인되었습니다.",
+    "isValid": true
 }
 ```
 
-### 4. 승인 대기 사용자 목록 (관리자 전용)
-**Endpoint**: `GET /api/auth/pending-users`
-**권한**: Admin
+#### 5.3 새 비밀번호 설정
 
-**Response (성공 - 200)**:
-```json
-[
-  {
-    "userID": "user1@example.com",
-    "email": "user1@example.com",
-    "firstName": "홍",
-    "lastName": "길동",
-    "role": "Customer",
-    "isApproved": false,
-    "createdAt": "2024-01-15T09:00:00Z",
-    "companyName": "테스트기업1",
-    "businessNumber": "123-45-67890",
-    "address": "서울시 강남구 테스트로 123",
-    "companyPhone": "02-1234-5678",
-    "department": "개발부",
-    "position": "사원",
-    "contactPhone": "010-1234-5678"
-  }
-]
-```
+**엔드포인트**: `POST /api/auth/reset-password`
 
-### 5. 비밀번호 재설정 요청
-**Endpoint**: `POST /api/auth/forgot-password`
-**권한**: 없음
-
-**Request Body**:
+**요청 바디**:
 ```json
 {
-  "email": "user@example.com"
-}
-```
-
-**Response (성공 - 200)**:
-```json
-{
-  "message": "비밀번호 재설정 이메일이 발송되었습니다."
-}
-```
-
-**Response (실패 - 404)**:
-```json
-{
-  "message": "등록되지 않은 이메일입니다."
-}
-```
-
-### 6. 인증 코드 검증
-**Endpoint**: `POST /api/auth/verify-reset-code`
-**권한**: 없음
-
-**Request Body**:
-```json
-{
-  "email": "user@example.com",
-  "verificationCode": "123456"
-}
-```
-
-**Response (성공 - 200)**:
-```json
-{
-  "message": "인증 코드가 확인되었습니다."
-}
-```
-
-**Response (실패 - 400)**:
-```json
-{
-  "message": "인증 코드가 올바르지 않습니다."
-}
-```
-
-### 7. 새 비밀번호 설정
-**Endpoint**: `POST /api/auth/reset-password`
-**권한**: 없음
-
-**Request Body**:
-```json
-{
-  "email": "user@example.com",
-  "verificationCode": "123456",
-  "newPassword": "NewPassword123!",
-  "confirmPassword": "NewPassword123!"
-}
-```
-
-**Response (성공 - 200)**:
-```json
-{
-  "message": "비밀번호가 성공적으로 변경되었습니다."
-}
-```
-
-**Response (실패 - 400)**:
-```json
-{
-  "message": "비밀번호가 일치하지 않습니다."
-}
-```
-
-### 8. 인증 상태 확인
-**Endpoint**: `GET /api/auth/check-auth`
-**권한**: 인증 필요
-
-**Response (성공 - 200)**:
-```json
-{
-  "message": "인증이 유효합니다.",
-  "user": {
-    "userID": "user@example.com",
     "email": "user@example.com",
-    "firstName": "홍",
-    "lastName": "길동",
-    "roleID": 3,
-    "roleName": "Customer",
-    "isApproved": true
-  }
+    "verificationCode": "123456",
+    "newPassword": "NewPassword123!"
 }
 ```
 
-**Response (실패 - 401)**:
+**응답**:
 ```json
 {
-  "message": "인증이 필요합니다."
+    "success": true,
+    "message": "비밀번호가 성공적으로 재설정되었습니다."
 }
 ```
 
-## 👥 관리자 API
+## 👨‍💼 관리자 API
 
 ### 1. 전체 사용자 목록
-**Endpoint**: `GET /api/admin/users`
-**권한**: Admin
 
-**Response (성공 - 200)**:
+**엔드포인트**: `GET /api/admin/users`
+
+**헤더**: `Authorization: Bearer {admin_token}`
+
+**응답**:
 ```json
 [
-  {
-    "userID": "admin@example.com",
-    "email": "admin@example.com",
-    "firstName": "관리자",
-    "lastName": "계정",
-    "roleName": "Admin",
-    "isApproved": true,
-    "isActive": true,
-    "createdAt": "2024-01-01T00:00:00Z",
-    "companyName": "관리자회사",
-    "businessNumber": "000-00-00000",
-    "address": "서울시 강남구",
-    "companyPhone": "02-0000-0000",
-    "department": "관리부",
-    "position": "관리자",
-    "contactPhone": "010-0000-0000"
-  }
+    {
+        "userID": "admin@example.com",
+        "email": "admin@example.com",
+        "name": "관리자 계정",                // 통합된 이름
+        "role": "Admin",
+        "isApproved": true,
+        "approvedAt": "2024-12-14T10:00:00Z",
+        "approvedBy": "Admin",
+        "isActive": true,
+        "createdAt": "2024-12-14T09:00:00Z",
+        "updatedAt": "2024-12-14T10:00:00Z",
+        "companyName": "관리자 회사",
+        "businessNumber": "123-45-67890",
+        "address": "서울시 강남구",
+        "companyPhone": "02-1234-5678",
+        "department": "관리팀",
+        "position": "관리자",
+        "contactPhone": "010-1234-5678"     // 개인 연락처
+    }
 ]
 ```
 
-### 2. 특정 사용자 정보
-**Endpoint**: `GET /api/admin/users/{userId}`
-**권한**: Admin
+### 2. 사용자 정보 수정
 
-**Response (성공 - 200)**:
+**엔드포인트**: `PUT /api/admin/users/{id}`
+
+**헤더**: `Authorization: Bearer {admin_token}`
+
+**요청 바디**:
 ```json
 {
-  "userID": "user@example.com",
-  "email": "user@example.com",
-  "firstName": "홍",
-  "lastName": "길동",
-  "roleName": "Customer",
-  "isApproved": true,
-  "isActive": true,
-  "createdAt": "2024-01-15T09:00:00Z",
-  "updatedAt": "2024-01-15T10:30:00Z",
-  "approvedAt": "2024-01-15T10:30:00Z",
-  "approvedBy": "admin@example.com",
-  "companyName": "테스트기업",
-  "businessNumber": "123-45-67890",
-  "address": "서울시 강남구 테스트로 123",
-  "companyPhone": "02-1234-5678",
-  "department": "개발부",
-  "position": "사원",
-  "contactPhone": "010-1234-5678"
+    "name": "수정된 이름",                    // 통합된 이름
+    "companyName": "수정된 회사",
+    "businessNumber": "987-65-43210",
+    "address": "수정된 주소",
+    "companyPhone": "02-9876-5432",
+    "department": "수정된 부서",
+    "position": "수정된 직책",
+    "contactPhone": "010-9876-5432"         // 개인 연락처
 }
 ```
 
-### 3. 사용자 정보 수정
-**Endpoint**: `PUT /api/admin/users/{userId}`
-**권한**: Admin
-
-**Request Body**:
+**응답**:
 ```json
 {
-  "firstName": "수정된",
-  "lastName": "이름",
-  "roleID": 2,
-  "isApproved": true,
-  "isActive": true,
-  "companyName": "수정된기업",
-  "businessNumber": "987-65-43210",
-  "address": "서울시 서초구 수정로 456",
-  "companyPhone": "02-9876-5432",
-  "department": "영업부",
-  "position": "팀장",
-  "contactPhone": "010-9876-5432"
+    "message": "사용자 정보가 업데이트되었습니다."
 }
 ```
 
-**Response (성공 - 200)**:
+### 3. 대시보드 통계
+
+**엔드포인트**: `GET /api/admin/dashboard`
+
+**헤더**: `Authorization: Bearer {admin_token}`
+
+**응답**:
 ```json
 {
-  "message": "사용자 정보가 수정되었습니다.",
-  "user": {
-    "userID": "user@example.com",
-    "email": "user@example.com",
-    "firstName": "수정된",
-    "lastName": "이름",
-    "roleName": "Sales",
-    "isApproved": true,
-    "isActive": true
-  }
+    "totalUsers": 10,
+    "approvedUsers": 8,
+    "pendingUsers": 2,
+    "activeUsers": 9,
+    "adminCount": 1,
+    "salesCount": 3,
+    "customerCount": 6
 }
-```
-
-### 4. 사용자 삭제
-**Endpoint**: `DELETE /api/admin/users/{userId}`
-**권한**: Admin
-
-**Response (성공 - 200)**:
-```json
-{
-  "message": "사용자가 삭제되었습니다."
-}
-```
-
-### 5. 역할 목록
-**Endpoint**: `GET /api/admin/roles`
-**권한**: Admin
-
-**Response (성공 - 200)**:
-```json
-[
-  {
-    "roleID": 1,
-    "roleName": "Admin",
-    "description": "시스템 관리자",
-    "isActive": true
-  },
-  {
-    "roleID": 2,
-    "roleName": "Sales",
-    "description": "영업 담당자",
-    "isActive": true
-  },
-  {
-    "roleID": 3,
-    "roleName": "Customer",
-    "description": "고객",
-    "isActive": true
-  }
-]
 ```
 
 ## 👤 고객 API
 
 ### 1. 프로필 조회
-**Endpoint**: `GET /api/customer/profile`
-**권한**: Customer
 
-**Response (성공 - 200)**:
+**엔드포인트**: `GET /api/customer/profile`
+
+**헤더**: `Authorization: Bearer {customer_token}`
+
+**응답**:
 ```json
 {
-  "userID": "customer@example.com",
-  "email": "customer@example.com",
-  "firstName": "고객",
-  "lastName": "테스트",
-  "roleName": "Customer",
-  "isApproved": true,
-  "isActive": true,
-  "createdAt": "2024-01-15T09:00:00Z",
-  "companyName": "고객기업",
-  "businessNumber": "987-65-43210",
-  "address": "서울시 서초구 고객로 456",
-  "companyPhone": "02-9876-5432",
-  "department": "구매부",
-  "position": "대리",
-  "contactPhone": "010-9876-5432"
+    "userID": "customer@example.com",
+    "email": "customer@example.com",
+    "name": "고객 사용자",                    // 통합된 이름
+    "role": "Customer",
+    "isApproved": true,
+    "approvedAt": "2024-12-14T10:00:00Z",
+    "approvedBy": "Admin",
+    "isActive": true,
+    "createdAt": "2024-12-14T09:00:00Z",
+    "updatedAt": "2024-12-14T10:00:00Z",
+    "companyName": "고객 회사",
+    "businessNumber": "123-45-67890",
+    "address": "서울시 서초구",
+    "companyPhone": "02-1234-5678",
+    "department": "구매팀",
+    "position": "대리",
+    "contactPhone": "010-1234-5678"         // 개인 연락처
 }
 ```
 
 ### 2. 프로필 수정
-**Endpoint**: `PUT /api/customer/profile`
-**권한**: Customer
 
-**Request Body**:
+**엔드포인트**: `PUT /api/customer/profile`
+
+**헤더**: `Authorization: Bearer {customer_token}`
+
+**요청 바디**:
 ```json
 {
-  "firstName": "수정된",
-  "lastName": "고객",
-  "companyName": "수정된고객기업",
-  "businessNumber": "111-22-33333",
-  "address": "서울시 강남구 수정로 789",
-  "companyPhone": "02-1111-2222",
-  "department": "마케팅부",
-  "position": "과장",
-  "contactPhone": "010-1111-2222"
+    "name": "수정된 고객 이름",                // 통합된 이름
+    "companyName": "수정된 고객 회사",
+    "businessNumber": "987-65-43210",
+    "address": "수정된 고객 주소",
+    "companyPhone": "02-9876-5432",
+    "department": "수정된 부서",
+    "position": "수정된 직책",
+    "contactPhone": "010-9876-5432"         // 개인 연락처
 }
 ```
 
-**Response (성공 - 200)**:
+**응답**:
 ```json
 {
-  "message": "프로필이 수정되었습니다.",
-  "user": {
-    "userID": "customer@example.com",
-    "email": "customer@example.com",
-    "firstName": "수정된",
-    "lastName": "고객",
-    "companyName": "수정된고객기업",
-    "businessNumber": "111-22-33333",
-    "address": "서울시 강남구 수정로 789",
-    "companyPhone": "02-1111-2222",
-    "department": "마케팅부",
-    "position": "과장",
-    "contactPhone": "010-1111-2222"
-  }
+    "message": "프로필이 성공적으로 업데이트되었습니다."
 }
 ```
 
-### 3. 비밀번호 변경
-**Endpoint**: `PUT /api/customer/change-password`
-**권한**: Customer
+### 3. 문의 내역
 
-**Request Body**:
-```json
-{
-  "currentPassword": "OldPassword123!",
-  "newPassword": "NewPassword123!"
-}
-```
+**엔드포인트**: `GET /api/customer/support-tickets`
 
-**Response (성공 - 200)**:
-```json
-{
-  "message": "비밀번호가 변경되었습니다."
-}
-```
+**헤더**: `Authorization: Bearer {customer_token}`
 
-**Response (실패 - 400)**:
-```json
-{
-  "message": "현재 비밀번호가 올바르지 않습니다."
-}
-```
-
-## 📊 영업 API
-
-### 1. 고객 목록
-**Endpoint**: `GET /api/sales/customers`
-**권한**: Sales
-
-**Response (성공 - 200)**:
+**응답**:
 ```json
 [
-  {
-    "userID": "customer1@example.com",
-    "email": "customer1@example.com",
-    "firstName": "고객1",
-    "lastName": "테스트",
-    "roleName": "Customer",
-    "isApproved": true,
-    "isActive": true,
-    "createdAt": "2024-01-15T09:00:00Z",
-    "companyName": "고객기업1",
-    "businessNumber": "111-11-11111",
-    "address": "서울시 강남구 고객로 123",
-    "companyPhone": "02-1111-1111",
-    "department": "구매부",
-    "position": "대리",
-    "contactPhone": "010-1111-1111"
-  }
+    {
+        "id": 1,
+        "title": "배송 문의",
+        "status": "답변완료",
+        "createdAt": "2024-12-11T10:00:00Z"
+    },
+    {
+        "id": 2,
+        "title": "환불 요청",
+        "status": "처리중",
+        "createdAt": "2024-12-13T15:30:00Z"
+    }
 ]
 ```
 
-### 2. 고객 정보
-**Endpoint**: `GET /api/sales/customers/{customerId}`
-**권한**: Sales
+## 💼 영업 API
 
-**Response (성공 - 200)**:
+### 1. 리드 목록
+
+**엔드포인트**: `GET /api/sales/leads`
+
+**헤더**: `Authorization: Bearer {sales_token}`
+
+**응답**:
 ```json
-{
-  "userID": "customer@example.com",
-  "email": "customer@example.com",
-  "firstName": "고객",
-  "lastName": "테스트",
-  "roleName": "Customer",
-  "isApproved": true,
-  "isActive": true,
-  "createdAt": "2024-01-15T09:00:00Z",
-  "companyName": "고객기업",
-  "businessNumber": "987-65-43210",
-  "address": "서울시 서초구 고객로 456",
-  "companyPhone": "02-9876-5432",
-  "department": "구매부",
-  "position": "대리",
-  "contactPhone": "010-9876-5432"
-}
-```
-
-## 🔧 공통 응답 형식
-
-### 성공 응답 (200)
-```json
-{
-  "message": "작업이 성공적으로 완료되었습니다.",
-  "data": { /* 응답 데이터 */ }
-}
-```
-
-### 에러 응답 (4xx, 5xx)
-```json
-{
-  "message": "에러 메시지",
-  "errors": [
+[
     {
-      "field": "email",
-      "message": "이메일 형식이 올바르지 않습니다."
+        "id": 1,
+        "name": "김철수",
+        "email": "kim@example.com",
+        "phone": "010-1234-5678",
+        "status": "신규",
+        "createdAt": "2024-12-07T10:00:00Z"
+    },
+    {
+        "id": 2,
+        "name": "이영희",
+        "email": "lee@example.com",
+        "phone": "010-9876-5432",
+        "status": "연락중",
+        "createdAt": "2024-12-11T15:30:00Z"
     }
-  ]
+]
+```
+
+### 2. 리드 생성
+
+**엔드포인트**: `POST /api/sales/leads`
+
+**헤더**: `Authorization: Bearer {sales_token}`
+
+**요청 바디**:
+```json
+{
+    "name": "새로운 리드",
+    "email": "newlead@example.com",
+    "phone": "010-5555-1234",
+    "company": "새로운 회사",
+    "description": "새로운 리드에 대한 설명"
 }
 ```
 
-## 📋 HTTP 상태 코드
+**응답**:
+```json
+{
+    "id": 3,
+    "name": "새로운 리드",
+    "email": "newlead@example.com",
+    "phone": "010-5555-1234",
+    "status": "신규",
+    "createdAt": "2024-12-14T11:00:00Z"
+}
+```
+
+### 3. 고객 목록
+
+**엔드포인트**: `GET /api/sales/customers`
+
+**헤더**: `Authorization: Bearer {sales_token}`
+
+**응답**:
+```json
+[
+    {
+        "userID": "customer1@example.com",
+        "email": "customer1@example.com",
+        "name": "고객 1",                      // 통합된 이름
+        "role": "Customer",
+        "isApproved": true,
+        "createdAt": "2024-12-10T09:00:00Z",
+        "companyName": "고객 회사 1",
+        "businessNumber": "123-45-67890",
+        "address": "서울시 강남구",
+        "companyPhone": "02-1234-5678",
+        "department": "구매팀",
+        "position": "대리",
+        "contactPhone": "010-1234-5678"       // 개인 연락처
+    }
+]
+```
+
+## ⚠️ 에러 코드 및 응답
+
+### 공통 에러 응답 형식
+
+```json
+{
+    "message": "에러 메시지",
+    "errors": {
+        "fieldName": ["필드별 에러 메시지"]
+    }
+}
+```
+
+### 주요 HTTP 상태 코드
 
 - **200 OK**: 요청 성공
 - **201 Created**: 리소스 생성 성공
-- **400 Bad Request**: 잘못된 요청
-- **401 Unauthorized**: 인증 실패
+- **400 Bad Request**: 잘못된 요청 (유효성 검증 실패)
+- **401 Unauthorized**: 인증 실패 (토큰 없음/만료)
 - **403 Forbidden**: 권한 없음
 - **404 Not Found**: 리소스 없음
-- **409 Conflict**: 리소스 충돌
 - **500 Internal Server Error**: 서버 오류
 
-## 🔐 인증 헤더
+### 주요 에러 메시지
 
-모든 보호된 API에는 JWT 토큰이 필요합니다:
+#### 인증 관련
+- `"잘못된 이메일 또는 비밀번호입니다."`
+- `"관리자 승인이 필요한 계정입니다."`
+- `"비활성화된 계정입니다."`
+- `"인증되지 않은 사용자입니다."`
 
+#### 회원가입 관련
+- `"이미 존재하는 이메일입니다."`
+- `"비밀번호가 일치하지 않습니다."`
+- `"필수 필드가 누락되었습니다."`
+
+#### 비밀번호 재설정 관련
+- `"유효하지 않은 인증 코드입니다."`
+- `"인증 코드가 만료되었습니다."`
+- `"승인되지 않은 계정입니다."`
+
+## 🔧 사용 예시
+
+### JavaScript/TypeScript 예시
+
+```typescript
+// 로그인 함수
+async function login(email: string, password: string) {
+    try {
+        const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            return data;
+        } else {
+            const error = await response.json();
+            throw new Error(error.message);
+        }
+    } catch (error) {
+        console.error('로그인 실패:', error);
+        throw error;
+    }
+}
+
+// 인증된 요청 함수
+async function authenticatedRequest(url: string, options: RequestInit = {}) {
+    const token = localStorage.getItem('token');
+    
+    const response = await fetch(url, {
+        ...options,
+        headers: {
+            ...options.headers,
+            'Authorization': `Bearer ${token}`
+        }
+    });
+
+    if (response.status === 401) {
+        // 토큰 만료 시 로그인 페이지로 리다이렉트
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+        return;
+    }
+
+    return response;
+}
+
+// 사용자 프로필 조회
+async function getUserProfile() {
+    const response = await authenticatedRequest('/api/customer/profile');
+    if (response?.ok) {
+        const profile = await response.json();
+        return profile;
+    }
+}
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+### React 예시
+
+```typescript
+// 로그인 컴포넌트
+const LoginComponent = () => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            const result = await login(email, password);
+            // 로그인 성공 시 처리
+            console.log('로그인 성공:', result.user.name); // 통합된 이름
+        } catch (error) {
+            setError(error.message);
+        }
+    };
+
+    return (
+        <form onSubmit={handleLogin}>
+            <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="이메일"
+            />
+            <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="비밀번호"
+            />
+            <button type="submit">로그인</button>
+            {error && <p className="error">{error}</p>}
+        </form>
+    );
+};
 ```
 
-## ⚠️ 주의사항
+## 📝 주의사항
 
-1. **비밀번호 정책**: 최소 8자, 대문자/소문자/숫자/특수문자 포함
-2. **이메일 형식**: 유효한 이메일 형식 필수
-3. **토큰 만료**: JWT 토큰은 60분 후 만료
-4. **승인 시스템**: 회원가입 후 관리자 승인 필요
-5. **권한 제어**: 각 API별 권한 확인 필수 
+### 1. 토큰 관리
+- JWT 토큰은 24시간 후 만료됩니다
+- 토큰 만료 시 자동으로 로그인 페이지로 리다이렉트 처리
+- 민감한 정보는 토큰에 포함하지 않습니다
+
+### 2. 에러 처리
+- 모든 API 호출에서 에러 처리를 구현하세요
+- 네트워크 오류와 비즈니스 로직 오류를 구분하여 처리
+- 사용자에게 적절한 에러 메시지를 표시
+
+### 3. 데이터 형식
+- 날짜는 ISO 8601 형식으로 전송됩니다
+- 파일 업로드는 multipart/form-data 형식을 사용
+- JSON 데이터는 UTF-8 인코딩을 사용
+
+### 4. 보안
+- HTTPS를 사용하여 모든 API 통신을 암호화
+- 토큰을 안전하게 저장 (httpOnly 쿠키 권장)
+- XSS 및 CSRF 공격 방지 조치
+
+---
+
+**최종 업데이트**: 2024년 12월 14일  
+**API 버전**: 2.0  
+**주요 변경**: FirstName/LastName → Name 통합 

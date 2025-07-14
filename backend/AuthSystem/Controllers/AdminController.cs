@@ -30,8 +30,7 @@ namespace FullAuthSystem.Controllers
                 {
                     UserID = u.UserID,
                     Email = u.Email,
-                    FirstName = u.FirstName,
-                    LastName = u.LastName,
+                    Name = u.Name,
                     Role = u.Role.RoleName,
                     IsApproved = u.IsApproved,
                     ApprovedAt = u.ApprovedAt,
@@ -61,8 +60,7 @@ namespace FullAuthSystem.Controllers
             {
                 UserID = user.UserID,
                 Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
+                Name = user.Name,
                 Role = user.Role.RoleName,
                 IsApproved = user.IsApproved,
                 ApprovedAt = user.ApprovedAt,
@@ -88,8 +86,7 @@ namespace FullAuthSystem.Controllers
             if (user == null)
                 return NotFound(new { message = "사용자를 찾을 수 없습니다." });
             // 기본 정보 업데이트
-            user.FirstName = model.FirstName;
-            user.LastName = model.LastName;
+            user.Name = model.Name;
             user.PhoneNumber = model.ContactPhone;
             user.UpdatedAt = DateTime.UtcNow;
             // 기업정보 업데이트
@@ -176,8 +173,7 @@ namespace FullAuthSystem.Controllers
                 {
                     UserID = u.UserID,
                     Email = u.Email,
-                    FirstName = u.FirstName,
-                    LastName = u.LastName,
+                    Name = u.Name,
                     Role = u.Role.RoleName,
                     IsApproved = u.IsApproved,
                     CreatedAt = u.CreatedAt,
@@ -223,8 +219,7 @@ namespace FullAuthSystem.Controllers
 
     public class UpdateUserRequest
     {
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
+        public string Name { get; set; }
         public string? CompanyName { get; set; }
         public string? BusinessNumber { get; set; }
         public string? Address { get; set; }

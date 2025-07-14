@@ -19,8 +19,6 @@ CREATE TABLE `Users` (
     `PhoneNumber` varchar(20) NULL,           -- 전화번호
     `RoleID` int NOT NULL,                    -- 역할 ID (FK)
     `Email` varchar(100) NOT NULL,            -- 이메일 (UserID와 동일)
-    `FirstName` varchar(50) NOT NULL,         -- 이름
-    `LastName` varchar(50) NOT NULL,          -- 성
     `IsApproved` tinyint(1) NOT NULL,        -- 승인 여부 (기본값: false)
     `ApprovedAt` datetime(6) NULL,            -- 승인 시간
     `ApprovedBy` varchar(50) NULL,            -- 승인자
@@ -111,19 +109,19 @@ CREATE TABLE `DataSheetLv3` (
 SELECT 
     u.UserID,
     u.Email,
-    u.FirstName,
-    u.LastName,
+    u.Name,
+    u.PhoneNumber,
+    r.RoleName,
     u.IsApproved,
     u.IsActive,
     u.CreatedAt,
-    r.RoleName,
+    u.UpdatedAt,
     u.CompanyName,
     u.BusinessNumber,
     u.Address,
     u.CompanyPhone,
     u.Department,
-    u.Position,
-    u.ContactPhone
+    u.Position
 FROM Users u
 JOIN Roles r ON u.RoleID = r.RoleID
 ORDER BY u.CreatedAt DESC;
@@ -134,17 +132,16 @@ ORDER BY u.CreatedAt DESC;
 SELECT 
     u.UserID,
     u.Email,
-    u.FirstName,
-    u.LastName,
-    u.CreatedAt,
+    u.Name,
     r.RoleName,
+    u.CreatedAt,
     u.CompanyName,
     u.BusinessNumber,
     u.Address,
     u.CompanyPhone,
     u.Department,
     u.Position,
-    u.ContactPhone
+    u.PhoneNumber
 FROM Users u
 JOIN Roles r ON u.RoleID = r.RoleID
 WHERE u.IsApproved = 0
@@ -156,12 +153,12 @@ ORDER BY u.CreatedAt ASC;
 SELECT 
     u.UserID,
     u.Email,
-    u.FirstName,
-    u.LastName,
+    u.Name,
+    r.RoleName,
     u.IsActive,
     u.ApprovedAt,
     u.ApprovedBy,
-    r.RoleName
+    u.CreatedAt
 FROM Users u
 JOIN Roles r ON u.RoleID = r.RoleID
 WHERE u.IsApproved = 1
@@ -394,9 +391,8 @@ ORDER BY TokenDate DESC;
 SELECT 
     u.UserID,
     u.Email,
-    u.FirstName,
-    u.LastName,
-    u.IsApproved,
+    u.Name,
+    u.PhoneNumber,
     r.RoleName
 FROM Users u
 JOIN Roles r ON u.RoleID = r.RoleID
@@ -408,15 +404,13 @@ WHERE u.Email LIKE '%search@example.com%';
 SELECT 
     u.UserID,
     u.Email,
-    u.FirstName,
-    u.LastName,
-    u.IsApproved,
+    u.Name,
     r.RoleName
 FROM Users u
 JOIN Roles r ON u.RoleID = r.RoleID
-WHERE u.FirstName LIKE '%홍%' 
-   OR u.LastName LIKE '%길동%'
-   OR CONCAT(u.FirstName, ' ', u.LastName) LIKE '%홍길동%';
+WHERE u.Name LIKE '%홍%' 
+   OR u.Name LIKE '%길동%'
+   OR CONCAT(u.Name, ' ', u.Name) LIKE '%홍길동%';
 ```
 
 #### 회사명으로 검색
@@ -424,8 +418,7 @@ WHERE u.FirstName LIKE '%홍%'
 SELECT 
     u.UserID,
     u.Email,
-    u.FirstName,
-    u.LastName,
+    u.Name,
     u.CompanyName,
     u.BusinessNumber,
     r.RoleName
@@ -441,8 +434,7 @@ WHERE u.CompanyName LIKE '%기업%';
 SELECT 
     u.UserID,
     u.Email,
-    u.FirstName,
-    u.LastName,
+    u.Name,
     u.IsApproved,
     u.IsActive,
     r.RoleName,
@@ -516,8 +508,7 @@ WHERE LENGTH(Password) != 64;
 SELECT 
     UserID,
     Email,
-    LastName,
-    FirstName,
+    Name,
     UpdatedAt,
     DATEDIFF(NOW(), UpdatedAt) as DaysSinceUpdate
 FROM Users

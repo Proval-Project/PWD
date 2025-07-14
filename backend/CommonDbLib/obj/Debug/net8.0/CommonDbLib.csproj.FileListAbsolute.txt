@@ -1,4 +1,5 @@
 /Users/simjimin/PWD/backend/CommonDbLib/bin/Debug/net8.0/CommonDbLib.deps.json
+/Users/simjimin/PWD/backend/CommonDbLib/bin/Debug/net8.0/CommonDbLib.runtimeconfig.json
 /Users/simjimin/PWD/backend/CommonDbLib/bin/Debug/net8.0/CommonDbLib.dll
 /Users/simjimin/PWD/backend/CommonDbLib/bin/Debug/net8.0/CommonDbLib.pdb
 /Users/simjimin/PWD/backend/CommonDbLib/obj/Debug/net8.0/CommonDbLib.csproj.AssemblyReference.cache
@@ -10,4 +11,5 @@
 /Users/simjimin/PWD/backend/CommonDbLib/obj/Debug/net8.0/CommonDbLib.dll
 /Users/simjimin/PWD/backend/CommonDbLib/obj/Debug/net8.0/refint/CommonDbLib.dll
 /Users/simjimin/PWD/backend/CommonDbLib/obj/Debug/net8.0/CommonDbLib.pdb
+/Users/simjimin/PWD/backend/CommonDbLib/obj/Debug/net8.0/CommonDbLib.genruntimeconfig.cache
 /Users/simjimin/PWD/backend/CommonDbLib/obj/Debug/net8.0/ref/CommonDbLib.dll

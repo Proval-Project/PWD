@@ -8,11 +8,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace AuthSystem.Migrations
+namespace CommonDbLib.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250714011836_RemoveUserHistories")]
-    partial class RemoveUserHistories
+    [Migration("20250714042925_InitWithNameOnly")]
+    partial class InitWithNameOnly
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -128,6 +128,10 @@ namespace AuthSystem.Migrations
                     b.Property<bool>("IsUsed")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<string>("UserID")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
                     b.Property<string>("VerificationCode")
                         .IsRequired()
                         .HasMaxLength(6)
@@ -206,21 +210,11 @@ namespace AuthSystem.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("IsApproved")
                         .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
 
                     b.Property<string>("Name")
                         .IsRequired()
