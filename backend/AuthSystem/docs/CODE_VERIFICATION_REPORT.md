@@ -80,7 +80,7 @@
 
 #### ✅ User.cs
 - `UserID` (Primary Key) ✅
-- `Email`, `Password`, `FirstName`, `LastName` ✅
+- `Email`, `Password`, `Name` ✅
 - `RoleID`, `IsApproved`, `IsActive` ✅
 - `CompanyName`, `BusinessNumber`, `Address` ✅
 - `Department`, `Position`, `PhoneNumber` ✅

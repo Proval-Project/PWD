@@ -71,7 +71,7 @@
 **기능**: 사용자 엔티티 모델
 **주요 필드**:
 - `UserID` (Primary Key, Email과 동일)
-- `Email`, `Password`, `FirstName`, `LastName`
+- `Email`, `Password`, `Name`
 - `RoleID`, `IsApproved`, `IsActive`
 - `CompanyName`, `BusinessNumber`, `Address`
 - `Department`, `Position`, `PhoneNumber`

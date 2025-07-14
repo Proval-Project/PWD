@@ -252,8 +252,7 @@ const getSalesReport = async (startDate, endDate) => {
 interface User {
   id: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  name: string;
   role: 'Admin' | 'Sales' | 'Customer';
   isApproved: boolean;
   isActive: boolean;
