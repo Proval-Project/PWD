@@ -150,13 +150,13 @@ namespace FullAuthSystem.Controllers
     public class UpdateCustomerProfileModel
     {
         public string Name { get; set; }
-        public string? CompanyName { get; set; }
-        public string? BusinessNumber { get; set; }
-        public string? Address { get; set; }
-        public string? CompanyPhone { get; set; }
-        public string? Department { get; set; }
-        public string? Position { get; set; }
-        public string? PhoneNumber { get; set; }
+        public string CompanyName { get; set; }
+        public string BusinessNumber { get; set; }
+        public string Address { get; set; }
+        public string CompanyPhone { get; set; }
+        public string Department { get; set; }
+        public string Position { get; set; }
+        public string PhoneNumber { get; set; }
     }
 
     public class ChangePasswordModel
