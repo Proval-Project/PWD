@@ -92,6 +92,20 @@
 - `UserID` (외래키, 사용 후 즉시 삭제)
 - `IsValid()` 메서드
 
+#### EstimateSheetLv1.cs
+**기능**: 견적 1차 시트 엔티티 모델
+**주요 필드**:
+- `CurEstimateNo` (PK)
+- `CurEstPrice`
+- `PrevEstimateNo`
+- `Status` (enum, int)  // 1:견적입력, 2:접수대기, 3:견적완료, 4:주문
+- `CustomerID` (FK)
+- `ManagerUserID` (FK)
+
+**2024-07-15 변경사항:**
+- `State` → `Status`로 컬럼명 변경 및 enum 기반으로 전환
+- 상태값: 1=견적입력, 2=접수대기, 3=견적완료, 4=주문
+
 ### 🔧 CommonDbLib/
 #### AppDbContext.cs
 **기능**: Entity Framework Core DbContext
@@ -173,6 +187,10 @@ dotnet ef database drop --force
 ### Seed 데이터
 - 기본 역할: Admin, Sales, Customer
 - 기본 관리자: admin@example.com / Admin123!
+
+### 마이그레이션/DB 반영 내역
+- EstimateSheetLv1 상태 컬럼 enum화 및 컬럼명(State→Status) 변경
+- 마이그레이션 및 DB에 정상 반영됨
 
 ## ⚠️ 주의사항
 

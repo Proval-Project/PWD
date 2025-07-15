@@ -77,6 +77,20 @@ CREATE TABLE Users (
 - ✅ `Name VARCHAR(50)` 유지 (통합된 이름 필드)
 - ✅ `phoneNumber` 필드 유지 (개인 연락처용)
 
+### **EstimateSheetLv1s 테이블 (주요 변경사항)**
+```sql
+CREATE TABLE EstimateSheetLv1s (
+    CurEstimateNo VARCHAR(50) PRIMARY KEY,
+    CurEstPrice INT NOT NULL,
+    PrevEstimateNo VARCHAR(50),
+    Status INT NOT NULL, -- 1:견적입력, 2:접수대기, 3:견적완료, 4:주문
+    CustomerID VARCHAR(50) NOT NULL,
+    ManagerUserID VARCHAR(50) NOT NULL,
+    FOREIGN KEY (CustomerID) REFERENCES Users(UserID),
+    FOREIGN KEY (ManagerUserID) REFERENCES Users(UserID)
+);
+```
+
 ## 🔐 **인증 플로우**
 
 ### **1. 회원가입**
@@ -291,3 +305,15 @@ dotnet run
 - 사용자가 이메일을 입력하면 해당 이메일로 아이디(=이메일) 안내 메일 발송
 - API: POST /api/auth/find-id
 - EmailService에 안내 메일 템플릿 및 전송 로직 구현 
+
+## 🔄 **최신 주요 변경사항 (2024년 7월 15일)**
+
+### ✅ **EstimateSheetLv1 상태 컬럼 enum화 및 상태값 추가**
+- **변경 내용**: EstimateSheetLv1 테이블에 상태를 나타내는 Status(enum) 컬럼 도입
+- **상태값**:
+  - 1: 견적 입력(EstimateInput)
+  - 2: 접수대기(ReceiptWaiting)
+  - 3: 견적완료(EstimateComplete)
+  - 4: 주문(Order)
+- **컬럼명 변경**: State → Status (int → enum 기반)
+- **적용 내역**: 코드, 마이그레이션, DB 모두 반영 
