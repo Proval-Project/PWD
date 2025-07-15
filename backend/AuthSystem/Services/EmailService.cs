@@ -130,7 +130,13 @@ FullAuthSystem 팀
 
         private string GenerateApprovalEmailBody()
         {
-            return @"안녕하세요,\n\n회원가입이 관리자에 의해 승인되었습니다.\n이제 로그인이 가능합니다.\n\n감사합니다.\nFullAuthSystem 팀";
+            return @"안녕하세요,
+            
+            회원가입이 관리자에 의해 승인되었습니다.
+            이제 로그인이 가능합니다.
+            
+            감사합니다.
+            FullAuthSystem 팀";
         }
 
         public async Task<bool> SendIdInfoEmailAsync(string email)
@@ -150,7 +156,14 @@ FullAuthSystem 팀
 
         private string GenerateIdInfoEmailBody(string email)
         {
-            return $@"안녕하세요,\n\n요청하신 아이디(이메일)는 다음과 같습니다.\n\n아이디: {email}\n\n감사합니다.\nFullAuthSystem 팀";
+            return $@"안녕하세요,
+            
+            요청하신 아이디(이메일)는 다음과 같습니다.
+            
+            아이디: {email}
+            
+            감사합니다.
+            FullAuthSystem 팀";
         }
     }
 } 

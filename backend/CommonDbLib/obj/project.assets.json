@@ -2306,19 +2306,19 @@
     ]
   },
   "packageFolders": {
-    "/Users/simjimin/.nuget/packages/": {}
+    "C:\\Users\\yubin\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/simjimin/PWD/backend/CommonDbLib/CommonDbLib.csproj",
+      "projectUniqueName": "C:\\Users\\yubin\\PWD\\backend\\CommonDbLib\\CommonDbLib.csproj",
       "projectName": "CommonDbLib",
-      "projectPath": "/Users/simjimin/PWD/backend/CommonDbLib/CommonDbLib.csproj",
-      "packagesPath": "/Users/simjimin/.nuget/packages/",
-      "outputPath": "/Users/simjimin/PWD/backend/CommonDbLib/obj/",
+      "projectPath": "C:\\Users\\yubin\\PWD\\backend\\CommonDbLib\\CommonDbLib.csproj",
+      "packagesPath": "C:\\Users\\yubin\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\yubin\\PWD\\backend\\CommonDbLib\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/Users/simjimin/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\yubin\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
@@ -2384,7 +2384,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.411/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.412/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
