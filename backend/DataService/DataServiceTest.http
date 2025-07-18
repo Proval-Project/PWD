@@ -1,0 +1,25 @@
+### DataService API 테스트
+
+### 1. 통계 조회
+GET http://localhost:5162/api/data/stats
+
+### 2. 모든 사용자 조회
+GET http://localhost:5162/api/data/users
+
+### 3. 특정 사용자 조회
+GET http://localhost:5162/api/data/users/admin@example.com
+
+### 4. 사용자 검색 (한글은 URL 인코딩 필요)
+GET http://localhost:5162/api/data/users/search?name=%EA%B4%80%EB%A6%AC%EC%9E%90
+
+### 5. 모든 견적서 조회
+GET http://localhost:5162/api/data/estimates
+
+### 6. 특정 견적서 조회
+GET http://localhost:5162/api/data/estimates/EST-2024-001
+
+### 7. 견적서 상태별 검색
+GET http://localhost:5162/api/data/estimates/search?status=1
+
+### 8. Swagger UI
+GET http://localhost:5162/swagger 
