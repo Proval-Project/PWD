@@ -36,3 +36,38 @@
     transform: rotate(360deg);
   }
 }
+
+.nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nav-link {
+  display: block;
+  padding: 8px 16px;
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.nav-link:hover, .nav-link.active {
+  background: #f0f0f0;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: #d00;
+  cursor: pointer;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.logout-btn:hover {
+  background: #ffeaea;
+}

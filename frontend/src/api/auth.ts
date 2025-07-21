@@ -1,0 +1,56 @@
+import axios from 'axios';
+
+const API_BASE_URL = 'http://localhost:5236/api';
+
+// 로그인
+export const login = async (email: string, password: string) => {
+  const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+    email,
+    password
+  });
+  return response.data;
+};
+
+// 회원가입 (RegisterRequest DTO에 맞게 타입 수정)
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  confirmPassword: string;
+  roleID: number;
+  companyName: string;
+  businessNumber: string;
+  address: string;
+  companyPhone: string;
+  department: string;
+  position: string;
+  phoneNumber: string;
+  name: string;
+}
+
+export const register = async (userData: RegisterRequest) => {
+  const response = await axios.post(`${API_BASE_URL}/auth/register`, userData);
+  return response.data;
+};
+
+// 비밀번호 찾기
+export const forgotPassword = async (email: string) => {
+  const response = await axios.post(`${API_BASE_URL}/auth/forgot-password`, {
+    email
+  });
+  return response.data;
+};
+
+// 비밀번호 재설정
+export const resetPassword = async (token: string, newPassword: string) => {
+  const response = await axios.post(`${API_BASE_URL}/auth/reset-password`, {
+    token,
+    newPassword
+  });
+  return response.data;
+};
+
+// 로그아웃
+export const logout = async () => {
+  const response = await axios.post(`${API_BASE_URL}/auth/logout`);
+  return response.data;
+};
