@@ -20,7 +20,7 @@ namespace CommonDbLib
 
         // 담당자 UserID (외래키)
         [MaxLength(50)]
-        public string ManagerUserID { get; set; }
-        public User Manager { get; set; }
+        public string? ManagerUserID { get; set; }
+        public User? Manager { get; set; }
     }
 } 

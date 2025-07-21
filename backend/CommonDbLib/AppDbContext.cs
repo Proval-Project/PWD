@@ -20,6 +20,14 @@ namespace CommonDbLib
         {
             base.OnModelCreating(modelBuilder);
             // 필요한 관계 설정 및 Fluent API 작성 가능
+            modelBuilder.Entity<DataSheetLv3>()
+                .HasOne(d => d.EstimateSheet)
+                .WithMany()
+                .HasForeignKey(d => d.EstimateNo);
+            modelBuilder.Entity<DataSheetLv3>()
+                .HasOne(d => d.Item)
+                .WithMany()
+                .HasForeignKey(d => d.ItemCode);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

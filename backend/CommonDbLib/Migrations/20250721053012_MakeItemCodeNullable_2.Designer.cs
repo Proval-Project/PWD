@@ -3,6 +3,7 @@ using System;
 using CommonDbLib;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CommonDbLib.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250721053012_MakeItemCodeNullable_2")]
+    partial class MakeItemCodeNullable_2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,9 +33,17 @@ namespace CommonDbLib.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)");
 
+                    b.Property<string>("EstimateSheetCurEstimateNo")
+                        .IsRequired()
+                        .HasColumnType("varchar(50)");
+
                     b.Property<string>("ItemCode")
                         .IsRequired()
                         .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("ItemCode1")
+                        .IsRequired()
                         .HasColumnType("varchar(50)");
 
                     b.Property<int>("Quantity")
@@ -43,9 +54,9 @@ namespace CommonDbLib.Migrations
 
                     b.HasKey("TagNo");
 
-                    b.HasIndex("EstimateNo");
+                    b.HasIndex("EstimateSheetCurEstimateNo");
 
-                    b.HasIndex("ItemCode");
+                    b.HasIndex("ItemCode1");
 
                     b.ToTable("DataSheetLv3s");
                 });
@@ -243,13 +254,13 @@ namespace CommonDbLib.Migrations
                 {
                     b.HasOne("CommonDbLib.EstimateSheetLv1", "EstimateSheet")
                         .WithMany()
-                        .HasForeignKey("EstimateNo")
+                        .HasForeignKey("EstimateSheetCurEstimateNo")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("CommonDbLib.ItemList", "Item")
                         .WithMany()
-                        .HasForeignKey("ItemCode")
+                        .HasForeignKey("ItemCode1")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

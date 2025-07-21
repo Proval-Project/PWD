@@ -23,6 +23,8 @@ import StatsPage from './pages/StatsPage';
 import AdminMainPage from './pages/AdminMainPage';
 import SalesMainPage from './pages/SalesMainPage';
 import CustomerMainPage from './pages/CustomerMainPage';
+import CustomerEstimatesPage from './pages/CustomerEstimatesPage';
+import AdminEstimatesPage from './pages/AdminEstimatesPage';
 
 function App() {
   const [user, setUser] = useState<any>(null);
@@ -104,8 +106,10 @@ function App() {
             <Route path="/users" element={<UsersPage />} />
             <Route path="/users/:id" element={<UserDetailPage />} />
 
-            {/* 견적 관리 페이지 */}
-            <Route path="/estimates" element={<EstimatesPage />} />
+            {/* 견적 관리 페이지: 권한별 분기 */}
+            <Route path="/estimates" element={
+              user && user.roleName === 'Customer' ? <CustomerEstimatesPage /> : <AdminEstimatesPage />
+            } />
             <Route path="/estimates/:id" element={<EstimateDetailPage />} />
 
             {/* 통계 페이지 */}
@@ -115,6 +119,7 @@ function App() {
             <Route path="/admin" element={<AdminMainPage />} />
             <Route path="/sales" element={<SalesMainPage />} />
             <Route path="/customer" element={<CustomerMainPage />} />
+            <Route path="/customer/estimates" element={<CustomerEstimatesPage />} />
           </Routes>
         </main>
       </div>

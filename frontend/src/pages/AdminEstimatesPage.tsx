@@ -10,14 +10,13 @@ interface Estimate {
   managerUserID: string;
 }
 
-const EstimatesPage: React.FC = () => {
+const AdminEstimatesPage: React.FC = () => {
   const [estimates, setEstimates] = useState<Estimate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [form, setForm] = useState({ curEstPrice: 0, prevEstimateNo: '', status: 1, customerID: '', managerUserID: '' });
   const [submitMsg, setSubmitMsg] = useState('');
 
-  // 견적 리스트 불러오기
   const fetchEstimates = async () => {
     setLoading(true);
     setError('');
@@ -33,7 +32,6 @@ const EstimatesPage: React.FC = () => {
 
   useEffect(() => {
     fetchEstimates();
-    // eslint-disable-next-line
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -59,15 +57,13 @@ const EstimatesPage: React.FC = () => {
     }
   };
 
-  // 수정 버튼 클릭 시 (추후 별도 페이지로 이동 예정)
   const handleEdit = (curEstimateNo: string) => {
     alert(`수정 폼으로 이동: ${curEstimateNo}`);
-    // TODO: /estimates/edit/:curEstimateNo 등으로 이동
   };
 
   return (
     <div className="page-container">
-      <h2>견적 관리</h2>
+      <h2>전체 견적 관리 (관리자/담당자)</h2>
       <form onSubmit={handleSubmit} className="estimate-form">
         <div className="form-group">
           <label htmlFor="curEstPrice">견적 가격</label>
@@ -138,4 +134,4 @@ const EstimatesPage: React.FC = () => {
   );
 };
 
-export default EstimatesPage;
+export default AdminEstimatesPage; 
