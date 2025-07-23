@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CommonDbLib.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250723001221_CreateDataSheetLv3WithSheetNo")]
-    partial class CreateDataSheetLv3WithSheetNo
+    [Migration("20250723045125_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -464,6 +464,10 @@ namespace CommonDbLib.Migrations
 
                     b.Property<string>("State")
                         .HasColumnType("longtext");
+
+                    b.Property<string>("TagNo")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
 
                     b.Property<string>("Temp")
                         .HasColumnType("longtext");
