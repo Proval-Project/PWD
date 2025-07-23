@@ -8,6 +8,8 @@ namespace CommonDbLib
         [Key]
         public int SheetNo { get; set; }
         [MaxLength(50)]
+        public string? TagNo { get; set; }
+        [MaxLength(50)]
         public string? EstimateNo { get; set; }
         [ForeignKey("EstimateNo")]
         public EstimateSheetLv1? EstimateSheet { get; set; }

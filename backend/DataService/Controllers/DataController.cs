@@ -242,13 +242,13 @@ public class DataController : ControllerBase
         return Ok(items);
     }
 
-    // 고객용 견적 생성: SheetNo만 입력, EstimateNo는 자동 생성
+    // 고객용 견적 생성: TagNo만 입력, EstimateNo는 자동 생성
     [HttpPost("customer-estimate")]
     public async Task<IActionResult> CreateCustomerEstimate([FromBody] CustomerEstimateInputDto dto)
     {
-        if (dto.SheetNos == null || dto.SheetNos.Count == 0)
+        if (dto.TagNos == null || dto.TagNos.Count == 0)
         {
-            return BadRequest(new { message = "SheetNo를 하나 이상 입력하세요." });
+            return BadRequest(new { message = "TagNo를 하나 이상 입력하세요." });
         }
         // 1. 오늘 날짜 기준 마지막 EstimateNo 찾기
         var today = DateTime.UtcNow.ToString("yyyyMMdd");
@@ -278,12 +278,12 @@ public class DataController : ControllerBase
         };
         _context.EstimateSheetLv1s.Add(est);
 
-        // 3. DataSheetLv3(상세) 여러 SheetNo로 생성
-        foreach (var sheetNo in dto.SheetNos)
+        // 3. DataSheetLv3(상세) 여러 TagNo로 생성 (SheetNo는 자동 생성)
+        foreach (var tagNo in dto.TagNos)
         {
             var data = new DataSheetLv3
             {
-                SheetNo = sheetNo,
+                TagNo = tagNo,
                 EstimateNo = newEstimateNo,
                 UnitPrice = 0,
                 Quantity = 0
@@ -292,18 +292,18 @@ public class DataController : ControllerBase
         }
 
         await _context.SaveChangesAsync();
-        return Ok(new { message = "견적 생성 완료", estimateNo = newEstimateNo, sheetNos = dto.SheetNos });
+        return Ok(new { message = "견적 생성 완료", estimateNo = newEstimateNo, tagNos = dto.TagNos });
     }
 
-    // 특정 견적번호의 SheetNo 리스트 조회
-    [HttpGet("estimates/{estimateNo}/sheets")]
-    public async Task<IActionResult> GetSheetsByEstimateNo(string estimateNo)
+    // 특정 견적번호의 TagNo 리스트 조회
+    [HttpGet("estimates/{estimateNo}/tags")]
+    public async Task<IActionResult> GetTagsByEstimateNo(string estimateNo)
     {
-        var sheets = await _context.DataSheetLv3s
+        var tags = await _context.DataSheetLv3s
             .Where(d => d.EstimateNo == estimateNo)
-            .Select(d => d.SheetNo)
+            .Select(d => d.TagNo)
             .ToListAsync();
-        return Ok(sheets);
+        return Ok(tags);
     }
 }
 
@@ -321,6 +321,6 @@ public class UpdateSheetNoDto
 }
 public class CustomerEstimateInputDto
 {
-    public List<int> SheetNos { get; set; } = new List<int>();
+    public List<string> TagNos { get; set; } = new List<string>();
     public string CustomerID { get; set; }
 } 
