@@ -1,0 +1,397 @@
+
+datasheetLV3 테이블
+Column명	데이터 형식	하위리스트여부	예시 데이터	비고	CV or VALVE 리스트 여부
+EstimateNo	Varchar [pk, not null]		YA20250716-001		
+ItemCode	Int [pk, ref, not null]		1	다른 테이블에 ‘Pneumatic Control 2-Way Globe Valve’값으로 관리되고 있습니다.	
+SheetNo	Int [pk, not null]		1	출력시 어플리케이션 레벨에서 ‘1 of 7’과 같은 문자열로 조정됩니다.	
+TagNo	Varchar		FCV-733A		
+UnitPrice	Int		10000000		
+Qty	Int		1		
+Project	Varchar		SK스페셜티_DS-1 Revamp		
+Service	Varchar		(null)		
+MFGNo	Varchar		(null)		
+ModelNo	Varchar		YAD-222Q4-L-RP-C		
+Medium	Varchar		MS		
+State	Varchar		Gas		
+FlowRateUnit	Varchar		kg/hr		
+FlowRateMaxQ	DECIMAL		12.0	일단 예시는 정수이나 소수점이 들어있어 소수 형으로 표기했습니다.	
+FlowRateNorQ	DECIMAL		8.0	일단 예시는 정수이나 소수점이 들어있어 소수 형으로 표기했습니다.	
+FlowRateMinQ	DECIMAL		1.0	일단 예시는 정수이나 소수점이 들어있어 소수 형으로 표기했습니다.	
+InletPressureUnit	Varchar		MPa g		
+InletPressureMaxQ	DECIMAL		0.60		
+InletPressureNorQ	DECIMAL		0.60		
+InletPressureMinQ	DECIMAL		0.60		
+OutletPressureUnit	Varchar		MPa g		
+OutletPressureMaxQ	DECIMAL		0.50		
+OutletPressureNorQ	DECIMAL		0.50		
+OutletPressureMinQ	DECIMAL		0.50		
+DifferentialPressureUnit	Varchar		MPa		
+DifferentialPressureMaxQ	DECIMAL		0.1		
+DifferentialPressureNorQ	DECIMAL		0.1		
+DifferentialPressureMinQ	DECIMAL		0.1		
+InletTemperatureUnit	Varchar		℃		
+InletTemperatureQ	DECIMAL		-7.0	일단 예시는 정수이나 소수점이 들어있어 소수 형으로 표기했습니다.	
+InletTemperatureNorQ	DECIMAL		-7.0	일단 예시는 정수이나 소수점이 들어있어 소수 형으로 표기했습니다.	
+InletTemperatureMinQ	DECIMAL		-7.0	일단 예시는 정수이나 소수점이 들어있어 소수 형으로 표기했습니다.	
+SpecificGravityUnit	Varchar		G		
+SpecificGravityMaxQ	DECIMAL		(null)	맥락적으로 봤을 때 숫자인 것 같아 예시가 null임에도 불구하고 소수형으로 표기했습니다.	
+SpecificGravityNorQ	DECIMAL		(null)	맥락적으로 봤을 때 숫자인 것 같아 예시가 null임에도 불구하고 소수형으로 표기했습니다.	
+SpecificGravityMinQ	DECIMAL		(null)	맥락적으로 봤을 때 숫자인 것 같아 예시가 null임에도 불구하고 소수형으로 표기했습니다.	
+DensityUnit	Varchar		kg/㎥		
+DensityMaxQ	DECIMAL		(null)	맥락적으로 봤을 때 숫자인 것 같아 예시가 null임에도 불구하고 소수형으로 표기했습니다.	
+DensityNorQ	DECIMAL		(null)	맥락적으로 봤을 때 숫자인 것 같아 예시가 null임에도 불구하고 소수형으로 표기했습니다.	
+DensityMinQ	DECIMAL		(null)	맥락적으로 봤을 때 숫자인 것 같아 예시가 null임에도 불구하고 소수형으로 표기했습니다.	
+MolecularWeightUnit	Varchar		(null)	맥락적으로 봤을 때 단위로 생각되어 varchar로 표기했습니다..	
+MolecularWeightMaxQ	DECIMAL		32.12		
+MolecularWeightNorQ	DECIMAL		32.12	.	
+MolecularWeightMinQ	DECIMAL		32.12		
+ViscosityUnit	Varchar		cPs		
+ViscosityMaxQ	DECIMAL		(null)	맥락적으로 봤을 때 숫자인 것 같아 예시가 null임에도 불구하고 소수형으로 표기했습니다.	
+ViscosityNorQ	DECIMAL		(null)	맥락적으로 봤을 때 숫자인 것 같아 예시가 null임에도 불구하고 소수형으로 표기했습니다.	
+ViscosityMinQ	DECIMAL		(null)	맥락적으로 봤을 때 숫자인 것 같아 예시가 null임에도 불구하고 소수형으로 표기했습니다.	
+PredictedSPLUnit	Varchar		dBA		
+PredictedSPLMaxQ	Varchar		<85	정확한 의미 파악이 안되어 varchar로 설정했습니다. 만약 85보다 작은 정수 라는 뜻이 있거나 다른 뜻이 있다면 저장 데이터 형식을 바꿔야 할 것 같습니다.
+Ex1)백엔드에서 85보다 작으면 boolean으로 true로 저장하고 그렇지 않으면 false로 저장
+Ex2) 일단 정수형 85로 저장한 후 작다/크다 정보 따로 저장
+Ex3) Varchar로 저장 후 담당자가 정보 파악(일단 이걸로 함).	
+PredictedSPLNorQ	Varchar		<85	정확한 의미 파악이 안되어 varchar로 설정했습니다. 만약 85보다 작은 정수 라는 뜻이 있거나 다른 뜻이 있다면 저장 데이터 형식을 바꿔야 할 것 같습니다.	
+PredictedSPLMinQ	Varchar		<85	정확한 의미 파악이 안되어 varchar로 설정했습니다. 만약 85보다 작은 정수 라는 뜻이 있거나 다른 뜻이 있다면 저장 데이터 형식을 바꿔야 할 것 같습니다.	
+CalculatedCvUnit	Varchar		(null)	맥락적으로 봤을 때 단위로 생각되어 varchar로 표기했습니다..	
+CalculatedCvMaxQ	DECIMAL		0.119		
+CalculatedCvNorQ	DECIMAL		0.097		
+CalculatedCvMinQ	DECIMAL		0.012		
+OpeningLiftUnit	Varchar		%		
+OpeningLiftMaxQ	DECIMAL		69	소수점 퍼센티지도 가능한지 여부 파악. 일단 예시에 따라 int로 표기했습니다.	
+OpeningLiftNorQ	DECIMAL		64	소수점 퍼센티지도 가능한지 여부 파악. 일단 예시에 따라 int로 표기했습니다.	
+OpeningLiftMinQ	DECIMAL		11	소수점 퍼센티지도 가능한지 여부 파악. 일단 예시에 따라 int로 표기했습니다.	
+ShutOffDPUnit	Varchar		Mpa		
+ShutOffDP	DECIMAL		0.96		
+PressureUnit	Varchar		MPa g		
+Pressure	DECIMAL		0.96		
+TempUnit	Varchar		℃		
+Temp	Varchar		-90~80	입력 예시가 -90~80까지의 수가 들어가는지, 아니면 정확히 ‘-90~80’ 이라는 문자열이 들어가는지 모호하여 일단 varchar로 표기했습니다.	
+InletPipeSize	Varchar		1"	1” 말고도 다른 표기가 있을까 우려되어 varchar로 표기했습니다.
+혹시 정해진 표기의 개수가 얼마 되지 않는다면 int형으로 바꾼 후 1,2,3,4,5,6, 등 넘버링을 매기는 방법도 생각중입니다.	
+InletPipeSizeSchNo	Varchar		(null)		
+OutletPipeSize	Varchar		1"	1” 말고도 다른 표기가 있을까 우려되어 varchar로 표기했습니다.
+혹시 정해진 표기의 개수가 별로 되지 않는다면 int형으로 바꾼 후 1,2,3,4,5,6, 등 넘버링을 매기는 방법도 생각중입니다.	
+OutletPipeSizeSchNo	Varchar		(null)		
+BNTBodyType	Varchar	1	Globe (Cryogenic, 2-Way)		
+BNTBodySize	Varchar		1"	1” 말고도 다른 표기가 있을까 우려되어 varchar로 표기했습니다.
+혹시 정해진 표기의 개수가 별로 되지 않는다면 int형으로 바꾼 후 1,2,3,4,5,6, 등 넘버링을 매기는 방법도 생각중입니다.	
+BNTPortSize	Varchar		1/8"	1/8” 말고도 다른 표기가 있을까 우려되어 varchar로 표기했습니다.
+혹시 정해진 표기의 개수가 별로 되지 않는다면 int형으로 바꾼 후 1,2,3,4,5,6, 등 넘버링을 매기는 방법도 생각중입니다. 또는 1/8을 소수형으로 나타내서 decimal로 표현하는 방법도 생각중입니다.	
+BNTTrimDesign	Varchar		Quick-Change / P-Port		
+BNTTrimType	Varchar		Unbalanced		
+BNTTrimSealRing	Varchar		(null)		
+BNTGuide	Varchar		Retainer		
+BNTRating	Varchar		150#	150#만 저장될 가능성?
+CONVAL에서의 RATING이다.	
+BNTEndConnection	Varchar		R.F Flanged	EndConnection의 종류 등이 정해져 있다면 다른테이블에서 ItemList처럼 관리하는 방식도 고려중. (채번의 방식은 잘 모르지만 우선 채번 요소임으로 정수형인 EndConnectionCode가 저장되고 BodyTrim리스트를 따로 관리하는 식으로 될 수 있음.)(채번 방식 이해 후 확정)	
+BNTFlangeFacing	Varchar		Spiral Serrated (125~250 AARH)		
+BNTBody	Varchar		A182-F316L		
+BNTTrim	Varchar		SUS316L (Stellited)		
+BNTStem	Varchar		SUS316L		
+BNTPacking	Varchar		PTFE		
+BNTSpecialName	Varchar		Bellows		
+BNTSpecial	Varchar		Hastelloy C-276		
+BNTBonnetType	Varchar		Bellows Seal (Extension)		
+BNTTrimForm	Varchar		Equal %		
+BNTMaxAllowSoundLevel(dBA)	Varchar		Less than 85	85보다 작은 값이 저장되어야 하는건지, Less than 85 라는 문구가 저장되어야 하는건지 모호하여 일단 varchar로 설정하였습니다.	
+BNTRequiredSeatTightness	Varchar		ANSI CLASS IV	검색을 해보니 ANSI 형의 클래스가 몇개 정의된것 같아 int형으로 바꾸어도 될 것으로 생각했습니다. 그러나 예시가 일단 문자열로 되어있어 varchar로 설정헀습니다.	
+BNTRatedCv	DECIMAL		0.4		
+BNTStroke	Varchar		(null)		
+BNTFlowActionTo	Varchar		Up	방향의 종류, 이용 방식에 따라 int로 할지 varchar로 할지 결정해야 할 것같습니다.	
+BNTPaintingColor	Varchar		(null)		
+BNTPaintingType	Varchar		(null)		
+BNTOilFreeWaterFreeTreatment	Varchar		EP		
+ActuatorType	Varchar	1	Single Acting Diaphragm		
+ActuatorModelNo	Varchar		A-270M		
+ActuatorCloseAt	DECIMAL		1.4		
+ActuatorOpenAt	DECIMAL		0.7		
+ActuatorFailPosition	Varchar		Open		
+ActuatorPaintingColor	Varchar		RAL 5019		
+ActuatorPaintingType	Varchar		Polyuret hane		
+HWTypeLocation	Varchar		(null)		
+HWPainting Color (RAL No.)	Varchar		(null)		
+HWPaintingType	Varchar		(null)		
+IPPosInputSignal	Varchar		4 ~ 20	4~20이라는 문자열이 들어갈지 아니면 실제로 4보다 크거나 같고 20보다 작거나 같은 소수 or 정수일지 모호하여 일단 예시를 따라 varchar로 설정하였습니다.	
+IPPosType	Varchar		Conventional		
+IPPosEnclosure	Varchar		ExdIICT5		
+IPPosModel No.	Varchar		TS600LC		
+IPPosMFG.	Varchar		TSC		
+PosTransOutput	Varchar		(null)		
+PosTransType	Varchar		(null)		
+AirSetSupplySettingPressure	DECIMAL		2.8		
+AirSetModelNo	Varchar		AR-1501		
+AirSetMFG	Varchar		Proval		
+SolValvePower	Varchar		(null)		
+SolValveType	Varchar		(null)		
+SolValveEnclosure	Varchar		(null)		
+SolValveModelNo	Varchar		(null)		
+SolValveMFG	Varchar		(null)		
+LimSwitchQuantity	Varchar		(null)		
+LimSwitchType	Varchar		(null)		
+LimSwitchEnclosure	Varchar		(null)		
+LimSwitchModelNo	Varchar		(null)		
+LimSwitchMFG	Varchar		(null)		
+LockUpValveSettingPressure	Varchar		(null)		
+LockUpValveModelNo	Varchar		(null)		
+SnapActSettingPressure	Varchar		(null)		
+SnapActModelNo	Varchar		(null)		
+AccAirOperatedValve	Varchar		(null)		
+AccMechanicalValve	Varchar		(null)		
+AccCheckValve	Varchar		(null)		
+AccVolumeBooster	Varchar		(null)		
+AccExhaustValve	Varchar		(null)		
+AccSpeedController	Varchar		(null)		
+AccSilencer	Varchar		(null)		
+MiscellAirSupply	Varchar		NPT.F 1/4"	1/4 가 14처럼 int나 , 0.25처럼 Decimal로 저장될 수 있을 정도로 종류가 적고 종류의 수가 정해져있다면 그게 더 좋을 것 같습니다.	
+MiscellElectrical	Varchar		NPT.F 1/2"	1/2 가 12처럼 int나 , 0.5처럼 Decimal로 저장될 수 있을 정도로 종류가 적고 종류의 수가 정해져있다면 그게 더 좋을 것 같습니다.	
+MiscellWaterSeal	Varchar		(null)		
+MiscellJacket	Varchar		(null)		
+MiscellJacketMaterial	Varchar		(null)		
+MiscellTubingMaterial	Varchar		316 SS	Material_body	
+MiscellSunshadeMaterial	Varchar		(null)		
+Note	Varchar		(null)	Note가 길어지면 text가 되어야 할 수도 있으나 일단 varchar로 저장하였습니다.	
+No	Varchar		A		
+Date	Date		2024-02-01		
+Revision	Varchar		For Approval		
+PreparedBy	Varchar		E. Y. J		
+CheckedBy	Varchar		H. S. L		
+ApprovedBy	Varchar		S. S. H		
+CVDate	Date		2024년 06월 23일		Cv
+CVNo	Int		1		Cv
+CVRemark	Varchar		(null)		Cv
+VALNo	Int		1		valve
+VALJacket	Varchar		KS 10K R.F Flanged		Valve
+VALBR	Boolean		Y		Valve
+VALWS	Boolean		Y		Valve
+VALSS	Boolean		Y		Valve
+VALAmount	Int			개수 계산이므로 저장 x	Valve
+VALDeviation	Varchar				Valve
+VALRemak	Varchar		(null)		Valve
+VALTotal	Int		7	개수 계산이므로 실제 데이터베이스에는 저장 x	Valve
+VALBoosterRelay	Varchar		VB-1000, Proval		Valve
+ 
+ 
+ 
+User
+Column명	데이터 형식	설명	예시 데이터	비고
+UserID	Varchar [PK, not null]	아이디	User123	
+Password	Varchar [not null]	비밀번호	ef92b778bafe7731e0f06a	해싱값 저장
+CompanyName	Varchar [not null]	회사명	포스코건설	
+CompanyPhone	Varchar [not null,unique]	대표번호	031-1234-5678	
+RoleID	Int [FK, not null]			
+Position	Varchar [not null]	직급	과장	
+Department	Varchar [not null]	부서	영업부	
+Name	Varchar [not null]	이름	홍길동	
+BusinessNumber	Varchar [not null]	사업자 등록번호	123-45-67890	
+Address	Varchar [not null]	주소	경기도 시흥시 정왕동 302-702	
+Email	Varchar [not null]	이메일	company@google.com	
+PhoneNumber	Varchar [not null]	연락처	010-1234-5678	
+IsApproved	Bool (default false)	관리자승인여부	T/F	유저에겐 표시 안됨.
+ 
+Role
+Column명	데이터 형식	설명	예시 데이터	비고
+RoleID	Int [PK, not null]		1	
+RoleName	Varchar [not null]	권한	고객	
+Description	Varchar	설명란		불필요시 제거.
+datasheetLV3 테이블
+Column명	데이터 형식	하위리스트여부	예시 데이터	비고	CV or VALVE 리스트 여부
+EstimateNo	Varchar [pk, not null]		YA20250716-001		
+ItemCode	Int [pk, ref, not null]		1	다른 테이블에 ‘Pneumatic Control 2-Way Globe Valve’값으로 관리되고 있습니다.	
+SheetNo	Int [pk, not null]		1	출력시 어플리케이션 레벨에서 ‘1 of 7’과 같은 문자열로 조정됩니다.	
+TagNo	Varchar		FCV-733A		
+UnitPrice	Int		10000000		
+Qty	Int		1		
+Project	Varchar		SK스페셜티_DS-1 Revamp		
+Service	Varchar		(null)		
+MFGNo	Varchar		(null)		
+ModelNo	Varchar		YAD-222Q4-L-RP-C		
+Medium	Varchar		MS		
+State	Varchar		Gas		
+FlowRateUnit	Varchar		kg/hr		
+FlowRateMaxQ	DECIMAL		12.0	일단 예시는 정수이나 소수점이 들어있어 소수 형으로 표기했습니다.	
+FlowRateNorQ	DECIMAL		8.0	일단 예시는 정수이나 소수점이 들어있어 소수 형으로 표기했습니다.	
+FlowRateMinQ	DECIMAL		1.0	일단 예시는 정수이나 소수점이 들어있어 소수 형으로 표기했습니다.	
+InletPressureUnit	Varchar		MPa g		
+InletPressureMaxQ	DECIMAL		0.60		
+InletPressureNorQ	DECIMAL		0.60		
+InletPressureMinQ	DECIMAL		0.60		
+OutletPressureUnit	Varchar		MPa g		
+OutletPressureMaxQ	DECIMAL		0.50		
+OutletPressureNorQ	DECIMAL		0.50		
+OutletPressureMinQ	DECIMAL		0.50		
+DifferentialPressureUnit	Varchar		MPa		
+DifferentialPressureMaxQ	DECIMAL		0.1		
+DifferentialPressureNorQ	DECIMAL		0.1		
+DifferentialPressureMinQ	DECIMAL		0.1		
+InletTemperatureUnit	Varchar		℃		
+InletTemperatureQ	DECIMAL		-7.0	일단 예시는 정수이나 소수점이 들어있어 소수 형으로 표기했습니다.	
+InletTemperatureNorQ	DECIMAL		-7.0	일단 예시는 정수이나 소수점이 들어있어 소수 형으로 표기했습니다.	
+InletTemperatureMinQ	DECIMAL		-7.0	일단 예시는 정수이나 소수점이 들어있어 소수 형으로 표기했습니다.	
+SpecificGravityUnit	Varchar		G		
+SpecificGravityMaxQ	DECIMAL		(null)	맥락적으로 봤을 때 숫자인 것 같아 예시가 null임에도 불구하고 소수형으로 표기했습니다.	
+SpecificGravityNorQ	DECIMAL		(null)	맥락적으로 봤을 때 숫자인 것 같아 예시가 null임에도 불구하고 소수형으로 표기했습니다.	
+SpecificGravityMinQ	DECIMAL		(null)	맥락적으로 봤을 때 숫자인 것 같아 예시가 null임에도 불구하고 소수형으로 표기했습니다.	
+DensityUnit	Varchar		kg/㎥		
+DensityMaxQ	DECIMAL		(null)	맥락적으로 봤을 때 숫자인 것 같아 예시가 null임에도 불구하고 소수형으로 표기했습니다.	
+DensityNorQ	DECIMAL		(null)	맥락적으로 봤을 때 숫자인 것 같아 예시가 null임에도 불구하고 소수형으로 표기했습니다.	
+DensityMinQ	DECIMAL		(null)	맥락적으로 봤을 때 숫자인 것 같아 예시가 null임에도 불구하고 소수형으로 표기했습니다.	
+MolecularWeightUnit	Varchar		(null)	맥락적으로 봤을 때 단위로 생각되어 varchar로 표기했습니다..	
+MolecularWeightMaxQ	DECIMAL		32.12		
+MolecularWeightNorQ	DECIMAL		32.12	.	
+MolecularWeightMinQ	DECIMAL		32.12		
+ViscosityUnit	Varchar		cPs		
+ViscosityMaxQ	DECIMAL		(null)	맥락적으로 봤을 때 숫자인 것 같아 예시가 null임에도 불구하고 소수형으로 표기했습니다.	
+ViscosityNorQ	DECIMAL		(null)	맥락적으로 봤을 때 숫자인 것 같아 예시가 null임에도 불구하고 소수형으로 표기했습니다.	
+ViscosityMinQ	DECIMAL		(null)	맥락적으로 봤을 때 숫자인 것 같아 예시가 null임에도 불구하고 소수형으로 표기했습니다.	
+PredictedSPLUnit	Varchar		dBA		
+PredictedSPLMaxQ	Varchar		<85	정확한 의미 파악이 안되어 varchar로 설정했습니다. 만약 85보다 작은 정수 라는 뜻이 있거나 다른 뜻이 있다면 저장 데이터 형식을 바꿔야 할 것 같습니다.
+Ex1)백엔드에서 85보다 작으면 boolean으로 true로 저장하고 그렇지 않으면 false로 저장
+Ex2) 일단 정수형 85로 저장한 후 작다/크다 정보 따로 저장
+Ex3) Varchar로 저장 후 담당자가 정보 파악(일단 이걸로 함).	
+PredictedSPLNorQ	Varchar		<85	정확한 의미 파악이 안되어 varchar로 설정했습니다. 만약 85보다 작은 정수 라는 뜻이 있거나 다른 뜻이 있다면 저장 데이터 형식을 바꿔야 할 것 같습니다.	
+PredictedSPLMinQ	Varchar		<85	정확한 의미 파악이 안되어 varchar로 설정했습니다. 만약 85보다 작은 정수 라는 뜻이 있거나 다른 뜻이 있다면 저장 데이터 형식을 바꿔야 할 것 같습니다.	
+CalculatedCvUnit	Varchar		(null)	맥락적으로 봤을 때 단위로 생각되어 varchar로 표기했습니다..	
+CalculatedCvMaxQ	DECIMAL		0.119		
+CalculatedCvNorQ	DECIMAL		0.097		
+CalculatedCvMinQ	DECIMAL		0.012		
+OpeningLiftUnit	Varchar		%		
+OpeningLiftMaxQ	DECIMAL		69	소수점 퍼센티지도 가능한지 여부 파악. 일단 예시에 따라 int로 표기했습니다.	
+OpeningLiftNorQ	DECIMAL		64	소수점 퍼센티지도 가능한지 여부 파악. 일단 예시에 따라 int로 표기했습니다.	
+OpeningLiftMinQ	DECIMAL		11	소수점 퍼센티지도 가능한지 여부 파악. 일단 예시에 따라 int로 표기했습니다.	
+ShutOffDPUnit	Varchar		Mpa		
+ShutOffDP	DECIMAL		0.96		
+PressureUnit	Varchar		MPa g		
+Pressure	DECIMAL		0.96		
+TempUnit	Varchar		℃		
+Temp	Varchar		-90~80	입력 예시가 -90~80까지의 수가 들어가는지, 아니면 정확히 ‘-90~80’ 이라는 문자열이 들어가는지 모호하여 일단 varchar로 표기했습니다.	
+InletPipeSize	Varchar		1"	1” 말고도 다른 표기가 있을까 우려되어 varchar로 표기했습니다.
+혹시 정해진 표기의 개수가 얼마 되지 않는다면 int형으로 바꾼 후 1,2,3,4,5,6, 등 넘버링을 매기는 방법도 생각중입니다.	
+InletPipeSizeSchNo	Varchar		(null)		
+OutletPipeSize	Varchar		1"	1” 말고도 다른 표기가 있을까 우려되어 varchar로 표기했습니다.
+혹시 정해진 표기의 개수가 별로 되지 않는다면 int형으로 바꾼 후 1,2,3,4,5,6, 등 넘버링을 매기는 방법도 생각중입니다.	
+OutletPipeSizeSchNo	Varchar		(null)		
+BNTBodyType	Varchar	1	Globe (Cryogenic, 2-Way)		
+BNTBodySize	Varchar		1"	1” 말고도 다른 표기가 있을까 우려되어 varchar로 표기했습니다.
+혹시 정해진 표기의 개수가 별로 되지 않는다면 int형으로 바꾼 후 1,2,3,4,5,6, 등 넘버링을 매기는 방법도 생각중입니다.	
+BNTPortSize	Varchar		1/8"	1/8” 말고도 다른 표기가 있을까 우려되어 varchar로 표기했습니다.
+혹시 정해진 표기의 개수가 별로 되지 않는다면 int형으로 바꾼 후 1,2,3,4,5,6, 등 넘버링을 매기는 방법도 생각중입니다. 또는 1/8을 소수형으로 나타내서 decimal로 표현하는 방법도 생각중입니다.	
+BNTTrimDesign	Varchar		Quick-Change / P-Port		
+BNTTrimType	Varchar		Unbalanced		
+BNTTrimSealRing	Varchar		(null)		
+BNTGuide	Varchar		Retainer		
+BNTRating	Varchar		150#	150#만 저장될 가능성?
+CONVAL에서의 RATING이다.	
+BNTEndConnection	Varchar		R.F Flanged	EndConnection의 종류 등이 정해져 있다면 다른테이블에서 ItemList처럼 관리하는 방식도 고려중. (채번의 방식은 잘 모르지만 우선 채번 요소임으로 정수형인 EndConnectionCode가 저장되고 BodyTrim리스트를 따로 관리하는 식으로 될 수 있음.)(채번 방식 이해 후 확정)	
+BNTFlangeFacing	Varchar		Spiral Serrated (125~250 AARH)		
+BNTBody	Varchar		A182-F316L		
+BNTTrim	Varchar		SUS316L (Stellited)		
+BNTStem	Varchar		SUS316L		
+BNTPacking	Varchar		PTFE		
+BNTSpecialName	Varchar		Bellows		
+BNTSpecial	Varchar		Hastelloy C-276		
+BNTBonnetType	Varchar		Bellows Seal (Extension)		
+BNTTrimForm	Varchar		Equal %		
+BNTMaxAllowSoundLevel(dBA)	Varchar		Less than 85	85보다 작은 값이 저장되어야 하는건지, Less than 85 라는 문구가 저장되어야 하는건지 모호하여 일단 varchar로 설정하였습니다.	
+BNTRequiredSeatTightness	Varchar		ANSI CLASS IV	검색을 해보니 ANSI 형의 클래스가 몇개 정의된것 같아 int형으로 바꾸어도 될 것으로 생각했습니다. 그러나 예시가 일단 문자열로 되어있어 varchar로 설정헀습니다.	
+BNTRatedCv	DECIMAL		0.4		
+BNTStroke	Varchar		(null)		
+BNTFlowActionTo	Varchar		Up	방향의 종류, 이용 방식에 따라 int로 할지 varchar로 할지 결정해야 할 것같습니다.	
+BNTPaintingColor	Varchar		(null)		
+BNTPaintingType	Varchar		(null)		
+BNTOilFreeWaterFreeTreatment	Varchar		EP		
+ActuatorType	Varchar	1	Single Acting Diaphragm		
+ActuatorModelNo	Varchar		A-270M		
+ActuatorCloseAt	DECIMAL		1.4		
+ActuatorOpenAt	DECIMAL		0.7		
+ActuatorFailPosition	Varchar		Open		
+ActuatorPaintingColor	Varchar		RAL 5019		
+ActuatorPaintingType	Varchar		Polyuret hane		
+HWTypeLocation	Varchar		(null)		
+HWPainting Color (RAL No.)	Varchar		(null)		
+HWPaintingType	Varchar		(null)		
+IPPosInputSignal	Varchar		4 ~ 20	4~20이라는 문자열이 들어갈지 아니면 실제로 4보다 크거나 같고 20보다 작거나 같은 소수 or 정수일지 모호하여 일단 예시를 따라 varchar로 설정하였습니다.	
+IPPosType	Varchar		Conventional		
+IPPosEnclosure	Varchar		ExdIICT5		
+IPPosModel No.	Varchar		TS600LC		
+IPPosMFG.	Varchar		TSC		
+PosTransOutput	Varchar		(null)		
+PosTransType	Varchar		(null)		
+AirSetSupplySettingPressure	DECIMAL		2.8		
+AirSetModelNo	Varchar		AR-1501		
+AirSetMFG	Varchar		Proval		
+SolValvePower	Varchar		(null)		
+SolValveType	Varchar		(null)		
+SolValveEnclosure	Varchar		(null)		
+SolValveModelNo	Varchar		(null)		
+SolValveMFG	Varchar		(null)		
+LimSwitchQuantity	Varchar		(null)		
+LimSwitchType	Varchar		(null)		
+LimSwitchEnclosure	Varchar		(null)		
+LimSwitchModelNo	Varchar		(null)		
+LimSwitchMFG	Varchar		(null)		
+LockUpValveSettingPressure	Varchar		(null)		
+LockUpValveModelNo	Varchar		(null)		
+SnapActSettingPressure	Varchar		(null)		
+SnapActModelNo	Varchar		(null)		
+AccAirOperatedValve	Varchar		(null)		
+AccMechanicalValve	Varchar		(null)		
+AccCheckValve	Varchar		(null)		
+AccVolumeBooster	Varchar		(null)		
+AccExhaustValve	Varchar		(null)		
+AccSpeedController	Varchar		(null)		
+AccSilencer	Varchar		(null)		
+MiscellAirSupply	Varchar		NPT.F 1/4"	1/4 가 14처럼 int나 , 0.25처럼 Decimal로 저장될 수 있을 정도로 종류가 적고 종류의 수가 정해져있다면 그게 더 좋을 것 같습니다.	
+MiscellElectrical	Varchar		NPT.F 1/2"	1/2 가 12처럼 int나 , 0.5처럼 Decimal로 저장될 수 있을 정도로 종류가 적고 종류의 수가 정해져있다면 그게 더 좋을 것 같습니다.	
+MiscellWaterSeal	Varchar		(null)		
+MiscellJacket	Varchar		(null)		
+MiscellJacketMaterial	Varchar		(null)		
+MiscellTubingMaterial	Varchar		316 SS	Material_body	
+MiscellSunshadeMaterial	Varchar		(null)		
+Note	Varchar		(null)	Note가 길어지면 text가 되어야 할 수도 있으나 일단 varchar로 저장하였습니다.	
+No	Varchar		A		
+Date	Date		2024-02-01		
+Revision	Varchar		For Approval		
+PreparedBy	Varchar		E. Y. J		
+CheckedBy	Varchar		H. S. L		
+ApprovedBy	Varchar		S. S. H		
+CVDate	Date		2024년 06월 23일		Cv
+CVNo	Int		1		Cv
+CVRemark	Varchar		(null)		Cv
+VALNo	Int		1		valve
+VALJacket	Varchar		KS 10K R.F Flanged		Valve
+VALBR	Boolean		Y		Valve
+VALWS	Boolean		Y		Valve
+VALSS	Boolean		Y		Valve
+VALAmount	Int			개수 계산이므로 저장 x	Valve
+VALDeviation	Varchar				Valve
+VALRemak	Varchar		(null)		Valve
+VALTotal	Int		7	개수 계산이므로 실제 데이터베이스에는 저장 x	Valve
+VALBoosterRelay	Varchar		VB-1000, Proval		Valve
+ 
+ 
+ 
+User
+Column명	데이터 형식	설명	예시 데이터	비고
+UserID	Varchar [PK, not null]	아이디	User123	
+Password	Varchar [not null]	비밀번호	ef92b778bafe7731e0f06a	해싱값 저장
+CompanyName	Varchar [not null]	회사명	포스코건설	
+CompanyPhone	Varchar [not null,unique]	대표번호	031-1234-5678	
+RoleID	Int [FK, not null]			
+Position	Varchar [not null]	직급	과장	
+Department	Varchar [not null]	부서	영업부	
+Name	Varchar [not null]	이름	홍길동	
+BusinessNumber	Varchar [not null]	사업자 등록번호	123-45-67890	
+Address	Varchar [not null]	주소	경기도 시흥시 정왕동 302-702	
+Email	Varchar [not null]	이메일	company@google.com	
+PhoneNumber	Varchar [not null]	연락처	010-1234-5678	
+IsApproved	Bool (default false)	관리자승인여부	T/F	유저에겐 표시 안됨.
+ 
+Role
+Column명	데이터 형식	설명	예시 데이터	비고
+RoleID	Int [PK, not null]		1	
+RoleName	Varchar [not null]	권한	고객	
+Description	Varchar	설명란		불필요시 제거.

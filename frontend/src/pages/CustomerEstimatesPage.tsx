@@ -15,15 +15,15 @@ const CustomerEstimatesPage: React.FC = () => {
   const [estimates, setEstimates] = useState<Estimate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [tagInputs, setTagInputs] = useState<string[]>(['']);
+  const [sheetInputs, setSheetInputs] = useState<number[]>([]);
   const [submitMsg, setSubmitMsg] = useState('');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editEstimate, setEditEstimate] = useState<Estimate | null>(null);
   const [editForm, setEditForm] = useState({ tagNo: '', curEstPrice: 0 });
-  const [tagModalOpen, setTagModalOpen] = useState(false);
+  const [sheetModalOpen, setSheetModalOpen] = useState(false);
   const [selectedEstimateNo, setSelectedEstimateNo] = useState<string | null>(null);
-  const [tagList, setTagList] = useState<string[]>([]);
+  const [sheetList, setSheetList] = useState<number[]>([]);
 
   // 본인 견적 리스트만 조회
   const fetchEstimates = async () => {
@@ -46,54 +46,54 @@ const CustomerEstimatesPage: React.FC = () => {
     fetchEstimates();
   }, []);
 
-  // TagNo 입력 행 추가
-  const handleAddTagInput = () => {
-    setTagInputs([...tagInputs, '']);
+  // SheetNo 입력 행 추가
+  const handleAddSheetInput = () => {
+    setSheetInputs([...sheetInputs, 0]);
   };
-  // TagNo 입력 행 삭제
-  const handleRemoveTagInput = (idx: number) => {
-    if (tagInputs.length === 1) return;
-    setTagInputs(tagInputs.filter((_, i) => i !== idx));
+  // SheetNo 입력 행 삭제
+  const handleRemoveSheetInput = (idx: number) => {
+    if (sheetInputs.length === 1) return;
+    setSheetInputs(sheetInputs.filter((_, i) => i !== idx));
   };
-  // TagNo 값 변경
-  const handleTagInputChange = (idx: number, value: string) => {
-    setTagInputs(tagInputs.map((v, i) => (i === idx ? value : v)));
+  // SheetNo 값 변경
+  const handleSheetInputChange = (idx: number, value: number) => {
+    setSheetInputs(sheetInputs.map((v, i) => (i === idx ? value : v)));
   };
 
-  // 여러 TagNo 한 번에 제출
+  // 여러 SheetNo 한 번에 제출
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitMsg('');
     try {
       // 빈 값 제외
-      const validTags = tagInputs.map(t => t.trim()).filter(t => t);
-      if (validTags.length === 0) {
-        setSubmitMsg('TagNo를 하나 이상 입력하세요.');
+      const validSheets = sheetInputs.filter(s => s > 0);
+      if (validSheets.length === 0) {
+        setSubmitMsg('SheetNo를 하나 이상 입력하세요.');
         return;
       }
-      // tagNos 배열로 한 번에 API 요청
+      // sheetNos 배열로 한 번에 API 요청
       await axios.post('/api/data/customer-estimate', {
-        tagNos: validTags,
+        sheetNos: validSheets,
         customerID: user.userId
       }, { baseURL: 'http://localhost:5162' });
       setSubmitMsg('견적 생성 완료!');
-      setTagInputs(['']);
+      setSheetInputs([]);
       fetchEstimates();
     } catch (err: any) {
       setSubmitMsg(err.response?.data?.message || '견적 생성에 실패했습니다.');
     }
   };
 
-  // 행 클릭 시 TagNo 리스트 모달 오픈
+  // 행 클릭 시 SheetNo 리스트 모달 오픈
   const handleRowClick = async (est: Estimate) => {
     setSelectedEstimateNo(est.curEstimateNo);
-    setTagList([]);
-    setTagModalOpen(true);
+    setSheetList([]);
+    setSheetModalOpen(true);
     try {
-      const res = await axios.get(`/api/data/estimates/${est.curEstimateNo}/tags`, { baseURL: 'http://localhost:5162' });
-      setTagList(res.data);
+      const res = await axios.get(`/api/data/estimates/${est.curEstimateNo}/sheets`, { baseURL: 'http://localhost:5162' });
+      setSheetList(res.data);
     } catch (err) {
-      setTagList([]);
+      setSheetList([]);
     }
   };
 
@@ -122,21 +122,21 @@ const CustomerEstimatesPage: React.FC = () => {
     <div className="page-container">
       <h2>내 견적 관리 (고객)</h2>
       <form onSubmit={handleSubmit} className="estimate-form">
-        <label>TagNo 입력 (여러 개 입력 가능)</label>
-        {tagInputs.map((tag, idx) => (
+        <label>SheetNo 입력 (여러 개 입력 가능)</label>
+        {sheetInputs.map((sheet, idx) => (
           <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
             <input
-              type="text"
-              name={`tagNo${idx}`}
-              value={tag}
-              onChange={e => handleTagInputChange(idx, e.target.value)}
+              type="number"
+              name={`sheetNo${idx}`}
+              value={sheet}
+              onChange={e => handleSheetInputChange(idx, parseInt(e.target.value) || 0)}
               required
               className="form-input"
               style={{ marginRight: 8 }}
             />
-            <button type="button" onClick={() => handleRemoveTagInput(idx)} disabled={tagInputs.length === 1}>-</button>
-            {idx === tagInputs.length - 1 && (
-              <button type="button" onClick={handleAddTagInput} style={{ marginLeft: 4 }}>+</button>
+            <button type="button" onClick={() => handleRemoveSheetInput(idx)} disabled={sheetInputs.length === 1}>-</button>
+            {idx === sheetInputs.length - 1 && (
+              <button type="button" onClick={handleAddSheetInput} style={{ marginLeft: 4 }}>+</button>
             )}
           </div>
         ))}
@@ -175,22 +175,22 @@ const CustomerEstimatesPage: React.FC = () => {
         </table>
       )}
       <Modal
-        isOpen={tagModalOpen}
-        onRequestClose={() => setTagModalOpen(false)}
-        contentLabel="TagNo 리스트"
+        isOpen={sheetModalOpen}
+        onRequestClose={() => setSheetModalOpen(false)}
+        contentLabel="SheetNo 리스트"
         ariaHideApp={false}
       >
-        <h2>TagNo 리스트 (견적번호: {selectedEstimateNo})</h2>
-        {tagList.length === 0 ? (
-          <div>TagNo가 없습니다.</div>
+        <h2>SheetNo 리스트 (견적번호: {selectedEstimateNo})</h2>
+        {sheetList.length === 0 ? (
+          <div>SheetNo가 없습니다.</div>
         ) : (
           <ul>
-            {tagList.map((tag, idx) => (
-              <li key={idx}>{tag}</li>
+            {sheetList.map((sheet, idx) => (
+              <li key={idx}>{sheet}</li>
             ))}
           </ul>
         )}
-        <button onClick={() => setTagModalOpen(false)} style={{ marginTop: 8 }}>닫기</button>
+        <button onClick={() => setSheetModalOpen(false)} style={{ marginTop: 8 }}>닫기</button>
       </Modal>
     </div>
   );

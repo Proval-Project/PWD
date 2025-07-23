@@ -223,15 +223,15 @@ public class DataController : ControllerBase
         return Ok(list);
     }
 
-    // DataSheetLv3 TagNo 수정
-    [HttpPut("datasheet/{tagNo}")]
-    public async Task<IActionResult> UpdateTagNo(string tagNo, [FromBody] UpdateTagNoDto dto)
+    // DataSheetLv3 SheetNo 수정
+    [HttpPut("datasheet/{sheetNo}")]
+    public async Task<IActionResult> UpdateSheetNo(int sheetNo, [FromBody] UpdateSheetNoDto dto)
     {
-        var data = await _context.DataSheetLv3s.FindAsync(tagNo);
-        if (data == null) return NotFound(new { message = "해당 TagNo를 찾을 수 없습니다." });
-        data.TagNo = dto.NewTagNo;
+        var data = await _context.DataSheetLv3s.FindAsync(sheetNo);
+        if (data == null) return NotFound(new { message = "해당 SheetNo를 찾을 수 없습니다." });
+        data.SheetNo = dto.NewSheetNo;
         await _context.SaveChangesAsync();
-        return Ok(new { message = "TagNo 수정 완료", tagNo = data.TagNo });
+        return Ok(new { message = "SheetNo 수정 완료", sheetNo = data.SheetNo });
     }
 
     // ItemList 전체 조회
@@ -242,13 +242,13 @@ public class DataController : ControllerBase
         return Ok(items);
     }
 
-    // 고객용 견적 생성: TagNo만 입력, EstimateNo는 자동 생성
+    // 고객용 견적 생성: SheetNo만 입력, EstimateNo는 자동 생성
     [HttpPost("customer-estimate")]
     public async Task<IActionResult> CreateCustomerEstimate([FromBody] CustomerEstimateInputDto dto)
     {
-        if (dto.TagNos == null || dto.TagNos.Count == 0)
+        if (dto.SheetNos == null || dto.SheetNos.Count == 0)
         {
-            return BadRequest(new { message = "TagNo를 하나 이상 입력하세요." });
+            return BadRequest(new { message = "SheetNo를 하나 이상 입력하세요." });
         }
         // 1. 오늘 날짜 기준 마지막 EstimateNo 찾기
         var today = DateTime.UtcNow.ToString("yyyyMMdd");
@@ -278,12 +278,12 @@ public class DataController : ControllerBase
         };
         _context.EstimateSheetLv1s.Add(est);
 
-        // 3. DataSheetLv3(상세) 여러 TagNo로 생성
-        foreach (var tagNo in dto.TagNos)
+        // 3. DataSheetLv3(상세) 여러 SheetNo로 생성
+        foreach (var sheetNo in dto.SheetNos)
         {
             var data = new DataSheetLv3
             {
-                TagNo = tagNo,
+                SheetNo = sheetNo,
                 EstimateNo = newEstimateNo,
                 UnitPrice = 0,
                 Quantity = 0
@@ -292,18 +292,18 @@ public class DataController : ControllerBase
         }
 
         await _context.SaveChangesAsync();
-        return Ok(new { message = "견적 생성 완료", estimateNo = newEstimateNo, tagNos = dto.TagNos });
+        return Ok(new { message = "견적 생성 완료", estimateNo = newEstimateNo, sheetNos = dto.SheetNos });
     }
 
-    // 특정 견적번호의 TagNo 리스트 조회
-    [HttpGet("estimates/{estimateNo}/tags")]
-    public async Task<IActionResult> GetTagsByEstimateNo(string estimateNo)
+    // 특정 견적번호의 SheetNo 리스트 조회
+    [HttpGet("estimates/{estimateNo}/sheets")]
+    public async Task<IActionResult> GetSheetsByEstimateNo(string estimateNo)
     {
-        var tags = await _context.DataSheetLv3s
+        var sheets = await _context.DataSheetLv3s
             .Where(d => d.EstimateNo == estimateNo)
-            .Select(d => d.TagNo)
+            .Select(d => d.SheetNo)
             .ToListAsync();
-        return Ok(tags);
+        return Ok(sheets);
     }
 }
 
@@ -315,12 +315,12 @@ public class DataSheetInputDto
     public int UnitPrice { get; set; }
     public int Quantity { get; set; }
 }
-public class UpdateTagNoDto
+public class UpdateSheetNoDto
 {
-    public string NewTagNo { get; set; }
+    public int NewSheetNo { get; set; }
 }
 public class CustomerEstimateInputDto
 {
-    public List<string> TagNos { get; set; } = new List<string>();
+    public List<int> SheetNos { get; set; } = new List<int>();
     public string CustomerID { get; set; }
 } 
