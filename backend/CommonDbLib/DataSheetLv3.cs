@@ -5,12 +5,14 @@ namespace CommonDbLib
 {
     public class DataSheetLv3
     {
-        [Key]
-        public int SheetNo { get; set; }
-        [MaxLength(50)]
-        public string? TagNo { get; set; }
+        // [Key] 어노테이션 제거, PK는 OnModelCreating에서 지정
+        [Column(Order = 0)]
         [MaxLength(50)]
         public string? EstimateNo { get; set; }
+        [Column(Order = 1)]
+        public int SheetID { get; set; } // PK, 생성 시 정해지고 변하지 않는 값
+        [MaxLength(50)]
+        public string? TagNo { get; set; }
         [ForeignKey("EstimateNo")]
         public EstimateSheetLv1? EstimateSheet { get; set; }
         [MaxLength(50)]
@@ -176,5 +178,6 @@ namespace CommonDbLib
         public string? VALRemak { get; set; }
         public int? VALTotal { get; set; }
         public string? VALBoosterRelay { get; set; }
+        public int? SheetNo { get; set; } // 순서, 위치 바꿀 때마다 바뀌는 값
     }
 } 

@@ -9,6 +9,7 @@ const roleMap: Record<string, number> = {
 
 const RegisterForm: React.FC = () => {
   const [formData, setFormData] = useState({
+    userID: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -20,7 +21,8 @@ const RegisterForm: React.FC = () => {
     department: '',
     position: '',
     phoneNumber: '',
-    name: ''
+    name: '',
+    itemCode: '1'
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -47,6 +49,7 @@ const RegisterForm: React.FC = () => {
 
     try {
       const payload = {
+        userID: formData.userID,
         email: formData.email,
         password: formData.password,
         confirmPassword: formData.confirmPassword,
@@ -58,14 +61,15 @@ const RegisterForm: React.FC = () => {
         department: formData.department,
         position: formData.position,
         phoneNumber: formData.phoneNumber,
-        name: formData.name
+        name: formData.name,
+        itemCode: formData.itemCode
       };
       const response = await register(payload);
       setSuccess('회원가입이 완료되었습니다. 관리자 승인 후 로그인이 가능합니다.');
       setFormData({
-        email: '', password: '', confirmPassword: '', role: 'Customer',
+        userID: '', email: '', password: '', confirmPassword: '', role: 'Customer',
         companyName: '', businessNumber: '', address: '', companyPhone: '',
-        department: '', position: '', phoneNumber: '', name: ''
+        department: '', position: '', phoneNumber: '', name: '', itemCode: '1'
       });
     } catch (err: any) {
       setError(err.response?.data?.message || '회원가입에 실패했습니다.');
@@ -79,8 +83,21 @@ const RegisterForm: React.FC = () => {
       {error && <div className="error-message">{error}</div>}
       {success && <div className="success-message">{success}</div>}
       <div className="form-group">
+        <label htmlFor="userID">아이디</label>
+        <input type="text" id="userID" name="userID" value={formData.userID} onChange={handleChange} required className="form-input" />
+      </div>
+      <div className="form-group">
         <label htmlFor="email">이메일</label>
         <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} required className="form-input" />
+      </div>
+      <div className="form-group">
+        <label htmlFor="itemCode">ItemCode</label>
+        <select id="itemCode" name="itemCode" value={formData.itemCode} onChange={handleChange} className="form-input">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+        </select>
       </div>
       <div className="form-group">
         <label htmlFor="password">비밀번호</label>

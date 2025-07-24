@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 const LoginForm: React.FC = () => {
   const [formData, setFormData] = useState({
-    email: '',
+    userID: '',
     password: ''
   });
   const [loading, setLoading] = useState(false);
@@ -24,7 +24,7 @@ const LoginForm: React.FC = () => {
     setError('');
 
     try {
-      const response = await login(formData.email, formData.password);
+      const response = await login(formData.userID, formData.password);
       localStorage.setItem('token', response.token);
       localStorage.setItem('user', JSON.stringify(response.user));
       // 권한별로 분기 이동
@@ -47,12 +47,12 @@ const LoginForm: React.FC = () => {
       {error && <div className="error-message">{error}</div>}
       
       <div className="form-group">
-        <label htmlFor="email">이메일</label>
+        <label htmlFor="userID">아이디</label>
         <input
-          type="email"
-          id="email"
-          name="email"
-          value={formData.email}
+          type="text"
+          id="userID"
+          name="userID"
+          value={formData.userID}
           onChange={handleChange}
           required
           className="form-input"

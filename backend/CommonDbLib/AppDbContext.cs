@@ -19,6 +19,9 @@ namespace CommonDbLib
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            // 복합키 지정
+            modelBuilder.Entity<DataSheetLv3>()
+                .HasKey(d => new { d.EstimateNo, d.SheetID });
             // 필요한 관계 설정 및 Fluent API 작성 가능
             modelBuilder.Entity<DataSheetLv3>()
                 .HasOne(d => d.EstimateSheet)

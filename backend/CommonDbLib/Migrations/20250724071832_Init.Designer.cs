@@ -3,6 +3,7 @@ using System;
 using CommonDbLib;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
@@ -11,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CommonDbLib.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250723045125_Init")]
+    [Migration("20250724071832_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -19,14 +20,19 @@ namespace CommonDbLib.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.6")
+                .HasAnnotation("ProductVersion", "8.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("CommonDbLib.DataSheetLv3", b =>
                 {
-                    b.Property<int>("SheetNo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                    b.Property<string>("EstimateNo")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnOrder(0);
+
+                    b.Property<int>("SheetID")
+                        .HasColumnType("int")
+                        .HasColumnOrder(1);
 
                     b.Property<string>("AccAirOperatedValve")
                         .HasColumnType("longtext");
@@ -210,10 +216,6 @@ namespace CommonDbLib.Migrations
 
                     b.Property<string>("DifferentialPressureUnit")
                         .HasColumnType("longtext");
-
-                    b.Property<string>("EstimateNo")
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
 
                     b.Property<decimal?>("FlowRateMaxQ")
                         .HasColumnType("decimal(65,30)");
@@ -423,6 +425,9 @@ namespace CommonDbLib.Migrations
                     b.Property<string>("Service")
                         .HasColumnType("longtext");
 
+                    b.Property<int?>("SheetNo")
+                        .HasColumnType("int");
+
                     b.Property<decimal?>("ShutOffDP")
                         .HasColumnType("decimal(65,30)");
 
@@ -517,9 +522,7 @@ namespace CommonDbLib.Migrations
                     b.Property<string>("ViscosityUnit")
                         .HasColumnType("longtext");
 
-                    b.HasKey("SheetNo");
-
-                    b.HasIndex("EstimateNo");
+                    b.HasKey("EstimateNo", "SheetID");
 
                     b.HasIndex("ItemCode");
 
@@ -585,6 +588,8 @@ namespace CommonDbLib.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
@@ -618,6 +623,8 @@ namespace CommonDbLib.Migrations
                     b.Property<int>("RoleID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("RoleID"));
 
                     b.Property<string>("Description")
                         .HasMaxLength(200)
@@ -718,7 +725,9 @@ namespace CommonDbLib.Migrations
                 {
                     b.HasOne("CommonDbLib.EstimateSheetLv1", "EstimateSheet")
                         .WithMany()
-                        .HasForeignKey("EstimateNo");
+                        .HasForeignKey("EstimateNo")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("CommonDbLib.ItemList", "Item")
                         .WithMany()

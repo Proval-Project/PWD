@@ -57,9 +57,14 @@ namespace FullAuthSystem.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // 이메일 중복 확인
-            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+            // 아이디 중복 확인
+            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.UserID == model.UserID);
             if (existingUser != null)
+                return BadRequest(new { message = "이미 등록된 아이디입니다." });
+
+            // 이메일 중복 확인
+            var existingEmail = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+            if (existingEmail != null)
                 return BadRequest(new { message = "이미 등록된 이메일입니다." });
 
             // RoleId 유효성 검사
@@ -69,10 +74,9 @@ namespace FullAuthSystem.Controllers
 
             var user = new User
             {
-                UserID = model.Email, // UserID를 이메일로 설정
+                UserID = model.UserID, // 아이디로 저장
                 Name = model.Name,
                 Email = model.Email,
-
                 RoleID = model.RoleID,
                 IsApproved = false, // 무조건 승인 대기 상태로 생성
                 IsActive = true,
@@ -104,16 +108,16 @@ namespace FullAuthSystem.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserID == model.UserID);
             
             // 디버깅 로그 추가
-            _logger.LogInformation("로그인 시도: Email={Email}, UserFound={UserFound}", 
-                model.Email, user != null);
+            _logger.LogInformation("로그인 시도: UserID={UserID}, UserFound={UserFound}", 
+                model.UserID, user != null);
             
             if (user == null)
             {
-                _logger.LogWarning("사용자를 찾을 수 없음: {Email}", model.Email);
-                return Unauthorized(new { message = "잘못된 이메일 또는 비밀번호입니다." });
+                _logger.LogWarning("사용자를 찾을 수 없음: {UserID}", model.UserID);
+                return Unauthorized(new { message = "잘못된 아이디 또는 비밀번호입니다." });
             }
 
             // 비밀번호 검증 로그 추가
@@ -125,8 +129,8 @@ namespace FullAuthSystem.Controllers
 
             if (!isPasswordValid)
             {
-                _logger.LogWarning("비밀번호 불일치: {Email}", model.Email);
-                return Unauthorized(new { message = "잘못된 이메일 또는 비밀번호입니다." });
+                _logger.LogWarning("비밀번호 불일치: {UserID}", model.UserID);
+                return Unauthorized(new { message = "잘못된 아이디 또는 비밀번호입니다." });
             }
 
             // 승인되지 않은 사용자는 로그인 불가
@@ -581,7 +585,7 @@ namespace FullAuthSystem.Controllers
 
     public class LoginModel
     {
-        public string Email { get; set; }
+        public string UserID { get; set; }
         public string Password { get; set; }
         public bool RememberMe { get; set; }
     }

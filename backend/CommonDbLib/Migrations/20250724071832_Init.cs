@@ -155,11 +155,10 @@ namespace CommonDbLib.Migrations
                 name: "DataSheetLv3s",
                 columns: table => new
                 {
-                    SheetNo = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    TagNo = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: true)
+                    EstimateNo = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    EstimateNo = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: true)
+                    SheetID = table.Column<int>(type: "int", nullable: false),
+                    TagNo = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     ItemCode = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -431,16 +430,18 @@ namespace CommonDbLib.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     VALTotal = table.Column<int>(type: "int", nullable: true),
                     VALBoosterRelay = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    SheetNo = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_DataSheetLv3s", x => x.SheetNo);
+                    table.PrimaryKey("PK_DataSheetLv3s", x => new { x.EstimateNo, x.SheetID });
                     table.ForeignKey(
                         name: "FK_DataSheetLv3s_EstimateSheetLv1s_EstimateNo",
                         column: x => x.EstimateNo,
                         principalTable: "EstimateSheetLv1s",
-                        principalColumn: "CurEstimateNo");
+                        principalColumn: "CurEstimateNo",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_DataSheetLv3s_ItemLists_ItemCode",
                         column: x => x.ItemCode,
@@ -448,11 +449,6 @@ namespace CommonDbLib.Migrations
                         principalColumn: "ItemCode");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_DataSheetLv3s_EstimateNo",
-                table: "DataSheetLv3s",
-                column: "EstimateNo");
 
             migrationBuilder.CreateIndex(
                 name: "IX_DataSheetLv3s_ItemCode",

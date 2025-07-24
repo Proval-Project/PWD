@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Modal from 'react-modal';
+import { useNavigate } from 'react-router-dom';
 
 interface Estimate {
   curEstimateNo: string;
@@ -11,11 +12,18 @@ interface Estimate {
   managerUserID: string;
 }
 
+interface ItemInput {
+  itemCode: string;
+  tagNos: string[];
+}
+
 const CustomerEstimatesPage: React.FC = () => {
   const [estimates, setEstimates] = useState<Estimate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [tagInputs, setTagInputs] = useState<string[]>(['']);
+  const [itemInputs, setItemInputs] = useState<ItemInput[]>([
+    { itemCode: '1', tagNos: [''] }
+  ]);
   const [submitMsg, setSubmitMsg] = useState('');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -24,6 +32,8 @@ const CustomerEstimatesPage: React.FC = () => {
   const [tagModalOpen, setTagModalOpen] = useState(false);
   const [selectedEstimateNo, setSelectedEstimateNo] = useState<string | null>(null);
   const [tagList, setTagList] = useState<string[]>([]);
+
+  const navigate = useNavigate();
 
   // 본인 견적 리스트만 조회
   const fetchEstimates = async () => {
@@ -46,38 +56,69 @@ const CustomerEstimatesPage: React.FC = () => {
     fetchEstimates();
   }, []);
 
-  // TagNo 입력 행 추가
-  const handleAddTagInput = () => {
-    setTagInputs([...tagInputs, '']);
+  // ItemCode 입력 행 추가
+  const handleAddItemInput = () => {
+    setItemInputs([...itemInputs, { itemCode: '', tagNos: [''] }]);
   };
-  // TagNo 입력 행 삭제
-  const handleRemoveTagInput = (idx: number) => {
-    if (tagInputs.length === 1) return;
-    setTagInputs(tagInputs.filter((_, i) => i !== idx));
+  // ItemCode 입력 행 삭제
+  const handleRemoveItemInput = (idx: number) => {
+    if (itemInputs.length === 1) return;
+    setItemInputs(itemInputs.filter((_, i) => i !== idx));
   };
-  // TagNo 값 변경
-  const handleTagInputChange = (idx: number, value: string) => {
-    setTagInputs(tagInputs.map((v, i) => (i === idx ? value : v)));
+  // ItemCode 값 변경
+  const handleItemCodeChange = (idx: number, value: string) => {
+    setItemInputs(itemInputs.map((item, i) => i === idx ? { ...item, itemCode: value } : item));
+  };
+  // TagNo 입력 행 추가 (특정 ItemCode)
+  const handleAddTagInput = (itemIdx: number) => {
+    setItemInputs(itemInputs.map((item, i) =>
+      i === itemIdx ? { ...item, tagNos: [...item.tagNos, ''] } : item
+    ));
+  };
+  // TagNo 입력 행 삭제 (특정 ItemCode)
+  const handleRemoveTagInput = (itemIdx: number, tagIdx: number) => {
+    setItemInputs(itemInputs.map((item, i) => {
+      if (i !== itemIdx) return item;
+      if (item.tagNos.length === 1) return item;
+      return { ...item, tagNos: item.tagNos.filter((_, j) => j !== tagIdx) };
+    }));
+  };
+  // TagNo 값 변경 (특정 ItemCode)
+  const handleTagInputChange = (itemIdx: number, tagIdx: number, value: string) => {
+    setItemInputs(itemInputs.map((item, i) =>
+      i === itemIdx ? { ...item, tagNos: item.tagNos.map((t, j) => j === tagIdx ? value : t) } : item
+    ));
   };
 
-  // 여러 TagNo 한 번에 제출
+  // 여러 ItemCode/TagNo 한 번에 제출
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitMsg('');
     try {
-      // 빈 값 제외
-      const validTags = tagInputs.map(t => t.trim()).filter(t => t);
-      if (validTags.length === 0) {
-        setSubmitMsg('TagNo를 하나 이상 입력하세요.');
+      // 빈 값 자동 제거
+      const cleanedInputs = itemInputs
+        .map(item => ({
+          itemCode: item.itemCode.trim(),
+          tagNos: item.tagNos.map(t => t.trim()).filter(t => t)
+        }))
+        .filter(item => item.itemCode && item.tagNos.length > 0);
+      if (cleanedInputs.length === 0) {
+        setSubmitMsg('ItemCode와 TagNo를 하나 이상 입력하세요.');
         return;
       }
-      // tagNos 배열로 한 번에 API 요청
+      // API 요청 (예시: /api/data/customer-estimate)
+      const flatItems = cleanedInputs.flatMap(item =>
+        item.tagNos.map(tagNo => ({
+          ItemCode: item.itemCode,
+          TagNo: tagNo
+        }))
+      );
       await axios.post('/api/data/customer-estimate', {
-        tagNos: validTags,
+        items: flatItems,
         customerID: user.userId
       }, { baseURL: 'http://localhost:5162' });
       setSubmitMsg('견적 생성 완료!');
-      setTagInputs(['']);
+      setItemInputs([{ itemCode: '1', tagNos: [''] }]);
       fetchEstimates();
     } catch (err: any) {
       setSubmitMsg(err.response?.data?.message || '견적 생성에 실패했습니다.');
@@ -95,6 +136,11 @@ const CustomerEstimatesPage: React.FC = () => {
     } catch (err) {
       setTagList([]);
     }
+  };
+
+  // 상세 페이지 이동
+  const handleEstimateClick = (est: Estimate) => {
+    navigate(`/estimates/${est.curEstimateNo}`);
   };
 
   // 수정 폼 입력 변경
@@ -122,22 +168,44 @@ const CustomerEstimatesPage: React.FC = () => {
     <div className="page-container">
       <h2>내 견적 관리 (고객)</h2>
       <form onSubmit={handleSubmit} className="estimate-form">
-        <label>TagNo 입력 (여러 개 입력 가능)</label>
-        {tagInputs.map((tag, idx) => (
-          <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-            <input
-              type="text"
-              name={`tagNo${idx}`}
-              value={tag}
-              onChange={e => handleTagInputChange(idx, e.target.value)}
-              required
-              className="form-input"
-              style={{ marginRight: 8 }}
-            />
-            <button type="button" onClick={() => handleRemoveTagInput(idx)} disabled={tagInputs.length === 1}>-</button>
-            {idx === tagInputs.length - 1 && (
-              <button type="button" onClick={handleAddTagInput} style={{ marginLeft: 4 }}>+</button>
-            )}
+        <label>ItemCode/TagNo 입력 (여러 개 입력 가능)</label>
+        {itemInputs.map((item, itemIdx) => (
+          <div key={itemIdx} style={{ border: '1px solid #eee', padding: 12, marginBottom: 8, borderRadius: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+              <label style={{ marginRight: 8 }}>ItemCode</label>
+              <input
+                type="text"
+                name={`itemCode${itemIdx}`}
+                value={item.itemCode}
+                onChange={e => handleItemCodeChange(itemIdx, e.target.value)}
+                required
+                className="form-input"
+                style={{ marginRight: 8, width: 80 }}
+              />
+              <button type="button" onClick={() => handleRemoveItemInput(itemIdx)} disabled={itemInputs.length === 1}>-</button>
+              {itemIdx === itemInputs.length - 1 && (
+                <button type="button" onClick={handleAddItemInput} style={{ marginLeft: 4 }}>+</button>
+              )}
+            </div>
+            <div style={{ marginLeft: 24 }}>
+              {item.tagNos.map((tag, tagIdx) => (
+                <div key={tagIdx} style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+                  <input
+                    type="text"
+                    name={`tagNo${itemIdx}_${tagIdx}`}
+                    value={tag}
+                    onChange={e => handleTagInputChange(itemIdx, tagIdx, e.target.value)}
+                    required
+                    className="form-input"
+                    style={{ marginRight: 8 }}
+                  />
+                  <button type="button" onClick={() => handleRemoveTagInput(itemIdx, tagIdx)} disabled={item.tagNos.length === 1}>-</button>
+                  {tagIdx === item.tagNos.length - 1 && (
+                    <button type="button" onClick={() => handleAddTagInput(itemIdx)} style={{ marginLeft: 4 }}>+</button>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         ))}
         <button type="submit" className="submit-button">견적 생성</button>
@@ -163,7 +231,7 @@ const CustomerEstimatesPage: React.FC = () => {
               <tr><td colSpan={4}>견적이 없습니다.</td></tr>
             ) : (
               estimates.map(est => (
-                <tr key={est.curEstimateNo} onClick={() => handleRowClick(est)} style={{ cursor: 'pointer' }}>
+                <tr key={est.curEstimateNo} onClick={() => handleEstimateClick(est)} style={{ cursor: 'pointer' }}>
                   <td>{est.curEstimateNo}</td>
                   <td>{est.curEstPrice}</td>
                   <td>{est.prevEstimateNo}</td>

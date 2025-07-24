@@ -11,6 +11,8 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 // User Pages
 import UsersPage from './pages/UsersPage';
 import UserDetailPage from './pages/UserDetailPage';
+import StaffListPage from './pages/StaffListPage';
+import CustomerListPage from './pages/CustomerListPage';
 
 // Estimate Pages
 import EstimatesPage from './pages/EstimatesPage';
@@ -55,9 +57,12 @@ function App() {
               <Link to="/" className="nav-link">홈</Link>
               {!user && <Link to="/login" className="nav-link">로그인</Link>}
               {!user && <Link to="/register" className="nav-link">회원가입</Link>}
-              {/* 관리자만 사용자 관리 메뉴 노출 */}
+              {/* 관리자만 직원/회원 관리 메뉴 노출 */}
               {user && user.roleName === 'Admin' && (
-                <Link to="/users" className="nav-link">회원 관리</Link>
+                <>
+                  <Link to="/staffs" className="nav-link">직원 관리</Link>
+                  <Link to="/customers" className="nav-link">회원 관리</Link>
+                </>
               )}
               <Link to="/estimates" className="nav-link">견적 관리</Link>
               <Link to="/stats" className="nav-link">통계</Link>
@@ -105,6 +110,10 @@ function App() {
             {/* 사용자 관리 페이지 */}
             <Route path="/users" element={<UsersPage />} />
             <Route path="/users/:id" element={<UserDetailPage />} />
+
+            {/* 직원/회원 관리 페이지 */}
+            <Route path="/staffs" element={<StaffListPage />} />
+            <Route path="/customers" element={<CustomerListPage />} />
 
             {/* 견적 관리 페이지: 권한별 분기 */}
             <Route path="/estimates" element={

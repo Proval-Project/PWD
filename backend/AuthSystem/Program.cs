@@ -133,6 +133,19 @@ using (var scope = app.Services.CreateScope())
             );
             context.SaveChanges();
         }
+        // ItemList 시드 (임의의 4개 아이템)
+        /*
+        if (!context.ItemLists.Any())
+        {
+            context.ItemLists.AddRange(
+                new ItemList { ItemCode = "1", ItemName = "아이템1", ItemDescription = "테스트용 아이템1" },
+                new ItemList { ItemCode = "2", ItemName = "아이템2", ItemDescription = "테스트용 아이템2" },
+                new ItemList { ItemCode = "3", ItemName = "아이템3", ItemDescription = "테스트용 아이템3" },
+                new ItemList { ItemCode = "4", ItemName = "아이템4", ItemDescription = "테스트용 아이템4" }
+            );
+            context.SaveChanges();
+        }
+        */
         // 기본 관리자 시드
         if (!context.Users.Any(u => u.Email == "admin@example.com"))
         {
