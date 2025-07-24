@@ -307,14 +307,17 @@ public class DataController : ControllerBase
         };
         _context.EstimateSheetLv1s.Add(est);
 
-        // 3. DataSheetLv3(상세) 여러 ItemCode/TagNo로 생성 (SheetNo는 자동 생성)
+        // 3. DataSheetLv3(상세) 여러 ItemCode/TagNo로 생성 (SheetID는 자동 생성)
+        int sheetID = 0;
         foreach (var item in dto.Items)
         {
+            sheetID++;
             var data = new DataSheetLv3
             {
                 TagNo = item.TagNo,
                 ItemCode = item.ItemCode,
                 EstimateNo = newEstimateNo,
+                SheetID = sheetID, // 1부터 순차적으로 할당
                 UnitPrice = 0,
                 Quantity = 0
             };

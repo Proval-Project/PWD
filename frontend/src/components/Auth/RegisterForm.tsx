@@ -22,7 +22,6 @@ const RegisterForm: React.FC = () => {
     position: '',
     phoneNumber: '',
     name: '',
-    itemCode: '1'
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -62,14 +61,13 @@ const RegisterForm: React.FC = () => {
         position: formData.position,
         phoneNumber: formData.phoneNumber,
         name: formData.name,
-        itemCode: formData.itemCode
       };
       const response = await register(payload);
       setSuccess('회원가입이 완료되었습니다. 관리자 승인 후 로그인이 가능합니다.');
       setFormData({
         userID: '', email: '', password: '', confirmPassword: '', role: 'Customer',
         companyName: '', businessNumber: '', address: '', companyPhone: '',
-        department: '', position: '', phoneNumber: '', name: '', itemCode: '1'
+        department: '', position: '', phoneNumber: '', name: '',
       });
     } catch (err: any) {
       setError(err.response?.data?.message || '회원가입에 실패했습니다.');
@@ -89,15 +87,6 @@ const RegisterForm: React.FC = () => {
       <div className="form-group">
         <label htmlFor="email">이메일</label>
         <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} required className="form-input" />
-      </div>
-      <div className="form-group">
-        <label htmlFor="itemCode">ItemCode</label>
-        <select id="itemCode" name="itemCode" value={formData.itemCode} onChange={handleChange} className="form-input">
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-        </select>
       </div>
       <div className="form-group">
         <label htmlFor="password">비밀번호</label>
