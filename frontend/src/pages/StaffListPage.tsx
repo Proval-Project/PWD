@@ -77,7 +77,10 @@ const StaffListPage: React.FC = () => {
         if (!res.ok) throw new Error('직원 조회 실패');
         return res.json();
       })
-      .then(data => setStaffs(data))
+      .then(data => {
+        const filtered = data.filter((user: any) => user.roleID === 3);
+        setStaffs(filtered);
+      })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
   }, []);

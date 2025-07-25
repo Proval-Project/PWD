@@ -61,11 +61,15 @@ function App() {
               {user && user.roleName === 'Admin' && (
                 <>
                   <Link to="/staffs" className="nav-link">직원 관리</Link>
-                  <Link to="/customers" className="nav-link">회원 관리</Link>
+                  <Link to="/customers" className="nav-link">고객 관리</Link>
                 </>
               )}
-              <Link to="/estimates" className="nav-link">견적 관리</Link>
-              <Link to="/stats" className="nav-link">통계</Link>
+              {user && (
+                <>
+                  <Link to="/estimates" className="nav-link">견적 관리</Link>
+                  <Link to="/stats" className="nav-link">통계</Link>
+                </>
+              )}
               {user && (
                 <button onClick={handleLogout} className="nav-link logout-btn">로그아웃</button>
               )}
@@ -82,8 +86,8 @@ function App() {
                 <div className="feature-grid">
                   {user && user.roleName === 'Admin' && (
                     <div className="feature-card">
-                      <h3>회원 관리</h3>
-                      <p>회원 정보 조회 및 관리</p>
+                      <h3>고객 관리</h3>
+                      <p>고객 정보 조회 및 관리</p>
                       <Link to="/users" className="feature-link">바로가기</Link>
                     </div>
                   )}
