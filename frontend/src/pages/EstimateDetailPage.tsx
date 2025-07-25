@@ -32,7 +32,13 @@ const EstimateDetailPage: React.FC = () => {
 
       setDataSheets(res.data);
       // itemCode, tagNo 순서 정보 추출
-      const itemCodes = Array.from(new Set(res.data.map((d: DataSheet) => d.itemCode))) as string[];
+      let itemCodes = Array.from(new Set(res.data.map((d: DataSheet) => d.itemCode))) as string[];
+      // 각 itemCode별 최소 sheetNo를 찾아서 정렬
+      itemCodes = itemCodes.sort((a, b) => {
+        const aMin = Math.min(...res.data.filter((d: DataSheet) => d.itemCode === a).map((d: DataSheet) => d.sheetNo ?? 0));
+        const bMin = Math.min(...res.data.filter((d: DataSheet) => d.itemCode === b).map((d: DataSheet) => d.sheetNo ?? 0));
+        return aMin - bMin;
+      });
       setItemOrder(itemCodes);
       // 최초 로딩 시 sheetIds 초기화 (SheetNo 순서로 정렬)
       const initialSheetIds: { [itemCode: string]: number[] } = {};
@@ -82,15 +88,15 @@ const EstimateDetailPage: React.FC = () => {
 
   // 저장 버튼 클릭 시 SheetNo 업데이트
   const handleSaveOrder = async () => {
-    if (!selectedItemCode) return;
+    if (!itemOrder.length) return;
     setSaving(true);
     try {
       let updates: { estimateNo: string; sheetID: number; SheetNo: number }[] = [];
       let sheetNo = 1;
+      // itemOrder 순서대로, 각 itemCode별 sheetIdList 순서대로 SheetNo를 1부터 연속적으로 할당
       itemOrder.forEach(itemCode => {
         const sheetIdList = sheetIds[itemCode] || [];
         sheetIdList.forEach(sheetId => {
-          // SheetID로 직접 업데이트 정보 생성
           updates.push({ estimateNo: id!, sheetID: sheetId, SheetNo: sheetNo++ });
         });
       });
@@ -118,7 +124,7 @@ const EstimateDetailPage: React.FC = () => {
               ) : (
                 <div>
                   {itemOrder.map((code, idx) => (
-                    <Draggable key={code} draggableId={code} index={idx}>
+                    <Draggable key={`itemCode-${code}`} draggableId={`itemCode-${code}`} index={idx}>
                       {(prov) => (
                         <div
                           ref={prov.innerRef}
@@ -140,7 +146,7 @@ const EstimateDetailPage: React.FC = () => {
                           }}
                           onClick={() => setSelectedItemCode(code)}
                         >
-                          {code}{selectedItemCode === code ? ' (클릭)' : ''}
+                          {code}
                         </div>
                       )}
                     </Draggable>
@@ -166,7 +172,7 @@ const EstimateDetailPage: React.FC = () => {
                     const row = dataSheets.find(d => d.sheetID === sheetId);
                     const tagNo = row ? row.tagNo : '';
                     return (
-                      <Draggable key={sheetId} draggableId={String(sheetId)} index={idx}>
+                      <Draggable key={`tagNo-${sheetId}`} draggableId={`tagNo-${sheetId}`} index={idx}>
                         {(prov) => (
                           <div
                             ref={prov.innerRef}
