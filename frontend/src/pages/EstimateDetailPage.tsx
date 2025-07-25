@@ -4,52 +4,64 @@ import axios from 'axios';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
 interface DataSheet {
-  SheetID: number;
+  sheetID: number;
   tagNo: string;
   itemCode: string;
-  SheetNo?: number;
+  sheetNo?: number;
 }
 
 const EstimateDetailPage: React.FC = () => {
   const { id } = useParams(); // 견적번호
   const [dataSheets, setDataSheets] = useState<DataSheet[]>([]);
   const [itemOrder, setItemOrder] = useState<string[]>([]); // itemCode 순서
-  const [tagOrder, setTagOrder] = useState<string[]>([]); // tagNo 순서(선택된 itemCode)
+  const [sheetIds, setSheetIds] = useState<{ [itemCode: string]: number[] }>({}); // itemCode별 SheetID 순서
   const [selectedItemCode, setSelectedItemCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
+  // 데이터 재조회 함수
+  const fetchData = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await axios.get(`/api/data/datasheet`, {
+        baseURL: 'http://localhost:5162',
+        params: { estimateNo: id }
+      });
+
+      setDataSheets(res.data);
+      // itemCode, tagNo 순서 정보 추출
+      const itemCodes = Array.from(new Set(res.data.map((d: DataSheet) => d.itemCode))) as string[];
+      setItemOrder(itemCodes);
+      // 최초 로딩 시 sheetIds 초기화 (SheetNo 순서로 정렬)
+      const initialSheetIds: { [itemCode: string]: number[] } = {};
+      itemCodes.forEach(code => {
+        const rows = res.data.filter((d: DataSheet) => d.itemCode === code);
+        // sheetNo 순서로 정렬 후 sheetID 추출
+        rows.sort((a: DataSheet, b: DataSheet) => (a.sheetNo || 0) - (b.sheetNo || 0));
+        initialSheetIds[code] = rows.map((d: DataSheet) => d.sheetID);
+      });
+      setSheetIds(initialSheetIds);
+      if (itemCodes.length > 0 && !selectedItemCode) setSelectedItemCode(itemCodes[0] as string);
+    } catch (err: any) {
+      setError(err.response?.data?.message || '데이터를 불러오지 못했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const res = await axios.get(`/api/data/datasheet`, {
-          baseURL: 'http://localhost:5162',
-          params: { estimateNo: id }
-        });
-        setDataSheets(res.data);
-        // itemCode, tagNo 순서 정보 추출
-        const itemCodes = Array.from(new Set(res.data.map((d: DataSheet) => d.itemCode))) as string[];
-        setItemOrder(itemCodes);
-        if (itemCodes.length > 0 && !selectedItemCode) setSelectedItemCode(itemCodes[0] as string);
-      } catch (err: any) {
-        setError(err.response?.data?.message || '데이터를 불러오지 못했습니다.');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
     // eslint-disable-next-line
   }, [id]);
 
-  // tagOrder는 선택된 itemCode가 바뀔 때마다 갱신
-  useEffect(() => {
-    if (!selectedItemCode) return;
-    const tags = dataSheets.filter(d => d.itemCode === selectedItemCode).map(d => d.tagNo);
-    setTagOrder(tags);
-  }, [selectedItemCode, dataSheets]);
+  // SheetID 순서를 가져와서 해당하는 tagNo들을 표시용으로 변환
+  const sheetIdOrder = sheetIds[selectedItemCode ?? ''] || [];
+  const tagNoOrder = sheetIdOrder.map(sheetId => {
+    const row = dataSheets.find(d => d.sheetID === sheetId);
+    return row ? row.tagNo : '';
+  }).filter(tagNo => tagNo !== '');
 
   // 드래그&드롭 핸들러
   const onDragEnd = (result: DropResult) => {
@@ -60,10 +72,11 @@ const EstimateDetailPage: React.FC = () => {
       newOrder.splice(result.destination.index, 0, removed);
       setItemOrder(newOrder);
     } else if (result.type === 'tagNo') {
-      const newOrder = Array.from(tagOrder);
+      const newOrder = Array.from(sheetIdOrder);
       const [removed] = newOrder.splice(result.source.index, 1);
       newOrder.splice(result.destination.index, 0, removed);
-      setTagOrder(newOrder);
+      // sheetIds에 반영
+      setSheetIds(prev => ({ ...prev, [selectedItemCode!]: newOrder }));
     }
   };
 
@@ -72,25 +85,24 @@ const EstimateDetailPage: React.FC = () => {
     if (!selectedItemCode) return;
     setSaving(true);
     try {
-      // itemCode 순서 업데이트
-      let updates: { SheetID: number; SheetNo: number }[] = [];
-      // itemCode별로 tagNo 순서도 업데이트
-      itemOrder.forEach((itemCode, i) => {
-        const tags = itemCode === selectedItemCode ? tagOrder : dataSheets.filter(d => d.itemCode === itemCode).map(d => d.tagNo);
-        tags.forEach((tagNo, j) => {
-          const row = dataSheets.find(d => d.itemCode === itemCode && d.tagNo === tagNo);
-          if (row) {
-            updates.push({ SheetID: row.SheetID, SheetNo: j + 1 });
-          }
+      let updates: { estimateNo: string; sheetID: number; SheetNo: number }[] = [];
+      let sheetNo = 1;
+      itemOrder.forEach(itemCode => {
+        const sheetIdList = sheetIds[itemCode] || [];
+        sheetIdList.forEach(sheetId => {
+          // SheetID로 직접 업데이트 정보 생성
+          updates.push({ estimateNo: id!, sheetID: sheetId, SheetNo: sheetNo++ });
         });
       });
       await axios.put('/api/data/datasheet/order', updates, { baseURL: 'http://localhost:5162' });
       alert('순서가 저장되었습니다.');
+      await fetchData(); // 저장 후 데이터 재조회
     } catch (err: any) {
       alert('저장 실패: ' + (err.response?.data?.message || err.message));
     } finally {
       setSaving(false);
     }
+
   };
 
   return (
@@ -146,37 +158,41 @@ const EstimateDetailPage: React.FC = () => {
               <h3>TagNo List</h3>
               {selectedItemCode === null ? (
                 <div>ItemCode를 선택하세요.</div>
-              ) : tagOrder.length === 0 ? (
+              ) : tagNoOrder.length === 0 ? (
                 <div>TagNo 없음</div>
               ) : (
                 <div>
-                  {tagOrder.map((tag, idx) => (
-                    <Draggable key={tag} draggableId={tag} index={idx}>
-                      {(prov) => (
-                        <div
-                          ref={prov.innerRef}
-                          {...prov.draggableProps}
-                          {...prov.dragHandleProps}
-                          style={{
-                            userSelect: 'none',
-                            padding: 16,
-                            margin: '0 0 8px 0',
-                            minHeight: '40px',
-                            backgroundColor: '#888',
-                            color: 'white',
-                            fontSize: 18,
-                            borderRadius: 6,
-                            border: '1px solid #888',
-                            cursor: 'grab',
-                            ...prov.draggableProps.style
-                          }}
-                          onClick={() => alert(`TagNo 상세: ${tag}`)}
-                        >
-                          {tag}
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
+                  {sheetIdOrder.map((sheetId, idx) => {
+                    const row = dataSheets.find(d => d.sheetID === sheetId);
+                    const tagNo = row ? row.tagNo : '';
+                    return (
+                      <Draggable key={sheetId} draggableId={String(sheetId)} index={idx}>
+                        {(prov) => (
+                          <div
+                            ref={prov.innerRef}
+                            {...prov.draggableProps}
+                            {...prov.dragHandleProps}
+                            style={{
+                              userSelect: 'none',
+                              padding: 16,
+                              margin: '0 0 8px 0',
+                              minHeight: '40px',
+                              backgroundColor: '#888',
+                              color: 'white',
+                              fontSize: 18,
+                              borderRadius: 6,
+                              border: '1px solid #888',
+                              cursor: 'grab',
+                              ...prov.draggableProps.style
+                            }}
+                            onClick={() => alert(`TagNo 상세: ${tagNo} (sheetID: ${sheetId})`)}
+                          >
+                            {tagNo}
+                          </div>
+                        )}
+                      </Draggable>
+                    );
+                  })}
                   {provided.placeholder}
                 </div>
               )}

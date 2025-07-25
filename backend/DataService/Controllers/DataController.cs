@@ -233,7 +233,17 @@ public class DataController : ControllerBase
         {
             query = query.Where(d => d.EstimateNo == estimateNo);
         }
-        var list = await query.ToListAsync();
+        var list = await query
+            .Select(d => new {
+                d.EstimateNo,
+                d.SheetID,
+                d.SheetNo,
+                d.TagNo,
+                d.ItemCode,
+                d.UnitPrice,
+                d.Quantity
+            })
+            .ToListAsync();
         return Ok(list);
     }
 
@@ -242,10 +252,15 @@ public class DataController : ControllerBase
     {
         foreach (var o in orders)
         {
-            var row = await _context.DataSheetLv3s.FindAsync(o.sheetID);
+            var row = await _context.DataSheetLv3s.FindAsync(o.estimateNo, o.sheetID);
             if (row != null)
             {
                 row.SheetNo = o.sheetNo;
+                Console.WriteLine($"Updated: {row.EstimateNo}, {row.SheetID} => SheetNo={row.SheetNo}");
+            }
+            else
+            {
+                Console.WriteLine($"Not found: {o.estimateNo}, {o.sheetID}");
             }
         }
         await _context.SaveChangesAsync();
@@ -307,7 +322,7 @@ public class DataController : ControllerBase
         };
         _context.EstimateSheetLv1s.Add(est);
 
-        // 3. DataSheetLv3(상세) 여러 ItemCode/TagNo로 생성 (SheetID는 자동 생성)
+        // 3. DataSheetLv3(상세) 여러 ItemCode/TagNo로 생성 (SheetID는 row 고유, SheetNo는 최초 순서만 할당)
         int sheetID = 0;
         foreach (var item in dto.Items)
         {
@@ -317,7 +332,8 @@ public class DataController : ControllerBase
                 TagNo = item.TagNo,
                 ItemCode = item.ItemCode,
                 EstimateNo = newEstimateNo,
-                SheetID = sheetID, // 1부터 순차적으로 할당
+                SheetID = sheetID, // 1부터 순차적으로 할당(불변)
+                SheetNo = sheetID,  // 최초 생성 시에만 순서로 할당, 이후에는 순서 변경 API로만 바뀜
                 UnitPrice = 0,
                 Quantity = 0
             };
@@ -365,6 +381,7 @@ public class CustomerEstimateInputDto
 
 public class SheetNoOrderDto
 {
+    public string estimateNo { get; set; }
     public int sheetID { get; set; }
     public int sheetNo { get; set; }
 } 
