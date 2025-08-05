@@ -13,6 +13,7 @@ export const login = async (userID: string, password: string) => {
 
 // 회원가입 (RegisterRequest DTO에 맞게 타입 수정)
 export interface RegisterRequest {
+  userID: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -29,6 +30,14 @@ export interface RegisterRequest {
 
 export const register = async (userData: RegisterRequest) => {
   const response = await axios.post(`${API_BASE_URL}/auth/register`, userData);
+  return response.data;
+};
+
+// 아이디 찾기
+export const findId = async (email: string) => {
+  const response = await axios.post(`${API_BASE_URL}/auth/find-id`, {
+    email
+  });
   return response.data;
 };
 

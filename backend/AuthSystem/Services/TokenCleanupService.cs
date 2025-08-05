@@ -1,8 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using CommonDbLib;
 using Microsoft.EntityFrameworkCore;
+using FullAuthSystem.Data;
 
 namespace FullAuthSystem.Services
 {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
 
 // Auth Pages
@@ -8,25 +8,21 @@ import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 
-// User Pages
-import UsersPage from './pages/UsersPage';
-import UserDetailPage from './pages/UserDetailPage';
-import StaffListPage from './pages/StaffListPage';
-import CustomerListPage from './pages/CustomerListPage';
+// Dashboard Layout
+import DashboardLayout from './components/Dashboard/DashboardLayout';
 
-// Estimate Pages
-import EstimatesPage from './pages/EstimatesPage';
-import EstimateDetailPage from './pages/EstimateDetailPage';
-
-// Stats Pages
-import StatsPage from './pages/StatsPage';
-
-// Admin Pages
-import AdminMainPage from './pages/AdminMainPage';
-import SalesMainPage from './pages/SalesMainPage';
-import CustomerMainPage from './pages/CustomerMainPage';
-import CustomerEstimatesPage from './pages/CustomerEstimatesPage';
-import AdminEstimatesPage from './pages/AdminEstimatesPage';
+// Dashboard Pages
+import StatisticsPage from './pages/Dashboard/StatisticsPage';
+import CustomerManagementPage from './pages/Dashboard/CustomerManagementPage';
+import StaffManagementPage from './pages/Dashboard/StaffManagementPage';
+import MembershipRequestsPage from './pages/Dashboard/MembershipRequestsPage';
+import EstimateRequestsPage from './pages/Dashboard/EstimateRequestsPage';
+import PersonalInfoPage from './pages/Dashboard/PersonalInfoPage';
+import EstimateRequestPage from './pages/Dashboard/EstimateRequestPage';
+import EstimateInquiryPage from './pages/Dashboard/EstimateInquiryPage';
+import EstimateManagementPage from './pages/Dashboard/EstimateManagementPage';
+import TemporaryStoragePage from './pages/Dashboard/TemporaryStoragePage';
+import AccessoryManagementPage from './pages/Dashboard/AccessoryManagementPage';
 
 function App() {
   const [user, setUser] = useState<any>(null);
@@ -47,95 +43,94 @@ function App() {
     window.location.href = '/login';
   };
 
-  return (
-    <Router>
-      <div className="App">
-        <nav className="navbar">
-          <div className="nav-container">
-            <h1 className="nav-title">관리 시스템</h1>
-            <div className="nav-links">
-              <Link to="/" className="nav-link">홈</Link>
-              {!user && <Link to="/login" className="nav-link">로그인</Link>}
-              {!user && <Link to="/register" className="nav-link">회원가입</Link>}
-              {/* 관리자만 직원/회원 관리 메뉴 노출 */}
-              {user && user.roleName === 'Admin' && (
-                <>
-                  <Link to="/staffs" className="nav-link">직원 관리</Link>
-                  <Link to="/customers" className="nav-link">고객 관리</Link>
-                </>
-              )}
-              {user && (
-                <>
-                  <Link to="/estimates" className="nav-link">견적 관리</Link>
-                  <Link to="/stats" className="nav-link">통계</Link>
-                </>
-              )}
-              {user && (
-                <button onClick={handleLogout} className="nav-link logout-btn">로그아웃</button>
-              )}
+  // 로그인하지 않은 경우 기본 홈페이지 표시
+  if (!user) {
+    return (
+      <Router>
+        <div className="App">
+          <nav className="navbar">
+            <div className="nav-container">
+              <h1 className="nav-title">컨트롤 밸브 견적 시스템</h1>
+              <div className="nav-links">
+                <Link to="/" className="nav-link">홈</Link>
+                <Link to="/login" className="nav-link">로그인</Link>
+                <Link to="/register" className="nav-link">회원가입</Link>
+              </div>
             </div>
-          </div>
-        </nav>
+          </nav>
 
-        <main className="main-content">
-          <Routes>
-            {/* 홈 페이지 */}
-            <Route path="/" element={
-              <div className="home-page">
-                <h2>관리 시스템에 오신 것을 환영합니다</h2>
-                <div className="feature-grid">
-                  {user && user.roleName === 'Admin' && (
+          <main className="main-content">
+            <Routes>
+              <Route path="/" element={
+                <div className="home-page">
+                  <h2>컨트롤 밸브 견적 시스템에 오신 것을 환영합니다</h2>
+                  <div className="feature-grid">
                     <div className="feature-card">
-                      <h3>고객 관리</h3>
-                      <p>고객 정보 조회 및 관리</p>
-                      <Link to="/users" className="feature-link">바로가기</Link>
+                      <h3>인증 관리</h3>
+                      <p>로그인 및 회원가입</p>
+                      <Link to="/login" className="feature-link">바로가기</Link>
                     </div>
-                  )}
-                  <div className="feature-card">
-                    <h3>견적 관리</h3>
-                    <p>견적 정보 조회 및 관리</p>
-                    <Link to="/estimates" className="feature-link">바로가기</Link>
-                  </div>
-                  <div className="feature-card">
-                    <h3>통계</h3>
-                    <p>시스템 통계 및 분석</p>
-                    <Link to="/stats" className="feature-link">바로가기</Link>
+                    <div className="feature-card">
+                      <h3>아이디 찾기</h3>
+                      <p>이메일로 아이디 찾기</p>
+                      <Link to="/forgot-password" className="feature-link">바로가기</Link>
+                    </div>
+                    <div className="feature-card">
+                      <h3>비밀번호 재설정</h3>
+                      <p>이메일 인증을 통한 비밀번호 재설정</p>
+                      <Link to="/forgot-password" className="feature-link">바로가기</Link>
+                    </div>
                   </div>
                 </div>
-              </div>
-            } />
+              } />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+            </Routes>
+          </main>
+        </div>
+      </Router>
+    );
+  }
 
-            {/* 인증 관련 페이지 */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
+  // 로그인한 경우 대시보드 표시
+  return (
+    <Router>
+      <Routes>
+        {/* 대시보드 레이아웃이 적용된 라우트들 */}
+        <Route path="/" element={<DashboardLayout userRole={user.roleId} />}>
+          <Route index element={<StatisticsPage />} />
+          <Route path="statistics" element={<StatisticsPage />} />
+          <Route path="customer-management" element={<CustomerManagementPage />} />
+          <Route path="staff-management" element={<StaffManagementPage />} />
+          <Route path="membership-requests" element={<MembershipRequestsPage />} />
+          <Route path="estimate-requests" element={<EstimateRequestsPage />} />
+          <Route path="personal-info" element={<PersonalInfoPage />} />
+          <Route path="estimate-request" element={<EstimateRequestPage />} />
+          <Route path="estimate-inquiry" element={<EstimateInquiryPage />} />
+          <Route path="estimate-management" element={<EstimateManagementPage />} />
+          <Route path="temporary-storage" element={<TemporaryStoragePage />} />
+          <Route path="accessory-management" element={<AccessoryManagementPage />} />
+        </Route>
 
-            {/* 사용자 관리 페이지 */}
-            <Route path="/users" element={<UsersPage />} />
-            <Route path="/users/:id" element={<UserDetailPage />} />
+        {/* 권한별 메인 페이지 라우트들 */}
+        <Route path="/admin" element={<DashboardLayout userRole={user.roleId} />}>
+          <Route index element={<StatisticsPage />} />
+        </Route>
+        <Route path="/sales" element={<DashboardLayout userRole={user.roleId} />}>
+          <Route index element={<StatisticsPage />} />
+        </Route>
+        <Route path="/customer" element={<DashboardLayout userRole={user.roleId} />}>
+          <Route index element={<PersonalInfoPage />} />
+        </Route>
 
-            {/* 직원/회원 관리 페이지 */}
-            <Route path="/staffs" element={<StaffListPage />} />
-            <Route path="/customers" element={<CustomerListPage />} />
-
-            {/* 견적 관리 페이지: 권한별 분기 */}
-            <Route path="/estimates" element={
-              user && user.roleName === 'Customer' ? <CustomerEstimatesPage /> : <AdminEstimatesPage />
-            } />
-            <Route path="/estimates/:id" element={<EstimateDetailPage />} />
-
-            {/* 통계 페이지 */}
-            <Route path="/stats" element={<StatsPage />} />
-
-            {/* 권한별 메인 페이지 */}
-            <Route path="/admin" element={<AdminMainPage />} />
-            <Route path="/sales" element={<SalesMainPage />} />
-            <Route path="/customer" element={<CustomerMainPage />} />
-            <Route path="/customer/estimates" element={<CustomerEstimatesPage />} />
-          </Routes>
-        </main>
-      </div>
+        {/* AuthSystem 관련 라우트들 */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+      </Routes>
     </Router>
   );
 }

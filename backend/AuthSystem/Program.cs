@@ -2,44 +2,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using CommonDbLib;
 using FullAuthSystem.Services;
+using FullAuthSystem.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "FullAuthSystem API", Version = "v1" });
-    
-    // JWT 인증 설정 추가
-    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-        Name = "Authorization",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-    
-    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-    {
-        {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-            {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
-    });
-});
+builder.Services.AddSwaggerGen();
 
 // Entity Framework 설정 - MySQL 사용
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -48,9 +19,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // 이메일 서비스 등록
 builder.Services.AddScoped<IEmailService, EmailService>();
-
-// Background Service 등록
-builder.Services.AddHostedService<TokenCleanupService>();
 
 // JWT 인증 설정
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -95,8 +63,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// app.UseHttpsRedirection(); // 개발 환경에서는 HTTPS 리다이렉션 비활성화
-
 // CORS 미들웨어 추가
 app.UseCors("AllowAll");
 
@@ -107,49 +73,32 @@ app.UseAuthorization();
 // 컨트롤러 라우팅 추가
 app.MapControllers();
 
-// 데이터베이스 마이그레이션 및 시드 데이터 생성
+// 데이터베이스 초기화
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
         var context = services.GetRequiredService<AppDbContext>();
-        try
-        {
-            context.Database.Migrate();
-        }
-        catch (Exception migrationEx)
-        {
-            var logger = services.GetRequiredService<ILogger<Program>>();
-            logger.LogWarning(migrationEx, "마이그레이션 중 오류가 발생했지만 애플리케이션을 계속 실행합니다.");
-        }
+        
+        // 데이터베이스 생성
+        context.Database.EnsureCreated();
+        
         // 기본 역할 시드
         if (!context.Roles.Any())
         {
             context.Roles.AddRange(
-                new Role { RoleID = 1, RoleName = "Admin", Description = "관리자", IsActive = true },
-                new Role { RoleID = 2, RoleName = "Sales", Description = "영업", IsActive = true },
-                new Role { RoleID = 3, RoleName = "Customer", Description = "고객", IsActive = true }
+                new FullAuthSystem.Models.Role { RoleID = 1, RoleName = "Admin", Description = "관리자" },
+                new FullAuthSystem.Models.Role { RoleID = 2, RoleName = "Sales", Description = "영업" },
+                new FullAuthSystem.Models.Role { RoleID = 3, RoleName = "Customer", Description = "고객" }
             );
             context.SaveChanges();
         }
-        // ItemList 시드 (임의의 4개 아이템)
-        /*
-        if (!context.ItemLists.Any())
-        {
-            context.ItemLists.AddRange(
-                new ItemList { ItemCode = "1", ItemName = "아이템1", ItemDescription = "테스트용 아이템1" },
-                new ItemList { ItemCode = "2", ItemName = "아이템2", ItemDescription = "테스트용 아이템2" },
-                new ItemList { ItemCode = "3", ItemName = "아이템3", ItemDescription = "테스트용 아이템3" },
-                new ItemList { ItemCode = "4", ItemName = "아이템4", ItemDescription = "테스트용 아이템4" }
-            );
-            context.SaveChanges();
-        }
-        */
+        
         // 기본 관리자 시드
         if (!context.Users.Any(u => u.Email == "admin@example.com"))
         {
-            // 실제 인증 코드와 동일한 해시 생성 방식 사용
+            // AuthController와 동일한 해시 방식 사용
             string adminPasswordHash;
             using (var sha = System.Security.Cryptography.SHA256.Create())
             {
@@ -158,16 +107,21 @@ using (var scope = app.Services.CreateScope())
                 adminPasswordHash = Convert.ToBase64String(hash);
             }
             
-            context.Users.Add(new User
+            context.Users.Add(new FullAuthSystem.Models.User
             {
                 UserID = "admin@example.com",
                 Email = "admin@example.com",
                 Name = "관리자 계정",
                 IsApproved = true,
-                IsActive = true,
                 Password = adminPasswordHash,
-                CreatedAt = DateTime.UtcNow,
-                RoleID = 1
+                RoleID = 1,
+                CompanyName = "관리자회사",
+                CompanyPhone = "010-1234-5678",
+                Position = "관리자",
+                Department = "관리부",
+                BusinessNumber = "123-45-67890",
+                Address = "서울시 강남구",
+                PhoneNumber = "010-1234-5678"
             });
             context.SaveChanges();
         }
@@ -180,8 +134,3 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

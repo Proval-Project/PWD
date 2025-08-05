@@ -1,0 +1,26 @@
+.page {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page h1 {
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.page p {
+  color: #666;
+  margin-bottom: 20px;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.page h3 {
+  color: #333;
+  margin-bottom: 10px;
+  font-size: 18px;
+  font-weight: 500;
+} 

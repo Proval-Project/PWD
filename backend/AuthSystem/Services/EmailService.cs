@@ -139,12 +139,12 @@ FullAuthSystem 팀
             FullAuthSystem 팀";
         }
 
-        public async Task<bool> SendIdInfoEmailAsync(string email)
+        public async Task<bool> SendIdInfoEmailAsync(string email, string userID)
         {
             try
             {
                 var subject = "아이디 안내";
-                var body = GenerateIdInfoEmailBody(email);
+                var body = GenerateIdInfoEmailBody(userID);
                 return await SendEmailAsync(email, subject, body);
             }
             catch (Exception ex)
@@ -154,13 +154,13 @@ FullAuthSystem 팀
             }
         }
 
-        private string GenerateIdInfoEmailBody(string email)
+        private string GenerateIdInfoEmailBody(string userID)
         {
             return $@"안녕하세요,
             
-            요청하신 아이디(이메일)는 다음과 같습니다.
+            요청하신 아이디는 다음과 같습니다.
             
-            아이디: {email}
+            아이디: {userID}
             
             감사합니다.
             FullAuthSystem 팀";

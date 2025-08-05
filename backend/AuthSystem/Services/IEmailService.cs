@@ -5,6 +5,6 @@ namespace FullAuthSystem.Services
         Task<bool> SendPasswordResetEmailAsync(string email, string verificationCode);
         Task<bool> SendEmailAsync(string to, string subject, string body);
         Task<bool> SendApprovalEmailAsync(string email);
-        Task<bool> SendIdInfoEmailAsync(string email);
+        Task<bool> SendIdInfoEmailAsync(string email, string userID);
     }
 } 
