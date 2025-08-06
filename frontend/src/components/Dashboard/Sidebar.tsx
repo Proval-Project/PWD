@@ -46,13 +46,7 @@ const menuItems: MenuItem[] = [
     path: '/estimate-requests',
     roles: [1, 2] // Admin, Staff
   },
-  {
-    id: 'personal-info',
-    label: '개인정보 관리',
-    icon: '👤',
-    path: '/personal-info',
-    roles: [1, 2, 3] // All roles
-  },
+
   {
     id: 'estimate-request',
     label: '견적요청',

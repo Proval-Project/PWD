@@ -95,8 +95,8 @@ using (var scope = app.Services.CreateScope())
             context.SaveChanges();
         }
         
-        // 기본 관리자 시드
-        if (!context.Users.Any(u => u.Email == "admin@example.com"))
+        // 기본 관리자 시드 - 이미 존재하는 경우 건너뛰기
+        if (!context.Users.Any(u => u.Email == "admin@example.com") && !context.Users.Any(u => u.PhoneNumber == "010-1234-5678"))
         {
             // AuthController와 동일한 해시 방식 사용
             string adminPasswordHash;

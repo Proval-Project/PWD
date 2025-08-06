@@ -3,7 +3,7 @@ import React from 'react';
 const EstimateRequestsPage: React.FC = () => {
   return (
     <div className="page">
-      <h1>📋 전체 견적 요청 관리</h1>
+      <h1>📋 견적 요청 관리</h1>
       <p>이 페이지는 모든 견적 요청을 관리합니다.</p>
       <div style={{ padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '8px', marginTop: '20px' }}>
         <h3>간이 페이지입니다</h3>

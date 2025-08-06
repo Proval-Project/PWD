@@ -14,11 +14,14 @@ import DashboardLayout from './components/Dashboard/DashboardLayout';
 // Dashboard Pages
 import StatisticsPage from './pages/Dashboard/StatisticsPage';
 import CustomerManagementPage from './pages/Dashboard/CustomerManagementPage';
+import CustomerDetailPage from './pages/Dashboard/CustomerDetailPage';
 import StaffManagementPage from './pages/Dashboard/StaffManagementPage';
+import StaffDetailPage from './pages/Dashboard/StaffDetailPage';
 import MembershipRequestsPage from './pages/Dashboard/MembershipRequestsPage';
 import EstimateRequestsPage from './pages/Dashboard/EstimateRequestsPage';
-import PersonalInfoPage from './pages/Dashboard/PersonalInfoPage';
+
 import EstimateRequestPage from './pages/Dashboard/EstimateRequestPage';
+import NewEstimateRequestPage from './pages/Dashboard/NewEstimateRequestPage';
 import EstimateInquiryPage from './pages/Dashboard/EstimateInquiryPage';
 import EstimateManagementPage from './pages/Dashboard/EstimateManagementPage';
 import TemporaryStoragePage from './pages/Dashboard/TemporaryStoragePage';
@@ -36,6 +39,7 @@ function App() {
     }
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -103,11 +107,14 @@ function App() {
           <Route index element={<StatisticsPage />} />
           <Route path="statistics" element={<StatisticsPage />} />
           <Route path="customer-management" element={<CustomerManagementPage />} />
+          <Route path="customer-detail/:customerId" element={<CustomerDetailPage />} />
           <Route path="staff-management" element={<StaffManagementPage />} />
+          <Route path="staff-detail/:staffId" element={<StaffDetailPage />} />
           <Route path="membership-requests" element={<MembershipRequestsPage />} />
           <Route path="estimate-requests" element={<EstimateRequestsPage />} />
-          <Route path="personal-info" element={<PersonalInfoPage />} />
+  
           <Route path="estimate-request" element={<EstimateRequestPage />} />
+          <Route path="estimate-request/new" element={<NewEstimateRequestPage />} />
           <Route path="estimate-inquiry" element={<EstimateInquiryPage />} />
           <Route path="estimate-management" element={<EstimateManagementPage />} />
           <Route path="temporary-storage" element={<TemporaryStoragePage />} />
@@ -122,7 +129,7 @@ function App() {
           <Route index element={<StatisticsPage />} />
         </Route>
         <Route path="/customer" element={<DashboardLayout userRole={user.roleId} />}>
-          <Route index element={<PersonalInfoPage />} />
+          <Route index element={<StatisticsPage />} />
         </Route>
 
         {/* AuthSystem 관련 라우트들 */}
