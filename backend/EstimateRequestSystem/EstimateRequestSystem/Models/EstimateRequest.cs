@@ -10,18 +10,21 @@ namespace EstimateRequestSystem.Models
         public int SheetID { get; set; }
         public string? EstimateNo { get; set; }
         public int SheetNo { get; set; }
-        public char? ValveType { get; set; }
+        public string? ValveType { get; set; }
         public string Tagno { get; set; } = string.Empty;
-        public string? Project { get; set; }
         public int? UnitPrice { get; set; }
         public int Qty { get; set; }
         public string? Medium { get; set; }
         public string? Fluid { get; set; }
         public bool? IsQM { get; set; }
-        public string? FlowRateUnit { get; set; }
-        public decimal? FlowRateMaxQ { get; set; }
-        public decimal? FlowRateNorQ { get; set; }
-        public decimal? FlowRateMinQ { get; set; }
+        public string? QMUnit { get; set; }
+        public decimal? QMMax { get; set; }
+        public decimal? QMNor { get; set; }
+        public decimal? QMMin { get; set; }
+        public string? QNUnit { get; set; }
+        public decimal? QNMax { get; set; }
+        public decimal? QNNor { get; set; }
+        public decimal? QNMin { get; set; }
         public bool? IsP2 { get; set; }
         public string? InletPressureUnit { get; set; }
         public decimal? InletPressureMaxQ { get; set; }
@@ -43,14 +46,13 @@ namespace EstimateRequestSystem.Models
         public decimal? Density { get; set; }
         public string? MolecularWeightUnit { get; set; }
         public decimal? MolecularWeight { get; set; }
-        public char? BodySizeUnit { get; set; }
+        public string? BodySizeUnit { get; set; }
         public string? BodySize { get; set; }
-        public char? BodyMat { get; set; }
-        public char? TrimMat { get; set; }
+        public string? BodyMat { get; set; }
+        public string? TrimMat { get; set; }
         public string? TrimOption { get; set; }
-        public char? BodyRatingUnit { get; set; }
-        public char? BodyRating { get; set; }
-        public char? ActType { get; set; }
+        public string? BodyRating { get; set; }
+        public string? ActType { get; set; }
         public bool? IsHW { get; set; }
         public bool? IsPositioner { get; set; }
         public string? PositionerType { get; set; }

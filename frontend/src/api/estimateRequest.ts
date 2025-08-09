@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const ESTIMATE_API_BASE_URL = 'http://localhost:5208/api';
+const ESTIMATE_API_BASE_URL = 'http://localhost:5135/api';
 
 // DTO 인터페이스들
 export interface CreateEstimateSheetDto {
@@ -216,4 +216,71 @@ export const downloadAttachment = async (attachmentID: number): Promise<Blob> =>
     responseType: 'blob',
   });
   return response.data;
+};
+
+// 새로운 API 함수들
+export const generateTempEstimateNo = async (): Promise<{ tempEstimateNo: string }> => {
+  const response = await axios.post(`${ESTIMATE_API_BASE_URL}/estimate/generate-temp-no`);
+  return response.data;
+};
+
+export const getBodyValveList = async () => {
+  const response = await axios.get('/api/estimate/body-valve-list');
+  return response.data;
+};
+
+export const getBodySizeList = async () => {
+  const response = await axios.get('/api/estimate/body-size-list');
+  return response.data;
+};
+
+export const getBodyMatList = async () => {
+  const response = await axios.get('/api/estimate/body-mat-list');
+  return response.data;
+};
+
+export const getTrimMatList = async () => {
+  const response = await axios.get('/api/estimate/trim-mat-list');
+  return response.data;
+};
+
+export const getTrimOptionList = async () => {
+  const response = await axios.get('/api/estimate/trim-option-list');
+  return response.data;
+};
+
+export const getBodyRatingList = async () => {
+  const response = await axios.get('/api/estimate/body-rating-list');
+  return response.data;
+};
+
+// Save Draft 및 Submit Estimate API 함수들
+export interface SaveDraftDto {
+  types: Array<{
+    valveSeries: string;
+    valveSeriesCode: string;
+    order: number;
+  }>;
+  valves: Array<{
+    valveSeries: string;
+    valveSeriesCode: string;
+    order: number;
+  }>;
+  specifications: {
+    project?: string;
+    customerRequirement?: string;
+    staffComment?: string;
+  };
+}
+
+export interface SubmitEstimateDto extends SaveDraftDto {
+  // Submit은 SaveDraft와 동일한 구조를 사용
+}
+
+export const saveDraft = async (tempEstimateNo: string, data: SaveDraftDto): Promise<void> => {
+  await axios.post(`${ESTIMATE_API_BASE_URL}/estimate/sheets/${tempEstimateNo}/save-draft`, data);
+};
+
+export const submitEstimate = async (tempEstimateNo: string, data: SubmitEstimateDto): Promise<void> => {
+  await axios.post(`${ESTIMATE_API_BASE_URL}/estimate/sheets/${tempEstimateNo}/submit`, data);
 }; 

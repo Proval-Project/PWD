@@ -5,10 +5,10 @@
 
 .dashboard-main {
   flex: 1;
-  margin-left: 280px; /* 사이드바 너비만큼 여백 */
+  margin-left: 220px; /* 사이드바 너비와 맞춤 */
   background-color: #ffffff;
   min-height: 100vh;
-  padding: 20px;
+  padding: 15px;
 }
 
 /* 반응형 디자인 */

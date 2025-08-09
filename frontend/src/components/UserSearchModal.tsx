@@ -27,8 +27,8 @@ const UserSearchModal: React.FC<UserSearchModalProps> = ({
       setLoading(true);
       setError(null);
       const results = await searchUsers(searchTerm);
-      // 관리자(roleID: 1)와 직원(roleID: 2)만 필터링
-      const filteredResults = results.filter(user => user.roleID === 1 || user.roleID === 2);
+      // 고객(roleID: 3)만 필터링
+      const filteredResults = results.filter(user => user.roleID === 3);
       setUsers(filteredResults);
     } catch (err: any) {
       console.error('사용자 검색 실패:', err);
@@ -74,7 +74,7 @@ const UserSearchModal: React.FC<UserSearchModalProps> = ({
           <div className="search-input">
             <input
               type="text"
-              placeholder="관리자/직원을 회사명, 이름, 이메일로 검색하세요..."
+              placeholder="고객을 회사명, 이름, 이메일로 검색하세요..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />

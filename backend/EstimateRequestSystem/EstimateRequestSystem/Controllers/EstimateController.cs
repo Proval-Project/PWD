@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using EstimateRequestSystem.Services;
 using EstimateRequestSystem.DTOs;
+using EstimateRequestSystem.Models;
 
 namespace EstimateRequestSystem.Controllers
 {
@@ -72,6 +73,142 @@ namespace EstimateRequestSystem.Controllers
                 return NotFound();
 
             return NoContent();
+        }
+
+        // 임시저장 기능
+        [HttpPost("sheets/{tempEstimateNo}/save-draft")]
+        public async Task<ActionResult> SaveDraft(string tempEstimateNo, [FromBody] SaveDraftDto dto)
+        {
+            try
+            {
+                var success = await _estimateService.SaveDraftAsync(tempEstimateNo, dto);
+                if (!success)
+                    return NotFound();
+
+                return Ok(new { message = "임시저장이 완료되었습니다." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // 견적요청 기능
+        [HttpPost("sheets/{tempEstimateNo}/submit")]
+        public async Task<ActionResult> SubmitEstimate(string tempEstimateNo, [FromBody] SubmitEstimateDto dto)
+        {
+            try
+            {
+                var success = await _estimateService.SubmitEstimateAsync(tempEstimateNo, dto);
+                if (!success)
+                    return NotFound();
+
+                return Ok(new { message = "견적요청이 완료되었습니다." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // TempEstimateNo 생성 API
+        [HttpPost("generate-temp-no")]
+        public async Task<ActionResult<object>> GenerateTempEstimateNo()
+        {
+            try
+            {
+                var tempEstimateNo = await _estimateService.GenerateTempEstimateNoAsync();
+                return Ok(new { tempEstimateNo });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // BodyValveList API
+        [HttpGet("body-valve-list")]
+        public async Task<IActionResult> GetBodyValveList()
+        {
+            try
+            {
+                var result = await _estimateService.GetBodyValveListAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("body-size-list")]
+        public async Task<IActionResult> GetBodySizeList()
+        {
+            try
+            {
+                var result = await _estimateService.GetBodySizeListAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("body-mat-list")]
+        public async Task<IActionResult> GetBodyMatList()
+        {
+            try
+            {
+                var result = await _estimateService.GetBodyMatListAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("trim-mat-list")]
+        public async Task<IActionResult> GetTrimMatList()
+        {
+            try
+            {
+                var result = await _estimateService.GetTrimMatListAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("trim-option-list")]
+        public async Task<IActionResult> GetTrimOptionList()
+        {
+            try
+            {
+                var result = await _estimateService.GetTrimOptionListAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("body-rating-list")]
+        public async Task<IActionResult> GetBodyRatingList()
+        {
+            try
+            {
+                var result = await _estimateService.GetBodyRatingListAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         // EstimateRequest operations
@@ -175,6 +312,16 @@ namespace EstimateRequestSystem.Controllers
             return NoContent();
         }
 
+        [HttpDelete("attachments/file")]
+        public async Task<ActionResult> DeleteFileByPath([FromBody] DeleteFileRequest request)
+        {
+            var success = await _estimateService.DeleteFileByPathAsync(request.FilePath);
+            if (!success)
+                return NotFound();
+
+            return NoContent();
+        }
+
         [HttpGet("attachments/{attachmentID}/download")]
         public async Task<ActionResult> DownloadAttachment(int attachmentID)
         {
@@ -191,5 +338,72 @@ namespace EstimateRequestSystem.Controllers
                 return NotFound();
             }
         }
+
+        // 견적 요청 조회 (검색, 필터링, 페이징)
+        [HttpGet("inquiry")]
+        public async Task<ActionResult<EstimateInquiryResponseDto>> GetEstimateInquiry(
+            [FromQuery] EstimateInquiryRequestDto request)
+        {
+            try
+            {
+                var result = await _estimateService.GetEstimateInquiryAsync(request);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // 견적 상태 업데이트
+        [HttpPut("sheets/{tempEstimateNo}/status")]
+        public async Task<ActionResult> UpdateEstimateStatus(string tempEstimateNo, [FromBody] UpdateStatusRequest request)
+        {
+            try
+            {
+                var status = EstimateStatusExtensions.FromInt(request.Status);
+                var result = await _estimateService.UpdateEstimateStatusAsync(tempEstimateNo, status);
+                
+                if (!result)
+                    return NotFound();
+
+                return Ok(new { message = "상태가 성공적으로 업데이트되었습니다." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // 담당자 지정
+        [HttpPut("sheets/{tempEstimateNo}/manager")]
+        public async Task<ActionResult> AssignManager(string tempEstimateNo, [FromBody] AssignManagerRequest request)
+        {
+            try
+            {
+                var result = await _estimateService.AssignManagerAsync(tempEstimateNo, request.ManagerID);
+                
+                if (!result)
+                    return BadRequest(new { message = "담당자 지정에 실패했습니다. 견적이 존재하지 않거나 유효하지 않은 담당자입니다." });
+
+                return Ok(new { message = "담당자가 성공적으로 지정되었습니다." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+    }
+
+    // 상태 업데이트 요청 DTO
+    public class UpdateStatusRequest
+    {
+        public int Status { get; set; }
+    }
+
+    // 담당자 지정 요청 DTO
+    public class AssignManagerRequest
+    {
+        public string ManagerID { get; set; } = string.Empty;
     }
 } 

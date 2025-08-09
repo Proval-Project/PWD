@@ -4,11 +4,12 @@ CREATE TABLE AccTypeList (
   AccTypeName VARCHAR(50) UNIQUE NOT NULL
 );
 
--- 2) 악세사리 메이커 리스트 (타입 포함)
+-- 2) 악세사리 메이커 리스트
 CREATE TABLE AccMakerList (
-  AccMakerCode CHAR(1) PRIMARY KEY,
+  AccMakerCode CHAR(1) NOT NULL,
   AccMakerName VARCHAR(100) NOT NULL,
   AccTypeCode CHAR(1) NOT NULL,
+  PRIMARY KEY (AccMakerCode, AccTypeCode),
   CONSTRAINT FK_AccMaker_AccType FOREIGN KEY (AccTypeCode) REFERENCES AccTypeList(AccTypeCode) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
@@ -21,10 +22,10 @@ CREATE TABLE AccModelList (
   AccSize VARCHAR(255),
   AccStatus BOOLEAN NOT NULL DEFAULT TRUE,
   CONSTRAINT FK_AccModel_AccType FOREIGN KEY (AccTypeCode) REFERENCES AccTypeList(AccTypeCode) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT FK_AccModel_AccMaker FOREIGN KEY (AccMakerCode) REFERENCES AccMakerList(AccMakerCode) ON UPDATE CASCADE ON DELETE RESTRICT
+  CONSTRAINT FK_AccModel_AccMaker FOREIGN KEY (AccMakerCode, AccTypeCode) REFERENCES AccMakerList(AccMakerCode, AccTypeCode) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
--- 4) Body 관련 테이블 예시
+-- 4) Body 관련 테이블
 CREATE TABLE BodyValveList (
   ValveSeries VARCHAR(255) UNIQUE,
   ValveSeriesCode CHAR(1) PRIMARY KEY NOT NULL
@@ -40,17 +41,17 @@ CREATE TABLE BodyMatList (
   BodyMatCode CHAR(1) PRIMARY KEY NOT NULL
 );
 
-CREATE TABLE BodyTrimSizeList (
-  SizeUnit VARCHAR(255) NOT NULL UNIQUE,
-  BodySize VARCHAR(255) UNIQUE,
+CREATE TABLE BodySizeList (
+  SizeUnit VARCHAR(255) NOT NULL,
+  BodySize VARCHAR(255),
   BodySizeCode CHAR(1) NOT NULL,
   PRIMARY KEY (SizeUnit, BodySizeCode)
 );
 
 CREATE TABLE BodyRatingList (
   RatingUnit VARCHAR(255) UNIQUE,
-  Rating VARCHAR(255) UNIQUE,
-  RatingCode CHAR(1) PRIMARY KEY NOT NULL
+  RatingCode CHAR(1) PRIMARY KEY,
+  RatingName VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE BodyConnectionList (
@@ -58,7 +59,7 @@ CREATE TABLE BodyConnectionList (
   ConnectionCode CHAR(1) PRIMARY KEY NOT NULL
 );
 
--- 5) Trim 관련 테이블 예시
+-- 5) Trim 관련 테이블
 CREATE TABLE TrimTypeList (
   TrimType VARCHAR(255) UNIQUE,
   TrimTypeCode CHAR(1) PRIMARY KEY NOT NULL
@@ -75,10 +76,9 @@ CREATE TABLE TrimMatList (
 );
 
 CREATE TABLE TrimPortSizeList (
-  TrimPortSizeUnit VARCHAR(255) NOT NULL,
-  TrimPortSize VARCHAR(255) UNIQUE,
-  TrimPortSizeCode CHAR(1) NOT NULL UNIQUE,
-  PRIMARY KEY (TrimPortSizeUnit, TrimPortSizeCode)
+  PortSizeCode CHAR(1) PRIMARY KEY,
+  PortSizeUnit VARCHAR(255) NOT NULL,
+  PortSize VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE TrimFormList (
@@ -87,10 +87,11 @@ CREATE TABLE TrimFormList (
 );
 
 CREATE TABLE TrimOptionList (
-  TrimOption VARCHAR(255) PRIMARY KEY NOT NULL
+  TrimOptionCode CHAR(1) PRIMARY KEY,
+  TrimOptionName VARCHAR(255) NOT NULL
 );
 
--- 6) Act 관련 테이블 예시
+-- 6) Act 관련 테이블
 CREATE TABLE ActTypeList (
   ActType VARCHAR(255) UNIQUE,
   ActTypeCode CHAR(1) PRIMARY KEY NOT NULL
@@ -103,9 +104,10 @@ CREATE TABLE ActSeriesList (
 
 CREATE TABLE ActSizeList (
   ActSeriesCode CHAR(1) NOT NULL,
-  ActSize VARCHAR(255) UNIQUE,
-  ActSizeCode CHAR(1) NOT NULL UNIQUE,
-  PRIMARY KEY (ActSeriesCode, ActSizeCode)
+  ActSize VARCHAR(255),
+  ActSizeCode CHAR(1) NOT NULL,
+  PRIMARY KEY (ActSeriesCode, ActSizeCode),
+  CONSTRAINT FK_ActSize_ActSeries FOREIGN KEY (ActSeriesCode) REFERENCES ActSeriesList(ActSeriesCode) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
 CREATE TABLE ActHWList (
@@ -135,7 +137,8 @@ CREATE TABLE User (
   Email VARCHAR(255) UNIQUE NOT NULL,
   PhoneNumber VARCHAR(255) UNIQUE NOT NULL,
   IsApproved BOOLEAN NOT NULL DEFAULT FALSE,
-  CONSTRAINT FK_User_Role FOREIGN KEY (RoleID) REFERENCES Role(RoleID) ON UPDATE CASCADE ON DELETE RESTRICT
+  CONSTRAINT FK_User_Role FOREIGN KEY (RoleID)
+    REFERENCES Role(RoleID) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
 -- 9) EstimateSheetLv1 테이블
@@ -163,16 +166,19 @@ CREATE TABLE EstimateRequest (
   SheetNo INT NOT NULL,
   ValveType CHAR(1),
   Tagno VARCHAR(255) NOT NULL,
-  Project VARCHAR(255),
   UnitPrice INT,
   Qty INT,
   Medium VARCHAR(255),
   Fluid VARCHAR(255),
   IsQM BOOLEAN,
-  FlowRateUnit VARCHAR(255),
-  FlowRateMaxQ DECIMAL,
-  FlowRateNorQ DECIMAL,
-  FlowRateMinQ DECIMAL,
+  QMUnit VARCHAR(255),
+  QMMax DECIMAL,
+  QMNor DECIMAL,
+  QMMin DECIMAL,
+  QNUnit VARCHAR(255),
+  QNMax DECIMAL,
+  QNNor DECIMAL,
+  QNMin DECIMAL,
   IsP2 BOOLEAN,
   InletPressureUnit VARCHAR(255),
   InletPressureMaxQ DECIMAL,
@@ -194,12 +200,11 @@ CREATE TABLE EstimateRequest (
   Density DECIMAL,
   MolecularWeightUnit VARCHAR(255),
   MolecularWeight DECIMAL,
-  BodySizeUnit CHAR(1),
-  BodySize VARCHAR(255),
+  BodySizeUnit VARCHAR(255),
+  BodySize CHAR(1),
   BodyMat CHAR(1),
   TrimMat CHAR(1),
-  TrimOption VARCHAR(255),
-  BodyRatingUnit CHAR(1),
+  TrimOption CHAR(1),
   BodyRating CHAR(1),
   ActType CHAR(1),
   IsHW BOOLEAN,
@@ -217,16 +222,26 @@ CREATE TABLE EstimateRequest (
   PRIMARY KEY (TempEstimateNo, SheetID),
   CONSTRAINT FK_EstimateRequest_TempEstimateNo FOREIGN KEY (TempEstimateNo) REFERENCES EstimateSheetLv1(TempEstimateNo) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT FK_EstimateRequest_ValveType FOREIGN KEY (ValveType) REFERENCES BodyValveList(ValveSeriesCode) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT FK_EstimateRequest_BodySizeUnit FOREIGN KEY (BodySizeUnit) REFERENCES BodyTrimSizeList(SizeUnit) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT FK_EstimateRequest_BodySize FOREIGN KEY (BodySize) REFERENCES BodyTrimSizeList(BodySize) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT FK_EstimateRequest_BodySize FOREIGN KEY (BodySizeUnit, BodySize) REFERENCES BodySizeList(SizeUnit, BodySizeCode) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT FK_EstimateRequest_BodyMat FOREIGN KEY (BodyMat) REFERENCES BodyMatList(BodyMatCode) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT FK_EstimateRequest_TrimMat FOREIGN KEY (TrimMat) REFERENCES TrimMatList(TrimMatCode) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT FK_EstimateRequest_TrimOption FOREIGN KEY (TrimOption) REFERENCES TrimOptionList(TrimOption) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT FK_EstimateRequest_BodyRatingUnit FOREIGN KEY (BodyRatingUnit) REFERENCES BodyRatingList(RatingUnit) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT FK_EstimateRequest_BodyRating FOREIGN KEY (BodyRating) REFERENCES BodyRatingList(Rating) ON UPDATE CASCADE ON DELETE RESTRICT
+  CONSTRAINT FK_EstimateRequest_TrimOption FOREIGN KEY (TrimOption) REFERENCES TrimOptionList(TrimOptionCode) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT FK_EstimateRequest_BodyRating FOREIGN KEY (BodyRating) REFERENCES BodyRatingList(RatingCode) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
--- 11) DataSheetLv3 테이블
+-- 11) EstimateAttachment 테이블
+CREATE TABLE EstimateAttachment (
+  AttachmentID INT AUTO_INCREMENT PRIMARY KEY,
+  TempEstimateNo VARCHAR(255) NOT NULL,
+  FileName VARCHAR(255) NOT NULL,
+  FilePath VARCHAR(500) NOT NULL,
+  FileSize INT,
+  UploadDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UploadUserID VARCHAR(255),
+  CONSTRAINT FK_EstimateAttachment_TempEstimateNo FOREIGN KEY (TempEstimateNo) REFERENCES EstimateSheetLv1(TempEstimateNo) ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT FK_EstimateAttachment_UploadUser FOREIGN KEY (UploadUserID) REFERENCES User(UserID) ON UPDATE CASCADE ON DELETE SET NULL
+);
+
 CREATE TABLE DataSheetLv3 (
   EstimateNo VARCHAR(255),
   TempEstimateNo VARCHAR(255) NOT NULL,
@@ -234,10 +249,14 @@ CREATE TABLE DataSheetLv3 (
   Medium VARCHAR(255),
   Fluid VARCHAR(255),
   IsQM BOOLEAN,
-  FlowRateUnit VARCHAR(255),
-  FlowRateMaxQ DECIMAL,
-  FlowRateNorQ DECIMAL,
-  FlowRateMinQ DECIMAL,
+  QMUnit VARCHAR(255),
+  QMMax DECIMAL,
+  QMNor DECIMAL,
+  QMMin DECIMAL,
+  QNUnit VARCHAR(255),
+  QNMax DECIMAL,
+  QNNor DECIMAL,
+  QNMin DECIMAL,
   IsP2 BOOLEAN,
   PressureUnit VARCHAR(255),
   InletPressureMaxQ DECIMAL,
@@ -318,23 +337,23 @@ CREATE TABLE DataSheetLv3 (
   FlowCoeff DECIMAL,
   NorFlowCoeff DECIMAL,
   SizePressureClass VARCHAR(255),
-  SuggestedValveSize VARCHAR(255),
+  SuggestedValveSize DECIMAL,
   SelectedValveSize VARCHAR(255),
   PressureClass VARCHAR(255),
   BonnetType CHAR(1),
   BodyMat CHAR(1),
-  BodySizeUnit CHAR(1),
-  BodySize VARCHAR(255),
-  RatingUnit CHAR(1),
+  BodySizeUnit VARCHAR(255),
+  BodySize CHAR(1),
   Rating CHAR(1),
   Connection CHAR(1),
   TrimType CHAR(1),
   TrimSeries CHAR(1),
-  TimMat CHAR(1),
-  TrimOption VARCHAR(255),
+  TrimMat CHAR(1),
+  TrimOption CHAR(1),
   TrimPortSize CHAR(1),
   TrimForm CHAR(1),
   ActType CHAR(1),
+  ActSeriesCode CHAR(1),
   ActSize CHAR(1),
   HW CHAR(1),
   PosCode CHAR(10),
@@ -350,18 +369,17 @@ CREATE TABLE DataSheetLv3 (
   CONSTRAINT FK_DataSheetLv3_ValveType FOREIGN KEY (ValveType) REFERENCES BodyValveList(ValveSeriesCode) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT FK_DataSheetLv3_BonnetType FOREIGN KEY (BonnetType) REFERENCES BodyBonnetList(BonnetCode) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT FK_DataSheetLv3_BodyMat FOREIGN KEY (BodyMat) REFERENCES BodyMatList(BodyMatCode) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT FK_DataSheetLv3_BodySizeUnit FOREIGN KEY (BodySizeUnit) REFERENCES BodyTrimSizeList(SizeUnit) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT FK_DataSheetLv3_BodySize FOREIGN KEY (BodySize) REFERENCES BodyTrimSizeList(BodySize) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT FK_DataSheetLv3_BodySize FOREIGN KEY (BodySizeUnit, BodySize) REFERENCES BodySizeList(SizeUnit, BodySizeCode) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT FK_DataSheetLv3_Rating FOREIGN KEY (Rating) REFERENCES BodyRatingList(RatingCode) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT FK_DataSheetLv3_Connection FOREIGN KEY (Connection) REFERENCES BodyConnectionList(ConnectionCode) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT FK_DataSheetLv3_TrimType FOREIGN KEY (TrimType) REFERENCES TrimTypeList(TrimTypeCode) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT FK_DataSheetLv3_TrimSeries FOREIGN KEY (TrimSeries) REFERENCES TrimSeriesList(TrimSeriesCode) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT FK_DataSheetLv3_TimMat FOREIGN KEY (TimMat) REFERENCES TrimMatList(TrimMatCode) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT FK_DataSheetLv3_TrimOption FOREIGN KEY (TrimOption) REFERENCES TrimOptionList(TrimOption) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT FK_DataSheetLv3_TrimPortSize FOREIGN KEY (TrimPortSize) REFERENCES TrimPortSizeList(TrimPortSizeCode) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT FK_DataSheetLv3_TrimMat FOREIGN KEY (TrimMat) REFERENCES TrimMatList(TrimMatCode) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT FK_DataSheetLv3_TrimOption FOREIGN KEY (TrimOption) REFERENCES TrimOptionList(TrimOptionCode) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT FK_DataSheetLv3_TrimPortSize FOREIGN KEY (TrimPortSize) REFERENCES TrimPortSizeList(PortSizeCode) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT FK_DataSheetLv3_TrimForm FOREIGN KEY (TrimForm) REFERENCES TrimFormList(TrimFormCode) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT FK_DataSheetLv3_ActType FOREIGN KEY (ActType) REFERENCES ActTypeList(ActTypeCode) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT FK_DataSheetLv3_ActSize FOREIGN KEY (ActSize) REFERENCES ActSizeList(ActSizeCode) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT FK_DataSheetLv3_ActSize FOREIGN KEY (ActSeriesCode, ActSize) REFERENCES ActSizeList(ActSeriesCode, ActSizeCode) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT FK_DataSheetLv3_HW FOREIGN KEY (HW) REFERENCES ActHWList(HWCode) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT FK_DataSheetLv3_PosCode FOREIGN KEY (PosCode) REFERENCES AccModelList(AccModelCode) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT FK_DataSheetLv3_SolCode FOREIGN KEY (SolCode) REFERENCES AccModelList(AccModelCode) ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -371,17 +389,4 @@ CREATE TABLE DataSheetLv3 (
   CONSTRAINT FK_DataSheetLv3_AirOpCode FOREIGN KEY (AirOpCode) REFERENCES AccModelList(AccModelCode) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT FK_DataSheetLv3_LockupCode FOREIGN KEY (LockupCode) REFERENCES AccModelList(AccModelCode) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT FK_DataSheetLv3_SnapActCode FOREIGN KEY (SnapActCode) REFERENCES AccModelList(AccModelCode) ON UPDATE CASCADE ON DELETE RESTRICT
-);
-
--- 12) EstimateAttachment 테이블
-CREATE TABLE EstimateAttachment (
-  AttachmentID INT AUTO_INCREMENT PRIMARY KEY,
-  TempEstimateNo VARCHAR(255) NOT NULL,
-  FileName VARCHAR(255) NOT NULL,
-  FilePath VARCHAR(500) NOT NULL,
-  FileSize INT,
-  UploadDate DATETIME DEFAULT CURRENT_TIMESTAMP,
-  UploadUserID VARCHAR(255),
-  CONSTRAINT FK_EstimateAttachment_TempEstimateNo FOREIGN KEY (TempEstimateNo) REFERENCES EstimateSheetLv1(TempEstimateNo) ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT FK_EstimateAttachment_UploadUser FOREIGN KEY (UploadUserID) REFERENCES User(UserID) ON UPDATE CASCADE ON DELETE SET NULL
 );

@@ -112,7 +112,6 @@ function App() {
           <Route path="staff-detail/:staffId" element={<StaffDetailPage />} />
           <Route path="membership-requests" element={<MembershipRequestsPage />} />
           <Route path="estimate-requests" element={<EstimateRequestsPage />} />
-  
           <Route path="estimate-request" element={<EstimateRequestPage />} />
           <Route path="estimate-request/new" element={<NewEstimateRequestPage />} />
           <Route path="estimate-inquiry" element={<EstimateInquiryPage />} />

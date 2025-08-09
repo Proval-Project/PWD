@@ -1,4 +1,5 @@
 using EstimateRequestSystem.DTOs;
+using EstimateRequestSystem.Models;
 
 namespace EstimateRequestSystem.Services
 {
@@ -12,6 +13,10 @@ namespace EstimateRequestSystem.Services
         Task<bool> UpdateEstimateSheetAsync(string tempEstimateNo, UpdateEstimateSheetDto dto);
         Task<bool> DeleteEstimateSheetAsync(string tempEstimateNo);
 
+        // 임시저장 및 견적요청
+        Task<bool> SaveDraftAsync(string tempEstimateNo, SaveDraftDto dto);
+        Task<bool> SubmitEstimateAsync(string tempEstimateNo, SubmitEstimateDto dto);
+
         // EstimateRequest operations
         Task<EstimateRequestResponseDto> CreateEstimateRequestAsync(string tempEstimateNo, CreateEstimateRequestDto dto);
         Task<EstimateRequestResponseDto?> GetEstimateRequestAsync(string tempEstimateNo, int sheetID);
@@ -24,11 +29,27 @@ namespace EstimateRequestSystem.Services
         Task<EstimateAttachmentResponseDto> UploadAttachmentAsync(string tempEstimateNo, IFormFile file, string uploadUserID);
         Task<List<EstimateAttachmentResponseDto>> GetAttachmentsAsync(string tempEstimateNo);
         Task<bool> DeleteAttachmentAsync(int attachmentID);
+        Task<bool> DeleteFileByPathAsync(string filePath);
         Task<byte[]> DownloadAttachmentAsync(int attachmentID);
 
         // Utility methods
         Task<string> GenerateTempEstimateNoAsync();
         Task<int> GetNextSheetIDAsync(string tempEstimateNo);
         Task<bool> IsDuplicateFileNameAsync(string tempEstimateNo, string fileName);
+        Task<List<object>> GetBodyValveListAsync();
+        Task<List<object>> GetBodySizeListAsync();
+        Task<List<object>> GetBodyMatListAsync();
+        Task<List<object>> GetTrimMatListAsync();
+        Task<List<object>> GetTrimOptionListAsync();
+        Task<List<object>> GetBodyRatingListAsync();
+
+        // 견적 요청 조회
+        Task<EstimateInquiryResponseDto> GetEstimateInquiryAsync(EstimateInquiryRequestDto request);
+
+        // 견적 상태 업데이트
+        Task<bool> UpdateEstimateStatusAsync(string tempEstimateNo, EstimateStatus status);
+
+        // 담당자 지정
+        Task<bool> AssignManagerAsync(string tempEstimateNo, string managerID);
     }
 } 
