@@ -43,7 +43,7 @@ const EstimateRequestPage: React.FC = () => {
   };
 
   const handleReInquiry = () => {
-    navigate('/estimate-request/re-inquiry');
+    navigate('/estimate-inquiry');
   };
 
   const handleCustomerSelect = (user: any) => {

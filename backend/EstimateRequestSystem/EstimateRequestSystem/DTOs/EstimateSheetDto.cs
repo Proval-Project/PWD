@@ -41,7 +41,6 @@ namespace EstimateRequestSystem.DTOs
         public int Status { get; set; }
         public string? CustomerName { get; set; }
         public string? WriterName { get; set; }
-        public DateTime? CreatedDate { get; set; }
         public int RequestCount { get; set; }
     }
 } 

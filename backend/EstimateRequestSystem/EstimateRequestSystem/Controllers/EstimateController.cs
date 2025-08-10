@@ -202,12 +202,195 @@ namespace EstimateRequestSystem.Controllers
         {
             try
             {
-                var result = await _estimateService.GetBodyRatingListAsync();
-                return Ok(result);
+                var ratingList = await _estimateService.GetBodyRatingListAsync();
+                return Ok(ratingList);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = ex.Message });
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // Step 3 마스터 데이터 엔드포인트들
+        [HttpGet("body-bonnet-list")]
+        public async Task<IActionResult> GetBodyBonnetList()
+        {
+            try
+            {
+                var bonnetList = await _estimateService.GetBodyBonnetListAsync();
+                return Ok(bonnetList);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("body-connection-list")]
+        public async Task<IActionResult> GetBodyConnectionList()
+        {
+            try
+            {
+                var connectionList = await _estimateService.GetBodyConnectionListAsync();
+                return Ok(connectionList);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("trim-type-list")]
+        public async Task<IActionResult> GetTrimTypeList()
+        {
+            try
+            {
+                var trimTypeList = await _estimateService.GetTrimTypeListAsync();
+                return Ok(trimTypeList);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("trim-series-list")]
+        public async Task<IActionResult> GetTrimSeriesList()
+        {
+            try
+            {
+                var trimSeriesList = await _estimateService.GetTrimSeriesListAsync();
+                return Ok(trimSeriesList);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("trim-port-size-list")]
+        public async Task<IActionResult> GetTrimPortSizeList()
+        {
+            try
+            {
+                var portSizeList = await _estimateService.GetTrimPortSizeListAsync();
+                return Ok(portSizeList);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("trim-form-list")]
+        public async Task<IActionResult> GetTrimFormList()
+        {
+            try
+            {
+                var formList = await _estimateService.GetTrimFormListAsync();
+                return Ok(formList);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("act-type-list")]
+        public async Task<IActionResult> GetActTypeList()
+        {
+            try
+            {
+                var actTypeList = await _estimateService.GetActTypeListAsync();
+                return Ok(actTypeList);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("act-series-list")]
+        public async Task<IActionResult> GetActSeriesList()
+        {
+            try
+            {
+                var actSeriesList = await _estimateService.GetActSeriesListAsync();
+                return Ok(actSeriesList);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("act-size-list")]
+        public async Task<IActionResult> GetActSizeList([FromQuery] string? actSeriesCode = null)
+        {
+            try
+            {
+                var actSizeList = await _estimateService.GetActSizeListAsync(actSeriesCode);
+                return Ok(actSizeList);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("act-hw-list")]
+        public async Task<IActionResult> GetActHWList()
+        {
+            try
+            {
+                var hwList = await _estimateService.GetActHWListAsync();
+                return Ok(hwList);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("acc-type-list")]
+        public async Task<IActionResult> GetAccTypeList()
+        {
+            try
+            {
+                var accTypeList = await _estimateService.GetAccTypeListAsync();
+                return Ok(accTypeList);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("acc-maker-list")]
+        public async Task<IActionResult> GetAccMakerList([FromQuery] string? accTypeCode = null)
+        {
+            try
+            {
+                var accMakerList = await _estimateService.GetAccMakerListAsync(accTypeCode);
+                return Ok(accMakerList);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("acc-model-list")]
+        public async Task<IActionResult> GetAccModelList([FromQuery] string? accTypeCode = null, [FromQuery] string? accMakerCode = null)
+        {
+            try
+            {
+                var accModelList = await _estimateService.GetAccModelListAsync(accTypeCode, accMakerCode);
+                return Ok(accModelList);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
             }
         }
 

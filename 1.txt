@@ -1,18 +1,43 @@
-mysql> select * from EstimateRequest where TempEstimateNo = 'TEMP20250810-004';
-+------------+------------------+---------+---------+-----------+----------+-----------+------+--------+----------+------+------+-----------+------+--------+---------+---------+---------+--------+---------+---------+---------+--------------+-------------------+-------------------+-------------------+--------------------+--------------------+--------------------+--------------------------+--------------------------+--------------------------+-----------------+-------------------+----------------------+----------------------+-------------+---------+---------------------+-----------------+--------------+----------+---------+---------+------------+------------+---------+--------------+----------------+--------------------+---------------+------------+-------------+----------+-----------------+---------------+----------+-------------------+
-| EstimateNo | TempEstimateNo   | SheetID | SheetNo | ValveType | Tagno    | UnitPrice | Qty  | Medium | Fluid    | IsQM | IsP2 | IsDensity | IsHW | QMUnit | QMMax   | QMNor   | QMMin   | QNUnit | QNMax   | QNNor   | QNMin   | PressureUnit | InletPressureMaxQ | InletPressureNorQ | InletPressureMinQ | OutletPressureMaxQ | OutletPressureNorQ | OutletPressureMinQ | DifferentialPressureMaxQ | DifferentialPressureNorQ | DifferentialPressureMinQ | TemperatureUnit | InletTemperatureQ | InletTemperatureNorQ | InletTemperatureMinQ | DensityUnit | Density | MolecularWeightUnit | MolecularWeight | BodySizeUnit | BodySize | BodyMat | TrimMat | TrimOption | BodyRating | ActType | IsPositioner | PositionerType | ExplosionProof     | IsTransmitter | IsSolenoid | IsLimSwitch | IsAirSet | IsVolumeBooster | IsAirOperated | IsLockUp | IsSnapActingRelay |
-+------------+------------------+---------+---------+-----------+----------+-----------+------+--------+----------+------+------+-----------+------+--------+---------+---------+---------+--------+---------+---------+---------+--------------+-------------------+-------------------+-------------------+--------------------+--------------------+--------------------+--------------------------+--------------------------+--------------------------+-----------------+-------------------+----------------------+----------------------+-------------+---------+---------------------+-----------------+--------------+----------+---------+---------+------------+------------+---------+--------------+----------------+--------------------+---------------+------------+-------------+----------+-----------------+---------------+----------+-------------------+
-| NULL       | TEMP20250810-004 |       1 |       1 | A         | Tag-0001 |      NULL |    0 | obl    | Vaporous |    1 |    1 |         0 |    0 | m³/h   | 0.00000 | 0.00000 | 0.00000 | m³/h   | 0.00000 | 0.00000 | 0.00000 | Mpa(g)       |           0.00000 |           0.00000 |           0.00000 |            0.00000 |            0.00000 |            0.00000 |                  0.00000 |                  0.00000 |                  0.00000 | °C              |           0.00000 |              0.00000 |              0.00000 | kg/m³       | 0.00000 | g/mol               |        12.00000 | inch         | A        | I       | 5       | A          | N          | NULL    |            0 | P.P            | 본질안전방폭       |             0 |          1 |           0 |        0 |               1 |             0 |        0 |                 1 |
-+------------+------------------+---------+---------+-----------+----------+-----------+------+--------+----------+------+------+-----------+------+--------+---------+---------+---------+--------+---------+---------+---------+--------------+-------------------+-------------------+-------------------+--------------------+--------------------+--------------------+--------------------------+--------------------------+--------------------------+-----------------+-------------------+----------------------+----------------------+-------------+---------+---------------------+-----------------+--------------+----------+---------+---------+------------+------------+---------+--------------+----------------+--------------------+---------------+------------+-------------+----------+-----------------+---------------+----------+-------------------+
-1 row in set (0.001 sec)
-
-mysql> select * from EstimateSheetLv1;
-+------------------+---------------+----------------+------------+----------+-----------+--------+---------------------+---------------------+--------------+
-| TempEstimateNo   | CurEstimateNo | PrevEstimateNo | CustomerID | WriterID | ManagerID | Status | Project             | CustomerRequirement | StaffComment |
-+------------------+---------------+----------------+------------+----------+-----------+--------+---------------------+---------------------+--------------+
-| TEMP20250810-001 | NULL          | NULL           | customer1  | admin    | NULL      |      2 | 나의 프로젝트       |                     |              |
-| TEMP20250810-002 | NULL          | NULL           | customer1  | admin    | NULL      |      1 | project_kkk         |                     | NULL         |
-+------------------+---------------+----------------+------------+----------+-----------+--------+---------------------+---------------------+--------------+
-2 rows in set (0.001 sec)
-
-mysql> 
+Positioner			Solenoid Valve			Limit Switch			Air-set			Volume booster			Air Operated Valve			Lockup valve			Snap-acting relay		
+선택목록			선택목록			선택목록			선택목록			선택목록			선택목록			선택목록			선택목록		
+모델명	메이커	규격	모델명	메이커	규격	모델명	메이커	규격	모델명	메이커	규격	모델명	메이커	규격	모델명	메이커	규격	모델명	메이커	규격	모델명	메이커	규격
+-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+AVP300-HSD3D-XXXX-X	Azbil	내압방폭 + NPT 1/2	4F310-08-TP-X-DC24V	CKD	5/2-WAY + DC24 + 비방폭 + PT 1/4xPT 1/4	APL-210N	HKC	2-SPDT + 비방폭 + NPT 1/2	AR-1501NS0(TS300)	Proval	10bar + NPT 1/4	VB-1000NS(TS100)	Proval	NPT 1/4	SFP4313	연우뉴매틱	5/3-WAY + NPT 1/4	LV-2000DNS	Proval	Double + NPT 1/4	SAR25D(TS250)	Tissin	Double + PT 1/4
+AVP302-HSD3D-XXXX-X	Azbil	내압방폭 + NPT 1/2 + HART	4F310-10-B-DC24V	CKD	5/2-WAY + DC24 + 비방폭 + PT 3/8xPT 3/8	APL-312N	HKC	4-SPDT + 비방폭 + NPT 1/2	AR-1501PS0(TS300)	Proval	10bar + PT 1/4	VB-1000PS(TS100)	Proval	PT 1/4	SFP6313	연우뉴매틱	5/3-WAY + NPT 1/2	LV-2000SNS	Proval	Single + NPT 1/4			
+EP-6000LN12S0(TS600)	Proval	비방폭 + PT 1/2	4F310E-08-TP-X-AC110V	CKD	5/2-WAY + AC110 + 내압방폭 + PT 1/4xPT 1/4	APL-314N	HKC	DPDT + 비방폭 + NPT 1/2	AR-2501NS0(TS310)	Proval	10bar + NPT 1/2	YT-320P-1	Rotork	NPT 1/2 + SUS	SV-210M	신영제어기기	5-WAY + PT 1/4	LV-2000SPS	Proval	Single + PT 1/4			
+EP-6100RN11S0	Proval	비방폭 + PT 1/2	4F310E-08-TP-X-DC24V	CKD	5/2-WAY + DC24 + 내압방폭 + PT 1/4xPT 1/4	APL-510N	HKC	2-SPDT + 내압수소방폭 + NPT 3/4	AW30-03-A	SMC	10bar + PT 3/8				SV-310M	신영제어기기	4-WAY + NPT 1/2						
+IP8100-031-CH-X114	SMC	내압방폭 + PT 1/2	ESV-S-A110P-F	PG	5/2-WAY + AC110 + 내압방폭 + PT 1/4xPT 3/4	APL-512N	HKC	4-SPDT + 내압수소방폭 + NPT 3/4	B7019-2C-M	CKD	10bar + PT 1/4				SV-410M	신영제어기기	5-WAY + PT 1/2						
+SP-8000N11S10(TS800)	Proval	비방폭 + PT 1/2 + PTM	ESV-S-A220P-F 	PG	5/2-WAY + AC220 + 내압방폭 + PT 1/4xPT 3/4	GLAA20A2A	Honeywell	DPDT + 비방폭 + NPT 1/2	TS300PS0	Tissin	10bar + PT 1/4												
+SP-8000N11S30(TS800)	Proval	비방폭 + PT 1/2 + PTM+HART	ESV-S-D24P-F	PG	5/2-WAY + DC24 + 내압방폭 + PT 1/4xPT 3/4	SLP5130-AL	Qlight	비방폭 + NPT 1/2	YT-200BN020	Rotork	10bar + NPT 1/4 + 고온용												
+SP-8100N11S30(TS800)	Proval	비방폭 + PT 1/2 + PTM+HART	HKW5020B	HSE	2-WAY + DC24 + 비방폭 + PF 1/2xPT 2	SZL-WLC-B	Honeywell	SPDT + 비방폭 + NPT 3/4	YT-200BP010	Rotork	10bar + PT 1/4												
+TS600LB12S0	Tissin	내압방폭 + PT 1/2	HKW5020S	HSE	2-WAY + DC24 + 비방폭 + PF 1/2xPT 2	TS400M1S1	Tissin	2-SPDT + 비방폭 + NPT 1/2	YT-200BP020	Rotork	10bar + PT 1/4 + 고온용												
+TS600LC12S0	Tissin	수소방폭 + PT 1/2	HPW2510B	HSE	2-WAY + DC24 + 비방폭 + PF 1/2xPT 1	TS410MK1S1	Tissin	2-SPDT + 내압방폭 + NPT 1/2	YT-220BN010	Rotork	10bar + NPT 1/2												
+TS600LN12S1	Tissin	비방폭 + PT 1/2 + PTM	HPW2510SB	HSE	2-WAY + DC24 + 비방폭 + PF 1/2xPT 1																		
+TS600RB11S0	Tissin	내압방폭 + PT 1/2	HPW3212B	HSE	2-WAY + DC24 + 비방폭 + PF 1/2xPT 1 1/4																		
+TS600RN11S1	Tissin	비방폭 + PT 1/2 + PTM	JKB8320G174MO	ASCO	3-WAY + AC220 + 비방폭 + NPT 1/2xNPT 1/4																		
+TS700LSN11S10	Tissin	비방폭 + PT 1/2 + PTM	JKH8320G174M0	ASCO	3/2-WAY + DC24 + 비방폭 + NPT 1/2xNPT 1/4																		
+TS800RA11S10	Tissin	수소+내압 + PT 1/2 + PTM	MOOU-8AE-12PU-AC110V	KANEKO	3-WAY + AC110 + 내압방폭 + PT 1/4xPT 1/4																		
+TS820RA11S01	Tissin	수소+내압 + PT 1/2 + Remote Type	MOOU-8AE-12PU-AC220V	KANEKO	3-WAY + AC220 + 내압방폭 + PT 1/4xPT 1/4																		
+TS900LC31S10	Tissin	수소방폭 + NPT 1/2 + PTM	MOOU-8DE-12PU-DC24V	KANEKO	3-WAY + DC24 + 내압방폭 + PT 1/4xPT 1/4																		
+TS900LC31S20	Tissin	수소방폭 + NPT 1/2 + HART	RDS5120-1DZ-03	TPC	5/2-WAY + AC110 + 비방폭 + PT 1/2xPT 3/8																		
+TS900LC31S30	Tissin	수소방폭 + NPT 1/2 + PTM+HART	SV-210-1D	신영제어기기	5/2-WAY + AC110 + 비방폭 + PT 1/4xPT 1/4																		
+TS900RC31S10	Tissin	수소방폭 + NPT 1/2 + PTM	SV-210-1D-LAMP	신영제어기기	5/2-WAY + AC110 + 비방폭 + PT 1/4xPT 1/4																		
+YT-1000LSC231S0	Rotork	수소방폭 + PT 1/2	SV-210-1D-LOCK LEVER	신영제어기기	5/2-WAY + AC110 + 비방폭 + PT 1/4xPT 1/4																		
+YT-1000LSM231S0	Rotork	내압방폭 + PT 1/2	SV-210-1D-LOCK LEVER+LAMP	신영제어기기	5/2-WAY + AC110 + 비방폭 + PT 1/4xPT 1/4																		
+YT-1000RSM231S0	Rotork	내압방폭 + PT 1/2	SV-210-2D	신영제어기기	5/2-WAY + AC220 + 비방폭 + PT 1/4xPT 1/4																		
+YT-1200LS231S0	Rotork	비방폭 + PT 1/4	SV-210-2D-LAMP	신영제어기기	5/2-WAY + AC220 + 비방폭 + PT 1/4xPT 1/4																		
+YT-3300LSN1101S	Rotork	비방폭 + PT 1/2 + PTM	SV-210-2D-LOCK LEVER	신영제어기기	5/2-WAY + AC220 + 비방폭 + PT 1/4xPT 1/4																		
+YT-3300LSN1120S	Rotork	비방폭 + PT 1/2 + HART	SV-210-2D-LOCK LEVER+LAMP	신영제어기기	5/2-WAY + AC220 + 비방폭 + PT 1/4xPT 1/4																		
+YT-3300LSN1121S	Rotork	비방폭 + PT 1/2 + PTM+HART	SV-210-4D-LAMP	신영제어기기	5/2-WAY + DC24 + 비방폭 + PT 1/4xPT 1/4																		
+YT-3300RSN2120S	Rotork	비방폭 + PT 1/2 + HART	SV-210-4D-LOCK LEVER	신영제어기기	5/2-WAY + DC24 + 비방폭 + PT 1/4xPT 1/4																		
+YT-3303LDN2121S	Rotork	비방폭 + PT 1/2 + PTM+HART	SV-210-4D-LOCK LEVER+LAMP	신영제어기기	5/2-WAY + DC24 + 비방폭 + PT 1/4xPT 1/4																		
+YT-3303LSN2100S	Rotork	비방폭 + PT 1/2	SV-410-1D-LOCK LEVER	신영제어기기	5/2-WAY + AC110 + 비방폭 + PT 1/2xPT 1/2																		
+YT-3303LSN2101S	Rotork	비방폭 + PT 1/2 + PTM	VCEFCMHBX8320G174MO-AC110V	ASCO	3/2-WAY + AC110 + 내압방폭 + NPT 1/2xNPT 1/4																		
+YT-3303LSN2120S	Rotork	비방폭 + PT 1/2 + HART	VCEFCMHBX8320G174MO-AC220V	ASCO	3/2-WAY + AC220 + 내압방폭 + NPT 1/2xNPT 1/4																		
+YT-3303LSN2121S	Rotork	비방폭 + PT 1/2 + PTM+HART																					
+YT-3400LDC2121S	Rotork	수소방폭 + PT 1/2 + PTM+HART																					
+YT-3400LSC2100S	Rotork	수소방폭 + PT 1/2																					
+YT-3400LSC2101S	Rotork	내압방폭 + PT 1/2 + PTM																					
+YT-3400LSC2121S	Rotork	수소방폭 + PT 1/2 + PTM+HART																					
+YT-3400RSC2100S	Rotork	수소방폭 + PT 1/2																					
+																							

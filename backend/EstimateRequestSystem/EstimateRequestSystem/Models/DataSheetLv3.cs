@@ -111,16 +111,22 @@ namespace EstimateRequestSystem.Models
         public string? BodySize { get; set; }
         public string? Rating { get; set; }
         public string? Connection { get; set; }
+        
+        // Trim 관련 필드 (DB 스키마에 맞춤)
         public string? TrimType { get; set; }
         public string? TrimSeries { get; set; }
         public string? TrimMat { get; set; }
         public string? TrimOption { get; set; }
         public string? TrimPortSize { get; set; }
         public string? TrimForm { get; set; }
+        
+        // Act 관련 필드 (DB 스키마에 맞춤)
         public string? ActType { get; set; }
         public string? ActSeriesCode { get; set; }
         public string? ActSize { get; set; }
         public string? HW { get; set; }
+        
+        // Acc 관련 필드 (DB 스키마에 맞춤)
         public string? PosCode { get; set; }
         public string? SolCode { get; set; }
         public string? LimCode { get; set; }

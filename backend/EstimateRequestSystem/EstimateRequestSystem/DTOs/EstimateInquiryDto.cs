@@ -7,6 +7,7 @@ namespace EstimateRequestSystem.DTOs
         public DateTime? StartDate { get; set; }    // 시작일
         public DateTime? EndDate { get; set; }      // 종료일
         public int? Status { get; set; }            // 상태 (null이면 전체)
+        public string? CustomerID { get; set; }     // 고객 ID (고객 권한일 때 자신의 견적만 조회)
         public int Page { get; set; } = 1;          // 페이지 번호
         public int PageSize { get; set; } = 10;     // 페이지 크기
         public bool IsDescending { get; set; } = true; // 역순 정렬

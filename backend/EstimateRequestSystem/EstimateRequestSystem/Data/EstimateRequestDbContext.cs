@@ -26,6 +26,18 @@ namespace EstimateRequestSystem.Data
         public DbSet<TrimOptionList> TrimOptionList { get; set; }
         public DbSet<ActHWList> ActHWList { get; set; }
 
+        // Step 3 마스터 데이터 테이블들
+        public DbSet<TrimSeriesList> TrimSeriesList { get; set; }
+        public DbSet<TrimPortSizeList> TrimPortSizeList { get; set; }
+        public DbSet<TrimFormList> TrimFormList { get; set; }
+        public DbSet<ActTypeList> ActTypeList { get; set; }
+        public DbSet<ActSeriesList> ActSeriesList { get; set; }
+
+        public DbSet<ActSizeList> ActSizeList { get; set; }
+        public DbSet<AccTypeList> AccTypeList { get; set; }
+        public DbSet<AccMakerList> AccMakerList { get; set; }
+        public DbSet<AccModelList> AccModelList { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -226,6 +238,118 @@ namespace EstimateRequestSystem.Data
                 entity.HasKey(e => e.HWCode);
                 entity.Property(e => e.HWCode).HasMaxLength(1).IsRequired();
                 entity.Property(e => e.HW).HasMaxLength(255).IsRequired();
+            });
+
+            // Step 3 마스터 데이터 테이블들 설정
+            // TrimSeriesList
+            modelBuilder.Entity<TrimSeriesList>(entity =>
+            {
+                entity.ToTable("TrimSeriesList");
+                entity.HasKey(e => e.TrimSeriesCode);
+                entity.Property(e => e.TrimSeriesCode).HasMaxLength(1).IsRequired();
+                entity.Property(e => e.TrimSeries).HasMaxLength(255).IsRequired();
+            });
+
+            // TrimPortSizeList
+            modelBuilder.Entity<TrimPortSizeList>(entity =>
+            {
+                entity.ToTable("TrimPortSizeList");
+                entity.HasKey(e => e.PortSizeCode);
+                entity.Property(e => e.PortSizeCode).HasMaxLength(1).IsRequired();
+                entity.Property(e => e.PortSizeUnit).HasMaxLength(10).IsRequired();
+                entity.Property(e => e.PortSize).HasMaxLength(50).IsRequired();
+            });
+
+            // TrimFormList
+            modelBuilder.Entity<TrimFormList>(entity =>
+            {
+                entity.ToTable("TrimFormList");
+                entity.HasKey(e => e.TrimFormCode);
+                entity.Property(e => e.TrimFormCode).HasMaxLength(1).IsRequired();
+                entity.Property(e => e.TrimForm).HasMaxLength(255).IsRequired();
+            });
+
+            // ActTypeList
+            modelBuilder.Entity<ActTypeList>(entity =>
+            {
+                entity.ToTable("ActTypeList");
+                entity.HasKey(e => e.ActTypeCode);
+                entity.Property(e => e.ActTypeCode).HasMaxLength(1).IsRequired();
+                entity.Property(e => e.ActType).HasMaxLength(255).IsRequired();
+            });
+
+            // ActSeriesList
+            modelBuilder.Entity<ActSeriesList>(entity =>
+            {
+                entity.ToTable("ActSeriesList");
+                entity.HasKey(e => e.ActSeriesCode);
+                entity.Property(e => e.ActSeriesCode).HasMaxLength(1).IsRequired();
+                entity.Property(e => e.ActSeries).HasMaxLength(255).IsRequired();
+            });
+
+            // ActSizeList
+            modelBuilder.Entity<ActSizeList>(entity =>
+            {
+                entity.ToTable("ActSizeList");
+                entity.HasKey(e => new { e.ActSeriesCode, e.ActSizeCode });
+                entity.Property(e => e.ActSeriesCode).HasMaxLength(1).IsRequired();
+                entity.Property(e => e.ActSizeCode).HasMaxLength(1).IsRequired();
+                entity.Property(e => e.ActSize).HasMaxLength(255).IsRequired();
+
+                // Foreign key
+                entity.HasOne<ActSeriesList>()
+                    .WithMany()
+                    .HasForeignKey(e => e.ActSeriesCode)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // AccTypeList
+            modelBuilder.Entity<AccTypeList>(entity =>
+            {
+                entity.ToTable("AccTypeList");
+                entity.HasKey(e => e.AccTypeCode);
+                entity.Property(e => e.AccTypeCode).HasMaxLength(1).IsRequired();
+                entity.Property(e => e.AccTypeName).HasMaxLength(255).IsRequired();
+            });
+
+            // AccMakerList
+            modelBuilder.Entity<AccMakerList>(entity =>
+            {
+                entity.ToTable("AccMakerList");
+                entity.HasKey(e => e.AccMakerCode);
+                entity.Property(e => e.AccMakerCode).HasMaxLength(1).IsRequired();
+                entity.Property(e => e.AccMakerName).HasMaxLength(255).IsRequired();
+                entity.Property(e => e.AccTypeCode).HasMaxLength(1).IsRequired();
+
+                // Foreign key
+                entity.HasOne<AccTypeList>()
+                    .WithMany()
+                    .HasForeignKey(e => e.AccTypeCode)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // AccModelList
+            modelBuilder.Entity<AccModelList>(entity =>
+            {
+                entity.ToTable("AccModelList");
+                entity.HasKey(e => e.AccModelCode);
+                entity.Property(e => e.AccModelCode).HasMaxLength(10).IsRequired();
+                entity.Property(e => e.AccModelName).HasMaxLength(255).IsRequired();
+                entity.Property(e => e.AccTypeCode).HasMaxLength(1).IsRequired();
+                entity.Property(e => e.AccMakerCode).HasMaxLength(1).IsRequired();
+                entity.Property(e => e.AccSize).HasMaxLength(50).IsRequired();
+                entity.Property(e => e.AccStatus).IsRequired();
+
+                // Foreign keys
+                entity.HasOne<AccTypeList>()
+                    .WithMany()
+                    .HasForeignKey(e => e.AccTypeCode)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<AccMakerList>()
+                    .WithMany()
+                    .HasForeignKey(e => e.AccMakerCode)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
         }
     }

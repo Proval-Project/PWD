@@ -41,6 +41,7 @@ export interface EstimateSheetListResponseDto {
   customerName?: string;
   writerName?: string;
   requestCount: number;
+  createdDate?: string;
 }
 
 export interface CreateEstimateRequestDto {

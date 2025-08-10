@@ -14,6 +14,7 @@ interface DraftItem {
   status: number;
   project: string;
   tempEstimateNo: string;
+  writerID: string;
 }
 
 const TemporaryStoragePage: React.FC = () => {
@@ -118,8 +119,22 @@ const TemporaryStoragePage: React.FC = () => {
 
   // 행 클릭 핸들러 (견적 작성 페이지로 이동하여 불러오기)
   const handleRowClick = (item: DraftItem) => {
-    // tempEstimateNo를 쿼리 파라미터로 전달하여 기존 데이터 불러오기
-    navigate(`/estimate-request/new?load=${item.tempEstimateNo}`);
+    // 현재 사용자 정보 가져오기
+    let user = currentUser;
+    if (!user) {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        user = JSON.parse(userStr);
+        setCurrentUser(user);
+      }
+    }
+    
+    // 수정 가능 여부 확인: 현재 사용자가 작성자이고 상태가 '임시저장'(1) 또는 '견적요청'(2)인 경우만 수정 가능
+    const canEdit = (item.status === 1 || item.status === 2) && user && item.writerID === user.userId;
+    const readonly = canEdit ? 'false' : 'true';
+    
+    // tempEstimateNo와 readonly 상태를 쿼리 파라미터로 전달
+    navigate(`/estimate-request/new?load=${item.tempEstimateNo}&readonly=${readonly}`);
   };
 
   return (
@@ -186,7 +201,7 @@ const TemporaryStoragePage: React.FC = () => {
             <tr>
               <th>견적번호</th>
               <th>회사명</th>
-              <th>담당자</th>
+              <th>작성자</th>
               <th>프로젝트</th>
               <th>수량</th>
               <th>저장일자</th>

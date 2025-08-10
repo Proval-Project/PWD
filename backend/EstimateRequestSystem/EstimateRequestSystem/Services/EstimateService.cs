@@ -1310,20 +1310,22 @@ namespace EstimateRequestSystem.Services
         }
 
         public async Task<List<object>> GetTrimMatListAsync()
-        {
-            var trimMatList = await _context.TrimMatList
-                .Select(t => new { t.TrimMat, t.TrimMatCode })
-                .ToListAsync();
-            return trimMatList.Cast<object>().ToList();
-        }
+{
+    var matList = await _context.TrimMatList
+        .Select(m => new { trimMatCode = m.TrimMatCode, trimMat = m.TrimMat })
+        .OrderBy(m => m.trimMatCode)
+        .ToListAsync();
+    return matList.Cast<object>().ToList();
+}
 
         public async Task<List<object>> GetTrimOptionListAsync()
-        {
-            var optionList = await _context.TrimOptionList
-                .Select(o => new { o.TrimOptionCode, o.TrimOptionName })
-                .ToListAsync();
-            return optionList.Cast<object>().ToList();
-        }
+{
+    var optionList = await _context.TrimOptionList
+        .Select(o => new { trimOptionCode = o.TrimOptionCode, trimOptionName = o.TrimOptionName })
+        .OrderBy(o => o.trimOptionCode)
+        .ToListAsync();
+    return optionList.Cast<object>().ToList();
+}
 
         public async Task<List<object>> GetBodyRatingListAsync()
         {
@@ -1331,6 +1333,26 @@ namespace EstimateRequestSystem.Services
                 .Select(r => new { r.RatingUnit, r.RatingCode, r.RatingName })
                 .ToListAsync();
             return ratingList.Cast<object>().ToList();
+        }
+
+        public async Task<List<string>> GetBodySizeUnitsAsync()
+        {
+            var units = await _context.BodySizeList
+                .Select(s => s.SizeUnit)
+                .Distinct()
+                .OrderBy(u => u)
+                .ToListAsync();
+            return units;
+        }
+
+        public async Task<List<string>> GetBodyRatingUnitsAsync()
+        {
+            var units = await _context.BodyRatingList
+                .Select(r => r.RatingUnit)
+                .Distinct()
+                .OrderBy(u => u)
+                .ToListAsync();
+            return units;
         }
 
         // 견적 요청 조회 (검색, 필터링, 페이징)
@@ -1356,6 +1378,7 @@ namespace EstimateRequestSystem.Services
                                sheet.Project,
                                CustomerName = c != null ? c.CompanyName : sheet.CustomerID,
                                ManagerName = m != null ? m.Name : null, // 담당자명
+                               WriterName = w != null ? w.Name : null, // 작성자명
                                EstimateRequestCount = _context.EstimateRequest
                                    .Where(er => er.TempEstimateNo == sheet.TempEstimateNo)
                                    .Sum(er => er.Qty)
@@ -1375,6 +1398,7 @@ namespace EstimateRequestSystem.Services
                 x.Project,
                 x.CustomerName,
                 x.ManagerName,
+                x.WriterName,
                 x.EstimateRequestCount,
                 RequestDate = ParseDateFromTempEstimateNo(x.TempEstimateNo)
             }).AsQueryable();
@@ -1406,6 +1430,12 @@ namespace EstimateRequestSystem.Services
                 processedData = processedData.Where(x => x.Status == request.Status.Value);
             }
 
+            // 고객 ID 필터 (고객 권한일 때 자신의 견적만 조회)
+            if (!string.IsNullOrEmpty(request.CustomerID))
+            {
+                processedData = processedData.Where(x => x.CustomerID == request.CustomerID);
+            }
+
             // 전체 개수 계산
             var totalCount = processedData.Count();
 
@@ -1427,7 +1457,7 @@ namespace EstimateRequestSystem.Services
                 {
                     EstimateNo = !string.IsNullOrEmpty(x.CurEstimateNo) ? x.CurEstimateNo : x.TempEstimateNo,
                     CompanyName = x.CustomerName,
-                    ContactPerson = x.ManagerName ?? "미지정", // 담당자는 ManagerName으로 설정
+                    ContactPerson = x.WriterName ?? x.WriterID, // 작성자는 WriterName으로 설정
                     RequestDate = x.RequestDate,
                     Quantity = x.EstimateRequestCount,
                     Status = x.Status,
@@ -1521,7 +1551,7 @@ namespace EstimateRequestSystem.Services
                            from c in customerGroup.DefaultIfEmpty()
                            join writer in _context.User on sheet.WriterID equals writer.UserID into writerGroup
                            from w in writerGroup.DefaultIfEmpty()
-                           where sheet.Status == (int)EstimateStatus.Draft && sheet.WriterID == currentUserId 
+                           where (sheet.WriterID == currentUserId || sheet.CustomerID == currentUserId)  // 작성자이거나 고객이면 표시
                                && (customerId == null || sheet.CustomerID == customerId)  // 고객 ID 필터 추가
                            select new
                            {
@@ -1556,6 +1586,12 @@ namespace EstimateRequestSystem.Services
                 x.EstimateRequestCount,
                 RequestDate = ParseDateFromTempEstimateNo(x.TempEstimateNo)
             }).AsQueryable();
+
+            // 상태 필터
+            if (request.Status.HasValue)
+            {
+                processedData = processedData.Where(x => x.Status == request.Status.Value);
+            }
 
             // 검색어 필터
             if (!string.IsNullOrEmpty(request.SearchKeyword))
@@ -1599,13 +1635,14 @@ namespace EstimateRequestSystem.Services
                 {
                     EstimateNo = x.CurEstimateNo ?? x.TempEstimateNo,
                     CompanyName = x.CustomerName,
-                    ContactPerson = x.WriterName ?? "알 수 없음",
+                    ContactPerson = x.WriterName ?? x.WriterID,
                     RequestDate = x.RequestDate,
                     Quantity = x.EstimateRequestCount,
                     StatusText = EstimateStatusExtensions.ToKoreanText(x.Status),
                     Status = x.Status,
                     Project = x.Project ?? "",
-                    TempEstimateNo = x.TempEstimateNo
+                    TempEstimateNo = x.TempEstimateNo,
+                    WriterID = x.WriterID
                 })
                 .ToList();
 
@@ -1765,6 +1802,1516 @@ namespace EstimateRequestSystem.Services
             };
 
             return response;
+        }
+
+        // Step 3 마스터 데이터 메서드들
+        public async Task<List<object>> GetBodyBonnetListAsync()
+        {
+            var bonnetList = await _context.BodyBonnetList
+                .Select(b => new { bonnetCode = b.BonnetCode, bonnet = b.BonnetType })
+                .OrderBy(b => b.bonnetCode)
+                .ToListAsync();
+            return bonnetList.Cast<object>().ToList();
+        }
+
+        public async Task<List<object>> GetBodyConnectionListAsync()
+        {
+            var connectionList = await _context.BodyConnectionList
+                .Select(c => new { connectionCode = c.ConnectionCode, connection = c.Connection })
+                .OrderBy(c => c.connectionCode)
+                .ToListAsync();
+            return connectionList.Cast<object>().ToList();
+        }
+
+        public async Task<List<object>> GetTrimTypeListAsync()
+        {
+            var trimTypeList = await _context.TrimTypeList
+                .Select(t => new { trimTypeCode = t.TrimTypeCode, trimType = t.TrimType })
+                .OrderBy(t => t.trimTypeCode)
+                .ToListAsync();
+            return trimTypeList.Cast<object>().ToList();
+        }
+
+        public async Task<List<object>> GetTrimSeriesListAsync()
+        {
+            var trimSeriesList = await _context.TrimSeriesList
+                .Select(t => new { trimSeriesCode = t.TrimSeriesCode, trimSeries = t.TrimSeries })
+                .OrderBy(t => t.trimSeriesCode)
+                .ToListAsync();
+            return trimSeriesList.Cast<object>().ToList();
+        }
+
+        public async Task<List<object>> GetTrimPortSizeListAsync()
+        {
+            try
+            {
+                var portSizeList = await _context.TrimPortSizeList
+                    .Select(p => new { portSizeCode = p.PortSizeCode, portSize = p.PortSize, portSizeUnit = p.PortSizeUnit })
+                    .OrderBy(p => p.portSizeCode)
+                    .ToListAsync();
+                return portSizeList.Cast<object>().ToList();
+            }
+            catch (Exception ex)
+            {
+                // 더 자세한 로깅을 위해 예외 정보를 포함
+                throw new Exception($"GetTrimPortSizeListAsync 실행 중 오류 발생: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<List<object>> GetTrimFormListAsync()
+        {
+            var formList = await _context.TrimFormList
+                .Select(f => new { trimFormCode = f.TrimFormCode, trimForm = f.TrimForm })
+                .OrderBy(f => f.trimFormCode)
+                .ToListAsync();
+            return formList.Cast<object>().ToList();
+        }
+
+        public async Task<List<object>> GetActTypeListAsync()
+        {
+            var actTypeList = await _context.ActTypeList
+                .Select(a => new { actTypeCode = a.ActTypeCode, actType = a.ActType })
+                .OrderBy(a => a.actTypeCode)
+                .ToListAsync();
+            return actTypeList.Cast<object>().ToList();
+        }
+
+        public async Task<List<object>> GetActSeriesListAsync()
+        {
+            var actSeriesList = await _context.ActSeriesList
+                .Select(a => new { actSeriesCode = a.ActSeriesCode, actSeries = a.ActSeries })
+                .OrderBy(a => a.actSeriesCode)
+                .ToListAsync();
+            return actSeriesList.Cast<object>().ToList();
+        }
+
+        public async Task<List<object>> GetActSizeListAsync(string actSeriesCode = null)
+        {
+            var query = _context.ActSizeList.AsQueryable();
+            
+            if (!string.IsNullOrEmpty(actSeriesCode))
+            {
+                query = query.Where(a => a.ActSeriesCode == actSeriesCode);
+            }
+
+            var actSizeList = await query
+                .Select(a => new { actSizeCode = a.ActSizeCode, actSize = a.ActSize })
+                .OrderBy(a => a.actSizeCode)
+                .ToListAsync();
+            return actSizeList.Cast<object>().ToList();
+        }
+
+        public async Task<List<object>> GetActHWListAsync()
+        {
+            try
+            {
+                var hwList = await _context.ActHWList
+                    .Select(h => new { hwCode = h.HWCode, hw = h.HW })
+                    .OrderBy(h => h.hwCode)
+                    .ToListAsync();
+                return hwList.Cast<object>().ToList();
+            }
+            catch (Exception ex)
+            {
+                // 더 자세한 로깅을 위해 예외 정보를 포함
+                throw new Exception($"GetActHWListAsync 실행 중 오류 발생: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<List<object>> GetAccTypeListAsync()
+        {
+            var accTypeList = await _context.AccTypeList
+                .Select(a => new { Code = a.AccTypeCode, Name = a.AccTypeName })
+                .OrderBy(a => a.Code)
+                .ToListAsync();
+            return accTypeList.Cast<object>().ToList();
+        }
+
+        public async Task<List<object>> GetAccMakerListAsync(string accTypeCode = null)
+        {
+            var query = _context.AccMakerList.AsQueryable();
+            
+            if (!string.IsNullOrEmpty(accTypeCode))
+            {
+                query = query.Where(a => a.AccTypeCode == accTypeCode);
+            }
+
+            var accMakerList = await query
+                .Select(a => new { 
+                    AccTypeCode = a.AccTypeCode, 
+                    AccMakerCode = a.AccMakerCode, 
+                    AccMakerName = a.AccMakerName 
+                })
+                .OrderBy(a => a.AccMakerCode)
+                .ToListAsync();
+            return accMakerList.Cast<object>().ToList();
+        }
+
+        public async Task<List<object>> GetAccModelListAsync(string accTypeCode = null, string accMakerCode = null)
+        {
+            var query = _context.AccModelList.AsQueryable();
+            
+            if (!string.IsNullOrEmpty(accTypeCode))
+            {
+                query = query.Where(a => a.AccTypeCode == accTypeCode);
+            }
+            
+            if (!string.IsNullOrEmpty(accMakerCode))
+            {
+                query = query.Where(a => a.AccMakerCode == accMakerCode);
+            }
+
+            var accModelList = await query
+                .Select(a => new { 
+                    AccModelCode = a.AccModelCode, 
+                    AccModelName = a.AccModelName, 
+                    AccTypeCode = a.AccTypeCode,
+                    AccMakerCode = a.AccMakerCode,
+                    AccSize = a.AccSize 
+                })
+                .OrderBy(a => a.AccModelCode)
+                .ToListAsync();
+            return accModelList.Cast<object>().ToList();
+        }
+
+        // 마스터 데이터 CRUD 메서드들
+        // Body 관련
+        public async Task<bool> AddBodyValveAsync(string valveSeriesCode, string valveSeries)
+        {
+            try
+            {
+                // Primary Key 중복 검사
+                var existing = await _context.BodyValveList
+                    .FirstOrDefaultAsync(b => b.ValveSeriesCode == valveSeriesCode);
+                if (existing != null)
+                {
+                    return false; // 중복된 코드
+                }
+
+                var newValve = new BodyValveList
+                {
+                    ValveSeriesCode = valveSeriesCode,
+                    ValveSeries = valveSeries
+                };
+
+                _context.BodyValveList.Add(newValve);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateBodyValveAsync(string valveSeriesCode, string valveSeries)
+        {
+            try
+            {
+                var existing = await _context.BodyValveList
+                    .FirstOrDefaultAsync(b => b.ValveSeriesCode == valveSeriesCode);
+                if (existing == null)
+                {
+                    return false; // 존재하지 않는 코드
+                }
+
+                existing.ValveSeries = valveSeries;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteBodyValveAsync(string valveSeriesCode)
+        {
+            try
+            {
+                var existing = await _context.BodyValveList
+                    .FirstOrDefaultAsync(b => b.ValveSeriesCode == valveSeriesCode);
+                if (existing == null)
+                {
+                    return false; // 존재하지 않는 코드
+                }
+
+                // FK 제약조건 검사 (실제 사용 중인지 확인)
+                var isUsed = await _context.EstimateRequest
+                    .AnyAsync(er => er.ValveType == valveSeriesCode);
+                if (isUsed)
+                {
+                    return false; // 사용 중인 항목은 삭제 불가
+                }
+
+                _context.BodyValveList.Remove(existing);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> AddBodyBonnetAsync(string bonnetCode, string bonnetType)
+        {
+            try
+            {
+                var existing = await _context.BodyBonnetList
+                    .FirstOrDefaultAsync(b => b.BonnetCode == bonnetCode);
+                if (existing != null)
+                {
+                    return false;
+                }
+
+                var newBonnet = new BodyBonnetList
+                {
+                    BonnetCode = bonnetCode,
+                    BonnetType = bonnetType
+                };
+
+                _context.BodyBonnetList.Add(newBonnet);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateBodyBonnetAsync(string bonnetCode, string bonnetType)
+        {
+            try
+            {
+                var existing = await _context.BodyBonnetList
+                    .FirstOrDefaultAsync(b => b.BonnetCode == bonnetCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                existing.BonnetType = bonnetType;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteBodyBonnetAsync(string bonnetCode)
+        {
+            try
+            {
+                var existing = await _context.BodyBonnetList
+                    .FirstOrDefaultAsync(b => b.BonnetCode == bonnetCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                // BodyBonnet은 EstimateRequest에서 사용되지 않으므로 FK 체크 생략
+                // var isUsed = await _context.EstimateRequest
+                //     .AnyAsync(er => er.BodyBonnet == bonnetCode);
+                // if (isUsed)
+                // {
+                //     return false;
+                // }
+
+                _context.BodyBonnetList.Remove(existing);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> AddBodyMaterialAsync(string bodyMatCode, string bodyMat)
+        {
+            try
+            {
+                var existing = await _context.BodyMatList
+                    .FirstOrDefaultAsync(b => b.BodyMatCode == bodyMatCode);
+                if (existing != null)
+                {
+                    return false;
+                }
+
+                var newMaterial = new BodyMatList
+                {
+                    BodyMatCode = bodyMatCode,
+                    BodyMat = bodyMat
+                };
+
+                _context.BodyMatList.Add(newMaterial);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateBodyMaterialAsync(string bodyMatCode, string bodyMat)
+        {
+            try
+            {
+                var existing = await _context.BodyMatList
+                    .FirstOrDefaultAsync(b => b.BodyMatCode == bodyMatCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                existing.BodyMat = bodyMat;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteBodyMaterialAsync(string bodyMatCode)
+        {
+            try
+            {
+                var existing = await _context.BodyMatList
+                    .FirstOrDefaultAsync(b => b.BodyMatCode == bodyMatCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                var isUsed = await _context.EstimateRequest
+                    .AnyAsync(er => er.BodyMat == bodyMatCode);
+                if (isUsed)
+                {
+                    return false;
+                }
+
+                _context.BodyMatList.Remove(existing);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> AddBodySizeAsync(string sizeUnit, string bodySizeCode, string bodySize)
+        {
+            try
+            {
+                var existing = await _context.BodySizeList
+                    .FirstOrDefaultAsync(b => b.SizeUnit == sizeUnit && b.BodySizeCode == bodySizeCode);
+                if (existing != null)
+                {
+                    return false;
+                }
+
+                var newSize = new BodySizeList
+                {
+                    SizeUnit = sizeUnit,
+                    BodySizeCode = bodySizeCode,
+                    BodySize = bodySize
+                };
+
+                _context.BodySizeList.Add(newSize);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateBodySizeAsync(string sizeUnit, string bodySizeCode, string bodySize)
+        {
+            try
+            {
+                var existing = await _context.BodySizeList
+                    .FirstOrDefaultAsync(b => b.SizeUnit == sizeUnit && b.BodySizeCode == bodySizeCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                existing.BodySize = bodySize;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteBodySizeAsync(string sizeUnit, string bodySizeCode)
+        {
+            try
+            {
+                var existing = await _context.BodySizeList
+                    .FirstOrDefaultAsync(b => b.SizeUnit == sizeUnit && b.BodySizeCode == bodySizeCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                var isUsed = await _context.EstimateRequest
+                    .AnyAsync(er => er.BodySizeUnit == sizeUnit && er.BodySize == existing.BodySize);
+                if (isUsed)
+                {
+                    return false;
+                }
+
+                _context.BodySizeList.Remove(existing);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> AddBodyRatingAsync(string ratingCode, string rating, string unit)
+        {
+            try
+            {
+                var existing = await _context.BodyRatingList
+                    .FirstOrDefaultAsync(b => b.RatingCode == ratingCode);
+                if (existing != null)
+                {
+                    return false;
+                }
+
+                var newRating = new BodyRatingList
+                {
+                    RatingCode = ratingCode,
+                    RatingUnit = $"{rating} {unit}".Trim(),
+                    RatingName = rating
+                };
+
+                _context.BodyRatingList.Add(newRating);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateBodyRatingAsync(string ratingCode, string rating, string unit)
+        {
+            try
+            {
+                var existing = await _context.BodyRatingList
+                    .FirstOrDefaultAsync(b => b.RatingCode == ratingCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                existing.RatingUnit = $"{rating} {unit}".Trim();
+                existing.RatingName = rating;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteBodyRatingAsync(string ratingCode)
+        {
+            try
+            {
+                var existing = await _context.BodyRatingList
+                    .FirstOrDefaultAsync(b => b.RatingCode == ratingCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                var isUsed = await _context.EstimateRequest
+                    .AnyAsync(er => er.BodyRating == ratingCode);
+                if (isUsed)
+                {
+                    return false;
+                }
+
+                _context.BodyRatingList.Remove(existing);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> AddBodyConnectionAsync(string connectionCode, string connection)
+        {
+            try
+            {
+                var existing = await _context.BodyConnectionList
+                    .FirstOrDefaultAsync(b => b.ConnectionCode == connectionCode);
+                if (existing != null)
+                {
+                    return false;
+                }
+
+                var newConnection = new BodyConnectionList
+                {
+                    ConnectionCode = connectionCode,
+                    Connection = connection
+                };
+
+                _context.BodyConnectionList.Add(newConnection);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateBodyConnectionAsync(string connectionCode, string connection)
+        {
+            try
+            {
+                var existing = await _context.BodyConnectionList
+                    .FirstOrDefaultAsync(b => b.ConnectionCode == connectionCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                existing.Connection = connection;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteBodyConnectionAsync(string connectionCode)
+        {
+            try
+            {
+                var existing = await _context.BodyConnectionList
+                    .FirstOrDefaultAsync(b => b.ConnectionCode == connectionCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                // BodyConnection은 EstimateRequest에서 사용되지 않으므로 FK 체크 생략
+                // var isUsed = await _context.EstimateRequest
+                //     .AnyAsync(er => er.BodyConnectionCode == connectionCode);
+                // if (isUsed)
+                // {
+                //     return false;
+                // }
+
+                _context.BodyConnectionList.Remove(existing);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // Trim 관련
+        public async Task<bool> AddTrimTypeAsync(string trimTypeCode, string trimType)
+        {
+            try
+            {
+                var existing = await _context.TrimTypeList
+                    .FirstOrDefaultAsync(t => t.TrimTypeCode == trimTypeCode);
+                if (existing != null)
+                {
+                    return false;
+                }
+
+                var newTrimType = new TrimTypeList
+                {
+                    TrimTypeCode = trimTypeCode,
+                    TrimType = trimType
+                };
+
+                _context.TrimTypeList.Add(newTrimType);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateTrimTypeAsync(string trimTypeCode, string trimType)
+        {
+            try
+            {
+                var existing = await _context.TrimTypeList
+                    .FirstOrDefaultAsync(t => t.TrimTypeCode == trimTypeCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                existing.TrimType = trimType;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteTrimTypeAsync(string trimTypeCode)
+        {
+            try
+            {
+                var existing = await _context.TrimTypeList
+                    .FirstOrDefaultAsync(t => t.TrimTypeCode == trimTypeCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                var isUsed = await _context.DataSheetLv3
+                    .AnyAsync(ds => ds.TrimType == trimTypeCode);
+                if (isUsed)
+                {
+                    return false;
+                }
+
+                _context.TrimTypeList.Remove(existing);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // Act 관련
+        public async Task<bool> AddActTypeAsync(string actTypeCode, string actType)
+        {
+            try
+            {
+                var existing = await _context.ActTypeList
+                    .FirstOrDefaultAsync(a => a.ActTypeCode == actTypeCode);
+                if (existing != null)
+                {
+                    return false;
+                }
+
+                var newActType = new ActTypeList
+                {
+                    ActTypeCode = actTypeCode,
+                    ActType = actType
+                };
+
+                _context.ActTypeList.Add(newActType);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateActTypeAsync(string actTypeCode, string actType)
+        {
+            try
+            {
+                var existing = await _context.ActTypeList
+                    .FirstOrDefaultAsync(a => a.ActTypeCode == actTypeCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                existing.ActType = actType;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteActTypeAsync(string actTypeCode)
+        {
+            try
+            {
+                var existing = await _context.ActTypeList
+                    .FirstOrDefaultAsync(a => a.ActTypeCode == actTypeCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                var isUsed = await _context.DataSheetLv3
+                    .AnyAsync(ds => ds.ActType == actTypeCode);
+                if (isUsed)
+                {
+                    return false;
+                }
+
+                _context.ActTypeList.Remove(existing);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // Acc 관련
+        public async Task<bool> AddAccTypeAsync(string accTypeCode, string accType)
+        {
+            try
+            {
+                var existing = await _context.AccTypeList
+                    .FirstOrDefaultAsync(a => a.AccTypeCode == accTypeCode);
+                if (existing != null)
+                {
+                    return false;
+                }
+
+                var newAccType = new AccTypeList
+                {
+                    AccTypeCode = accTypeCode,
+                    AccTypeName = accType
+                };
+
+                _context.AccTypeList.Add(newAccType);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateAccTypeAsync(string accTypeCode, string accType)
+        {
+            try
+            {
+                var existing = await _context.AccTypeList
+                    .FirstOrDefaultAsync(a => a.AccTypeCode == accTypeCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                existing.AccTypeName = accType;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteAccTypeAsync(string accTypeCode)
+        {
+            try
+            {
+                var existing = await _context.AccTypeList
+                    .FirstOrDefaultAsync(a => a.AccTypeCode == accTypeCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                var isUsed = await _context.DataSheetLv3
+                    .AnyAsync(ds => ds.PosCode == accTypeCode || ds.SolCode == accTypeCode || ds.LimCode == accTypeCode || ds.ASCode == accTypeCode);
+                if (isUsed)
+                {
+                    return false;
+                }
+
+                _context.AccTypeList.Remove(existing);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // Trim 관련 추가 메서드들
+        public async Task<bool> AddTrimSeriesAsync(string trimSeriesCode, string trimSeries)
+        {
+            try
+            {
+                var existing = await _context.TrimSeriesList
+                    .FirstOrDefaultAsync(t => t.TrimSeriesCode == trimSeriesCode);
+                if (existing != null)
+                {
+                    return false;
+                }
+
+                var newTrimSeries = new TrimSeriesList
+                {
+                    TrimSeriesCode = trimSeriesCode,
+                    TrimSeries = trimSeries
+                };
+
+                _context.TrimSeriesList.Add(newTrimSeries);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateTrimSeriesAsync(string trimSeriesCode, string trimSeries)
+        {
+            try
+            {
+                var existing = await _context.TrimSeriesList
+                    .FirstOrDefaultAsync(t => t.TrimSeriesCode == trimSeriesCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                existing.TrimSeries = trimSeries;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteTrimSeriesAsync(string trimSeriesCode)
+        {
+            try
+            {
+                var existing = await _context.TrimSeriesList
+                    .FirstOrDefaultAsync(t => t.TrimSeriesCode == trimSeriesCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                var isUsed = await _context.DataSheetLv3
+                    .AnyAsync(ds => ds.TrimSeries == trimSeriesCode);
+                if (isUsed)
+                {
+                    return false;
+                }
+
+                _context.TrimSeriesList.Remove(existing);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> AddTrimPortSizeAsync(string portSizeCode, string portSize, string unit)
+        {
+            try
+            {
+                var existing = await _context.TrimPortSizeList
+                    .FirstOrDefaultAsync(t => t.PortSizeCode == portSizeCode);
+                if (existing != null)
+                {
+                    return false;
+                }
+
+                var newTrimPortSize = new TrimPortSizeList
+                {
+                    PortSizeCode = portSizeCode,
+                    PortSize = portSize,
+                    PortSizeUnit = unit
+                };
+
+                _context.TrimPortSizeList.Add(newTrimPortSize);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateTrimPortSizeAsync(string portSizeCode, string portSize, string unit)
+        {
+            try
+            {
+                var existing = await _context.TrimPortSizeList
+                    .FirstOrDefaultAsync(t => t.PortSizeCode == portSizeCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                existing.PortSize = portSize;
+                existing.PortSizeUnit = unit;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteTrimPortSizeAsync(string portSizeCode)
+        {
+            try
+            {
+                var existing = await _context.TrimPortSizeList
+                    .FirstOrDefaultAsync(t => t.PortSizeCode == portSizeCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                var isUsed = await _context.DataSheetLv3
+                    .AnyAsync(ds => ds.TrimPortSize == portSizeCode);
+                if (isUsed)
+                {
+                    return false;
+                }
+
+                _context.TrimPortSizeList.Remove(existing);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> AddTrimFormAsync(string formCode, string form)
+        {
+            try
+            {
+                var existing = await _context.TrimFormList
+                    .FirstOrDefaultAsync(t => t.TrimFormCode == formCode);
+                if (existing != null)
+                {
+                    return false;
+                }
+
+                var newTrimForm = new TrimFormList
+                {
+                    TrimFormCode = formCode,
+                    TrimForm = form
+                };
+
+                _context.TrimFormList.Add(newTrimForm);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateTrimFormAsync(string formCode, string form)
+        {
+            try
+            {
+                var existing = await _context.TrimFormList
+                    .FirstOrDefaultAsync(t => t.TrimFormCode == formCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                existing.TrimForm = form;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteTrimFormAsync(string formCode)
+        {
+            try
+            {
+                var existing = await _context.TrimFormList
+                    .FirstOrDefaultAsync(t => t.TrimFormCode == formCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                var isUsed = await _context.DataSheetLv3
+                    .AnyAsync(ds => ds.TrimForm == formCode);
+                if (isUsed)
+                {
+                    return false;
+                }
+
+                _context.TrimFormList.Remove(existing);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // Act 관련 추가 메서드들
+        public async Task<bool> AddActSeriesAsync(string actSeriesCode, string actSeries)
+        {
+            try
+            {
+                var existing = await _context.ActSeriesList
+                    .FirstOrDefaultAsync(a => a.ActSeriesCode == actSeriesCode);
+                if (existing != null)
+                {
+                    return false;
+                }
+
+                var newActSeries = new ActSeriesList
+                {
+                    ActSeriesCode = actSeriesCode,
+                    ActSeries = actSeries
+                };
+
+                _context.ActSeriesList.Add(newActSeries);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateActSeriesAsync(string actSeriesCode, string actSeries)
+        {
+            try
+            {
+                var existing = await _context.ActSeriesList
+                    .FirstOrDefaultAsync(a => a.ActSeriesCode == actSeriesCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                existing.ActSeries = actSeries;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteActSeriesAsync(string actSeriesCode)
+        {
+            try
+            {
+                var existing = await _context.ActSeriesList
+                    .FirstOrDefaultAsync(a => a.ActSeriesCode == actSeriesCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                var isUsed = await _context.DataSheetLv3
+                    .AnyAsync(ds => ds.ActSeriesCode == actSeriesCode);
+                if (isUsed)
+                {
+                    return false;
+                }
+
+                _context.ActSeriesList.Remove(existing);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> AddActSeriesSizeAsync(string seriesSizeCode, string seriesSize, string unit)
+        {
+            try
+            {
+                var existing = await _context.ActSizeList
+                    .FirstOrDefaultAsync(a => a.ActSizeCode == seriesSizeCode);
+                if (existing != null)
+                {
+                    return false;
+                }
+
+                var newActSeriesSize = new ActSizeList
+                {
+                    ActSizeCode = seriesSizeCode,
+                    ActSize = seriesSize,
+                    ActSeriesCode = unit // unit을 ActSeriesCode로 사용
+                };
+
+                _context.ActSizeList.Add(newActSeriesSize);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateActSeriesSizeAsync(string seriesSizeCode, string seriesSize, string unit)
+        {
+            try
+            {
+                var existing = await _context.ActSizeList
+                    .FirstOrDefaultAsync(a => a.ActSizeCode == seriesSizeCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                existing.ActSize = seriesSize;
+                existing.ActSeriesCode = unit; // unit을 ActSeriesCode로 사용
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteActSeriesSizeAsync(string seriesSizeCode)
+        {
+            try
+            {
+                var existing = await _context.ActSizeList
+                    .FirstOrDefaultAsync(a => a.ActSizeCode == seriesSizeCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                var isUsed = await _context.DataSheetLv3
+                    .AnyAsync(ds => ds.ActSize == seriesSizeCode);
+                if (isUsed)
+                {
+                    return false;
+                }
+
+                _context.ActSizeList.Remove(existing);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> AddActHWAsync(string hwCode, string hw)
+        {
+            try
+            {
+                var existing = await _context.ActHWList
+                    .FirstOrDefaultAsync(a => a.HWCode == hwCode);
+                if (existing != null)
+                {
+                    return false;
+                }
+
+                var newActHW = new ActHWList
+                {
+                    HWCode = hwCode,
+                    HW = hw
+                };
+
+                _context.ActHWList.Add(newActHW);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateActHWAsync(string hwCode, string hw)
+        {
+            try
+            {
+                var existing = await _context.ActHWList
+                    .FirstOrDefaultAsync(a => a.HWCode == hwCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                existing.HW = hw;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteActHWAsync(string hwCode)
+        {
+            try
+            {
+                var existing = await _context.ActHWList
+                    .FirstOrDefaultAsync(a => a.HWCode == hwCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                var isUsed = await _context.DataSheetLv3
+                    .AnyAsync(ds => ds.HW == hwCode);
+                if (isUsed)
+                {
+                    return false;
+                }
+
+                _context.ActHWList.Remove(existing);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // Act Series-Size 조회를 위한 새로운 메서드
+        public async Task<List<object>> GetActSeriesSizeListAsync()
+        {
+            try
+            {
+                var result = await _context.ActSizeList
+                    .Select(a => new
+                    {
+                        code = a.ActSizeCode,
+                        name = a.ActSize,
+                        seriesCode = a.ActSeriesCode, // ActSeriesCode를 명확하게 반환
+                        unit = a.ActSize // 실제 size 값을 unit으로 반환
+                    })
+                    .ToListAsync();
+
+                return result.Cast<object>().ToList();
+            }
+            catch
+            {
+                return new List<object>();
+            }
+        }
+
+        // Acc 관련 추가 메서드들
+        public async Task<bool> AddAccMakerAsync(string makerCode, string maker, string accTypeCode)
+        {
+            try
+            {
+                var existing = await _context.AccMakerList
+                    .FirstOrDefaultAsync(a => a.AccMakerCode == makerCode);
+                if (existing != null)
+                {
+                    return false;
+                }
+
+                var newAccMaker = new AccMakerList
+                {
+                    AccMakerCode = makerCode,
+                    AccMakerName = maker,
+                    AccTypeCode = accTypeCode
+                };
+
+                _context.AccMakerList.Add(newAccMaker);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateAccMakerAsync(string makerCode, string maker, string accTypeCode)
+        {
+            try
+            {
+                var existing = await _context.AccMakerList
+                    .FirstOrDefaultAsync(a => a.AccMakerCode == makerCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                existing.AccMakerName = maker;
+                existing.AccTypeCode = accTypeCode;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteAccMakerAsync(string makerCode)
+        {
+            try
+            {
+                var existing = await _context.AccMakerList
+                    .FirstOrDefaultAsync(a => a.AccMakerCode == makerCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                var isUsed = await _context.DataSheetLv3
+                    .AnyAsync(ds => ds.PosCode == makerCode || ds.SolCode == makerCode || ds.LimCode == makerCode || ds.ASCode == makerCode);
+                if (isUsed)
+                {
+                    return false;
+                }
+
+                _context.AccMakerList.Remove(existing);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> AddAccModelAsync(string modelCode, string model, string accTypeCode, string accMakerCode)
+        {
+            try
+            {
+                var existing = await _context.AccModelList
+                    .FirstOrDefaultAsync(a => a.AccModelCode == modelCode);
+                if (existing != null)
+                {
+                    return false;
+                }
+
+                var newAccModel = new AccModelList
+                {
+                    AccModelCode = modelCode,
+                    AccModelName = model,
+                    AccTypeCode = accTypeCode,
+                    AccMakerCode = accMakerCode
+                };
+
+                _context.AccModelList.Add(newAccModel);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateAccModelAsync(string modelCode, string model, string accTypeCode, string accMakerCode)
+        {
+            try
+            {
+                var existing = await _context.AccModelList
+                    .FirstOrDefaultAsync(a => a.AccModelCode == modelCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                existing.AccModelName = model;
+                existing.AccTypeCode = accTypeCode;
+                existing.AccMakerCode = accMakerCode;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteAccModelAsync(string modelCode)
+        {
+            try
+            {
+                var existing = await _context.AccModelList
+                    .FirstOrDefaultAsync(a => a.AccModelCode == modelCode);
+                if (existing == null)
+                {
+                    return false;
+                }
+
+                var isUsed = await _context.DataSheetLv3
+                    .AnyAsync(ds => ds.PosCode == modelCode || ds.SolCode == modelCode || ds.LimCode == modelCode || ds.ASCode == modelCode);
+                if (isUsed)
+                {
+                    return false;
+                }
+
+                _context.AccModelList.Remove(existing);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 } 

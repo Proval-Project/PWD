@@ -28,6 +28,21 @@ const EstimateInquiryPage: React.FC = () => {
   const fetchData = async (page: number = 1, overrideParams: Partial<EstimateInquiryRequest> = {}) => {
     setLoading(true);
     try {
+      // 매번 호출할 때마다 현재 사용자 정보를 다시 가져오기
+      let user = currentUser;
+      if (!user) {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          user = JSON.parse(userStr);
+          setCurrentUser(user);
+        }
+      }
+      
+      // 디버깅: 사용자 정보 확인
+      console.log('현재 사용자 정보:', user);
+      console.log('사용자 roleId:', user?.roleId);
+      console.log('사용자 userId:', user?.userId);
+
       const params: EstimateInquiryRequest = {
         searchKeyword: searchKeyword || undefined,
         startDate: startDate || undefined,
@@ -38,6 +53,12 @@ const EstimateInquiryPage: React.FC = () => {
         isDescending,
         ...overrideParams, // 매개변수로 전달된 값이 우선
       };
+
+      // 고객(roleID가 3)인 경우 자신의 UserID만 조회
+      if (user && user.roleId === 3) {
+        params.customerID = user.userId;
+        console.log('고객 권한으로 조회 - CustomerID(UserID):', user.userId);
+      }
 
       console.log('API 요청 파라미터:', params); // 디버깅용
       const response = await getEstimateInquiry(params);
@@ -121,16 +142,30 @@ const EstimateInquiryPage: React.FC = () => {
 
   // 행 클릭 핸들러 (상세 페이지로 이동)
   const handleRowClick = (item: EstimateInquiryItem) => {
-    // 견적요청 상태이고 본인이 작성한 경우 수정 가능한 페이지로
-    const canEdit = item.status === 2 && currentUser && item.writerID === currentUser.userID;
-    
-    if (canEdit) {
-      // 수정 가능한 페이지로 이동 (NewEstimateRequestPage와 동일)
-      navigate(`/estimate-request/edit?tempEstimateNo=${item.tempEstimateNo}`);
-    } else {
-      // 읽기 전용 페이지로 이동
-      navigate(`/estimate-detail/${item.tempEstimateNo}`);
+    // 현재 사용자 정보가 없으면 다시 가져오기
+    let user = currentUser;
+    if (!user) {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        user = JSON.parse(userStr);
+        setCurrentUser(user);
+      }
     }
+    
+    // 모든 경우에 NewEstimateRequestPage로 이동하되, 편집 권한 여부를 쿼리 파라미터로 전달
+    console.log('Row clicked:', item);
+    console.log('Current user:', user);
+    console.log('Item status:', item.status);
+    console.log('Item writerID:', item.writerID);
+    console.log('Current userId:', user?.userId);
+    
+    const canEdit = (item.status === 1 || item.status === 2) && user && item.writerID === user.userId;
+    console.log('Can edit:', canEdit);
+    
+    const readonly = canEdit ? 'false' : 'true';
+    console.log('Readonly:', readonly);
+    
+    navigate(`/estimate-request/new?load=${item.tempEstimateNo}&readonly=${readonly}`);
   };
 
   // 관리자/직원 여부 확인
@@ -270,7 +305,7 @@ const EstimateInquiryPage: React.FC = () => {
             <tr>
               <th>견적번호</th>
               <th>회사명</th>
-              <th>담당자</th>
+              <th>작성자</th>
               <th>요청일자</th>
               <th>수량</th>
               <th>상태</th>

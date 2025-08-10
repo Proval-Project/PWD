@@ -8,6 +8,7 @@ export interface EstimateInquiryRequest {
   startDate?: string;
   endDate?: string;
   status?: number;
+  customerID?: string; // 고객 ID (고객 권한일 때 자신의 견적만 조회)
   page?: number;
   pageSize?: number;
   isDescending?: boolean;

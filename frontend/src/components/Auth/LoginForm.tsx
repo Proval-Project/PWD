@@ -33,7 +33,7 @@ const LoginForm: React.FC = () => {
       } else if (response.user.roleName === 'Sales') {
         window.location.href = '/sales';
       } else {
-        window.location.href = '/customer';
+        window.location.href = '/'; // 고객은 메인 대시보드로 이동
       }
     } catch (err: any) {
       setError(err.response?.data?.message || '로그인에 실패했습니다.');

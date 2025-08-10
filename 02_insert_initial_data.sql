@@ -15,8 +15,9 @@ INSERT INTO User (UserID, Password, CompanyName, CompanyPhone, RoleID, Position,
 
 -- 3) BodyValveList 데이터 (이미지 참조)
 INSERT INTO BodyValveList (ValveSeries, ValveSeriesCode) VALUES
-('2-way Globe', 'A'),
-('3-way Globe', 'B'),
+('None', '0'),
+('2-Way Globe', 'A'),
+('3-Way Globe', 'B'),
 ('Angle', 'C'),
 ('Hi-Performance Butterfly', 'D'),
 ('Segmental Ball', 'E'),
@@ -28,7 +29,8 @@ INSERT INTO BodyValveList (ValveSeries, ValveSeriesCode) VALUES
 ('Diaphragm (Weir Type)', 'K'),
 ('2-WAY GLOBE JAKET', 'L'),
 ('Float 2-Way Globe', 'M'),
-('3-Way Ball', 'N');
+('3-Way Ball', 'N'),
+('SPECIAL', 'Z');
 
 -- 4) BodyBonnetList 데이터 (이미지 참조)
 INSERT INTO BodyBonnetList (BonnetType, BonnetCode) VALUES
@@ -38,8 +40,18 @@ INSERT INTO BodyBonnetList (BonnetType, BonnetCode) VALUES
 ('Extension (Short)', 'C'),
 ('Extension (Long)', 'D'),
 ('Extension (Cry.)', 'E'),
-('Bellows (STD)', 'F'),
-('Bellows (Long)', 'G');
+('Damper', 'F'),
+('2-Way Ball', 'G'),
+('Gate Valve', 'H'),
+('Bellows (STD)', 'I'),
+('Bellows (Long)', 'J'),
+('Electric Motor Globe', 'K'),
+('Electric Motor Gate', 'L'),
+('Diaphragm (Weir Type)', 'M'),
+('2-WAY GLOBE JAKET', 'N'),
+('Float 2-Way Globe', 'O'),
+('3-Way Ball', 'P'),
+('SPECIAL', 'Z');
 
 -- 5) BodyMatList 데이터 (이미지 참조)
 INSERT INTO BodyMatList (BodyMat, BodyMatCode) VALUES
@@ -62,36 +74,12 @@ INSERT INTO BodyMatList (BodyMat, BodyMatCode) VALUES
 ('SUS304', 'P'),
 ('SUS316', 'Q'),
 ('F304', 'R'),
-('F316', 'S');
+('F316', 'S'),
+('SPECIAL', 'Z');
 
--- 6) BodySizeList 데이터 (이미지 참조)
+-- 6) BodySizeList 데이터 (이미지 참조) - 단위를 별도로 표기
 INSERT INTO BodySizeList (SizeUnit, BodySize, BodySizeCode) VALUES
-('inch', 'None', '0'),
-('inch', '1/2"', 'A'),
-('inch', '3/4"', 'B'),
-('inch', '1"', 'C'),
-('inch', '1 1/4"', 'D'),
-('inch', '1 1/2"', 'E'),
-('inch', '2"', 'F'),
-('inch', '2 1/2"', 'G'),
-('inch', '3"', 'H'),
-('inch', '4"', 'I'),
-('inch', '5"', 'J'),
-('inch', '6"', 'K'),
-('inch', '8"', 'L'),
-('inch', '10"', 'M'),
-('inch', '12"', 'N'),
-('inch', '14"', 'O'),
-('inch', '16"', 'P'),
-('inch', '18"', 'Q'),
-('inch', '20"', 'R'),
-('inch', '22"', 'S'),
-('inch', '24"', 'T'),
-('inch', '26"', 'U'),
-('inch', '28"', 'V'),
-('inch', '30"', 'W'),
-('inch', '32"', 'X'),
-('inch', '36"', 'Y'),
+('None', 'None', '0'),
 ('A', '15A', 'A'),
 ('A', '20A', 'B'),
 ('A', '25A', 'C'),
@@ -117,9 +105,34 @@ INSERT INTO BodySizeList (SizeUnit, BodySize, BodySizeCode) VALUES
 ('A', '750A', 'W'),
 ('A', '800A', 'X'),
 ('A', '900A', 'Y'),
-('A', '1000A', 'Z');
+('inch', '1/2"', 'A'),
+('inch', '3/4"', 'B'),
+('inch', '1"', 'C'),
+('inch', '1 1/4"', 'D'),
+('inch', '1 1/2"', 'E'),
+('inch', '2"', 'F'),
+('inch', '2 1/2"', 'G'),
+('inch', '3"', 'H'),
+('inch', '4"', 'I'),
+('inch', '5"', 'J'),
+('inch', '6"', 'K'),
+('inch', '8"', 'L'),
+('inch', '10"', 'M'),
+('inch', '12"', 'N'),
+('inch', '14"', 'O'),
+('inch', '16"', 'P'),
+('inch', '18"', 'Q'),
+('inch', '20"', 'R'),
+('inch', '22"', 'S'),
+('inch', '24"', 'T'),
+('inch', '26"', 'U'),
+('inch', '28"', 'V'),
+('inch', '30"', 'W'),
+('inch', '32"', 'X'),
+('inch', '36"', 'Y'),
+('SPECIAL', 'SPECIAL', 'Z');
 
--- 7) BodyRatingList 데이터 (이미지 참조)
+-- 7) BodyRatingList 데이터 (이미지 참조) - 단위를 별도로 표기
 INSERT INTO BodyRatingList (RatingUnit, RatingCode, RatingName) VALUES
 ('ASME', 'A', '150#'),
 ('ASME', 'B', '300#'),
@@ -140,7 +153,8 @@ INSERT INTO BodyRatingList (RatingUnit, RatingCode, RatingName) VALUES
 ('PN', 'Q', 'PN 16'),
 ('PN', 'R', 'PN 25'),
 ('PN', 'S', 'PN 40'),
-('PN', 'T', 'PN 63');
+('PN', 'T', 'PN 63'),
+('SPECIAL', 'Z', 'SPECIAL');
 
 -- 8) BodyConnectionList 데이터 (이미지 참조)
 INSERT INTO BodyConnectionList (Connection, ConnectionCode) VALUES
@@ -152,7 +166,8 @@ INSERT INTO BodyConnectionList (Connection, ConnectionCode) VALUES
 ('Wafer', 'E'),
 ('Screwed', 'F'),
 ('Female', 'G'),
-('RTJ', 'H');
+('RTJ', 'H'),
+('SPECIAL', 'Z');
 
 -- 9) TrimTypeList 데이터 (이미지 참조)
 INSERT INTO TrimTypeList (TrimType, TrimTypeCode) VALUES
@@ -160,17 +175,24 @@ INSERT INTO TrimTypeList (TrimType, TrimTypeCode) VALUES
 ('T-Port', 'A'),
 ('Y-Port', 'B'),
 ('L-Port', 'C'),
-('Balanced / Protek', 'D'),
-('Balanced', 'E'),
-('Floating', 'F'),
-('Trunnion Type', 'G'),
-('Knife Gate', 'H'),
-('L-Type', 'I'),
-('Mixing', 'J'),
-('Straight', 'K'),
-('Weir', 'L'),
-('Unbalanced / Protek', 'M'),
-('Unbalanced', 'N');
+('Multi-Hole', 'D'),
+('Multi-Hole(P-Port)', 'E'),
+('Balanced / Protek', 'F'),
+('Balanced', 'G'),
+('Diverting', 'H'),
+('Concentric', 'I'),
+('Eccentric', 'J'),
+('TRIPLE OFF SET', 'K'),
+('Floating', 'L'),
+('Trunnion Type', 'M'),
+('Knife Gate', 'N'),
+('L-Type', 'O'),
+('Mixing', 'P'),
+('Straight', 'Q'),
+('Weir', 'R'),
+('Unbalanced / Protek', 'S'),
+('Unbalanced', 'T'),
+('SPECIAL', 'Z');
 
 -- 10) TrimSeriesList 데이터 (이미지 참조)
 INSERT INTO TrimSeriesList (TrimSeries, TrimSeriesCode) VALUES
@@ -184,7 +206,16 @@ INSERT INTO TrimSeriesList (TrimSeries, TrimSeriesCode) VALUES
 ('Diverting', 'G'),
 ('Concentric', 'H'),
 ('Eccentric', 'I'),
-('TRIPLE OFF SET', 'J');
+('TRIPLE OFF SET', 'J'),
+('Floating', 'K'),
+('Trunnion Type', 'L'),
+('Knife Gate', 'M'),
+('L-Type', 'N'),
+('Straight', 'O'),
+('Weir', 'P'),
+('Unbalanced / Protek', 'Q'),
+('Unbalanced', 'R'),
+('SPECIAL', 'Z');
 
 -- 11) TrimMatList 데이터 (이미지 참조)
 INSERT INTO TrimMatList (TrimMat, TrimMatCode) VALUES
@@ -220,49 +251,52 @@ INSERT INTO TrimMatList (TrimMat, TrimMatCode) VALUES
 ('TCC(304)', '3'),
 ('TCC(316)', '4'),
 ('630', '5'),
-('SUS420J2', '6');
+('SUS420J2', '6'),
+('SPECIAL', '7');
 
--- 12) TrimPortSizeList 데이터 (이미지 참조)
+-- 12) TrimPortSizeList 데이터 (이미지 참조) - 단위를 별도로 표기
 INSERT INTO TrimPortSizeList (PortSizeCode, PortSizeUnit, PortSize) VALUES
-('0', 'inch', 'None'),
-('A', 'inch', '1/8'),
-('B', 'inch', '1/4'),
-('C', 'inch', '3/8'),
-('D', 'inch', '1/2'),
-('E', 'inch', '3/4'),
-('F', 'inch', '1'),
-('G', 'inch', '1 1/4'),
-('H', 'inch', '1 1/2'),
-('I', 'inch', '2'),
-('J', 'inch', '2 1/2'),
-('K', 'inch', '3'),
-('L', 'inch', '4'),
-('M', 'inch', '5'),
-('N', 'inch', '6'),
-('O', 'inch', '8'),
-('P', 'inch', '10'),
-('Q', 'inch', '12'),
-('R', 'inch', '14'),
-('S', 'inch', '16'),
-('T', 'inch', '18'),
-('U', 'inch', '20'),
-('V', 'inch', '22'),
-('W', 'inch', '24'),
-('X', 'inch', '26'),
-('Y', 'inch', '28'),
-('Z', 'inch', '30'),
-('1', 'inch', '32'),
-('2', 'inch', '36');
+('0', 'None', 'None'),
+('A', 'inch', '1/8"'),
+('B', 'inch', '1/4"'),
+('C', 'inch', '3/8"'),
+('D', 'inch', '1/2"'),
+('E', 'inch', '3/4"'),
+('F', 'inch', '1"'),
+('G', 'inch', '1 1/4"'),
+('H', 'inch', '1 1/2"'),
+('I', 'inch', '2"'),
+('J', 'inch', '2 1/2"'),
+('K', 'inch', '3"'),
+('L', 'inch', '4"'),
+('M', 'inch', '5"'),
+('N', 'inch', '6"'),
+('O', 'inch', '8"'),
+('P', 'inch', '10"'),
+('Q', 'inch', '12"'),
+('R', 'inch', '14"'),
+('S', 'inch', '16"'),
+('T', 'inch', '18"'),
+('U', 'inch', '20"'),
+('V', 'inch', '22"'),
+('W', 'inch', '24"'),
+('X', 'inch', '26"'),
+('Y', 'inch', '28"'),
+('Z', 'inch', '30"'),
+('1', 'inch', '32"'),
+('2', 'inch', '36"'),
+('7', 'SPECIAL', 'SPECIAL');
 
 -- 13) TrimFormList 데이터 (이미지 참조)
 INSERT INTO TrimFormList (TrimForm, TrimFormCode) VALUES
 ('None', '0'),
-('Equal %', 'A'),
-('Linear', 'B'),
-('Quick-Open', 'C'),
-('Mod. Equal%', 'D'),
+('(NONE)', 'A'),
+('Equal %', 'B'),
+('Linear', 'C'),
+('Quick-Open', 'D'),
 ('Modified-Linear', 'E'),
-('On-Off', 'F');
+('On-Off', 'F'),
+('SPECIAL', 'Z');
 
 -- 14) TrimOptionList 데이터 (이미지 참조)
 INSERT INTO TrimOptionList (TrimOptionCode, TrimOptionName) VALUES
@@ -417,24 +451,70 @@ INSERT INTO AccTypeList (AccTypeCode, AccTypeName) VALUES
 
 -- 20) AccMakerList 데이터 (이미지 참조)
 INSERT INTO AccMakerList (AccMakerCode, AccMakerName, AccTypeCode) VALUES
+-- Positioner 제조사
 ('A', 'YTC', 'A'),
 ('B', 'SAMSON', 'A'),
 ('C', 'FISHER', 'A'),
+-- Solenoid Valve 제조사
 ('D', 'YTC', 'B'),
 ('E', 'SAMSON', 'B'),
 ('F', 'FISHER', 'B'),
+-- Limit Switch 제조사
 ('G', 'YTC', 'C'),
 ('H', 'SAMSON', 'C'),
-('I', 'FISHER', 'C');
+('I', 'FISHER', 'C'),
+-- Air Set 제조사
+('J', 'Tissin', 'D'),
+('K', 'SAMSON', 'D'),
+('L', 'FISHER', 'D'),
+-- Volume Booster 제조사
+('M', 'YTC', 'E'),
+('N', 'SAMSON', 'E'),
+('O', 'FISHER', 'E'),
+-- Air Operated 제조사
+('P', 'YTC', 'F'),
+('Q', 'SAMSON', 'F'),
+('R', 'FISHER', 'F'),
+-- Lock Up 제조사
+('S', 'YTC', 'G'),
+('T', 'SAMSON', 'G'),
+('U', 'FISHER', 'G'),
+-- Snap Acting Relay 제조사
+('V', 'YTC', 'H'),
+('W', 'SAMSON', 'H'),
+('X', 'FISHER', 'H');
 
 -- 21) AccModelList 데이터 (이미지 참조)
 INSERT INTO AccModelList (AccModelCode, AccModelName, AccTypeCode, AccMakerCode, AccSize, AccStatus) VALUES
+-- Positioner 모델
 ('A001', 'YT-1000R', 'A', 'A', '1/2', TRUE),
 ('A002', '3760', 'A', 'B', '1', TRUE),
 ('A003', '3582', 'A', 'C', '1/4', TRUE),
+-- Solenoid Valve 모델
 ('B001', 'YT-2000', 'B', 'D', '1/2', TRUE),
 ('B002', '3785', 'B', 'E', '1', TRUE),
 ('B003', '3585', 'B', 'F', '1/4', TRUE),
+-- Limit Switch 모델
 ('C001', 'YT-3000', 'C', 'G', '1/2', TRUE),
 ('C002', '3790', 'C', 'H', '1', TRUE),
-('C003', '3590', 'C', 'I', '1/4', TRUE);
+('C003', '3590', 'C', 'I', '1/4', TRUE),
+-- Air Set 모델
+('D001', 'TS300PS0', 'D', 'J', '1/4', TRUE),
+('D002', 'PT 1/4', 'D', 'J', '1/4', TRUE),
+('D003', 'TS500PS0', 'D', 'K', '1/2', TRUE),
+-- Volume Booster 모델
+('E001', 'VB-100', 'E', 'M', '1/2', TRUE),
+('E002', 'VB-200', 'E', 'N', '1', TRUE),
+('E003', 'VB-300', 'E', 'O', '1/4', TRUE),
+-- Air Operated 모델
+('F001', 'AO-100', 'F', 'P', '1/2', TRUE),
+('F002', 'AO-200', 'F', 'Q', '1', TRUE),
+('F003', 'AO-300', 'F', 'R', '1/4', TRUE),
+-- Lock Up 모델
+('G001', 'LU-100', 'G', 'S', '1/2', TRUE),
+('G002', 'LU-200', 'G', 'T', '1', TRUE),
+('G003', 'LU-300', 'G', 'U', '1/4', TRUE),
+-- Snap Acting Relay 모델
+('H001', 'SAR-100', 'H', 'V', '1/2', TRUE),
+('H002', 'SAR-200', 'H', 'W', '1', TRUE),
+('H003', 'SAR-300', 'H', 'X', '1/4', TRUE);

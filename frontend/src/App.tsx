@@ -123,6 +123,30 @@ function App() {
           <Route path="estimate-request/temporary" element={<TemporaryStoragePage />} />
           <Route path="temporary-storage" element={<TemporaryStoragePage />} />
           <Route path="accessory-management" element={<AccessoryManagementPage />} />
+          <Route path="estimate-requests" element={<EstimateInquiryPage />} />
+        </Route>
+
+        {/* 대시보드 레이아웃이 적용된 다른 경로들 */}
+        <Route path="/dashboard" element={<DashboardLayout userRole={user.roleId} />}>
+          <Route index element={<StatisticsPage />} />
+          <Route path="statistics" element={<StatisticsPage />} />
+          <Route path="customer-management" element={<CustomerManagementPage />} />
+          <Route path="customer-detail/:customerId" element={<CustomerDetailPage />} />
+          <Route path="staff-management" element={<StaffManagementPage />} />
+          <Route path="staff-detail/:staffId" element={<StaffDetailPage />} />
+          <Route path="membership-requests" element={<MembershipRequestsPage />} />
+
+          <Route path="estimate-request" element={<EstimateRequestPage />} />
+          <Route path="estimate-request/new" element={<NewEstimateRequestPage />} />
+          <Route path="estimate-request/edit" element={<NewEstimateRequestPage />} />
+          <Route path="estimate-request/:tempEstimateNo" element={<NewEstimateRequestPage />} />
+          <Route path="estimate-inquiry" element={<EstimateInquiryPage />} />
+          <Route path="estimate-detail/:tempEstimateNo" element={<EstimateDetailPage />} />
+          <Route path="estimate-management" element={<EstimateManagementPage />} />
+          <Route path="estimate-request/temporary" element={<TemporaryStoragePage />} />
+          <Route path="temporary-storage" element={<TemporaryStoragePage />} />
+          <Route path="accessory-management" element={<AccessoryManagementPage />} />
+          <Route path="estimate-requests" element={<EstimateInquiryPage />} />
         </Route>
 
         {/* 권한별 메인 페이지 라우트들 */}
@@ -130,9 +154,6 @@ function App() {
           <Route index element={<StatisticsPage />} />
         </Route>
         <Route path="/sales" element={<DashboardLayout userRole={user.roleId} />}>
-          <Route index element={<StatisticsPage />} />
-        </Route>
-        <Route path="/customer" element={<DashboardLayout userRole={user.roleId} />}>
           <Route index element={<StatisticsPage />} />
         </Route>
 
