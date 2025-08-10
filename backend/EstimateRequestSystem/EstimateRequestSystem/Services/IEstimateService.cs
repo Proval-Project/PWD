@@ -51,5 +51,11 @@ namespace EstimateRequestSystem.Services
 
         // 담당자 지정
         Task<bool> AssignManagerAsync(string tempEstimateNo, string managerID);
+
+        // 임시저장 목록 조회
+        Task<EstimateInquiryResponseDto> GetDraftEstimatesAsync(EstimateInquiryRequestDto request, string currentUserId, string? customerId = null);
+
+        // 견적 상세 조회
+        Task<EstimateDetailResponseDto?> GetEstimateDetailAsync(string tempEstimateNo, string currentUserId);
     }
 } 

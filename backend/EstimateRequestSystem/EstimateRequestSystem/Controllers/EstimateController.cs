@@ -355,6 +355,24 @@ namespace EstimateRequestSystem.Controllers
             }
         }
 
+        // 임시저장 목록 조회
+        [HttpGet("drafts")]
+        public async Task<ActionResult<EstimateInquiryResponseDto>> GetDraftEstimates(
+            [FromQuery] EstimateInquiryRequestDto request,
+            [FromQuery] string currentUserId,
+            [FromQuery] string? customerId = null)
+        {
+            try
+            {
+                var result = await _estimateService.GetDraftEstimatesAsync(request, currentUserId, customerId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         // 견적 상태 업데이트
         [HttpPut("sheets/{tempEstimateNo}/status")]
         public async Task<ActionResult> UpdateEstimateStatus(string tempEstimateNo, [FromBody] UpdateStatusRequest request)
@@ -387,6 +405,30 @@ namespace EstimateRequestSystem.Controllers
                     return BadRequest(new { message = "담당자 지정에 실패했습니다. 견적이 존재하지 않거나 유효하지 않은 담당자입니다." });
 
                 return Ok(new { message = "담당자가 성공적으로 지정되었습니다." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // 견적 상세 조회
+        [HttpGet("sheets/{tempEstimateNo}/detail")]
+        public async Task<ActionResult<EstimateDetailResponseDto>> GetEstimateDetail(string tempEstimateNo, [FromQuery] string currentUserId)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(currentUserId))
+                {
+                    return BadRequest(new { message = "현재 사용자 ID가 필요합니다." });
+                }
+
+                var result = await _estimateService.GetEstimateDetailAsync(tempEstimateNo, currentUserId);
+                
+                if (result == null)
+                    return NotFound(new { message = "견적을 찾을 수 없습니다." });
+
+                return Ok(result);
             }
             catch (Exception ex)
             {

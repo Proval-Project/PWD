@@ -18,7 +18,7 @@ import CustomerDetailPage from './pages/Dashboard/CustomerDetailPage';
 import StaffManagementPage from './pages/Dashboard/StaffManagementPage';
 import StaffDetailPage from './pages/Dashboard/StaffDetailPage';
 import MembershipRequestsPage from './pages/Dashboard/MembershipRequestsPage';
-import EstimateRequestsPage from './pages/Dashboard/EstimateRequestsPage';
+
 
 import EstimateRequestPage from './pages/Dashboard/EstimateRequestPage';
 import NewEstimateRequestPage from './pages/Dashboard/NewEstimateRequestPage';
@@ -26,6 +26,7 @@ import EstimateInquiryPage from './pages/Dashboard/EstimateInquiryPage';
 import EstimateManagementPage from './pages/Dashboard/EstimateManagementPage';
 import TemporaryStoragePage from './pages/Dashboard/TemporaryStoragePage';
 import AccessoryManagementPage from './pages/Dashboard/AccessoryManagementPage';
+import EstimateDetailPage from './pages/Dashboard/EstimateDetailPage';
 
 function App() {
   const [user, setUser] = useState<any>(null);
@@ -111,11 +112,15 @@ function App() {
           <Route path="staff-management" element={<StaffManagementPage />} />
           <Route path="staff-detail/:staffId" element={<StaffDetailPage />} />
           <Route path="membership-requests" element={<MembershipRequestsPage />} />
-          <Route path="estimate-requests" element={<EstimateRequestsPage />} />
+
           <Route path="estimate-request" element={<EstimateRequestPage />} />
           <Route path="estimate-request/new" element={<NewEstimateRequestPage />} />
+          <Route path="estimate-request/edit" element={<NewEstimateRequestPage />} />
+          <Route path="estimate-request/:tempEstimateNo" element={<NewEstimateRequestPage />} />
           <Route path="estimate-inquiry" element={<EstimateInquiryPage />} />
+          <Route path="estimate-detail/:tempEstimateNo" element={<EstimateDetailPage />} />
           <Route path="estimate-management" element={<EstimateManagementPage />} />
+          <Route path="estimate-request/temporary" element={<TemporaryStoragePage />} />
           <Route path="temporary-storage" element={<TemporaryStoragePage />} />
           <Route path="accessory-management" element={<AccessoryManagementPage />} />
         </Route>

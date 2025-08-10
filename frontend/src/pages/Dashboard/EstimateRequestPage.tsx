@@ -33,6 +33,12 @@ const EstimateRequestPage: React.FC = () => {
   };
 
   const handleLoadTemporary = () => {
+    if (!selectedCustomer) {
+      alert('고객을 먼저 선택해주세요.');
+      return;
+    }
+    // 선택된 고객 정보를 localStorage에 저장
+    localStorage.setItem('selectedCustomerForTempStorage', JSON.stringify(selectedCustomer));
     navigate('/estimate-request/temporary');
   };
 

@@ -34,5 +34,6 @@ namespace EstimateRequestSystem.DTOs
         public int Status { get; set; }                            // 상태 코드
         public string Project { get; set; } = string.Empty;        // 프로젝트
         public string TempEstimateNo { get; set; } = string.Empty; // 임시 견적번호 (상세 조회용)
+        public string WriterID { get; set; } = string.Empty;       // 작성자 ID (수정 권한 확인용)
     }
 }

@@ -24,6 +24,7 @@ namespace EstimateRequestSystem.Data
         public DbSet<TrimTypeList> TrimTypeList { get; set; }
         public DbSet<TrimMatList> TrimMatList { get; set; }
         public DbSet<TrimOptionList> TrimOptionList { get; set; }
+        public DbSet<ActHWList> ActHWList { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -73,10 +74,8 @@ namespace EstimateRequestSystem.Data
                 entity.Property(e => e.Fluid).HasMaxLength(255);
                 entity.Property(e => e.QMUnit).HasMaxLength(255);
                 entity.Property(e => e.QNUnit).HasMaxLength(255);
-                entity.Property(e => e.InletPressureUnit).HasMaxLength(255);
-                entity.Property(e => e.OutletPressureUnit).HasMaxLength(255);
-                entity.Property(e => e.DifferentialPressureUnit).HasMaxLength(255);
-                entity.Property(e => e.InletTemperatureUnit).HasMaxLength(255);
+                entity.Property(e => e.PressureUnit).HasMaxLength(255);
+                entity.Property(e => e.TemperatureUnit).HasMaxLength(255);
                 entity.Property(e => e.DensityUnit).HasMaxLength(255);
                 entity.Property(e => e.MolecularWeightUnit).HasMaxLength(255);
                 entity.Property(e => e.BodySizeUnit).HasMaxLength(255);
@@ -126,7 +125,7 @@ namespace EstimateRequestSystem.Data
                 entity.Property(e => e.QMUnit).HasMaxLength(255);
                 entity.Property(e => e.QNUnit).HasMaxLength(255);
                 entity.Property(e => e.PressureUnit).HasMaxLength(255);
-                entity.Property(e => e.InletTemperatureUnit).HasMaxLength(255);
+                entity.Property(e => e.TemperatureUnit).HasMaxLength(255);
                 entity.Property(e => e.DensityUnit).HasMaxLength(255);
                 entity.Property(e => e.MolecularWeightUnit).HasMaxLength(255);
                 entity.Property(e => e.CalculatedCvUnit).HasMaxLength(255);
@@ -150,8 +149,6 @@ namespace EstimateRequestSystem.Data
                 entity.Property(e => e.BasicCharacter).HasMaxLength(255);
                 entity.Property(e => e.FlowCoeffUnit).HasMaxLength(255);
                 entity.Property(e => e.SizePressureClass).HasMaxLength(255);
-                entity.Property(e => e.SelectedValveSize).HasMaxLength(255);
-                entity.Property(e => e.PressureClass).HasMaxLength(255);
                 entity.Property(e => e.BonnetType).HasMaxLength(1);
                 entity.Property(e => e.BodyMat).HasMaxLength(1);
     
@@ -177,10 +174,15 @@ namespace EstimateRequestSystem.Data
                 entity.Property(e => e.LockupCode).HasMaxLength(10);
                 entity.Property(e => e.SnapActCode).HasMaxLength(10);
 
-                // Foreign key
+                // Foreign keys
                 entity.HasOne(e => e.EstimateSheet)
                     .WithMany()
                     .HasForeignKey(e => e.TempEstimateNo)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.ActHW)
+                    .WithMany()
+                    .HasForeignKey(e => e.HW)
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
@@ -215,6 +217,15 @@ namespace EstimateRequestSystem.Data
                 entity.HasKey(e => e.RoleID);
                 entity.Property(e => e.RoleName).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.Description).HasMaxLength(255);
+            });
+
+            // ActHWList
+            modelBuilder.Entity<ActHWList>(entity =>
+            {
+                entity.ToTable("ActHWList");
+                entity.HasKey(e => e.HWCode);
+                entity.Property(e => e.HWCode).HasMaxLength(1).IsRequired();
+                entity.Property(e => e.HW).HasMaxLength(255).IsRequired();
             });
         }
     }

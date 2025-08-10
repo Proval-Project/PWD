@@ -33,6 +33,7 @@ export interface EstimateInquiryItem {
   status: number;
   project: string;
   tempEstimateNo: string;
+  writerID: string; // 작성자 ID (수정 권한 확인용)
 }
 
 // 견적 요청 조회 API

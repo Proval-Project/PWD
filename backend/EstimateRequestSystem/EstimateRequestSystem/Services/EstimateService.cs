@@ -83,19 +83,38 @@ namespace EstimateRequestSystem.Services
                 .ToListAsync();
             _context.DataSheetLv3.RemoveRange(existingDataSheets);
 
+            // 4. 기존 첨부파일 데이터 삭제 (중요: 삭제된 첨부파일을 DB에서도 제거)
+            var existingAttachments = await _context.EstimateAttachment
+                .Where(a => a.TempEstimateNo == tempEstimateNo)
+                .ToListAsync();
+            _context.EstimateAttachment.RemoveRange(existingAttachments);
+
             // 새로운 데이터 삽입
-            int sheetID = 1;
+            // 전체 데이터베이스에서 가장 큰 SheetID 조회
+            int maxSheetID = await _context.EstimateRequest
+                .Select(er => (int?)er.SheetID)
+                .MaxAsync() ?? 0;
+            int sheetID = maxSheetID + 1;
             foreach (var typeSelection in dto.TypeSelections)
             {
                 foreach (var valveSelection in typeSelection.Valves)
                 {
                     foreach (var tagNo in valveSelection.TagNos)
                     {
+                        // 기존 SheetID가 있으면 사용, 없으면 새로 생성
+                        var currentSheetID = tagNo.SheetID ?? sheetID;
+                        if (tagNo.SheetID == null)
+                        {
+                            sheetID++; // 새로운 경우에만 증가
+                        }
+                        
                         var estimateRequest = new EstimateRequest
                         {
                             TempEstimateNo = tempEstimateNo,
-                            SheetID = sheetID,
+                            SheetID = currentSheetID,
                             SheetNo = tagNo.SheetNo,
+                            EstimateNo = null, // NULL 값
+                            ValveType = string.IsNullOrEmpty(valveSelection.ValveSeriesCode) ? null : valveSelection.ValveSeriesCode, // FK 코드 설정 (NULL 허용)
                             Tagno = tagNo.Tagno,
                             Qty = tagNo.Qty,
                             Medium = tagNo.Medium,
@@ -110,19 +129,18 @@ namespace EstimateRequestSystem.Services
                             QNNor = tagNo.QNNor,
                             QNMin = tagNo.QNMin,
                             IsP2 = tagNo.IsP2,
-                            InletPressureUnit = tagNo.InletPressureUnit,
+                            IsDensity = tagNo.IsDensity,
+                            PressureUnit = tagNo.PressureUnit,
                             InletPressureMaxQ = tagNo.InletPressureMaxQ,
                             InletPressureNorQ = tagNo.InletPressureNorQ,
                             InletPressureMinQ = tagNo.InletPressureMinQ,
-                            OutletPressureUnit = tagNo.OutletPressureUnit,
                             OutletPressureMaxQ = tagNo.OutletPressureMaxQ,
                             OutletPressureNorQ = tagNo.OutletPressureNorQ,
                             OutletPressureMinQ = tagNo.OutletPressureMinQ,
-                            DifferentialPressureUnit = tagNo.DifferentialPressureUnit,
                             DifferentialPressureMaxQ = tagNo.DifferentialPressureMaxQ,
                             DifferentialPressureNorQ = tagNo.DifferentialPressureNorQ,
                             DifferentialPressureMinQ = tagNo.DifferentialPressureMinQ,
-                            InletTemperatureUnit = tagNo.InletTemperatureUnit,
+                            TemperatureUnit = tagNo.TemperatureUnit,
                             InletTemperatureQ = tagNo.InletTemperatureQ,
                             InletTemperatureNorQ = tagNo.InletTemperatureNorQ,
                             InletTemperatureMinQ = tagNo.InletTemperatureMinQ,
@@ -136,12 +154,12 @@ namespace EstimateRequestSystem.Services
                             TrimMat = string.IsNullOrEmpty(tagNo.TrimMat) ? null : tagNo.TrimMat,
                             TrimOption = string.IsNullOrEmpty(tagNo.TrimOption) ? null : tagNo.TrimOption,
                             BodyRating = string.IsNullOrEmpty(tagNo.BodyRating) ? null : tagNo.BodyRating,
-                            ActType = string.IsNullOrEmpty(tagNo.ActType) ? null : tagNo.ActType,
+                            ActType = tagNo.ActType, // 임시저장/견적요청에서는 NULL
                             IsHW = tagNo.IsHW,
                             IsPositioner = tagNo.IsPositioner,
                             PositionerType = tagNo.PositionerType,
                             ExplosionProof = tagNo.ExplosionProof,
-                            IsTransmitter = tagNo.IsTransmitter,
+                            TransmitterType = tagNo.TransmitterType,
                             IsSolenoid = tagNo.IsSolenoid,
                             IsLimSwitch = tagNo.IsLimSwitch,
                             IsAirSet = tagNo.IsAirSet,
@@ -162,6 +180,7 @@ namespace EstimateRequestSystem.Services
                             Fluid = tagNo.Fluid,
                             IsQM = tagNo.IsQM,
                             IsP2 = tagNo.IsP2,
+                            IsDensity = tagNo.IsDensity,
                             QMUnit = tagNo.QMUnit,
                             QMMax = tagNo.QMMax,
                             QMNor = tagNo.QMNor,
@@ -170,7 +189,7 @@ namespace EstimateRequestSystem.Services
                             QNMax = tagNo.QNMax,
                             QNNor = tagNo.QNNor,
                             QNMin = tagNo.QNMin,
-                            PressureUnit = tagNo.InletPressureUnit,
+                            PressureUnit = tagNo.PressureUnit,
                             InletPressureMaxQ = tagNo.InletPressureMaxQ,
                             InletPressureNorQ = tagNo.InletPressureNorQ,
                             InletPressureMinQ = tagNo.InletPressureMinQ,
@@ -180,7 +199,7 @@ namespace EstimateRequestSystem.Services
                             DifferentialPressureMaxQ = tagNo.DifferentialPressureMaxQ,
                             DifferentialPressureNorQ = tagNo.DifferentialPressureNorQ,
                             DifferentialPressureMinQ = tagNo.DifferentialPressureMinQ,
-                            InletTemperatureUnit = tagNo.InletTemperatureUnit,
+                            TemperatureUnit = tagNo.TemperatureUnit,
                             InletTemperatureQ = tagNo.InletTemperatureQ,
                             InletTemperatureNorQ = tagNo.InletTemperatureNorQ,
                             InletTemperatureMinQ = tagNo.InletTemperatureMinQ,
@@ -280,18 +299,31 @@ namespace EstimateRequestSystem.Services
             _context.DataSheetLv3.RemoveRange(existingDataSheets);
 
             // 새로운 데이터 삽입 (SaveDraft와 동일한 로직)
-            int sheetID = 1;
+            // 전체 데이터베이스에서 가장 큰 SheetID 조회
+            int maxSheetID = await _context.EstimateRequest
+                .Select(er => (int?)er.SheetID)
+                .MaxAsync() ?? 0;
+            int sheetID = maxSheetID + 1;
             foreach (var typeSelection in dto.TypeSelections)
             {
                 foreach (var valveSelection in typeSelection.Valves)
                 {
                     foreach (var tagNo in valveSelection.TagNos)
                     {
+                        // 기존 SheetID가 있으면 사용, 없으면 새로 생성
+                        var currentSheetID = tagNo.SheetID ?? sheetID;
+                        if (tagNo.SheetID == null)
+                        {
+                            sheetID++; // 새로운 경우에만 증가
+                        }
+                        
                         var estimateRequest = new EstimateRequest
                         {
                             TempEstimateNo = tempEstimateNo,
-                            SheetID = sheetID++,
+                            SheetID = currentSheetID,
                             SheetNo = tagNo.SheetNo,
+                            EstimateNo = null, // NULL 값
+                            ValveType = string.IsNullOrEmpty(valveSelection.ValveSeriesCode) ? null : valveSelection.ValveSeriesCode, // FK 코드 설정 (NULL 허용)
                             Tagno = tagNo.Tagno,
                             Qty = tagNo.Qty,
                             Medium = tagNo.Medium,
@@ -306,19 +338,18 @@ namespace EstimateRequestSystem.Services
                             QNNor = tagNo.QNNor,
                             QNMin = tagNo.QNMin,
                             IsP2 = tagNo.IsP2,
-                            InletPressureUnit = tagNo.InletPressureUnit,
+                            IsDensity = tagNo.IsDensity,
+                            PressureUnit = tagNo.PressureUnit,
                             InletPressureMaxQ = tagNo.InletPressureMaxQ,
                             InletPressureNorQ = tagNo.InletPressureNorQ,
                             InletPressureMinQ = tagNo.InletPressureMinQ,
-                            OutletPressureUnit = tagNo.OutletPressureUnit,
                             OutletPressureMaxQ = tagNo.OutletPressureMaxQ,
                             OutletPressureNorQ = tagNo.OutletPressureNorQ,
                             OutletPressureMinQ = tagNo.OutletPressureMinQ,
-                            DifferentialPressureUnit = tagNo.DifferentialPressureUnit,
                             DifferentialPressureMaxQ = tagNo.DifferentialPressureMaxQ,
                             DifferentialPressureNorQ = tagNo.DifferentialPressureNorQ,
                             DifferentialPressureMinQ = tagNo.DifferentialPressureMinQ,
-                            InletTemperatureUnit = tagNo.InletTemperatureUnit,
+                            TemperatureUnit = tagNo.TemperatureUnit,
                             InletTemperatureQ = tagNo.InletTemperatureQ,
                             InletTemperatureNorQ = tagNo.InletTemperatureNorQ,
                             InletTemperatureMinQ = tagNo.InletTemperatureMinQ,
@@ -329,15 +360,15 @@ namespace EstimateRequestSystem.Services
                             BodySizeUnit = string.IsNullOrEmpty(tagNo.BodySizeUnit) ? null : tagNo.BodySizeUnit,
                             BodySize = string.IsNullOrEmpty(tagNo.BodySize) ? null : tagNo.BodySize,
                             BodyMat = string.IsNullOrEmpty(tagNo.BodyMat) ? null : tagNo.BodyMat,
-                            TrimMat = tagNo.TrimMat,
-                            TrimOption = tagNo.TrimOption,
-                            BodyRating = tagNo.BodyRating,
+                            TrimMat = string.IsNullOrEmpty(tagNo.TrimMat) ? null : tagNo.TrimMat,
+                            TrimOption = string.IsNullOrEmpty(tagNo.TrimOption) ? null : tagNo.TrimOption,
+                            BodyRating = string.IsNullOrEmpty(tagNo.BodyRating) ? null : tagNo.BodyRating,
                             ActType = tagNo.ActType,
                             IsHW = tagNo.IsHW,
                             IsPositioner = tagNo.IsPositioner,
                             PositionerType = tagNo.PositionerType,
                             ExplosionProof = tagNo.ExplosionProof,
-                            IsTransmitter = tagNo.IsTransmitter,
+                            TransmitterType = tagNo.TransmitterType,
                             IsSolenoid = tagNo.IsSolenoid,
                             IsLimSwitch = tagNo.IsLimSwitch,
                             IsAirSet = tagNo.IsAirSet,
@@ -358,6 +389,7 @@ namespace EstimateRequestSystem.Services
                             Fluid = tagNo.Fluid,
                             IsQM = tagNo.IsQM,
                             IsP2 = tagNo.IsP2,
+                            IsDensity = tagNo.IsDensity,
                             QMUnit = tagNo.QMUnit,
                             QMMax = tagNo.QMMax,
                             QMNor = tagNo.QMNor,
@@ -366,7 +398,7 @@ namespace EstimateRequestSystem.Services
                             QNMax = tagNo.QNMax,
                             QNNor = tagNo.QNNor,
                             QNMin = tagNo.QNMin,
-                            PressureUnit = tagNo.InletPressureUnit,
+                            PressureUnit = tagNo.PressureUnit,
                             InletPressureMaxQ = tagNo.InletPressureMaxQ,
                             InletPressureNorQ = tagNo.InletPressureNorQ,
                             InletPressureMinQ = tagNo.InletPressureMinQ,
@@ -376,7 +408,7 @@ namespace EstimateRequestSystem.Services
                             DifferentialPressureMaxQ = tagNo.DifferentialPressureMaxQ,
                             DifferentialPressureNorQ = tagNo.DifferentialPressureNorQ,
                             DifferentialPressureMinQ = tagNo.DifferentialPressureMinQ,
-                            InletTemperatureUnit = tagNo.InletTemperatureUnit,
+                            TemperatureUnit = tagNo.TemperatureUnit,
                             InletTemperatureQ = tagNo.InletTemperatureQ,
                             InletTemperatureNorQ = tagNo.InletTemperatureNorQ,
                             InletTemperatureMinQ = tagNo.InletTemperatureMinQ,
@@ -389,8 +421,8 @@ namespace EstimateRequestSystem.Services
                             BodyMat = string.IsNullOrEmpty(tagNo.BodyMat) ? null : tagNo.BodyMat,
                             TrimMat = string.IsNullOrEmpty(tagNo.TrimMat) ? null : tagNo.TrimMat,
                             TrimOption = string.IsNullOrEmpty(tagNo.TrimOption) ? null : tagNo.TrimOption,
-                            ActType = string.IsNullOrEmpty(tagNo.ActType) ? null : tagNo.ActType,
-                            HW = tagNo.IsHW == true ? "Y" : "N"
+                            ActType = null, // 임시저장/견적요청에서는 NULL
+                            HW = tagNo.IsHW == true ? "0" : null // IsHW가 true면 기본값 "0" (None), false면 null
                         };
 
                         _context.DataSheetLv3.Add(dataSheetLv3);
@@ -474,19 +506,18 @@ namespace EstimateRequestSystem.Services
                     QNNor = er.QNNor,
                     QNMin = er.QNMin,
                     IsP2 = er.IsP2,
-                    InletPressureUnit = er.InletPressureUnit,
+                    IsDensity = er.IsDensity,
+                    PressureUnit = er.PressureUnit,
                     InletPressureMaxQ = er.InletPressureMaxQ,
                     InletPressureNorQ = er.InletPressureNorQ,
                     InletPressureMinQ = er.InletPressureMinQ,
-                    OutletPressureUnit = er.OutletPressureUnit,
                     OutletPressureMaxQ = er.OutletPressureMaxQ,
                     OutletPressureNorQ = er.OutletPressureNorQ,
                     OutletPressureMinQ = er.OutletPressureMinQ,
-                    DifferentialPressureUnit = er.DifferentialPressureUnit,
                     DifferentialPressureMaxQ = er.DifferentialPressureMaxQ,
                     DifferentialPressureNorQ = er.DifferentialPressureNorQ,
                     DifferentialPressureMinQ = er.DifferentialPressureMinQ,
-                    InletTemperatureUnit = er.InletTemperatureUnit,
+                    TemperatureUnit = er.TemperatureUnit,
                     InletTemperatureQ = er.InletTemperatureQ,
                     InletTemperatureNorQ = er.InletTemperatureNorQ,
                     InletTemperatureMinQ = er.InletTemperatureMinQ,
@@ -504,7 +535,7 @@ namespace EstimateRequestSystem.Services
                     IsPositioner = er.IsPositioner,
                     PositionerType = er.PositionerType,
                     ExplosionProof = er.ExplosionProof,
-                    IsTransmitter = er.IsTransmitter,
+                    TransmitterType = er.TransmitterType,
                     IsSolenoid = er.IsSolenoid,
                     IsLimSwitch = er.IsLimSwitch,
                     IsAirSet = er.IsAirSet,
@@ -613,19 +644,18 @@ namespace EstimateRequestSystem.Services
                 QNNor = dto.QNNor,
                 QNMin = dto.QNMin,
                 IsP2 = dto.IsP2,
-                InletPressureUnit = dto.InletPressureUnit,
+                IsDensity = dto.IsDensity,
+                PressureUnit = dto.PressureUnit,
                 InletPressureMaxQ = dto.InletPressureMaxQ,
                 InletPressureNorQ = dto.InletPressureNorQ,
                 InletPressureMinQ = dto.InletPressureMinQ,
-                OutletPressureUnit = dto.OutletPressureUnit,
                 OutletPressureMaxQ = dto.OutletPressureMaxQ,
                 OutletPressureNorQ = dto.OutletPressureNorQ,
                 OutletPressureMinQ = dto.OutletPressureMinQ,
-                DifferentialPressureUnit = dto.DifferentialPressureUnit,
                 DifferentialPressureMaxQ = dto.DifferentialPressureMaxQ,
                 DifferentialPressureNorQ = dto.DifferentialPressureNorQ,
                 DifferentialPressureMinQ = dto.DifferentialPressureMinQ,
-                InletTemperatureUnit = dto.InletTemperatureUnit,
+                TemperatureUnit = dto.TemperatureUnit,
                 InletTemperatureQ = dto.InletTemperatureQ,
                 InletTemperatureNorQ = dto.InletTemperatureNorQ,
                 InletTemperatureMinQ = dto.InletTemperatureMinQ,
@@ -645,7 +675,7 @@ namespace EstimateRequestSystem.Services
                 IsPositioner = dto.IsPositioner,
                 PositionerType = dto.PositionerType,
                 ExplosionProof = dto.ExplosionProof,
-                IsTransmitter = dto.IsTransmitter,
+                TransmitterType = dto.TransmitterType,
                 IsSolenoid = dto.IsSolenoid,
                 IsLimSwitch = dto.IsLimSwitch,
                 IsAirSet = dto.IsAirSet,
@@ -680,19 +710,18 @@ namespace EstimateRequestSystem.Services
                 QNNor = estimateRequest.QNNor,
                 QNMin = estimateRequest.QNMin,
                 IsP2 = estimateRequest.IsP2,
-                InletPressureUnit = estimateRequest.InletPressureUnit,
+                IsDensity = estimateRequest.IsDensity,
+                PressureUnit = estimateRequest.PressureUnit,
                 InletPressureMaxQ = estimateRequest.InletPressureMaxQ,
                 InletPressureNorQ = estimateRequest.InletPressureNorQ,
                 InletPressureMinQ = estimateRequest.InletPressureMinQ,
-                OutletPressureUnit = estimateRequest.OutletPressureUnit,
                 OutletPressureMaxQ = estimateRequest.OutletPressureMaxQ,
                 OutletPressureNorQ = estimateRequest.OutletPressureNorQ,
                 OutletPressureMinQ = estimateRequest.OutletPressureMinQ,
-                DifferentialPressureUnit = estimateRequest.DifferentialPressureUnit,
                 DifferentialPressureMaxQ = estimateRequest.DifferentialPressureMaxQ,
                 DifferentialPressureNorQ = estimateRequest.DifferentialPressureNorQ,
                 DifferentialPressureMinQ = estimateRequest.DifferentialPressureMinQ,
-                InletTemperatureUnit = estimateRequest.InletTemperatureUnit,
+                TemperatureUnit = estimateRequest.TemperatureUnit,
                 InletTemperatureQ = estimateRequest.InletTemperatureQ,
                 InletTemperatureNorQ = estimateRequest.InletTemperatureNorQ,
                 InletTemperatureMinQ = estimateRequest.InletTemperatureMinQ,
@@ -710,7 +739,7 @@ namespace EstimateRequestSystem.Services
                 IsPositioner = estimateRequest.IsPositioner,
                 PositionerType = estimateRequest.PositionerType,
                 ExplosionProof = estimateRequest.ExplosionProof,
-                IsTransmitter = estimateRequest.IsTransmitter,
+                TransmitterType = estimateRequest.TransmitterType,
                 IsSolenoid = estimateRequest.IsSolenoid,
                 IsLimSwitch = estimateRequest.IsLimSwitch,
                 IsAirSet = estimateRequest.IsAirSet,
@@ -750,19 +779,18 @@ namespace EstimateRequestSystem.Services
                 QNNor = estimateRequest.QNNor,
                 QNMin = estimateRequest.QNMin,
                 IsP2 = estimateRequest.IsP2,
-                InletPressureUnit = estimateRequest.InletPressureUnit,
+                IsDensity = estimateRequest.IsDensity,
+                PressureUnit = estimateRequest.PressureUnit,
                 InletPressureMaxQ = estimateRequest.InletPressureMaxQ,
                 InletPressureNorQ = estimateRequest.InletPressureNorQ,
                 InletPressureMinQ = estimateRequest.InletPressureMinQ,
-                OutletPressureUnit = estimateRequest.OutletPressureUnit,
                 OutletPressureMaxQ = estimateRequest.OutletPressureMaxQ,
                 OutletPressureNorQ = estimateRequest.OutletPressureNorQ,
                 OutletPressureMinQ = estimateRequest.OutletPressureMinQ,
-                DifferentialPressureUnit = estimateRequest.DifferentialPressureUnit,
                 DifferentialPressureMaxQ = estimateRequest.DifferentialPressureMaxQ,
                 DifferentialPressureNorQ = estimateRequest.DifferentialPressureNorQ,
                 DifferentialPressureMinQ = estimateRequest.DifferentialPressureMinQ,
-                InletTemperatureUnit = estimateRequest.InletTemperatureUnit,
+                TemperatureUnit = estimateRequest.TemperatureUnit,
                 InletTemperatureQ = estimateRequest.InletTemperatureQ,
                 InletTemperatureNorQ = estimateRequest.InletTemperatureNorQ,
                 InletTemperatureMinQ = estimateRequest.InletTemperatureMinQ,
@@ -780,7 +808,7 @@ namespace EstimateRequestSystem.Services
                 IsPositioner = estimateRequest.IsPositioner,
                 PositionerType = estimateRequest.PositionerType,
                 ExplosionProof = estimateRequest.ExplosionProof,
-                IsTransmitter = estimateRequest.IsTransmitter,
+                TransmitterType = estimateRequest.TransmitterType,
                 IsSolenoid = estimateRequest.IsSolenoid,
                 IsLimSwitch = estimateRequest.IsLimSwitch,
                 IsAirSet = estimateRequest.IsAirSet,
@@ -831,19 +859,18 @@ namespace EstimateRequestSystem.Services
             estimateRequest.QNNor = dto.QNNor;
             estimateRequest.QNMin = dto.QNMin;
             estimateRequest.IsP2 = dto.IsP2;
-            estimateRequest.InletPressureUnit = dto.InletPressureUnit;
+            estimateRequest.IsDensity = dto.IsDensity;
+            estimateRequest.PressureUnit = dto.PressureUnit;
             estimateRequest.InletPressureMaxQ = dto.InletPressureMaxQ;
             estimateRequest.InletPressureNorQ = dto.InletPressureNorQ;
             estimateRequest.InletPressureMinQ = dto.InletPressureMinQ;
-            estimateRequest.OutletPressureUnit = dto.OutletPressureUnit;
             estimateRequest.OutletPressureMaxQ = dto.OutletPressureMaxQ;
             estimateRequest.OutletPressureNorQ = dto.OutletPressureNorQ;
             estimateRequest.OutletPressureMinQ = dto.OutletPressureMinQ;
-            estimateRequest.DifferentialPressureUnit = dto.DifferentialPressureUnit;
             estimateRequest.DifferentialPressureMaxQ = dto.DifferentialPressureMaxQ;
             estimateRequest.DifferentialPressureNorQ = dto.DifferentialPressureNorQ;
             estimateRequest.DifferentialPressureMinQ = dto.DifferentialPressureMinQ;
-            estimateRequest.InletTemperatureUnit = dto.InletTemperatureUnit;
+            estimateRequest.TemperatureUnit = dto.TemperatureUnit;
             estimateRequest.InletTemperatureQ = dto.InletTemperatureQ;
             estimateRequest.InletTemperatureNorQ = dto.InletTemperatureNorQ;
             estimateRequest.InletTemperatureMinQ = dto.InletTemperatureMinQ;
@@ -863,7 +890,7 @@ namespace EstimateRequestSystem.Services
             estimateRequest.IsPositioner = dto.IsPositioner;
             estimateRequest.PositionerType = dto.PositionerType;
             estimateRequest.ExplosionProof = dto.ExplosionProof;
-            estimateRequest.IsTransmitter = dto.IsTransmitter;
+            estimateRequest.TransmitterType = dto.TransmitterType;
             estimateRequest.IsSolenoid = dto.IsSolenoid;
             estimateRequest.IsLimSwitch = dto.IsLimSwitch;
             estimateRequest.IsAirSet = dto.IsAirSet;
@@ -1123,7 +1150,6 @@ namespace EstimateRequestSystem.Services
                 IsQM = false,
                 IsP2 = false,
                 IsDensity = false,
-                IsN1 = false,
                 QMUnit = "m³/h",
                 QMMax = 0,
                 QMNor = 0,
@@ -1142,7 +1168,7 @@ namespace EstimateRequestSystem.Services
                 DifferentialPressureMaxQ = 0,
                 DifferentialPressureNorQ = 0,
                 DifferentialPressureMinQ = 0,
-                InletTemperatureUnit = "°C",
+                TemperatureUnit = "°C",
                 InletTemperatureQ = 0,
                 InletTemperatureNorQ = 0,
                 InletTemperatureMinQ = 0,
@@ -1211,8 +1237,6 @@ namespace EstimateRequestSystem.Services
                 NorFlowCoeff = 0,
                 SizePressureClass = "",
                 SuggestedValveSize = 0,
-                SelectedValveSize = "",
-                PressureClass = "",
                 BonnetType = null, // NULL 허용
                 BodyMat = null, // NULL 허용
 
@@ -1247,9 +1271,10 @@ namespace EstimateRequestSystem.Services
 
         public async Task<int> GetNextSheetIDAsync(string tempEstimateNo)
         {
+            // 전체 데이터베이스에서 가장 큰 SheetID 조회 (TempEstimateNo 무관)
             var maxSheetID = await _context.EstimateRequest
-                .Where(er => er.TempEstimateNo == tempEstimateNo)
-                .MaxAsync(er => (int?)er.SheetID) ?? 0;
+                .Select(er => (int?)er.SheetID)
+                .MaxAsync() ?? 0;
 
             return maxSheetID + 1;
         }
@@ -1317,6 +1342,8 @@ namespace EstimateRequestSystem.Services
                            from c in customerGroup.DefaultIfEmpty()
                            join manager in _context.User on sheet.ManagerID equals manager.UserID into managerGroup
                            from m in managerGroup.DefaultIfEmpty()
+                           join writer in _context.User on sheet.WriterID equals writer.UserID into writerGroup
+                           from w in writerGroup.DefaultIfEmpty()
                            where sheet.Status >= (int)EstimateStatus.Requested  // 임시저장 제외, 견적요청 이상만
                            select new
                            {
@@ -1406,7 +1433,8 @@ namespace EstimateRequestSystem.Services
                     Status = x.Status,
                     StatusText = GetStatusText(x.Status),
                     Project = x.Project ?? "",
-                    TempEstimateNo = x.TempEstimateNo
+                    TempEstimateNo = x.TempEstimateNo,
+                    WriterID = x.WriterID ?? "" // 작성자 ID 추가
                 })
                 .ToList();
 
@@ -1482,6 +1510,261 @@ namespace EstimateRequestSystem.Services
             estimateSheet.ManagerID = managerID;
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        // 임시저장 목록 조회
+        public async Task<EstimateInquiryResponseDto> GetDraftEstimatesAsync(EstimateInquiryRequestDto request, string currentUserId, string? customerId = null)
+        {
+            // 기본 데이터를 가져온 후 메모리에서 처리
+            var baseQuery = from sheet in _context.EstimateSheetLv1
+                           join customer in _context.User on sheet.CustomerID equals customer.UserID into customerGroup
+                           from c in customerGroup.DefaultIfEmpty()
+                           join writer in _context.User on sheet.WriterID equals writer.UserID into writerGroup
+                           from w in writerGroup.DefaultIfEmpty()
+                           where sheet.Status == (int)EstimateStatus.Draft && sheet.WriterID == currentUserId 
+                               && (customerId == null || sheet.CustomerID == customerId)  // 고객 ID 필터 추가
+                           select new
+                           {
+                               sheet.TempEstimateNo,
+                               sheet.CurEstimateNo,
+                               sheet.CustomerID,
+                               sheet.WriterID,
+                               sheet.ManagerID,
+                               sheet.Status,
+                               sheet.Project,
+                               CustomerName = c != null ? c.CompanyName : sheet.CustomerID,
+                               WriterName = w != null ? w.Name : null,
+                               EstimateRequestCount = _context.EstimateRequest
+                                   .Where(er => er.TempEstimateNo == sheet.TempEstimateNo)
+                                   .Sum(er => er.Qty)
+                           };
+
+            var baseData = await baseQuery.ToListAsync();
+
+            // 메모리에서 날짜 파싱 및 필터링
+            var processedData = baseData.Select(x => new
+            {
+                x.TempEstimateNo,
+                x.CurEstimateNo,
+                x.CustomerID,
+                x.WriterID,
+                x.ManagerID,
+                x.Status,
+                x.Project,
+                x.CustomerName,
+                x.WriterName,
+                x.EstimateRequestCount,
+                RequestDate = ParseDateFromTempEstimateNo(x.TempEstimateNo)
+            }).AsQueryable();
+
+            // 검색어 필터
+            if (!string.IsNullOrEmpty(request.SearchKeyword))
+            {
+                processedData = processedData.Where(x => 
+                    x.TempEstimateNo.Contains(request.SearchKeyword) ||
+                    (x.CurEstimateNo != null && x.CurEstimateNo.Contains(request.SearchKeyword)) ||
+                    x.CustomerName.Contains(request.SearchKeyword) ||
+                    (x.Project != null && x.Project.Contains(request.SearchKeyword)));
+            }
+
+            // 기간 필터
+            if (request.StartDate.HasValue)
+            {
+                processedData = processedData.Where(x => x.RequestDate >= request.StartDate.Value);
+            }
+            if (request.EndDate.HasValue)
+            {
+                var endDate = request.EndDate.Value.AddDays(1);
+                processedData = processedData.Where(x => x.RequestDate < endDate);
+            }
+
+            // 전체 개수 계산
+            var totalCount = processedData.Count();
+
+            // 정렬
+            if (request.IsDescending)
+            {
+                processedData = processedData.OrderByDescending(x => x.RequestDate);
+            }
+            else
+            {
+                processedData = processedData.OrderBy(x => x.RequestDate);
+            }
+
+            // 페이징
+            var items = processedData
+                .Skip((request.Page - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .Select(x => new EstimateInquiryItemDto
+                {
+                    EstimateNo = x.CurEstimateNo ?? x.TempEstimateNo,
+                    CompanyName = x.CustomerName,
+                    ContactPerson = x.WriterName ?? "알 수 없음",
+                    RequestDate = x.RequestDate,
+                    Quantity = x.EstimateRequestCount,
+                    StatusText = EstimateStatusExtensions.ToKoreanText(x.Status),
+                    Status = x.Status,
+                    Project = x.Project ?? "",
+                    TempEstimateNo = x.TempEstimateNo
+                })
+                .ToList();
+
+            var totalPages = (int)Math.Ceiling((double)totalCount / request.PageSize);
+
+            return new EstimateInquiryResponseDto
+            {
+                Items = items,
+                TotalCount = totalCount,
+                TotalPages = totalPages,
+                CurrentPage = request.Page,
+                PageSize = request.PageSize
+            };
+        }
+
+        // 견적 상세 조회
+        public async Task<EstimateDetailResponseDto?> GetEstimateDetailAsync(string tempEstimateNo, string currentUserId)
+        {
+            // 1. EstimateSheetLv1 조회
+            var estimateSheet = await _context.EstimateSheetLv1
+                .Include(es => es.Customer)
+                .Include(es => es.Writer)
+                .Include(es => es.Manager)
+                .FirstOrDefaultAsync(es => es.TempEstimateNo == tempEstimateNo);
+
+            if (estimateSheet == null)
+                return null;
+
+            // 2. EstimateRequest 목록 조회
+            var estimateRequests = await _context.EstimateRequest
+                .Where(er => er.TempEstimateNo == tempEstimateNo)
+                .OrderBy(er => er.SheetID)
+                .ToListAsync();
+
+            // 3. 첨부파일 목록 조회
+            var attachments = await _context.EstimateAttachment
+                .Where(ea => ea.TempEstimateNo == tempEstimateNo)
+                .Select(ea => new EstimateAttachmentResponseDto
+                {
+                    AttachmentID = ea.AttachmentID,
+                    TempEstimateNo = ea.TempEstimateNo,
+                    FileName = ea.FileName,
+                    FilePath = ea.FilePath,
+                    FileSize = ea.FileSize,
+                    UploadUserID = ea.UploadUserID
+                })
+                .ToListAsync();
+
+            // 4. 권한 확인
+            bool canEdit = (estimateSheet.Status == (int)EstimateStatus.Draft || 
+                           estimateSheet.Status == (int)EstimateStatus.Requested) &&
+                           estimateSheet.WriterID == currentUserId;
+
+            // 5. 현재 사용자 역할 확인
+            var currentUser = await _context.User.FirstOrDefaultAsync(u => u.UserID == currentUserId);
+            string currentUserRole = currentUser?.RoleID switch
+            {
+                1 => "Admin",
+                2 => "Staff", 
+                3 => "Customer",
+                _ => "Unknown"
+            };
+
+            // 6. EstimateRequest를 ValveType별로 그룹핑하여 변환 (SheetNo 순서대로)
+            var groupedRequests = estimateRequests
+                .GroupBy(er => er.ValveType ?? "")
+                .Select(group => new EstimateRequestDetailDto
+                {
+                    ValveType = group.Key,
+                    TagNos = group
+                        .OrderBy(er => er.SheetNo) // SheetNo 순서대로 정렬
+                        .Select(er => new TagNoDetailDto
+                        {
+                            SheetID = er.SheetID,
+                            TagNo = er.Tagno ?? "",
+                            Qty = er.Qty,
+                            Medium = er.Medium,
+                            Fluid = er.Fluid,
+                            IsQM = er.IsQM ?? false,
+                            QMUnit = er.QMUnit,
+                            QMMax = er.QMMax,
+                            QMNor = er.QMNor,
+                            QMMin = er.QMMin,
+                            QNUnit = er.QNUnit,
+                            QNMax = er.QNMax,
+                            QNNor = er.QNNor,
+                            QNMin = er.QNMin,
+                            IsP2 = er.IsP2 ?? false,
+                            IsDensity = er.IsDensity ?? false,
+                            PressureUnit = er.PressureUnit,
+                            InletPressureMaxQ = er.InletPressureMaxQ,
+                            InletPressureNorQ = er.InletPressureNorQ,
+                            InletPressureMinQ = er.InletPressureMinQ,
+                            OutletPressureMaxQ = er.OutletPressureMaxQ,
+                            OutletPressureNorQ = er.OutletPressureNorQ,
+                            OutletPressureMinQ = er.OutletPressureMinQ,
+                            DifferentialPressureMaxQ = er.DifferentialPressureMaxQ,
+                            DifferentialPressureNorQ = er.DifferentialPressureNorQ,
+                            DifferentialPressureMinQ = er.DifferentialPressureMinQ,
+                            TemperatureUnit = er.TemperatureUnit,
+                            InletTemperatureQ = er.InletTemperatureQ,
+                            InletTemperatureNorQ = er.InletTemperatureNorQ,
+                            InletTemperatureMinQ = er.InletTemperatureMinQ,
+                            DensityUnit = er.DensityUnit,
+                            Density = er.Density,
+                            MolecularWeightUnit = er.MolecularWeightUnit,
+                            MolecularWeight = er.MolecularWeight,
+                            BodySizeUnit = er.BodySizeUnit,
+                            BodySize = er.BodySize,
+                            BodyMat = er.BodyMat,
+                            TrimMat = er.TrimMat,
+                            TrimOption = er.TrimOption,
+                            BodyRating = er.BodyRating,
+                            ActType = er.ActType,
+                            IsHW = er.IsHW,
+                            IsPositioner = er.IsPositioner,
+                            PositionerType = er.PositionerType,
+                            ExplosionProof = er.ExplosionProof,
+                            TransmitterType = er.TransmitterType,
+                            IsSolenoid = er.IsSolenoid,
+                            IsLimSwitch = er.IsLimSwitch,
+                            IsAirSet = er.IsAirSet,
+                            IsVolumeBooster = er.IsVolumeBooster,
+                            IsAirOperated = er.IsAirOperated,
+                            IsLockUp = er.IsLockUp,
+                            IsSnapActingRelay = er.IsSnapActingRelay
+                        }).ToList()
+                })
+                .OrderBy(g => g.TagNos.FirstOrDefault()?.SheetID ?? 0) // ValveType 그룹도 첫 번째 SheetID 순서로 정렬
+                .ToList();
+
+            // 7. DTO 변환
+            var response = new EstimateDetailResponseDto
+            {
+                EstimateSheet = new EstimateSheetInfoDto
+                {
+                    TempEstimateNo = estimateSheet.TempEstimateNo,
+                    CurEstimateNo = estimateSheet.CurEstimateNo,
+                    PrevEstimateNo = estimateSheet.PrevEstimateNo,
+                    CustomerID = estimateSheet.CustomerID ?? "",
+                    CustomerName = estimateSheet.Customer?.CompanyName ?? estimateSheet.CustomerID ?? "",
+                    WriterID = estimateSheet.WriterID ?? "",
+                    WriterName = estimateSheet.Writer?.Name ?? estimateSheet.WriterID ?? "",
+                    ManagerID = estimateSheet.ManagerID,
+                    ManagerName = estimateSheet.Manager?.Name,
+                    Status = estimateSheet.Status,
+                    StatusText = EstimateStatusExtensions.ToKoreanText(estimateSheet.Status),
+                    Project = estimateSheet.Project,
+                    CustomerRequirement = estimateSheet.CustomerRequirement,
+                    StaffComment = estimateSheet.StaffComment,
+                    CreatedDate = ParseDateFromTempEstimateNo(estimateSheet.TempEstimateNo)
+                },
+                EstimateRequests = groupedRequests,
+                Attachments = attachments,
+                CanEdit = canEdit,
+                CurrentUserRole = currentUserRole
+            };
+
+            return response;
         }
     }
 } 

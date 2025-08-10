@@ -35,7 +35,7 @@ namespace EstimateRequestSystem.Models
         public decimal? DifferentialPressureMaxQ { get; set; }
         public decimal? DifferentialPressureNorQ { get; set; }
         public decimal? DifferentialPressureMinQ { get; set; }
-        public string? InletTemperatureUnit { get; set; }
+        public string? TemperatureUnit { get; set; }
         public decimal? InletTemperatureQ { get; set; }
         public decimal? InletTemperatureNorQ { get; set; }
         public decimal? InletTemperatureMinQ { get; set; }
@@ -104,8 +104,6 @@ namespace EstimateRequestSystem.Models
         public decimal? NorFlowCoeff { get; set; }
         public string? SizePressureClass { get; set; }
         public decimal? SuggestedValveSize { get; set; }
-        public string? SelectedValveSize { get; set; }
-        public string? PressureClass { get; set; }
         public string? BonnetType { get; set; }
         public string? BodyMat { get; set; }
 
@@ -134,5 +132,6 @@ namespace EstimateRequestSystem.Models
 
         // Navigation properties
         public virtual EstimateSheetLv1 EstimateSheet { get; set; } = null!;
+        public virtual ActHWList? ActHW { get; set; }
     }
 }

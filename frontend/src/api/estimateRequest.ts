@@ -54,19 +54,17 @@ export interface CreateEstimateRequestDto {
   flowRateNorQ?: number;
   flowRateMinQ?: number;
   isP2?: boolean;
-  inletPressureUnit?: string;
+  pressureUnit?: string;
   inletPressureMaxQ?: number;
   inletPressureNorQ?: number;
   inletPressureMinQ?: number;
-  outletPressureUnit?: string;
   outletPressureMaxQ?: number;
   outletPressureNorQ?: number;
   outletPressureMinQ?: number;
-  differentialPressureUnit?: string;
   differentialPressureMaxQ?: number;
   differentialPressureNorQ?: number;
   differentialPressureMinQ?: number;
-  inletTemperatureUnit?: string;
+  temperatureUnit?: string;
   inletTemperatureQ?: number;
   inletTemperatureNorQ?: number;
   inletTemperatureMinQ?: number;
@@ -86,7 +84,7 @@ export interface CreateEstimateRequestDto {
   isPositioner?: boolean;
   positionerType?: string;
   explosionProof?: string;
-  isTransmitter?: boolean;
+  transmitterType?: string;
   isSolenoid?: boolean;
   isLimSwitch?: boolean;
   isAirSet?: boolean;
@@ -224,33 +222,39 @@ export const generateTempEstimateNo = async (): Promise<{ tempEstimateNo: string
   return response.data;
 };
 
-export const getBodyValveList = async () => {
-  const response = await axios.get('/api/estimate/body-valve-list');
+// 밸브 리스트 인터페이스
+export interface BodyValveListItem {
+  valveSeries: string;
+  valveSeriesCode: string;
+}
+
+export const getBodyValveList = async (): Promise<BodyValveListItem[]> => {
+  const response = await axios.get(`${ESTIMATE_API_BASE_URL}/estimate/body-valve-list`);
   return response.data;
 };
 
 export const getBodySizeList = async () => {
-  const response = await axios.get('/api/estimate/body-size-list');
+  const response = await axios.get(`${ESTIMATE_API_BASE_URL}/estimate/body-size-list`);
   return response.data;
 };
 
 export const getBodyMatList = async () => {
-  const response = await axios.get('/api/estimate/body-mat-list');
+  const response = await axios.get(`${ESTIMATE_API_BASE_URL}/estimate/body-mat-list`);
   return response.data;
 };
 
 export const getTrimMatList = async () => {
-  const response = await axios.get('/api/estimate/trim-mat-list');
+  const response = await axios.get(`${ESTIMATE_API_BASE_URL}/estimate/trim-mat-list`);
   return response.data;
 };
 
 export const getTrimOptionList = async () => {
-  const response = await axios.get('/api/estimate/trim-option-list');
+  const response = await axios.get(`${ESTIMATE_API_BASE_URL}/estimate/trim-option-list`);
   return response.data;
 };
 
 export const getBodyRatingList = async () => {
-  const response = await axios.get('/api/estimate/body-rating-list');
+  const response = await axios.get(`${ESTIMATE_API_BASE_URL}/estimate/body-rating-list`);
   return response.data;
 };
 
@@ -283,4 +287,120 @@ export const saveDraft = async (tempEstimateNo: string, data: SaveDraftDto): Pro
 
 export const submitEstimate = async (tempEstimateNo: string, data: SubmitEstimateDto): Promise<void> => {
   await axios.post(`${ESTIMATE_API_BASE_URL}/estimate/sheets/${tempEstimateNo}/submit`, data);
+};
+
+// 견적 상세 조회 관련 인터페이스 및 API
+export interface EstimateDetailResponseDto {
+  estimateSheet: EstimateSheetInfoDto;
+  estimateRequests: EstimateRequestDetailDto[];
+  attachments: EstimateAttachmentResponseDto[];
+  canEdit: boolean;
+  currentUserRole: string;
+}
+
+export interface EstimateSheetInfoDto {
+  tempEstimateNo: string;
+  curEstimateNo?: string;
+  prevEstimateNo?: string;
+  customerID: string;
+  customerName: string;
+  writerID: string;
+  writerName: string;
+  managerID?: string;
+  managerName?: string;
+  status: number;
+  statusText: string;
+  project?: string;
+  customerRequirement?: string;
+  staffComment?: string;
+  createdDate: string;
+}
+
+export interface EstimateRequestDetailDto {
+  valveType: string; // ValveSeriesCode
+  tagNos: TagNoDetailDto[];
+}
+
+export interface TagNoDetailDto {
+  sheetID: number;
+  tagNo: string;
+  qty: number;
+  medium?: string;
+  fluid?: string;
+  
+  // Flow Rate
+  isQM: boolean;
+  qmUnit?: string;
+  qmMax?: number;
+  qmNor?: number;
+  qmMin?: number;
+  qnUnit?: string;
+  qnMax?: number;
+  qnNor?: number;
+  qnMin?: number;
+  
+  // Pressure
+  isP2: boolean;
+  pressureUnit?: string;
+  inletPressureMaxQ?: number;
+  inletPressureNorQ?: number;
+  inletPressureMinQ?: number;
+  outletPressureMaxQ?: number;
+  outletPressureNorQ?: number;
+  outletPressureMinQ?: number;
+  differentialPressureMaxQ?: number;
+  differentialPressureNorQ?: number;
+  differentialPressureMinQ?: number;
+  
+  // Temperature
+  temperatureUnit?: string;
+  inletTemperatureQ?: number;
+  inletTemperatureNorQ?: number;
+  inletTemperatureMinQ?: number;
+  
+  // Density & Molecular
+  isDensity?: boolean;
+  densityUnit?: string;
+  density?: number;
+  molecularWeightUnit?: string;
+  molecularWeight?: number;
+  
+  // Body
+  bodySizeUnit?: string;
+  bodySize?: string;
+  bodyMat?: string;
+  trimMat?: string;
+  trimOption?: string;
+  bodyRating?: string;
+  
+  // Actuator
+  actType?: string;
+  isHW?: boolean;
+  
+  // Accessory
+  isPositioner?: boolean;
+  positionerType?: string;
+  explosionProof?: string;
+  transmitterType?: string;
+  isSolenoid?: boolean;
+  isLimSwitch?: boolean;
+  isAirSet?: boolean;
+  isVolumeBooster?: boolean;
+  isAirOperated?: boolean;
+  isLockUp?: boolean;
+  isSnapActingRelay?: boolean;
+}
+
+// 임시저장 목록 조회 API
+export const getDraftEstimates = async (params: any, currentUserId: string, customerId?: string): Promise<any> => {
+  const response = await axios.get(`${ESTIMATE_API_BASE_URL}/estimate/drafts`, { 
+    params: { ...params, currentUserId, customerId } 
+  });
+  return response.data;
+};
+
+// 견적 상세 조회 API
+export const getEstimateDetail = async (tempEstimateNo: string, currentUserId: string): Promise<EstimateDetailResponseDto> => {
+  const response = await axios.get(`${ESTIMATE_API_BASE_URL}/estimate/sheets/${tempEstimateNo}/detail?currentUserId=${currentUserId}`);
+  return response.data;
 }; 

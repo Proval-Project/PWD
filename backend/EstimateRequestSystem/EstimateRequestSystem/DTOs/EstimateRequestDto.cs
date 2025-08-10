@@ -2,6 +2,7 @@ namespace EstimateRequestSystem.DTOs
 {
     public class CreateEstimateRequestDto
     {
+        public int? SheetID { get; set; } // 기존 데이터 수정 시 사용
         public string Tagno { get; set; } = string.Empty;
         public int Qty { get; set; }
         public string? Medium { get; set; }
@@ -16,19 +17,18 @@ namespace EstimateRequestSystem.DTOs
         public decimal? QNNor { get; set; }
         public decimal? QNMin { get; set; }
         public bool? IsP2 { get; set; }
-        public string? InletPressureUnit { get; set; }
+        public bool? IsDensity { get; set; }
+        public string? PressureUnit { get; set; }
         public decimal? InletPressureMaxQ { get; set; }
         public decimal? InletPressureNorQ { get; set; }
         public decimal? InletPressureMinQ { get; set; }
-        public string? OutletPressureUnit { get; set; }
         public decimal? OutletPressureMaxQ { get; set; }
         public decimal? OutletPressureNorQ { get; set; }
         public decimal? OutletPressureMinQ { get; set; }
-        public string? DifferentialPressureUnit { get; set; }
         public decimal? DifferentialPressureMaxQ { get; set; }
         public decimal? DifferentialPressureNorQ { get; set; }
         public decimal? DifferentialPressureMinQ { get; set; }
-        public string? InletTemperatureUnit { get; set; }
+        public string? TemperatureUnit { get; set; }
         public decimal? InletTemperatureQ { get; set; }
         public decimal? InletTemperatureNorQ { get; set; }
         public decimal? InletTemperatureMinQ { get; set; }
@@ -49,7 +49,7 @@ namespace EstimateRequestSystem.DTOs
         public bool? IsPositioner { get; set; }
         public string? PositionerType { get; set; }
         public string? ExplosionProof { get; set; }
-        public bool? IsTransmitter { get; set; }
+        public string? TransmitterType { get; set; }
         public bool? IsSolenoid { get; set; }
         public bool? IsLimSwitch { get; set; }
         public bool? IsAirSet { get; set; }
@@ -129,6 +129,7 @@ namespace EstimateRequestSystem.DTOs
     public class ValveSelectionDto
     {
         public string ValveName { get; set; } = string.Empty;
+        public string ValveSeriesCode { get; set; } = string.Empty; // FK를 위한 코드 추가
         public List<TagNoDto> TagNos { get; set; } = new List<TagNoDto>();
     }
 

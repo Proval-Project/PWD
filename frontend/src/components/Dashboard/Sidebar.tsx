@@ -40,14 +40,6 @@ const menuItems: MenuItem[] = [
     roles: [1] // Admin only
   },
   {
-    id: 'estimate-requests',
-    label: '전체 견적 요청 관리',
-    icon: '📋',
-    path: '/estimate-requests',
-    roles: [1, 2] // Admin, Staff
-  },
-
-  {
     id: 'estimate-request',
     label: '견적요청',
     icon: '📝',

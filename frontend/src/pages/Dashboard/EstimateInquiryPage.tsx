@@ -24,8 +24,8 @@ const EstimateInquiryPage: React.FC = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [pageSize] = useState(10);
 
-  // 데이터 조회 함수
-  const fetchData = async (page: number = 1) => {
+  // 데이터 조회 함수 (매개변수로 현재 상태를 받아서 처리)
+  const fetchData = async (page: number = 1, overrideParams: Partial<EstimateInquiryRequest> = {}) => {
     setLoading(true);
     try {
       const params: EstimateInquiryRequest = {
@@ -36,8 +36,10 @@ const EstimateInquiryPage: React.FC = () => {
         page,
         pageSize,
         isDescending,
+        ...overrideParams, // 매개변수로 전달된 값이 우선
       };
 
+      console.log('API 요청 파라미터:', params); // 디버깅용
       const response = await getEstimateInquiry(params);
       setItems(response.items);
       setCurrentPage(response.currentPage);
@@ -89,8 +91,12 @@ const EstimateInquiryPage: React.FC = () => {
 
   // 정렬 토글
   const handleSortToggle = () => {
-    setIsDescending(!isDescending);
-    setTimeout(() => fetchData(currentPage), 0);
+    const newIsDescending = !isDescending;
+    setIsDescending(newIsDescending);
+    setCurrentPage(1);
+    setTimeout(() => {
+      fetchData(1, { isDescending: newIsDescending });
+    }, 100);
   };
 
   // 날짜 포맷팅
@@ -111,10 +117,20 @@ const EstimateInquiryPage: React.FC = () => {
     }
   };
 
+
+
   // 행 클릭 핸들러 (상세 페이지로 이동)
   const handleRowClick = (item: EstimateInquiryItem) => {
-    // TODO: 상세 페이지로 이동
-    console.log('견적 상세 조회:', item.tempEstimateNo);
+    // 견적요청 상태이고 본인이 작성한 경우 수정 가능한 페이지로
+    const canEdit = item.status === 2 && currentUser && item.writerID === currentUser.userID;
+    
+    if (canEdit) {
+      // 수정 가능한 페이지로 이동 (NewEstimateRequestPage와 동일)
+      navigate(`/estimate-request/edit?tempEstimateNo=${item.tempEstimateNo}`);
+    } else {
+      // 읽기 전용 페이지로 이동
+      navigate(`/estimate-detail/${item.tempEstimateNo}`);
+    }
   };
 
   // 관리자/직원 여부 확인
@@ -147,14 +163,15 @@ const EstimateInquiryPage: React.FC = () => {
               placeholder="검색 (견적번호, 회사명, 프로젝트명)"
               value={searchKeyword}
               onChange={(e) => {
-                setSearchKeyword(e.target.value);
+                const newKeyword = e.target.value;
+                setSearchKeyword(newKeyword);
                 // 입력 후 500ms 후 자동 검색 (디바운싱)
                 if (searchTimeout.current) {
                   clearTimeout(searchTimeout.current);
                 }
                 searchTimeout.current = setTimeout(() => {
                   setCurrentPage(1);
-                  fetchData(1);
+                  fetchData(1, { searchKeyword: newKeyword || undefined });
                 }, 500);
               }}
               onKeyPress={(e) => {
@@ -174,11 +191,15 @@ const EstimateInquiryPage: React.FC = () => {
               type="date"
               value={startDate}
               onChange={(e) => {
-                setStartDate(e.target.value);
-                if (e.target.value && endDate) {
-                  setCurrentPage(1);
-                  setTimeout(() => fetchData(1), 0);
-                }
+                const newStartDate = e.target.value;
+                setStartDate(newStartDate);
+                setCurrentPage(1);
+                // 즉시 검색 (날짜 하나만 입력해도 검색)
+                setTimeout(() => {
+                  fetchData(1, { 
+                    startDate: newStartDate || undefined 
+                  });
+                }, 100);
               }}
             />
             <span>~</span>
@@ -186,11 +207,15 @@ const EstimateInquiryPage: React.FC = () => {
               type="date"
               value={endDate}
               onChange={(e) => {
-                setEndDate(e.target.value);
-                if (startDate && e.target.value) {
-                  setCurrentPage(1);
-                  setTimeout(() => fetchData(1), 0);
-                }
+                const newEndDate = e.target.value;
+                setEndDate(newEndDate);
+                setCurrentPage(1);
+                // 즉시 검색 (날짜 하나만 입력해도 검색)
+                setTimeout(() => {
+                  fetchData(1, { 
+                    endDate: newEndDate || undefined 
+                  });
+                }, 100);
               }}
             />
           </div>
@@ -200,10 +225,15 @@ const EstimateInquiryPage: React.FC = () => {
             <select
               value={selectedStatus}
               onChange={(e) => {
-                setSelectedStatus(e.target.value);
+                const newStatus = e.target.value;
+                setSelectedStatus(newStatus);
                 setCurrentPage(1);
-                // 상태 변경 시 즉시 검색
-                setTimeout(() => fetchData(1), 0);
+                // 상태 변경 시 즉시 검색 (새로운 상태값으로)
+                setTimeout(() => {
+                  fetchData(1, { 
+                    status: newStatus ? parseInt(newStatus) : undefined 
+                  });
+                }, 100);
               }}
             >
               {statusOptions.map(option => (

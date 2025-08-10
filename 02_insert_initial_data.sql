@@ -1,4 +1,5 @@
 -- 초기 데이터 삽입
+USE PWD_Final;
 
 -- 1) Role 데이터
 INSERT INTO Role (RoleID, RoleName, Description) VALUES
