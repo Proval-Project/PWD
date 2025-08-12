@@ -20,12 +20,13 @@ CREATE TABLE AccMakerList (
 
 -- 3) 악세사리 모델 리스트
 CREATE TABLE AccModelList (
-  AccModelCode CHAR(10) PRIMARY KEY,
+  AccModelCode CHAR(1) NOT NULL,
   AccModelName VARCHAR(255) NOT NULL,
   AccTypeCode CHAR(1) NOT NULL,
   AccMakerCode CHAR(1) NOT NULL,
   AccSize VARCHAR(255),
   AccStatus BOOLEAN NOT NULL DEFAULT TRUE,
+  PRIMARY KEY (AccModelCode, AccTypeCode, AccMakerCode),
   CONSTRAINT FK_AccModel_AccType FOREIGN KEY (AccTypeCode) REFERENCES AccTypeList(AccTypeCode) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT FK_AccModel_AccMaker FOREIGN KEY (AccMakerCode, AccTypeCode) REFERENCES AccMakerList(AccMakerCode, AccTypeCode) ON UPDATE CASCADE ON DELETE RESTRICT
 );
@@ -364,14 +365,30 @@ CREATE TABLE DataSheetLv3 (
   ActSeriesCode CHAR(1) NULL DEFAULT NULL,
   ActSize CHAR(1) NULL DEFAULT NULL,
   HW CHAR(1) NULL DEFAULT NULL,
-  PosCode CHAR(10) NULL DEFAULT NULL,
-  SolCode CHAR(10) NULL DEFAULT NULL,
-  LimCode CHAR(10) NULL DEFAULT NULL,
-  ASCode CHAR(10) NULL DEFAULT NULL,
-  VolCode CHAR(10) NULL DEFAULT NULL,
-  AirOpCode CHAR(10) NULL DEFAULT NULL,
-  LockupCode CHAR(10) NULL DEFAULT NULL,
-  SnapActCode CHAR(10) NULL DEFAULT NULL,
+  PosCode CHAR(1) NULL DEFAULT NULL, -- Changed from CHAR(10)
+  PosAccTypeCode CHAR(1) NULL DEFAULT NULL, -- New column
+  PosAccMakerCode CHAR(1) NULL DEFAULT NULL, -- New column
+  SolCode CHAR(1) NULL DEFAULT NULL, -- Changed from CHAR(10)
+  SolAccTypeCode CHAR(1) NULL DEFAULT NULL, -- New column
+  SolAccMakerCode CHAR(1) NULL DEFAULT NULL, -- New column
+  LimCode CHAR(1) NULL DEFAULT NULL, -- Changed from CHAR(10)
+  LimAccTypeCode CHAR(1) NULL DEFAULT NULL, -- New column
+  LimAccMakerCode CHAR(1) NULL DEFAULT NULL, -- New column
+  ASCode CHAR(1) NULL DEFAULT NULL, -- Changed from CHAR(10)
+  ASAccTypeCode CHAR(1) NULL DEFAULT NULL, -- New column
+  ASAccMakerCode CHAR(1) NULL DEFAULT NULL, -- New column
+  VolCode CHAR(1) NULL DEFAULT NULL, -- Changed from CHAR(10)
+  VolAccTypeCode CHAR(1) NULL DEFAULT NULL, -- New column
+  VolAccMakerCode CHAR(1) NULL DEFAULT NULL, -- New column
+  AirOpCode CHAR(1) NULL DEFAULT NULL, -- Changed from CHAR(10)
+  AirOpAccTypeCode CHAR(1) NULL DEFAULT NULL, -- New column
+  AirOpAccMakerCode CHAR(1) NULL DEFAULT NULL, -- New column
+  LockupCode CHAR(1) NULL DEFAULT NULL, -- Changed from CHAR(10)
+  LockupAccTypeCode CHAR(1) NULL DEFAULT NULL, -- New column
+  LockupAccMakerCode CHAR(1) NULL DEFAULT NULL, -- New column
+  SnapActCode CHAR(1) NULL DEFAULT NULL, -- Changed from CHAR(10)
+  SnapActAccTypeCode CHAR(1) NULL DEFAULT NULL, -- New column
+  SnapActAccMakerCode CHAR(1) NULL DEFAULT NULL, -- New column
   PRIMARY KEY (TempEstimateNo, SheetID),
   CONSTRAINT FK_DataSheetLv3_TempEstimateNo FOREIGN KEY (TempEstimateNo) REFERENCES EstimateSheetLv1(TempEstimateNo) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT FK_DataSheetLv3_ValveType FOREIGN KEY (ValveType) REFERENCES BodyValveList(ValveSeriesCode) ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -389,12 +406,12 @@ CREATE TABLE DataSheetLv3 (
   CONSTRAINT FK_DataSheetLv3_ActType FOREIGN KEY (ActType) REFERENCES ActTypeList(ActTypeCode) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT FK_DataSheetLv3_ActSize FOREIGN KEY (ActSeriesCode, ActSize) REFERENCES ActSizeList(ActSeriesCode, ActSizeCode) ON UPDATE CASCADE ON DELETE RESTRICT,
   CONSTRAINT FK_DataSheetLv3_HW FOREIGN KEY (HW) REFERENCES ActHWList(HWCode) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT FK_DataSheetLv3_PosCode FOREIGN KEY (PosCode) REFERENCES AccModelList(AccModelCode) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT FK_DataSheetLv3_SolCode FOREIGN KEY (SolCode) REFERENCES AccModelList(AccModelCode) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT FK_DataSheetLv3_LimCode FOREIGN KEY (LimCode) REFERENCES AccModelList(AccModelCode) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT FK_DataSheetLv3_ASCode FOREIGN KEY (ASCode) REFERENCES AccModelList(AccModelCode) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT FK_DataSheetLv3_VolCode FOREIGN KEY (VolCode) REFERENCES AccModelList(AccModelCode) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT FK_DataSheetLv3_AirOpCode FOREIGN KEY (AirOpCode) REFERENCES AccModelList(AccModelCode) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT FK_DataSheetLv3_LockupCode FOREIGN KEY (LockupCode) REFERENCES AccModelList(AccModelCode) ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT FK_DataSheetLv3_SnapActCode FOREIGN KEY (SnapActCode) REFERENCES AccModelList(AccModelCode) ON UPDATE CASCADE ON DELETE RESTRICT
+  CONSTRAINT FK_DataSheetLv3_PosCode FOREIGN KEY (PosCode, PosAccTypeCode, PosAccMakerCode) REFERENCES AccModelList(AccModelCode, AccTypeCode, AccMakerCode) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT FK_DataSheetLv3_SolCode FOREIGN KEY (SolCode, SolAccTypeCode, SolAccMakerCode) REFERENCES AccModelList(AccModelCode, AccTypeCode, AccMakerCode) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT FK_DataSheetLv3_LimCode FOREIGN KEY (LimCode, LimAccTypeCode, LimAccMakerCode) REFERENCES AccModelList(AccModelCode, AccTypeCode, AccMakerCode) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT FK_DataSheetLv3_ASCode FOREIGN KEY (ASCode, ASAccTypeCode, ASAccMakerCode) REFERENCES AccModelList(AccModelCode, AccTypeCode, AccMakerCode) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT FK_DataSheetLv3_VolCode FOREIGN KEY (VolCode, VolAccTypeCode, VolAccMakerCode) REFERENCES AccModelList(AccModelCode, AccTypeCode, AccMakerCode) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT FK_DataSheetLv3_AirOpCode FOREIGN KEY (AirOpCode, AirOpAccTypeCode, AirOpAccMakerCode) REFERENCES AccModelList(AccModelCode, AccTypeCode, AccMakerCode) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT FK_DataSheetLv3_LockupCode FOREIGN KEY (LockupCode, LockupAccTypeCode, LockupAccMakerCode) REFERENCES AccModelList(AccModelCode, AccTypeCode, AccMakerCode) ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT FK_DataSheetLv3_SnapActCode FOREIGN KEY (SnapActCode, SnapActAccTypeCode, SnapActAccMakerCode) REFERENCES AccModelList(AccModelCode, AccTypeCode, AccMakerCode) ON UPDATE CASCADE ON DELETE RESTRICT
 );

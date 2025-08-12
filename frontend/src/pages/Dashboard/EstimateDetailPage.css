@@ -1,5 +1,6 @@
 /* EstimateDetailPage.css - 사양 선정 페이지 전용 스타일 */
 
+
 .estimate-detail-page {
   padding: 20px;
   max-width: 1400px;
@@ -630,6 +631,23 @@
   color: #6c757d;
 }
 
+.acc-options-group {
+  display: flex;
+  gap: 10px; /* 드롭다운 간 간격 */
+  align-items: center;
+  width: 100%; /* 부모 td의 전체 너비를 사용 */
+}
+
+.acc-options-group select {
+  flex: 2; /* 메이커, 모델명 드롭다운에 상대적으로 2의 비율로 공간 할당 */
+  min-width: 100px; /* 최소 너비 */
+}
+
+.acc-options-group input {
+  flex: 3; /* 규격 인풋에 상대적으로 3의 비율로 공간 할당 (더 넓게) */
+  min-width: 150px; /* 최소 너비 */
+}
+
 /* 반응형 디자인 개선 */
 @media (max-width: 1200px) {
   .estimate-detail-page .fluid-grid,
@@ -771,4 +789,110 @@
 
 .valve-item.selected:hover {
   background: #218838;
+}
+
+/* AccessorySelector 컴포넌트 스타일 */
+.accessory-selector {
+  position: relative; /* 드롭다운 목록의 위치 지정을 위함 */
+  width: 100%;
+}
+
+.accessory-selector input[type="text"] {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  box-sizing: border-box; /* 패딩이 너비에 포함되도록 */
+  font-size: 1rem;
+}
+
+.accessory-selector .dropdown-list {
+  position: absolute;
+  top: 100%; /* 입력 필드 바로 아래 */
+  left: 0;
+  right: 0;
+  background-color: #fff;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-height: 200px; /* 최대 높이 설정 */
+  overflow-y: auto; /* 스크롤바 표시 */
+  list-style: none;
+  padding: 0;
+  margin: 5px 0 0 0;
+  z-index: 1000; /* 다른 요소 위에 표시 */
+}
+
+.accessory-selector .dropdown-list li {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  display: flex; /* 자식 요소들을 가로로 정렬 */
+  gap: 10px; /* 각 섹션 사이의 간격 */
+  justify-content: space-between; /* 요소들 사이에 공간 균등 분배 */
+  align-items: center; /* 세로 중앙 정렬 */
+}
+
+.accessory-selector .dropdown-list li:last-child {
+  border-bottom: none;
+}
+
+.accessory-selector .dropdown-list li:hover {
+  background-color: #f8f9fa;
+}
+
+.accessory-selector .dropdown-maker {
+  flex: 2; /* 메이커 필드에 더 많은 공간 할당 */
+  min-width: 80px;
+  font-weight: bold;
+}
+
+.accessory-selector .dropdown-model {
+  flex: 3; /* 모델명 필드에 더 많은 공간 할당 */
+  min-width: 100px;
+}
+
+.accessory-selector .dropdown-spec {
+  flex: 2; /* 규격 필드에 적절한 공간 할당 */
+  min-width: 80px;
+  text-align: right; /* 규격은 오른쪽 정렬 */
+  color: #6c757d;
+}
+
+.selected-accessory-display {
+  margin-top: 5px;
+  font-size: 0.9em;
+  color: #6c757d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.accessory-selector .input-group {
+  display: flex;
+  flex-direction: row; /* 명시적으로 가로 정렬 */
+  gap: 10px; /* 입력 필드 간 간격 */
+  margin-bottom: 5px; /* 검색 결과 드롭다운과의 간격 */
+  align-items: center; /* 세로 중앙 정렬 */
+  justify-content: space-between; /* 요소들 사이에 공간 균등 분배 */
+}
+
+.accessory-selector .input-group input {
+  flex: 1; /* 각 입력 필드가 가용한 공간을 균등하게 분배 */
+}
+
+.reset-button {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: 10px; /* 입력 필드와 버튼 사이 간격 */
+  white-space: nowrap; /* 버튼 텍스트 줄바꿈 방지 */
+}
+
+.reset-button:hover {
+  background: #c82333;
 }

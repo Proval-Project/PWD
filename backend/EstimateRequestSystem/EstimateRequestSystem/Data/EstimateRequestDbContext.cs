@@ -177,14 +177,30 @@ namespace EstimateRequestSystem.Data
                 entity.Property(e => e.ActSeriesCode).HasMaxLength(1);
                 entity.Property(e => e.ActSize).HasMaxLength(1);
                 entity.Property(e => e.HW).HasMaxLength(1);
-                entity.Property(e => e.PosCode).HasMaxLength(10);
-                entity.Property(e => e.SolCode).HasMaxLength(10);
-                entity.Property(e => e.LimCode).HasMaxLength(10);
-                entity.Property(e => e.ASCode).HasMaxLength(10);
-                entity.Property(e => e.VolCode).HasMaxLength(10);
-                entity.Property(e => e.AirOpCode).HasMaxLength(10);
-                entity.Property(e => e.LockupCode).HasMaxLength(10);
-                entity.Property(e => e.SnapActCode).HasMaxLength(10);
+                entity.Property(e => e.PosCode).HasMaxLength(1);
+                entity.Property(e => e.PosAccTypeCode).HasMaxLength(1);
+                entity.Property(e => e.PosAccMakerCode).HasMaxLength(1);
+                entity.Property(e => e.SolCode).HasMaxLength(1);
+                entity.Property(e => e.SolAccTypeCode).HasMaxLength(1);
+                entity.Property(e => e.SolAccMakerCode).HasMaxLength(1);
+                entity.Property(e => e.LimCode).HasMaxLength(1);
+                entity.Property(e => e.LimAccTypeCode).HasMaxLength(1);
+                entity.Property(e => e.LimAccMakerCode).HasMaxLength(1);
+                entity.Property(e => e.ASCode).HasMaxLength(1);
+                entity.Property(e => e.ASAccTypeCode).HasMaxLength(1);
+                entity.Property(e => e.ASAccMakerCode).HasMaxLength(1);
+                entity.Property(e => e.VolCode).HasMaxLength(1);
+                entity.Property(e => e.VolAccTypeCode).HasMaxLength(1);
+                entity.Property(e => e.VolAccMakerCode).HasMaxLength(1);
+                entity.Property(e => e.AirOpCode).HasMaxLength(1);
+                entity.Property(e => e.AirOpAccTypeCode).HasMaxLength(1);
+                entity.Property(e => e.AirOpAccMakerCode).HasMaxLength(1);
+                entity.Property(e => e.LockupCode).HasMaxLength(1);
+                entity.Property(e => e.LockupAccTypeCode).HasMaxLength(1);
+                entity.Property(e => e.LockupAccMakerCode).HasMaxLength(1);
+                entity.Property(e => e.SnapActCode).HasMaxLength(1);
+                entity.Property(e => e.SnapActAccTypeCode).HasMaxLength(1);
+                entity.Property(e => e.SnapActAccMakerCode).HasMaxLength(1);
 
                 // Foreign keys
                 entity.HasOne(e => e.EstimateSheet)
@@ -201,6 +217,55 @@ namespace EstimateRequestSystem.Data
                 entity.HasOne(e => e.ActHW)
                     .WithMany()
                     .HasForeignKey(e => e.HW)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // AccModelList composite foreign keys
+                entity.HasOne<AccModelList>()
+                    .WithMany()
+                    .HasForeignKey(e => new { e.PosCode, e.PosAccTypeCode, e.PosAccMakerCode })
+                    .HasPrincipalKey(a => new { a.AccModelCode, a.AccTypeCode, a.AccMakerCode })
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<AccModelList>()
+                    .WithMany()
+                    .HasForeignKey(e => new { e.SolCode, e.SolAccTypeCode, e.SolAccMakerCode })
+                    .HasPrincipalKey(a => new { a.AccModelCode, a.AccTypeCode, a.AccMakerCode })
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<AccModelList>()
+                    .WithMany()
+                    .HasForeignKey(e => new { e.LimCode, e.LimAccTypeCode, e.LimAccMakerCode })
+                    .HasPrincipalKey(a => new { a.AccModelCode, a.AccTypeCode, a.AccMakerCode })
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<AccModelList>()
+                    .WithMany()
+                    .HasForeignKey(e => new { e.ASCode, e.ASAccTypeCode, e.ASAccMakerCode })
+                    .HasPrincipalKey(a => new { a.AccModelCode, a.AccTypeCode, a.AccMakerCode })
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<AccModelList>()
+                    .WithMany()
+                    .HasForeignKey(e => new { e.VolCode, e.VolAccTypeCode, e.VolAccMakerCode })
+                    .HasPrincipalKey(a => new { a.AccModelCode, a.AccTypeCode, a.AccMakerCode })
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<AccModelList>()
+                    .WithMany()
+                    .HasForeignKey(e => new { e.AirOpCode, e.AirOpAccTypeCode, e.AirOpAccMakerCode })
+                    .HasPrincipalKey(a => new { a.AccModelCode, a.AccTypeCode, a.AccMakerCode })
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<AccModelList>()
+                    .WithMany()
+                    .HasForeignKey(e => new { e.LockupCode, e.LockupAccTypeCode, e.LockupAccMakerCode })
+                    .HasPrincipalKey(a => new { a.AccModelCode, a.AccTypeCode, a.AccMakerCode })
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<AccModelList>()
+                    .WithMany()
+                    .HasForeignKey(e => new { e.SnapActCode, e.SnapActAccTypeCode, e.SnapActAccMakerCode })
+                    .HasPrincipalKey(a => new { a.AccModelCode, a.AccTypeCode, a.AccMakerCode })
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
@@ -322,8 +387,8 @@ namespace EstimateRequestSystem.Data
             modelBuilder.Entity<AccMakerList>(entity =>
             {
                 entity.ToTable("AccMakerList");
-                entity.HasKey(e => e.AccMakerCode);
-                entity.Property(e => e.AccMakerCode).HasMaxLength(1).IsRequired();
+                entity.HasKey(e => new { e.AccMakerCode, e.AccTypeCode }); // Composite Key for AccMakerList
+                entity.Property(e => e.AccMakerCode).HasMaxLength(1).IsRequired(); // Changed to 1
                 entity.Property(e => e.AccMakerName).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.AccTypeCode).HasMaxLength(1).IsRequired();
 
@@ -338,12 +403,12 @@ namespace EstimateRequestSystem.Data
             modelBuilder.Entity<AccModelList>(entity =>
             {
                 entity.ToTable("AccModelList");
-                entity.HasKey(e => e.AccModelCode);
-                entity.Property(e => e.AccModelCode).HasMaxLength(10).IsRequired();
+                entity.HasKey(e => new { e.AccModelCode, e.AccTypeCode, e.AccMakerCode });
+                entity.Property(e => e.AccModelCode).HasMaxLength(1).IsRequired();
                 entity.Property(e => e.AccModelName).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.AccTypeCode).HasMaxLength(1).IsRequired();
-                entity.Property(e => e.AccMakerCode).HasMaxLength(1).IsRequired();
-                entity.Property(e => e.AccSize).HasMaxLength(50).IsRequired();
+                entity.Property(e => e.AccMakerCode).HasMaxLength(1).IsRequired(); // Changed to 1
+                entity.Property(e => e.AccSize).HasMaxLength(255);
                 entity.Property(e => e.AccStatus).IsRequired();
 
                 // Foreign keys
@@ -354,7 +419,7 @@ namespace EstimateRequestSystem.Data
 
                 entity.HasOne<AccMakerList>()
                     .WithMany()
-                    .HasForeignKey(e => e.AccMakerCode)
+                    .HasForeignKey(e => new { e.AccMakerCode, e.AccTypeCode }) // Composite FK
                     .OnDelete(DeleteBehavior.Restrict);
             });
         }

@@ -487,34 +487,34 @@ INSERT INTO AccMakerList (AccMakerCode, AccMakerName, AccTypeCode) VALUES
 -- 21) AccModelList 데이터 (이미지 참조)
 INSERT INTO AccModelList (AccModelCode, AccModelName, AccTypeCode, AccMakerCode, AccSize, AccStatus) VALUES
 -- Positioner 모델
-('A001', 'YT-1000R', 'A', 'A', '1/2', TRUE),
-('A002', '3760', 'A', 'B', '1', TRUE),
-('A003', '3582', 'A', 'C', '1/4', TRUE),
+('1', 'YT-1000R', 'A', 'A', '1/2', TRUE),
+('2', '3760', 'A', 'B', '1', TRUE),
+('3', '3582', 'A', 'C', '1/4', TRUE),
 -- Solenoid Valve 모델
-('B001', 'YT-2000', 'B', 'D', '1/2', TRUE),
-('B002', '3785', 'B', 'E', '1', TRUE),
-('B003', '3585', 'B', 'F', '1/4', TRUE),
+('1', 'YT-2000', 'B', 'D', '1/2', TRUE),
+('2', '3785', 'B', 'E', '1', TRUE),
+('3', '3585', 'B', 'F', '1/4', TRUE),
 -- Limit Switch 모델
-('C001', 'YT-3000', 'C', 'G', '1/2', TRUE),
-('C002', '3790', 'C', 'H', '1', TRUE),
-('C003', '3590', 'C', 'I', '1/4', TRUE),
+('1', 'YT-3000', 'C', 'G', '1/2', TRUE),
+('2', '3790', 'C', 'H', '1', TRUE),
+('3', '3590', 'C', 'I', '1/4', TRUE),
 -- Air Set 모델
-('D001', 'TS300PS0', 'D', 'J', '1/4', TRUE),
-('D002', 'PT 1/4', 'D', 'J', '1/4', TRUE),
-('D003', 'TS500PS0', 'D', 'K', '1/2', TRUE),
+('1', 'TS300PS0', 'D', 'J', '1/4', TRUE),
+('2', 'PT 1/4', 'D', 'J', '1/4', TRUE),
+('3', 'TS500PS0', 'D', 'K', '1/2', TRUE),
 -- Volume Booster 모델
-('E001', 'VB-100', 'E', 'M', '1/2', TRUE),
-('E002', 'VB-200', 'E', 'N', '1', TRUE),
-('E003', 'VB-300', 'E', 'O', '1/4', TRUE),
+('1', 'VB-100', 'E', 'M', '1/2', TRUE),
+('2', 'VB-200', 'E', 'N', '1', TRUE),
+('3', 'VB-300', 'E', 'O', '1/4', TRUE),
 -- Air Operated 모델
-('F001', 'AO-100', 'F', 'P', '1/2', TRUE),
-('F002', 'AO-200', 'F', 'Q', '1', TRUE),
-('F003', 'AO-300', 'F', 'R', '1/4', TRUE),
+('1', 'AO-100', 'F', 'P', '1/2', TRUE),
+('2', 'AO-200', 'F', 'Q', '1', TRUE),
+('3', 'AO-300', 'F', 'R', '1/4', TRUE),
 -- Lock Up 모델
-('G001', 'LU-100', 'G', 'S', '1/2', TRUE),
-('G002', 'LU-200', 'G', 'T', '1', TRUE),
-('G003', 'LU-300', 'G', 'U', '1/4', TRUE),
+('1', 'LU-100', 'G', 'S', '1/2', TRUE),
+('2', 'LU-200', 'G', 'T', '1', TRUE),
+('3', 'LU-300', 'G', 'U', '1/4', TRUE),
 -- Snap Acting Relay 모델
-('H001', 'SAR-100', 'H', 'V', '1/2', TRUE),
-('H002', 'SAR-200', 'H', 'W', '1', TRUE),
-('H003', 'SAR-300', 'H', 'X', '1/4', TRUE);
+('1', 'SAR-100', 'H', 'V', '1/2', TRUE),
+('2', 'SAR-200', 'H', 'W', '1', TRUE),
+('3', 'SAR-300', 'H', 'X', '1/4', TRUE);

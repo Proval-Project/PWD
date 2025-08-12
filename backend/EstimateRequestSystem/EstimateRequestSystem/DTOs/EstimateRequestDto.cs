@@ -213,18 +213,38 @@ namespace EstimateRequestSystem.DTOs
 
     public class AccessorySpecificationDto
     {
-        public string Maker { get; set; } = string.Empty;
-        public string Model { get; set; } = string.Empty;
+        // Maker와 Model은 이제 각 악세사리 DTO 안에 포함되어야 합니다. 여기에 직접 저장 필드를 추가합니다.
+        public string? PosCode { get; set; }        // 포지셔너 모델 코드 (CHAR(1))
+        public string? PosAccTypeCode { get; set; } // 포지셔너 타입 코드 (CHAR(1))
+        public string? PosAccMakerCode { get; set; } // 포지셔너 메이커 코드 (CHAR(10))
         
-        // 실제 DB 필드들 추가
-        public string? PosCode { get; set; }        // 포지셔너
-        public string? SolCode { get; set; }        // 솔레노이드
-        public string? LimCode { get; set; }        // 리미터
-        public string? ASCode { get; set; }         // 에어 서플라이
-        public string? VolCode { get; set; }        // 볼륨 부스터
-        public string? AirOpCode { get; set; }      // 에어 오퍼레이터
-        public string? LockupCode { get; set; }     // 락업
-        public string? SnapActCode { get; set; }    // 스냅 액션
+        public string? SolCode { get; set; }        // 솔레노이드 모델 코드 (CHAR(1))
+        public string? SolAccTypeCode { get; set; } // 솔레노이드 타입 코드 (CHAR(1))
+        public string? SolAccMakerCode { get; set; } // 솔레노이드 메이커 코드 (CHAR(10))
+        
+        public string? LimCode { get; set; }        // 리미터 모델 코드 (CHAR(1))
+        public string? LimAccTypeCode { get; set; } // 리미터 타입 코드 (CHAR(1))
+        public string? LimAccMakerCode { get; set; } // 리미터 메이커 코드 (CHAR(10))
+        
+        public string? ASCode { get; set; }         // 에어 서플라이 모델 코드 (CHAR(1))
+        public string? ASAccTypeCode { get; set; }  // 에어 서플라이 타입 코드 (CHAR(1))
+        public string? ASAccMakerCode { get; set; } // 에어 서플라이 메이커 코드 (CHAR(10))
+        
+        public string? VolCode { get; set; }        // 볼륨 부스터 모델 코드 (CHAR(1))
+        public string? VolAccTypeCode { get; set; } // 볼륨 부스터 타입 코드 (CHAR(1))
+        public string? VolAccMakerCode { get; set; } // 볼륨 부스터 메이커 코드 (CHAR(10))
+        
+        public string? AirOpCode { get; set; }      // 에어 오퍼레이터 모델 코드 (CHAR(1))
+        public string? AirOpAccTypeCode { get; set; } // 에어 오퍼레이터 타입 코드 (CHAR(1))
+        public string? AirOpAccMakerCode { get; set; } // 에어 오퍼레이터 메이커 코드 (CHAR(10))
+        
+        public string? LockupCode { get; set; }     // 락업 모델 코드 (CHAR(1))
+        public string? LockupAccTypeCode { get; set; } // 락업 타입 코드 (CHAR(1))
+        public string? LockupAccMakerCode { get; set; } // 락업 메이커 코드 (CHAR(10))
+        
+        public string? SnapActCode { get; set; }    // 스냅 액션 모델 코드 (CHAR(1))
+        public string? SnapActAccTypeCode { get; set; } // 스냅 액션 타입 코드 (CHAR(1))
+        public string? SnapActAccMakerCode { get; set; } // 스냅 액션 메이커 코드 (CHAR(10))
     }
 
     // 사양 데이터 응답 DTO
@@ -283,6 +303,7 @@ namespace EstimateRequestSystem.DTOs
         public string HWName { get; set; } = string.Empty;
     }
 
+    // AccessoryDetailDto는 그대로 사용해도 될 것 같습니다.
     public class AccessoryDetailDto
     {
         public string? TypeCode { get; set; }
@@ -290,8 +311,10 @@ namespace EstimateRequestSystem.DTOs
         public string? ModelName { get; set; }
         public string? MakerCode { get; set; }
         public string? MakerName { get; set; }
+        public string? Specification { get; set; } // Added for accessory specification
     }
 
+    // AccessorySpecificationResponseDto는 DetailDto를 사용하여 업데이트됩니다.
     public class AccessorySpecificationResponseDto
     {
         public AccessoryDetailDto? Positioner { get; set; }

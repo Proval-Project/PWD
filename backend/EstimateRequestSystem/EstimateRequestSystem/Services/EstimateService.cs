@@ -198,9 +198,7 @@ namespace EstimateRequestSystem.Services
                                 BodyMat = await GetBodyMatCodeAsync(tagNo.BodyMat),
                                 TrimMat = await GetTrimMatCodeAsync(tagNo.TrimMat),
                                 TrimOption = await GetTrimOptionCodeAsync(tagNo.TrimOption),
-                                Rating = await GetBodyRatingCodeAsync(tagNo.BodyRating),
-                                ActType = await GetActTypeCodeAsync(tagNo.ActType),
-                                HW = await GetActHWCodeAsync(tagNo.IsHW)
+                                Rating = await GetBodyRatingCodeAsync(tagNo.BodyRating)
                             };
                             _context.DataSheetLv3.Add(dataSheetLv3);
                         }
@@ -399,8 +397,6 @@ namespace EstimateRequestSystem.Services
                                 TrimMat = await GetTrimMatCodeAsync(tagNo.TrimMat),
                                 TrimOption = await GetTrimOptionCodeAsync(tagNo.TrimOption),
                                 Rating = await GetBodyRatingCodeAsync(tagNo.BodyRating),
-                                ActType = await GetActTypeCodeAsync(tagNo.ActType),
-                                HW = await GetActHWCodeAsync(tagNo.IsHW)
                             };
                             _context.DataSheetLv3.Add(dataSheetLv3);
                         }
@@ -510,7 +506,6 @@ namespace EstimateRequestSystem.Services
                     ActType = er.ActType,
                     IsHW = er.IsHW,
                     IsPositioner = er.IsPositioner,
-                    PositionerType = er.PositionerType,
                     ExplosionProof = er.ExplosionProof,
                     TransmitterType = er.TransmitterType,
                     IsSolenoid = er.IsSolenoid,
@@ -3317,13 +3312,29 @@ private string? ConvertEmptyToNull(string? value)
                     
                     // 악세사리 필드들 업데이트
                     existingDataSheet.PosCode = ConvertEmptyToNull(specification.Accessories.PosCode);
+                    existingDataSheet.PosAccTypeCode = ConvertEmptyToNull(specification.Accessories.PosAccTypeCode); // New
+                    existingDataSheet.PosAccMakerCode = ConvertEmptyToNull(specification.Accessories.PosAccMakerCode); // New
                     existingDataSheet.SolCode = ConvertEmptyToNull(specification.Accessories.SolCode);
+                    existingDataSheet.SolAccTypeCode = ConvertEmptyToNull(specification.Accessories.SolAccTypeCode); // New
+                    existingDataSheet.SolAccMakerCode = ConvertEmptyToNull(specification.Accessories.SolAccMakerCode); // New
                     existingDataSheet.LimCode = ConvertEmptyToNull(specification.Accessories.LimCode);
+                    existingDataSheet.LimAccTypeCode = ConvertEmptyToNull(specification.Accessories.LimAccTypeCode); // New
+                    existingDataSheet.LimAccMakerCode = ConvertEmptyToNull(specification.Accessories.LimAccMakerCode); // New
                     existingDataSheet.ASCode = ConvertEmptyToNull(specification.Accessories.ASCode);
+                    existingDataSheet.ASAccTypeCode = ConvertEmptyToNull(specification.Accessories.ASAccTypeCode); // New
+                    existingDataSheet.ASAccMakerCode = ConvertEmptyToNull(specification.Accessories.ASAccMakerCode); // New
                     existingDataSheet.VolCode = ConvertEmptyToNull(specification.Accessories.VolCode);
+                    existingDataSheet.VolAccTypeCode = ConvertEmptyToNull(specification.Accessories.VolAccTypeCode); // New
+                    existingDataSheet.VolAccMakerCode = ConvertEmptyToNull(specification.Accessories.VolAccMakerCode); // New
                     existingDataSheet.AirOpCode = ConvertEmptyToNull(specification.Accessories.AirOpCode);
+                    existingDataSheet.AirOpAccTypeCode = ConvertEmptyToNull(specification.Accessories.AirOpAccTypeCode); // New
+                    existingDataSheet.AirOpAccMakerCode = ConvertEmptyToNull(specification.Accessories.AirOpAccMakerCode); // New
                     existingDataSheet.LockupCode = ConvertEmptyToNull(specification.Accessories.LockupCode);
+                    existingDataSheet.LockupAccTypeCode = ConvertEmptyToNull(specification.Accessories.LockupAccTypeCode); // New
+                    existingDataSheet.LockupAccMakerCode = ConvertEmptyToNull(specification.Accessories.LockupAccMakerCode); // New
                     existingDataSheet.SnapActCode = ConvertEmptyToNull(specification.Accessories.SnapActCode);
+                    existingDataSheet.SnapActAccTypeCode = ConvertEmptyToNull(specification.Accessories.SnapActAccTypeCode); // New
+                    existingDataSheet.SnapActAccMakerCode = ConvertEmptyToNull(specification.Accessories.SnapActAccMakerCode); // New
                     
                     Console.WriteLine("기존 데이터 업데이트 완료");
                 }
@@ -3356,13 +3367,29 @@ private string? ConvertEmptyToNull(string? value)
                         
                         // 악세사리 필드들 저장
                         PosCode = ConvertEmptyToNull(specification.Accessories.PosCode),
+                        PosAccTypeCode = ConvertEmptyToNull(specification.Accessories.PosAccTypeCode), // New
+                        PosAccMakerCode = ConvertEmptyToNull(specification.Accessories.PosAccMakerCode), // New
                         SolCode = ConvertEmptyToNull(specification.Accessories.SolCode),
+                        SolAccTypeCode = ConvertEmptyToNull(specification.Accessories.SolAccTypeCode), // New
+                        SolAccMakerCode = ConvertEmptyToNull(specification.Accessories.SolAccMakerCode), // New
                         LimCode = ConvertEmptyToNull(specification.Accessories.LimCode),
+                        LimAccTypeCode = ConvertEmptyToNull(specification.Accessories.LimAccTypeCode), // New
+                        LimAccMakerCode = ConvertEmptyToNull(specification.Accessories.LimAccMakerCode), // New
                         ASCode = ConvertEmptyToNull(specification.Accessories.ASCode),
+                        ASAccTypeCode = ConvertEmptyToNull(specification.Accessories.ASAccTypeCode), // New
+                        ASAccMakerCode = ConvertEmptyToNull(specification.Accessories.ASAccMakerCode), // New
                         VolCode = ConvertEmptyToNull(specification.Accessories.VolCode),
+                        VolAccTypeCode = ConvertEmptyToNull(specification.Accessories.VolAccTypeCode), // New
+                        VolAccMakerCode = ConvertEmptyToNull(specification.Accessories.VolAccMakerCode), // New
                         AirOpCode = ConvertEmptyToNull(specification.Accessories.AirOpCode),
+                        AirOpAccTypeCode = ConvertEmptyToNull(specification.Accessories.AirOpAccTypeCode), // New
+                        AirOpAccMakerCode = ConvertEmptyToNull(specification.Accessories.AirOpAccMakerCode), // New
                         LockupCode = ConvertEmptyToNull(specification.Accessories.LockupCode),
-                        SnapActCode = ConvertEmptyToNull(specification.Accessories.SnapActCode)
+                        LockupAccTypeCode = ConvertEmptyToNull(specification.Accessories.LockupAccTypeCode), // New
+                        LockupAccMakerCode = ConvertEmptyToNull(specification.Accessories.LockupAccMakerCode), // New
+                        SnapActCode = ConvertEmptyToNull(specification.Accessories.SnapActCode),
+                        SnapActAccTypeCode = ConvertEmptyToNull(specification.Accessories.SnapActAccTypeCode), // New
+                        SnapActAccMakerCode = ConvertEmptyToNull(specification.Accessories.SnapActAccMakerCode) // New
                     };
 
                     _context.DataSheetLv3.Add(newDataSheet);
@@ -3681,14 +3708,14 @@ private string? ConvertEmptyToNull(string? value)
                 // Accessories 정보 조회
                 var accessories = new AccessorySpecificationResponseDto
                 {
-                    Positioner = await GetAccessoryDetailAsync(dataSheet.PosCode),
-                    Solenoid = await GetAccessoryDetailAsync(dataSheet.SolCode),
-                    Limiter = await GetAccessoryDetailAsync(dataSheet.LimCode),
-                    AirSupply = await GetAccessoryDetailAsync(dataSheet.ASCode),
-                    VolumeBooster = await GetAccessoryDetailAsync(dataSheet.VolCode),
-                    AirOperator = await GetAccessoryDetailAsync(dataSheet.AirOpCode),
-                    LockUp = await GetAccessoryDetailAsync(dataSheet.LockupCode),
-                    SnapActingRelay = await GetAccessoryDetailAsync(dataSheet.SnapActCode)
+                    Positioner = await GetAccessoryDetailAsync(dataSheet.PosCode, dataSheet.PosAccTypeCode, dataSheet.PosAccMakerCode),
+                    Solenoid = await GetAccessoryDetailAsync(dataSheet.SolCode, dataSheet.SolAccTypeCode, dataSheet.SolAccMakerCode),
+                    Limiter = await GetAccessoryDetailAsync(dataSheet.LimCode, dataSheet.LimAccTypeCode, dataSheet.LimAccMakerCode),
+                    AirSupply = await GetAccessoryDetailAsync(dataSheet.ASCode, dataSheet.ASAccTypeCode, dataSheet.ASAccMakerCode),
+                    VolumeBooster = await GetAccessoryDetailAsync(dataSheet.VolCode, dataSheet.VolAccTypeCode, dataSheet.VolAccMakerCode),
+                    AirOperator = await GetAccessoryDetailAsync(dataSheet.AirOpCode, dataSheet.AirOpAccTypeCode, dataSheet.AirOpAccMakerCode),
+                    LockUp = await GetAccessoryDetailAsync(dataSheet.LockupCode, dataSheet.LockupAccTypeCode, dataSheet.LockupAccMakerCode),
+                    SnapActingRelay = await GetAccessoryDetailAsync(dataSheet.SnapActCode, dataSheet.SnapActAccTypeCode, dataSheet.SnapActAccMakerCode)
                 };
 
                 return new SpecificationResponseDto
@@ -3743,35 +3770,43 @@ private string? ConvertEmptyToNull(string? value)
             catch (Exception ex)
             {
                 Console.WriteLine($"사양 조회 중 오류 발생: {ex.Message}");
-                return null;
+                return new SpecificationResponseDto(); // null 대신 빈 DTO 반환
             }
         }
 
-        private async Task<AccessoryDetailDto?> GetAccessoryDetailAsync(string? modelCode)
+        private async Task<AccessoryDetailDto?> GetAccessoryDetailAsync(string? modelCode, string? typeCode, string? makerCode)
         {
-            if (string.IsNullOrEmpty(modelCode))
+            // 모든 코드가 null인 경우에도 최소한의 TypeCode를 가진 객체 반환 (프론트엔드 드롭다운 필터링 위함)
+            if (string.IsNullOrEmpty(modelCode) && string.IsNullOrEmpty(typeCode) && string.IsNullOrEmpty(makerCode))
             {
-                return null;
+                // 이전에 loadInitialSpecification에 하드코딩된 TypeCode 매핑을 활용
+                // 예: Positioner는 'A', Solenoid는 'B' 등. 이 매핑은 프론트엔드에서 담당하므로 여기서는 빈 문자열로 둠.
+                // 백엔드는 단순히 TypeCode가 null이 아니면 DTO를 반환하도록만 처리하고, 실제 TypeCode 매핑은 프론트엔드에 맡김.
+                return new AccessoryDetailDto { TypeCode = typeCode ?? "", MakerCode = makerCode ?? "", ModelCode = modelCode ?? "", Specification = "" };
             }
-
+            
             var model = await _context.AccModelList
-                                      .FirstOrDefaultAsync(m => m.AccModelCode == modelCode);
+                                      .FirstOrDefaultAsync(m => m.AccModelCode == modelCode && m.AccTypeCode == typeCode && m.AccMakerCode == makerCode);
 
             if (model == null)
             {
-                return new AccessoryDetailDto { ModelCode = modelCode }; // 코드만 반환
+                // 모델을 찾지 못했더라도 TypeCode, MakerCode, ModelCode는 반환
+                return new AccessoryDetailDto { TypeCode = typeCode ?? "", MakerCode = makerCode ?? "", ModelCode = modelCode ?? "", Specification = "" };
             }
 
+            // AccMakerList의 복합 키를 사용하여 메이커 정보 조회
             var maker = await _context.AccMakerList
-                                      .FirstOrDefaultAsync(m => m.AccMakerCode == model.AccMakerCode);
+                                      .FirstOrDefaultAsync(m => m.AccMakerCode == model.AccMakerCode && m.AccTypeCode == model.AccTypeCode);
 
+            Console.WriteLine($"GetAccessoryDetailAsync: model.AccSize = {model.AccSize}");
             return new AccessoryDetailDto
             {
                 TypeCode = model.AccTypeCode,
                 ModelCode = model.AccModelCode,
                 ModelName = model.AccModelName,
                 MakerCode = model.AccMakerCode,
-                MakerName = maker?.AccMakerName
+                MakerName = maker?.AccMakerName,
+                Specification = model.AccSize // AccSize 값을 Specification에 할당
             };
         }
 

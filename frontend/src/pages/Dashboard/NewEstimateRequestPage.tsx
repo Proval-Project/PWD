@@ -60,16 +60,16 @@ interface ValveData {
     hw: string;
   };
   accessory: {
-    positioner: { type: string; exists: boolean; };
+    positioner: { exists: boolean; type: string; maker: string; model: string; };
     explosionProof: string;
-    transmitter: { type: string; exists: boolean; };
-    solenoidValve: boolean;
-    limitSwitch: boolean;
-    airSet: boolean;
-    volumeBooster: boolean;
-    airOperatedValve: boolean;
-    lockupValve: boolean;
-    snapActingRelay: boolean;
+    transmitter: { exists: boolean; type: string; };
+    solenoidValve: { exists: boolean; type: string; maker: string; model: string; };
+    limitSwitch: { exists: boolean; type: string; maker: string; model: string; };
+    airSet: { exists: boolean; type: string; maker: string; model: string; };
+    volumeBooster: { exists: boolean; type: string; maker: string; model: string; };
+    airOperatedValve: { exists: boolean; type: string; maker: string; model: string; };
+    lockupValve: { exists: boolean; type: string; maker: string; model: string; };
+    snapActingRelay: { exists: boolean; type: string; maker: string; model: string; };
   };
   // 라디오 버튼 상태들
   isQM: boolean;
@@ -445,16 +445,16 @@ const NewEstimateRequestPage: React.FC = () => {
         hw: ''
       },
       accessory: {
-        positioner: { type: '', exists: false },
+        positioner: { exists: false, type: '', maker: '', model: '' },
         explosionProof: '',
-        transmitter: { type: '', exists: false },
-        solenoidValve: false,
-        limitSwitch: false,
-        airSet: false,
-        volumeBooster: false,
-        airOperatedValve: false,
-        lockupValve: false,
-        snapActingRelay: false
+        transmitter: { exists: false, type: '' },
+        solenoidValve: { exists: false, type: '', maker: '', model: '' },
+        limitSwitch: { exists: false, type: '', maker: '', model: '' },
+        airSet: { exists: false, type: '', maker: '', model: '' },
+        volumeBooster: { exists: false, type: '', maker: '', model: '' },
+        airOperatedValve: { exists: false, type: '', maker: '', model: '' },
+        lockupValve: { exists: false, type: '', maker: '', model: '' },
+        snapActingRelay: { exists: false, type: '', maker: '', model: '' }
       },
       // 라디오 버튼 상태들
       isQM: false,
@@ -792,16 +792,16 @@ const NewEstimateRequestPage: React.FC = () => {
                   hw: tagNo.isHW ? 'Yes' : 'No'
                 },
                 accessory: {
-                  positioner: { type: tagNo.positionerType || '', exists: tagNo.isPositioner || false },
+                  positioner: { exists: tagNo.isPositioner || false, type: tagNo.positionerType || '', maker: '', model: '' },
                   explosionProof: tagNo.explosionProof || '',
-                  transmitter: { type: '', exists: tagNo.isTransmitter || false },
-                  solenoidValve: tagNo.isSolenoid || false,
-                  limitSwitch: tagNo.isLimSwitch || false,
-                  airSet: tagNo.isAirSet || false,
-                  volumeBooster: tagNo.isVolumeBooster || false,
-                  airOperatedValve: tagNo.isAirOperated || false,
-                  lockupValve: tagNo.isLockUp || false,
-                  snapActingRelay: tagNo.isSnapActingRelay || false
+                  transmitter: { exists: tagNo.isTransmitter || false, type: '' },
+                  solenoidValve: { exists: tagNo.isSolenoid || false, type: '', maker: '', model: '' },
+                  limitSwitch: { exists: tagNo.isLimSwitch || false, type: '', maker: '', model: '' },
+                  airSet: { exists: tagNo.isAirSet || false, type: '', maker: '', model: '' },
+                  volumeBooster: { exists: tagNo.isVolumeBooster || false, type: '', maker: '', model: '' },
+                  airOperatedValve: { exists: tagNo.isAirOperated || false, type: '', maker: '', model: '' },
+                  lockupValve: { exists: tagNo.isLockUp || false, type: '', maker: '', model: '' },
+                  snapActingRelay: { exists: tagNo.isSnapActingRelay || false, type: '', maker: '', model: '' }
                 },
                 isQM: tagNo.isQM || false,
                 isP2: tagNo.isP2 || false,
@@ -918,16 +918,16 @@ const NewEstimateRequestPage: React.FC = () => {
                   hw: req.isHW ? 'Yes' : 'No'
                 },
                 accessory: {
-                  positioner: { type: req.positionerType || '', exists: req.isPositioner || false },
+                  positioner: { exists: req.isPositioner || false, type: req.positionerType || '', maker: '', model: '' },
                   explosionProof: req.explosionProof || '',
-                  transmitter: { type: req.transmitterType || '', exists: req.transmitterType ? true : false },
-                  solenoidValve: req.isSolenoid || false,
-                  limitSwitch: req.isLimSwitch || false,
-                  airSet: req.isAirSet || false,
-                  volumeBooster: req.isVolumeBooster || false,
-                  airOperatedValve: req.isAirOperated || false,
-                  lockupValve: req.isLockUp || false,
-                  snapActingRelay: req.isSnapActingRelay || false
+                  transmitter: { exists: req.transmitterType ? true : false, type: req.transmitterType || '' },
+                  solenoidValve: { exists: req.isSolenoid || false, type: '', maker: '', model: '' },
+                  limitSwitch: { exists: req.isLimSwitch || false, type: '', maker: '', model: '' },
+                  airSet: { exists: req.isAirSet || false, type: '', maker: '', model: '' },
+                  volumeBooster: { exists: req.isVolumeBooster || false, type: '', maker: '', model: '' },
+                  airOperatedValve: { exists: req.isAirOperated || false, type: '', maker: '', model: '' },
+                  lockupValve: { exists: req.isLockUp || false, type: '', maker: '', model: '' },
+                  snapActingRelay: { exists: req.isSnapActingRelay || false, type: '', maker: '', model: '' }
                 },
                 isQM: req.isQM || false,
                 isP2: req.isP2 || false,
@@ -1156,16 +1156,16 @@ const NewEstimateRequestPage: React.FC = () => {
                 ActType: valve.actuator.type,
                 IsHW: valve.actuator.hw === 'Yes',
                 IsPositioner: valve.accessory.positioner.exists,
-                PositionerType: valve.accessory.positioner.type,
-                ExplosionProof: valve.accessory.explosionProof,
-                TransmitterType: valve.accessory.transmitter.type,
-                IsSolenoid: valve.accessory.solenoidValve,
-                IsLimSwitch: valve.accessory.limitSwitch,
-                IsAirSet: valve.accessory.airSet,
-                IsVolumeBooster: valve.accessory.volumeBooster,
-                IsAirOperated: valve.accessory.airOperatedValve,
-                IsLockUp: valve.accessory.lockupValve,
-                IsSnapActingRelay: valve.accessory.snapActingRelay
+                PositionerType: valve.accessory.positioner.type || null,
+                ExplosionProof: valve.accessory.explosionProof || null,
+                TransmitterType: valve.accessory.transmitter.type || null,
+                IsSolenoid: valve.accessory.solenoidValve.exists,
+                IsLimSwitch: valve.accessory.limitSwitch.exists,
+                IsAirSet: valve.accessory.airSet.exists,
+                IsVolumeBooster: valve.accessory.volumeBooster.exists,
+                IsAirOperated: valve.accessory.airOperatedValve.exists,
+                IsLockUp: valve.accessory.lockupValve.exists,
+                IsSnapActingRelay: valve.accessory.snapActingRelay.exists
               }]
             }))
         })),
@@ -1315,16 +1315,16 @@ const NewEstimateRequestPage: React.FC = () => {
                 ActType: valve.actuator.type,
                 IsHW: valve.actuator.hw === 'Yes',
                 IsPositioner: valve.accessory.positioner.exists,
-                PositionerType: valve.accessory.positioner.type,
-                ExplosionProof: valve.accessory.explosionProof,
-                TransmitterType: valve.accessory.transmitter.type,
-                IsSolenoid: valve.accessory.solenoidValve,
-                IsLimSwitch: valve.accessory.limitSwitch,
-                IsAirSet: valve.accessory.airSet,
-                IsVolumeBooster: valve.accessory.volumeBooster,
-                IsAirOperated: valve.accessory.airOperatedValve,
-                IsLockUp: valve.accessory.lockupValve,
-                IsSnapActingRelay: valve.accessory.snapActingRelay
+                PositionerType: valve.accessory.positioner.type || null,
+                ExplosionProof: valve.accessory.explosionProof || null,
+                TransmitterType: valve.accessory.transmitter.type || null,
+                IsSolenoid: valve.accessory.solenoidValve.exists,
+                IsLimSwitch: valve.accessory.limitSwitch.exists,
+                IsAirSet: valve.accessory.airSet.exists,
+                IsVolumeBooster: valve.accessory.volumeBooster.exists,
+                IsAirOperated: valve.accessory.airOperatedValve.exists,
+                IsLockUp: valve.accessory.lockupValve.exists,
+                IsSnapActingRelay: valve.accessory.snapActingRelay.exists
               }]
             }))
         })),
@@ -2314,7 +2314,7 @@ const NewEstimateRequestPage: React.FC = () => {
                           <option value="">선택하세요</option>
                           {trimOptionList.map(item => (
                             <option key={item.trimOptionCode} value={item.trimOptionCode}>
-                              {item.trimOptionName}
+                              {item.trimOption}
                             </option>
                           ))}
                         </select>
@@ -2680,9 +2680,7 @@ const NewEstimateRequestPage: React.FC = () => {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          console.log('타입 클릭:', item.id, '현재 selectedType:', selectedType); // 디버깅용
                           setSelectedType(item.id);
-                          console.log('selectedType 업데이트됨:', item.id); // 디버깅용
                         }}
                         onMouseDown={(e) => {
                           e.preventDefault();
@@ -2694,7 +2692,7 @@ const NewEstimateRequestPage: React.FC = () => {
                           pointerEvents: 'auto'
                         }}
                       >
-                        <span>{item.name} ({item.count})</span>
+                        <span>{item.name} ({valves.filter(valve => valve.body.type === item.name).reduce((sum, valve) => sum + valve.qty, 0)})</span>
                       </div>
                     </SortableItem>
                   ))}
@@ -2703,22 +2701,32 @@ const NewEstimateRequestPage: React.FC = () => {
               
               {/* 드롭다운을 TypeSection 안에 렌더링 */}
               {showValveDropdown && (
-                <div className="valve-dropdown">
-                  <div className="dropdown-header">
-                    <h4>밸브 타입 선택</h4>
-                    <button onClick={() => setShowValveDropdown(false)}>닫기</button>
-                  </div>
-                  <div className="dropdown-content">
-                    {bodyValveList.map((valve) => (
-                      <div
-                        key={valve.valveSeriesCode}
-                        className="dropdown-item"
-                        onClick={() => handleValveSelect(valve)}
-                      >
-                        {valve.valveSeries}
-                      </div>
-                    ))}
-                  </div>
+                <div className="valve-dropdown" style={{ 
+                  position: 'relative',
+                  backgroundColor: 'white', 
+                  border: '2px solid #007bff',
+                  borderRadius: '4px',
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                  maxHeight: '150px',
+                  overflowY: 'auto',
+                  marginTop: '5px'
+                }}>
+                  {bodyValveList.map((valve) => (
+                    <div
+                      key={valve.valveSeriesCode}
+                      onClick={() => handleValveSelect(valve)}
+                      style={{ 
+                        padding: '8px 12px', 
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #eee',
+                        fontSize: '14px'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                    >
+                      {valve.valveSeries}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

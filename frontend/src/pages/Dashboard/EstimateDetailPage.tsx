@@ -1,8 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getEstimateDetail, EstimateDetailResponseDto } from '../../api/estimateRequest';
 import './DashboardPages.css';
 import './EstimateDetailPage.css';
+
+interface AccessorySelectorProps {
+  accTypeKey: string;
+  accSelections: { [key: string]: { typeCode: string; makerCode: string; modelCode: string; specification: string; }; };
+  setAccSelections: React.Dispatch<React.SetStateAction<{
+    positioner: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    solenoid: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    limiter: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    airSupply: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    volumeBooster: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    airOperator: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    lockUp: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    snapActingRelay: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+  }>>;
+  accMakerList: any[];
+  accModelList: any[];
+}
 
 interface ValveData {
   id: string;
@@ -101,7 +118,6 @@ const EstimateDetailPage: React.FC = () => {
   const [actSeriesList, setActSeriesList] = useState<any[]>([]);
   const [actSizeList, setActSizeList] = useState<any[]>([]);
   const [actHWList, setActHWList] = useState<any[]>([]);
-  const [accTypeList, setAccTypeList] = useState<any[]>([]);
   const [accMakerList, setAccMakerList] = useState<any[]>([]);
   const [accModelList, setAccModelList] = useState<any[]>([]);
   
@@ -112,21 +128,27 @@ const EstimateDetailPage: React.FC = () => {
 
   // ACC 섹션 선택 상태 관리
   const [accSelections, setAccSelections] = useState<{
-    [key: string]: {
-      modelCode: string;
-      makerCode: string;
-      specification: string;
-    };
-  }>({
-    positioner: { modelCode: '', makerCode: '', specification: '' },
-    solenoidValve: { modelCode: '', makerCode: '', specification: '' },
-    limitSwitch: { modelCode: '', makerCode: '', specification: '' },
-    airSet: { modelCode: '', makerCode: '', specification: '' },
-    volumeBooster: { modelCode: '', makerCode: '', specification: '' },
-    airOperatedValve: { modelCode: '', makerCode: '', specification: '' },
-    lockUpValve: { modelCode: '', makerCode: '', specification: '' },
-    snapActingRelay: { modelCode: '', makerCode: '', specification: '' }
+    positioner: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    solenoid: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    limiter: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    airSupply: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    volumeBooster: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    airOperator: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    lockUp: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    snapActingRelay: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+  }>({ // 각 악세사리의 typeCode를 하드코딩된 값으로 초기화
+    positioner: { typeCode: 'A', makerCode: '', modelCode: '', specification: '' },
+    solenoid: { typeCode: 'B', makerCode: '', modelCode: '', specification: '' },
+    limiter: { typeCode: 'C', makerCode: '', modelCode: '', specification: '' },
+    airSupply: { typeCode: 'D', makerCode: '', modelCode: '', specification: '' },
+    volumeBooster: { typeCode: 'E', makerCode: '', modelCode: '', specification: '' },
+    airOperator: { typeCode: 'F', makerCode: '', modelCode: '', specification: '' },
+    lockUp: { typeCode: 'G', makerCode: '', modelCode: '', specification: '' },
+    snapActingRelay: { typeCode: 'H', makerCode: '', modelCode: '', specification: '' },
   });
+
+  // 모든 상태 변수 선언 후, 렌더링 시 accSelections 상태 로깅
+  console.log('EstimateDetailPage render - accSelections:', accSelections);
 
   // TagNo별 사용자 선택값 임시 저장 (TagNo 변경 시 복원용)
   const [tempSelections, setTempSelections] = useState<{
@@ -293,75 +315,64 @@ const EstimateDetailPage: React.FC = () => {
 
   // ACC 섹션 이벤트 핸들러들
   const handleAccModelChange = (accType: string, modelCode: string) => {
-    if (modelCode) {
-      // 선택된 모델의 정보 가져오기
-      const selectedModel = accModelList.find((item: any) => 
-        item.accModelCode === modelCode && item.accTypeCode === getAccTypeCode(accType)
-      );
-      
-      if (selectedModel) {
-        setAccSelections(prev => ({
-          ...prev,
-          [accType]: {
-            ...prev[accType],
-            modelCode,
-            makerCode: selectedModel.accMakerCode, // 모델 선택 시 메이커 자동 설정
-            specification: selectedModel.accSize // 모델 선택 시 규격 자동 설정
-          }
-        }));
+    console.log(`handleAccModelChange 호출됨. accType: ${accType}, modelCode: ${modelCode}`);
+    setAccSelections(prev => {
+      const newAccSelections = { ...prev };
+      const currentAcc = prev[accType as keyof typeof prev];
+      console.log(`handleAccModelChange - currentAcc (${accType}):`, currentAcc);
+
+      if (!currentAcc) {
+        console.error(`handleAccModelChange: currentAcc (${accType})가 undefined입니다. prev 상태를 확인하세요.`, prev);
+        return prev; // currentAcc가 없으면 이전 상태 반환
       }
-    } else {
-      // 모델 선택 해제 시 초기화
-      setAccSelections(prev => ({
-        ...prev,
-        [accType]: {
-          ...prev[accType],
+      
+      // 선택된 modelCode와 현재 선택된 typeCode를 기반으로 모델 정보 찾기 (makerCode 조건 제거)
+      const modelInfo = accModelList.find(item => 
+        item.accModelCode === modelCode &&
+        item.accTypeCode === currentAcc?.typeCode
+      );
+
+      if (modelInfo) {
+        console.log(`handleAccModelChange: 모델 정보 찾음 - modelInfo:`, modelInfo, `specification:`, modelInfo.specification);
+        newAccSelections[accType as keyof typeof newAccSelections] = {
+          typeCode: modelInfo.accTypeCode,
+          makerCode: modelInfo.accMakerCode, // 찾은 modelInfo의 makerCode를 할당
+          modelCode: modelInfo.accModelCode,
+          specification: modelInfo.accSize || '' // AccSize 값을 Specification에 할당
+        };
+      } else {
+        console.log(`handleAccModelChange: 모델 정보 찾지 못함. modelCode: ${modelCode}`);
+        // If modelCode is empty or not found, reset model-related fields
+        newAccSelections[accType as keyof typeof newAccSelections] = {
+          ...currentAcc, // Preserve typeCode and makerCode if they exist
           modelCode: '',
-          makerCode: '',
           specification: ''
-        }
-      }));
-    }
+        };
+      }
+      return newAccSelections;
+    });
   };
 
   const handleAccMakerChange = (accType: string, makerCode: string) => {
-    if (makerCode) {
-      setAccSelections(prev => ({
-        ...prev,
-        [accType]: {
-          ...prev[accType],
-          makerCode,
-          modelCode: '', // 메이커 변경 시 모델 초기화
-          specification: '' // 메이커 변경 시 규격 초기화
-        }
-      }));
-    } else {
-      // 메이커 선택 해제 시 초기화
-      setAccSelections(prev => ({
-        ...prev,
-        [accType]: {
-          ...prev[accType],
-          makerCode: '',
-          modelCode: '',
-          specification: ''
-        }
-      }));
-    }
-  };
+    setAccSelections(prev => {
+      const newAccSelections = { ...prev };
+      const currentAcc = prev[accType as keyof typeof prev];
+      console.log(`handleAccMakerChange - currentAcc (${accType}):`, currentAcc);
 
-  // 액세서리 타입별 코드 반환
-  const getAccTypeCode = (accType: string): string => {
-    const typeMap: { [key: string]: string } = {
-      positioner: 'A',
-      solenoidValve: 'B',
-      limitSwitch: 'C',
-      airSet: 'D',
-      volumeBooster: 'E',
-      airOperatedValve: 'F',
-      lockUpValve: 'G',
-      snapActingRelay: 'H'
-    };
-    return typeMap[accType] || '';
+      if (!currentAcc) {
+        console.error(`handleAccMakerChange: currentAcc (${accType})가 undefined입니다. prev 상태를 확인하세요.`, prev);
+        return prev; // currentAcc가 없으면 이전 상태 반환
+      }
+
+      newAccSelections[accType as keyof typeof newAccSelections] = {
+        ...currentAcc,
+        makerCode: makerCode,
+        // 메이커 변경 시 모델 코드 및 규격 초기화 (선택 강제)
+        modelCode: '',
+        specification: ''
+      };
+      return newAccSelections;
+    });
   };
 
   // 마스터 데이터 가져오기
@@ -422,6 +433,9 @@ const EstimateDetailPage: React.FC = () => {
         accModelRes.json()
       ]);
 
+      console.log('악세사리 메이커 데이터:', accMakerData);
+      console.log('악세사리 모델 데이터:', accModelData);
+
       setBodyBonnetList(bodyBonnetData || []);
       setBodyConnectionList(bodyConnectionData || []);
       setTrimTypeList(trimTypeData || []);
@@ -431,7 +445,6 @@ const EstimateDetailPage: React.FC = () => {
       setActTypeList(actTypeData || []);
       setActSeriesList(actSeriesData || []);
       setActHWList(actHWData || []);
-      setAccTypeList(accTypeData || []);
       setAccMakerList(accMakerData || []);
       setAccModelList(accModelData || []);
 
@@ -452,14 +465,13 @@ const EstimateDetailPage: React.FC = () => {
       setActTypeList([]);
       setActSeriesList([]);
       setActHWList([]);
-      setAccTypeList([]);
       setAccMakerList([]);
       setAccModelList([]);
     }
   };
 
   // 기존 데이터 로드
-  const loadExistingData = async () => {
+  const loadExistingData = useCallback(async () => {
     if (!tempEstimateNo) return;
     
     console.log('현재 tempEstimateNo:', tempEstimateNo); // tempEstimateNo 로그 추가
@@ -605,7 +617,7 @@ const EstimateDetailPage: React.FC = () => {
     } catch (error) {
       console.error('기존 데이터 로드 실패:', error);
     }
-  };
+  }, [tempEstimateNo, bodyValveList, bodyRatingList]);
 
   // 상태 변경 처리
   const handleStatusChange = async (newStatus: string) => {
@@ -637,7 +649,7 @@ const EstimateDetailPage: React.FC = () => {
   };
 
   // 사양 저장 함수
-  const handleSaveSpecification = async () => {
+  const handleSaveSpecification = useCallback(async () => {
     try {
       if (!selectedValve) {
         alert('저장할 밸브를 선택해주세요.');
@@ -671,44 +683,238 @@ const EstimateDetailPage: React.FC = () => {
           hw: actSelections.hw || ''
         },
         accessories: {
-          maker: accSelections.positioner?.makerCode || '',
-          model: accSelections.positioner?.modelCode || '',
-          
-          // 모든 악세사리 필드들 추가
           PosCode: accSelections.positioner?.modelCode || '',
-          SolCode: accSelections.solenoidValve?.modelCode || '',
-          LimCode: accSelections.limitSwitch?.modelCode || '',
-          ASCode: accSelections.airSet?.modelCode || '',
+          PosAccTypeCode: accSelections.positioner?.typeCode || '',
+          PosAccMakerCode: accSelections.positioner?.makerCode || '',
+          SolCode: accSelections.solenoid?.modelCode || '',
+          SolAccTypeCode: accSelections.solenoid?.typeCode || '',
+          SolAccMakerCode: accSelections.solenoid?.makerCode || '',
+          LimCode: accSelections.limiter?.modelCode || '',
+          LimAccTypeCode: accSelections.limiter?.typeCode || '',
+          LimAccMakerCode: accSelections.limiter?.makerCode || '',
+          ASCode: accSelections.airSupply?.modelCode || '',
+          ASAccTypeCode: accSelections.airSupply?.typeCode || '',
+          ASAccMakerCode: accSelections.airSupply?.makerCode || '',
           VolCode: accSelections.volumeBooster?.modelCode || '',
-          AirOpCode: accSelections.airOperatedValve?.modelCode || '',
-          LockupCode: accSelections.lockUpValve?.modelCode || '',
-          SnapActCode: accSelections.snapActingRelay?.modelCode || ''
-        }
+          VolAccTypeCode: accSelections.volumeBooster?.typeCode || '',
+          VolAccMakerCode: accSelections.volumeBooster?.makerCode || '',
+          AirOpCode: accSelections.airOperator?.modelCode || '',
+          AirOpAccTypeCode: accSelections.airOperator?.typeCode || '',
+          AirOpAccMakerCode: accSelections.airOperator?.makerCode || '',
+          LockupCode: accSelections.lockUp?.modelCode || '',
+          LockupAccTypeCode: accSelections.lockUp?.typeCode || '',
+          LockupAccMakerCode: accSelections.lockUp?.makerCode || '',
+          SnapActCode: accSelections.snapActingRelay?.modelCode || '',
+          SnapActAccTypeCode: accSelections.snapActingRelay?.typeCode || '',
+          SnapActAccMakerCode: accSelections.snapActingRelay?.makerCode || '',
+        },
       };
 
       // 디버깅용 로그 추가
       console.log('선택된 밸브 정보:', selectedValve);
       console.log('전송할 사양 데이터:', specificationData);
 
-      const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/requests/${selectedValve.sheetID}/specification`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(specificationData),
-      });
+      const saveSpecDto = {
+        ...specificationData,
+        Accessories: specificationData.accessories,
+      };
 
-      if (response.ok) {
-        alert('사양이 성공적으로 저장되었습니다.');
-      } else {
-        alert('사양 저장에 실패했습니다.');
+      console.log('사양 저장 요청 DTO:', saveSpecDto); // DTO 전체 로그
+      console.log('악세사리 전송 데이터 (handleSaveSpecification):', saveSpecDto.Accessories); // 악세사리 데이터만 상세 로그
+
+      try {
+        const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/requests/${selectedValve.sheetID}/specification`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(saveSpecDto),
+        });
+
+        if (response.ok) {
+          alert('사양이 성공적으로 저장되었습니다.');
+        } else {
+          alert('사양 저장에 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('사양 저장 중 오류 발생:', error);
+        alert('사양 저장 중 오류가 발생했습니다.');
       }
     } catch (error) {
       console.error('사양 저장 중 오류 발생:', error);
       alert('사양 저장 중 오류가 발생했습니다.');
     }
-  };
+  }, [selectedValve, bodySelections, trimSelections, actSelections, accSelections, tempEstimateNo]);
 
+  const AccessorySelector: React.FC<AccessorySelectorProps> = ({
+    accTypeKey,
+    accSelections,
+    setAccSelections,
+    accMakerList,
+    accModelList,
+  }) => {
+    const [makerSearchTerm, setMakerSearchTerm] = useState('');
+    const [modelSearchTerm, setModelSearchTerm] = useState('');
+    const [specSearchTerm, setSpecSearchTerm] = useState('');
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isSelected, setIsSelected] = useState(false); // 선택 여부 상태 추가
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    const currentAcc = accSelections[accTypeKey];
+    const typeCode = currentAcc?.typeCode;
+
+    // 컴포넌트 마운트 시 또는 accSelections 변경 시 입력 필드 초기화 및 선택 상태 설정
+    useEffect(() => {
+      if (currentAcc?.modelCode) {
+        const selectedMakerName = accMakerList.find(maker => maker.accMakerCode === currentAcc?.makerCode)?.accMakerName || '';
+        const selectedModelName = accModelList.find(model => model.accModelCode === currentAcc?.modelCode)?.accModelName || '';
+        setMakerSearchTerm(selectedMakerName);
+        setModelSearchTerm(selectedModelName);
+        setSpecSearchTerm(currentAcc.specification || '');
+        setIsSelected(true); // 모델이 이미 선택되어 있으면 isSelected를 true로
+      } else {
+        setMakerSearchTerm('');
+        setModelSearchTerm('');
+        setSpecSearchTerm('');
+        setIsSelected(false); // 모델이 없으면 isSelected를 false로
+      }
+    }, [currentAcc, accMakerList, accModelList]);
+
+    // 통합 검색 필터링 로직
+    const filteredModels = useMemo(() => {
+      const allSearchTerms = [
+        makerSearchTerm,
+        modelSearchTerm,
+        specSearchTerm
+      ].filter(term => term);
+
+      if (allSearchTerms.length === 0) {
+        // 검색어가 없으면 해당 타입 코드와 일치하는 전체 모델 반환 (typeCode가 없으면 빈 배열)
+        return accModelList.filter(item => item.accTypeCode === typeCode);
+      }
+
+      const lowerCaseSearchWords = allSearchTerms.map(term => term.toLowerCase().split(' ').filter(word => word)).flat();
+
+      return accModelList.filter(item => {
+        if (!typeCode || item.accTypeCode !== typeCode) {
+          return false;
+        }
+
+        const makerName = (accMakerList.find(maker => maker.accMakerCode === item.accMakerCode)?.accMakerName || '').toLowerCase();
+        const modelName = (item.accModelName || '').toLowerCase();
+        const specification = (item.accSize || '').toLowerCase();
+
+        // 모든 검색 단어를 모든 필드에서 AND 검색
+        return lowerCaseSearchWords.every(word =>
+          makerName.includes(word) || modelName.includes(word) || specification.includes(word)
+        );
+      });
+    }, [makerSearchTerm, modelSearchTerm, specSearchTerm, accModelList, accMakerList, typeCode]);
+
+    // 악세사리 선택 핸들러
+    const handleSelectAccessory = (selectedModel: any) => {
+      setAccSelections(prev => ({
+        ...prev,
+        [accTypeKey]: {
+          typeCode: selectedModel.accTypeCode,
+          makerCode: selectedModel.accMakerCode,
+          modelCode: selectedModel.accModelCode,
+          specification: selectedModel.accSize || '',
+        },
+      }));
+      // 선택 시 세 입력 필드를 선택된 값으로 채우기
+      const selectedMakerName = accMakerList.find(maker => maker.accMakerCode === selectedModel.accMakerCode)?.accMakerName || '';
+      setMakerSearchTerm(selectedMakerName);
+      setModelSearchTerm(selectedModel.accModelName || '');
+      setSpecSearchTerm(selectedModel.accSize || '');
+      setIsDropdownOpen(false);
+      setIsSelected(true); // 선택 완료 시 isSelected를 true로
+    };
+
+    // 선택 해제 핸들러
+    const handleReset = () => {
+      setAccSelections(prev => ({
+        ...prev,
+        [accTypeKey]: {
+          typeCode: typeCode || '', // 기존 typeCode 유지
+          makerCode: '',
+          modelCode: '',
+          specification: '',
+        },
+      }));
+      setMakerSearchTerm('');
+      setModelSearchTerm('');
+      setSpecSearchTerm('');
+      setIsSelected(false); // 선택 해제 시 isSelected를 false로
+      setIsDropdownOpen(false); // 드롭다운 닫기
+    };
+
+    // 외부 클릭 감지 (드롭다운 닫기)
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+          setIsDropdownOpen(false);
+        }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }, []);
+
+
+    return (
+      <div className="accessory-selector" ref={dropdownRef}>
+        <div className="input-group">
+          <input
+            type="text"
+            placeholder="메이커"
+            value={makerSearchTerm}
+            onChange={(e) => {if (!isSelected) {setMakerSearchTerm(e.target.value); setIsDropdownOpen(true);}}}
+            onFocus={() => {if (!isSelected) setIsDropdownOpen(true);}}
+            readOnly={isSelected} // 선택되면 읽기 전용
+          />
+          <input
+            type="text"
+            placeholder="모델명"
+            value={modelSearchTerm}
+            onChange={(e) => {if (!isSelected) {setModelSearchTerm(e.target.value); setIsDropdownOpen(true);}}}
+            onFocus={() => {if (!isSelected) setIsDropdownOpen(true);}}
+            readOnly={isSelected}
+          />
+          <input
+            type="text"
+            placeholder="규격"
+            value={specSearchTerm}
+            onChange={(e) => {if (!isSelected) {setSpecSearchTerm(e.target.value); setIsDropdownOpen(true);}}}
+            onFocus={() => {if (!isSelected) setIsDropdownOpen(true);}}
+            readOnly={isSelected}
+          />
+          {isSelected && (
+            <button type="button" onClick={handleReset} className="reset-button">초기화</button>
+          )}
+        </div>
+        {isDropdownOpen && (
+          <ul className="dropdown-list">
+            {filteredModels.length > 0 ? (
+              filteredModels.map((item: any) => (
+                <li
+                  key={`${item.accTypeCode}-${item.accMakerCode}-${item.accModelCode}`}
+                  onClick={() => handleSelectAccessory(item)}
+                >
+                  <span className="dropdown-maker">{accMakerList.find(maker => maker.accMakerCode === item.accMakerCode)?.accMakerName || ''}</span>
+                  <span className="dropdown-model">{item.accModelName}</span>
+                  <span className="dropdown-spec">{item.accSize || ''}</span>
+                </li>
+              ))
+            ) : ( 
+              <li>검색 결과가 없습니다.</li>
+            )}
+          </ul>
+        )}
+      </div>
+    );
+  };
   // 초기화
   useEffect(() => {
     console.log('EstimateDetailPage 초기화 시작');
@@ -776,31 +982,15 @@ const EstimateDetailPage: React.FC = () => {
       const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/specification/${sheetID}`);
       if (response.ok) {
         const specificationData = await response.json();
-        console.log('API 응답 데이터:', specificationData); // API 응답 로그 추가
-        
-        console.log('--- 실제 Body 데이터 구조 ---', specificationData.body);
-        console.log('--- 실제 Trim 데이터 구조 ---', specificationData.trim);
-        console.log('--- 실제 Actuator 데이터 구조 ---', specificationData.actuator);
-
-        // 주요 필드별 값 확인 로그 추가
-        console.log('--- Body ---');
-        console.log('BonnetType:', specificationData.body?.bonnetType);
-        console.log('MaterialBody:', specificationData.body?.materialBody);
-        console.log('Size:', specificationData.body?.size);
-        console.log('Rating:', specificationData.body?.rating);
-        console.log('Connection:', specificationData.body?.connection);
-        console.log('--- Trim ---');
-        console.log('TrimType:', specificationData.trim?.type);
-        console.log('TrimSeries:', specificationData.trim?.series);
-        console.log('MaterialTrim:', specificationData.body?.materialTrim);
-        console.log('PortSize:', specificationData.trim?.portSize);
-        console.log('Form:', specificationData.trim?.form);
-        console.log('--- Actuator ---');
-        console.log('ActType:', specificationData.actuator?.type);
-        console.log('ActSeries:', specificationData.actuator?.series);
-        console.log('ActSize:', specificationData.actuator?.size);
-        console.log('ActHW:', specificationData.actuator?.hw);
         console.log('--- 실제 Accessories 데이터 구조 ---', specificationData.accessories);
+        
+        if (specificationData.accessories) {
+          console.log('개별 악세사리 데이터 (Positioner):', specificationData.accessories.positioner);
+          console.log('개별 악세사리 데이터 (Solenoid):', specificationData.accessories.solenoid);
+          console.log('개별 악세사리 데이터 (AirOperator):', specificationData.accessories.airOperator);
+          console.log('개별 악세사리 데이터 (LockUp):', specificationData.accessories.lockUp);
+        }
+        
         // Body 사양 데이터 설정 (초기값만) - null 처리 개선
         if (specificationData.body) {
           console.log('Body 데이터:', specificationData.body); // Body 데이터 로그 추가
@@ -851,84 +1041,80 @@ const EstimateDetailPage: React.FC = () => {
         
         // Accessory 사양 데이터 설정 (초기값만) - null 처리 개선
         if (specificationData.accessories) {
-          // accessories 객체 구조 대응
-          const accSelectionsObj = {
-            positioner: { modelCode: '', makerCode: '', specification: '' },
-            solenoidValve: { modelCode: '', makerCode: '', specification: '' },
-            limitSwitch: { modelCode: '', makerCode: '', specification: '' },
-            airSet: { modelCode: '', makerCode: '', specification: '' },
-            volumeBooster: { modelCode: '', makerCode: '', specification: '' },
-            airOperatedValve: { modelCode: '', makerCode: '', specification: '' },
-            lockUpValve: { modelCode: '', makerCode: '', specification: '' },
-            snapActingRelay: { modelCode: '', makerCode: '', specification: '' }
+          const newAccSelections = {
+            positioner: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
+            solenoid: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
+            limiter: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
+            airSupply: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
+            volumeBooster: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
+            airOperator: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
+            lockUp: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
+            snapActingRelay: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
           };
-          const apiToFrontKeyMap = {
-            positioner: 'positioner',
-            solenoid: 'solenoidValve',
-            limiter: 'limitSwitch',
-            airSupply: 'airSet',
-            volumeBooster: 'volumeBooster',
-            airOperator: 'airOperatedValve',      // 실제 응답 키 'airOperator'로 변경
-            lockUp: 'lockUpValve',            // 실제 응답 키 'lockUp'으로 변경
-            snapActingRelay: 'snapActingRelay'
-          };
-          Object.entries(apiToFrontKeyMap).forEach(([apiKey, frontKey]) => {
-            const accObj = specificationData.accessories[apiKey];
-            if (accObj && accObj.modelCode) {
-              const modelInfo = accModelList.find(item => item.accModelCode === accObj.modelCode);
-              accSelectionsObj[frontKey as keyof typeof accSelectionsObj] = {
-                modelCode: accObj.modelCode,
-                makerCode: modelInfo ? modelInfo.accMakerCode : '',
-                specification: modelInfo ? modelInfo.accSize : ''
+
+          const accKeys: Array<keyof typeof specificationData.accessories> = [
+            'positioner', 'solenoid', 'limiter', 'airSupply',
+            'volumeBooster', 'airOperator', 'lockUp', 'snapActingRelay',
+          ];
+
+          accKeys.forEach(key => {
+            const accObj = specificationData.accessories[key];
+            console.log(`로딩될 악세사리 데이터 (${String(key)}):`, accObj);
+            if (accObj) {
+              // 백엔드에서 받은 AccModelCode, AccTypeCode, AccMakerCode를 사용하여 모델 정보 찾기
+              const modelInfo = accModelList.find(
+                item => 
+                  item.accModelCode === accObj.modelCode &&
+                  item.accTypeCode === accObj.typeCode &&
+                  item.accMakerCode === accObj.makerCode
+              );
+
+              newAccSelections[key as keyof typeof newAccSelections] = {
+                typeCode: (key === 'positioner' ? 'A' :
+                           key === 'solenoid' ? 'B' :
+                           key === 'limiter' ? 'C' :
+                           key === 'airSupply' ? 'D' :
+                           key === 'volumeBooster' ? 'E' :
+                           key === 'airOperator' ? 'F' :
+                           key === 'lockUp' ? 'G' :
+                           key === 'snapActingRelay' ? 'H' : '') || accObj.typeCode || '',
+                makerCode: accObj.makerCode || '',
+                modelCode: accObj.modelCode || '',
+                specification: accObj.specification || '',
               };
+              console.log(`새로운 AccSelections (${String(key)}) typeCode 설정됨:`, newAccSelections[key as keyof typeof newAccSelections].typeCode);
+            } else {
+              console.log(`로딩될 악세사리 데이터 (${String(key)}): accObj가 null입니다. 기본값으로 설정.`);
+              // accObj가 null인 경우에도 typeCode를 하드코딩된 값으로 설정
+              newAccSelections[key as keyof typeof newAccSelections] = {
+                typeCode: (key === 'positioner' ? 'A' :
+                           key === 'solenoid' ? 'B' :
+                           key === 'limiter' ? 'C' :
+                           key === 'airSupply' ? 'D' :
+                           key === 'volumeBooster' ? 'E' :
+                           key === 'airOperator' ? 'F' :
+                           key === 'lockUp' ? 'G' :
+                           key === 'snapActingRelay' ? 'H' : ''),
+                makerCode: '',
+                modelCode: '',
+                specification: '',
+              };
+              console.log(`새로운 AccSelections (${String(key)}) typeCode 기본값 설정됨:`, newAccSelections[key as keyof typeof newAccSelections].typeCode);
             }
           });
-          setAccSelections(accSelectionsObj);
-        } else if (specificationData.PosCode || specificationData.SolCode) {
-          // DataSheet 칼럼 구조 fallback
-          const accSelectionsObj = {
-            positioner: { modelCode: '', makerCode: '', specification: '' },
-            solenoidValve: { modelCode: '', makerCode: '', specification: '' },
-            limitSwitch: { modelCode: '', makerCode: '', specification: '' },
-            airSet: { modelCode: '', makerCode: '', specification: '' },
-            volumeBooster: { modelCode: '', makerCode: '', specification: '' },
-            airOperatedValve: { modelCode: '', makerCode: '', specification: '' },
-            lockUpValve: { modelCode: '', makerCode: '', specification: '' },
-            snapActingRelay: { modelCode: '', makerCode: '', specification: '' }
-          };
-          const codeToKeyMap = {
-            PosCode: 'positioner',
-            SolCode: 'solenoidValve',
-            LimCode: 'limitSwitch',
-            ASCode: 'airSet',
-            VolCode: 'volumeBooster',
-            AirOpCode: 'airOperatedValve',
-            LockupCode: 'lockUpValve',
-            SnapActCode: 'snapActingRelay'
-          };
-          Object.entries(codeToKeyMap).forEach(([col, key]) => {
-            const modelCode = specificationData[col];
-            if (modelCode) {
-              const modelInfo = accModelList.find(item => item.accModelCode === modelCode);
-              accSelectionsObj[key as keyof typeof accSelectionsObj] = {
-                modelCode,
-                makerCode: modelInfo ? modelInfo.accMakerCode : '',
-                specification: modelInfo ? modelInfo.accSize : ''
-              };
-            }
-          });
-          setAccSelections(accSelectionsObj);
+          console.log('최종 업데이트될 AccSelections:', newAccSelections);
+          setAccSelections(newAccSelections);
         } else {
             // 액세서리 데이터가 없는 경우 모든 선택 초기화
             setAccSelections({
-                positioner: { modelCode: '', makerCode: '', specification: '' },
-                solenoidValve: { modelCode: '', makerCode: '', specification: '' },
-                limitSwitch: { modelCode: '', makerCode: '', specification: '' },
-                airSet: { modelCode: '', makerCode: '', specification: '' },
-                volumeBooster: { modelCode: '', makerCode: '', specification: '' },
-                airOperatedValve: { modelCode: '', makerCode: '', specification: '' },
-                lockUpValve: { modelCode: '', makerCode: '', specification: '' },
-                snapActingRelay: { modelCode: '', makerCode: '', specification: '' }
+                positioner: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
+                solenoid: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
+                limiter: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
+                airSupply: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
+                volumeBooster: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
+                airOperator: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
+                lockUp: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
+                snapActingRelay: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
             });
         }
       } else {
@@ -1180,6 +1366,17 @@ const EstimateDetailPage: React.FC = () => {
                       </select>
                     </div>
                     <div className="spec-item">
+                      <label>Option:</label>
+                      <select value={trimSelections.option} onChange={(e) => handleTrimChange('option', e.target.value)}>
+                        <option value="">선택하세요</option>
+                        {trimOptionList && trimOptionList.length > 0 && trimOptionList.map((item: any) => (
+                          <option key={item.trimOptionCode} value={item.trimOptionCode}>
+                            {item.trimOption}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="spec-item">
                       <label>Size Port:</label>
                       <div className="size-input-group">
                         <select value={trimSelections.sizePortUnit} onChange={(e) => handleTrimChange('sizePortUnit', e.target.value)}>
@@ -1216,17 +1413,6 @@ const EstimateDetailPage: React.FC = () => {
                         {trimFormList && trimFormList.length > 0 && trimFormList.map((item: any) => (
                           <option key={item.trimFormCode} value={item.trimFormCode}>
                             {item.trimForm}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="spec-item">
-                      <label>Option:</label>
-                      <select value={trimSelections.option} onChange={(e) => handleTrimChange('option', e.target.value)}>
-                        <option value="">선택하세요</option>
-                        {trimOptionList && trimOptionList.length > 0 && trimOptionList.map((item: any) => (
-                          <option key={item.trimOptionCode} value={item.trimOptionCode}>
-                            {item.trimOption}
                           </option>
                         ))}
                       </select>
@@ -1296,324 +1482,108 @@ const EstimateDetailPage: React.FC = () => {
                     <thead>
                       <tr>
                         <th>선택목록</th>
-                        <th>모델명</th>
                         <th>메이커</th>
+                        <th>모델명</th>
                         <th>규격</th>
                       </tr>
                     </thead>
                     <tbody>
+                    <tr>
+                              <td>Positioner</td>
+                              <td className="acc-options-group" colSpan={3}>
+                                <AccessorySelector 
+                                  accTypeKey="positioner" 
+                                  accSelections={accSelections} 
+                                  setAccSelections={setAccSelections} 
+                                  accMakerList={accMakerList} 
+                                  accModelList={accModelList} 
+                                />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Solenoid Valve</td>
+                              <td className="acc-options-group" colSpan={3}>
+                                <AccessorySelector 
+                                  accTypeKey="solenoid" 
+                                  accSelections={accSelections} 
+                                  setAccSelections={setAccSelections} 
+                                  accMakerList={accMakerList} 
+                                  accModelList={accModelList} 
+                                />
+                              </td>
+                            </tr>
                       <tr>
-                        <td>Positioner</td>
-                               <td>
-         <select 
-           value={accSelections.positioner.modelCode} 
-           onChange={(e) => handleAccModelChange('positioner', e.target.value)}
-         >
-           <option value="">선택하세요</option>
-                                     {accModelList && accModelList
-                              .filter((item: any) => 
-                                item.accTypeCode === 'A' && 
-                                (!accSelections.positioner.makerCode || item.accMakerCode === accSelections.positioner.makerCode)
-                              )
-                              .map((item: any) => (
-                                <option key={item.accModelCode} value={item.accModelCode}>
-                                  {item.accModelName}
-                                </option>
-                              ))}
-         </select>
-       </td>
-       <td>
-         <select 
-           value={accSelections.positioner.makerCode} 
-           onChange={(e) => handleAccMakerChange('positioner', e.target.value)}
-         >
-           <option value="">선택하세요</option>
-         {accMakerList && accMakerList.length > 0 && accMakerList
-           .filter((item: any) => item.accTypeCode === 'A')
-           .map((item: any) => (
-             <option key={item.accMakerCode} value={item.accMakerCode}>
-               {item.accMakerName}
-             </option>
-           ))}
-         </select>
-       </td>
-       <td>
-         <input type="text" value={accSelections.positioner.specification} readOnly />
-       </td>
-                      </tr>
-                                              <tr>
-                          <td>Solenoid Valve</td>
-                          <td>
-                            <select 
-                              value={accSelections.solenoidValve.modelCode} 
-                              onChange={(e) => handleAccModelChange('solenoidValve', e.target.value)}
-                            >
-                              <option value="">선택하세요</option>
-                            {accModelList && accModelList.length > 0 && accModelList
-                              .filter((item: any) => 
-                                item.accTypeCode === 'B' && 
-                                (!accSelections.solenoidValve.makerCode || item.accMakerCode === accSelections.solenoidValve.makerCode)
-                              )
-                              .map((item: any) => (
-                                <option key={item.accModelCode} value={item.accModelCode}>
-                                  {item.accModelName}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td>
-                            <select 
-                              value={accSelections.solenoidValve.makerCode} 
-                              onChange={(e) => handleAccMakerChange('solenoidValve', e.target.value)}
-                            >
-                              <option value="">선택하세요</option>
-                            {accMakerList && accMakerList.length > 0 && accMakerList
-                              .filter((item: any) => item.accTypeCode === 'B')
-                              .map((item: any) => (
-                                <option key={item.accMakerCode} value={item.accMakerCode}>
-                                  {item.accMakerName}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td>
-                            <input type="text" value={accSelections.solenoidValve.specification} readOnly />
-                          </td>
-                        </tr>
-                                              <tr>
-                          <td>Limit Switch</td>
-                          <td>
-                            <select 
-                              value={accSelections.limitSwitch.modelCode} 
-                              onChange={(e) => handleAccModelChange('limitSwitch', e.target.value)}
-                            >
-                              <option value="">선택하세요</option>
-                            {accModelList && accModelList.length > 0 && accModelList
-                              .filter((item: any) => 
-                                item.accTypeCode === 'C' && 
-                                (!accSelections.limitSwitch.makerCode || item.accMakerCode === accSelections.limitSwitch.makerCode)
-                              )
-                              .map((item: any) => (
-                                <option key={item.accModelCode} value={item.accModelCode}>
-                                  {item.accModelName}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td>
-                            <select 
-                              value={accSelections.limitSwitch.makerCode} 
-                              onChange={(e) => handleAccMakerChange('limitSwitch', e.target.value)}
-                            >
-                              <option value="">선택하세요</option>
-                            {accMakerList && accMakerList.length > 0 && accMakerList
-                              .filter((item: any) => item.accTypeCode === 'C')
-                              .map((item: any) => (
-                                <option key={item.accMakerCode} value={item.accMakerCode}>
-                                  {item.accMakerName}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td>
-                            <input type="text" value={accSelections.limitSwitch.specification} readOnly />
-                          </td>
-                        </tr>
-                                              <tr>
-                          <td>Air Set</td>
-                          <td>
-                            <select 
-                              value={accSelections.airSet.modelCode} 
-                              onChange={(e) => handleAccModelChange('airSet', e.target.value)}
-                            >
-                              <option value="">선택하세요</option>
-                            {accModelList && accModelList.length > 0 && accModelList
-                              .filter((item: any) => 
-                                item.accTypeCode === 'D' && 
-                                (!accSelections.airSet.makerCode || item.accMakerCode === accSelections.airSet.makerCode)
-                              )
-                              .map((item: any) => (
-                                <option key={item.accModelCode} value={item.accModelCode}>
-                                  {item.accModelName}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td>
-                            <select 
-                              value={accSelections.airSet.makerCode} 
-                              onChange={(e) => handleAccMakerChange('airSet', e.target.value)}
-                            >
-                              <option value="">선택하세요</option>
-                            {accMakerList && accMakerList.length > 0 && accMakerList
-                              .filter((item: any) => item.accTypeCode === 'D')
-                              .map((item: any) => (
-                                <option key={item.accMakerCode} value={item.accMakerCode}>
-                                  {item.accMakerName}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td>
-                            <input type="text" value={accSelections.airSet.specification} readOnly />
-                          </td>
-                        </tr>
-                                              <tr>
-                          <td>Volume Booster</td>
-                          <td>
-                            <select 
-                              value={accSelections.volumeBooster.modelCode} 
-                              onChange={(e) => handleAccModelChange('volumeBooster', e.target.value)}
-                            >
-                              <option value="">선택하세요</option>
-                            {accModelList && accModelList.length > 0 && accModelList
-                              .filter((item: any) => 
-                                item.accTypeCode === 'E' && 
-                                (!accSelections.volumeBooster.makerCode || item.accMakerCode === accSelections.volumeBooster.makerCode)
-                              )
-                              .map((item: any) => (
-                                <option key={item.accModelCode} value={item.accModelCode}>
-                                  {item.accModelName}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td>
-                            <select 
-                              value={accSelections.volumeBooster.makerCode} 
-                              onChange={(e) => handleAccMakerChange('volumeBooster', e.target.value)}
-                            >
-                              <option value="">선택하세요</option>
-                            {accMakerList && accMakerList.length > 0 && accMakerList
-                              .filter((item: any) => item.accTypeCode === 'E')
-                              .map((item: any) => (
-                                <option key={item.accMakerCode} value={item.accMakerCode}>
-                                  {item.accMakerName}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td>
-                            <input type="text" value={accSelections.volumeBooster.specification} readOnly />
-                          </td>
-                        </tr>
-                                              <tr>
-                          <td>Air Operated Valve</td>
-                          <td>
-                            <select 
-                              value={accSelections.airOperatedValve.modelCode} 
-                              onChange={(e) => handleAccModelChange('airOperatedValve', e.target.value)}
-                            >
-                              <option value="">선택하세요</option>
-                            {accModelList && accModelList.length > 0 && accModelList
-                              .filter((item: any) => 
-                                item.accTypeCode === 'F' && 
-                                (!accSelections.airOperatedValve.makerCode || item.accMakerCode === accSelections.airOperatedValve.makerCode)
-                              )
-                              .map((item: any) => (
-                                <option key={item.accModelCode} value={item.accModelCode}>
-                                  {item.accModelName}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td>
-                            <select 
-                              value={accSelections.airOperatedValve.makerCode} 
-                              onChange={(e) => handleAccMakerChange('airOperatedValve', e.target.value)}
-                            >
-                              <option value="">선택하세요</option>
-                            {accMakerList && accMakerList.length > 0 && accMakerList
-                              .filter((item: any) => item.accTypeCode === 'F')
-                              .map((item: any) => (
-                                <option key={item.accMakerCode} value={item.accMakerCode}>
-                                  {item.accMakerName}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td>
-                            <input type="text" value={accSelections.airOperatedValve.specification} readOnly />
-                          </td>
-                        </tr>
-                                              <tr>
-                          <td>Lock Up Valve</td>
-                          <td>
-                            <select 
-                              value={accSelections.lockUpValve.modelCode} 
-                              onChange={(e) => handleAccModelChange('lockUpValve', e.target.value)}
-                            >
-                              <option value="">선택하세요</option>
-                            {accModelList && accModelList.length > 0 && accModelList
-                              .filter((item: any) => 
-                                item.accTypeCode === 'G' && 
-                                (!accSelections.lockUpValve.makerCode || item.accMakerCode === accSelections.lockUpValve.makerCode)
-                              )
-                              .map((item: any) => (
-                                <option key={item.accModelCode} value={item.accModelCode}>
-                                  {item.accModelName}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td>
-                            <select 
-                              value={accSelections.lockUpValve.makerCode} 
-                              onChange={(e) => handleAccMakerChange('lockUpValve', e.target.value)}
-                            >
-                              <option value="">선택하세요</option>
-                            {accMakerList && accMakerList.length > 0 && accMakerList
-                              .filter((item: any) => item.accTypeCode === 'G')
-                              .map((item: any) => (
-                                <option key={item.accMakerCode} value={item.accMakerCode}>
-                                  {item.accMakerName}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td>
-                            <input type="text" value={accSelections.lockUpValve.specification} readOnly />
-                          </td>
-                        </tr>
-                                              <tr>
-                          <td>Snap Acting Relay</td>
-                          <td>
-                            <select 
-                              value={accSelections.snapActingRelay.modelCode} 
-                              onChange={(e) => handleAccModelChange('snapActingRelay', e.target.value)}
-                            >
-                              <option value="">선택하세요</option>
-                            {accModelList && accModelList.length > 0 && accModelList
-                              .filter((item: any) => 
-                                item.accTypeCode === 'H' && 
-                                (!accSelections.snapActingRelay.makerCode || item.accMakerCode === accSelections.snapActingRelay.makerCode)
-                              )
-                              .map((item: any) => (
-                                <option key={item.accModelCode} value={item.accModelCode}>
-                                  {item.accModelName}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td>
-                            <select 
-                              value={accSelections.snapActingRelay.makerCode} 
-                              onChange={(e) => handleAccMakerChange('snapActingRelay', e.target.value)}
-                            >
-                              <option value="">선택하세요</option>
-                            {accMakerList && accMakerList.length > 0 && accMakerList
-                              .filter((item: any) => item.accTypeCode === 'H')
-                              .map((item: any) => (
-                                <option key={item.accMakerCode} value={item.accMakerCode}>
-                                  {item.accMakerName}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td>
-                            <input type="text" value={accSelections.snapActingRelay.specification} readOnly />
-                          </td>
-                        </tr>
+                      <td>Limit Switch</td>
+                              <td className="acc-options-group" colSpan={3}>
+                                <AccessorySelector 
+                                  accTypeKey="limiter" 
+                                  accSelections={accSelections} 
+                                  setAccSelections={setAccSelections} 
+                                  accMakerList={accMakerList} 
+                                  accModelList={accModelList} 
+                                />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Air Set</td>
+                              <td className="acc-options-group" colSpan={3}>
+                                <AccessorySelector 
+                                  accTypeKey="airSupply" 
+                                  accSelections={accSelections} 
+                                  setAccSelections={setAccSelections} 
+                                  accMakerList={accMakerList} 
+                                  accModelList={accModelList} 
+                                />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Volume Booster</td>
+                              <td className="acc-options-group" colSpan={3}>
+                                <AccessorySelector 
+                                  accTypeKey="volumeBooster" 
+                                  accSelections={accSelections} 
+                                  setAccSelections={setAccSelections} 
+                                  accMakerList={accMakerList} 
+                                  accModelList={accModelList} 
+                                />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Air Operated Valve</td>
+                              <td className="acc-options-group" colSpan={3}>
+                                <AccessorySelector 
+                                  accTypeKey="airOperator" 
+                                  accSelections={accSelections} 
+                                  setAccSelections={setAccSelections} 
+                                  accMakerList={accMakerList} 
+                                  accModelList={accModelList} 
+                                />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Lock-Up Valve</td>
+                              <td className="acc-options-group" colSpan={3}>
+                                <AccessorySelector 
+                                  accTypeKey="lockUp" 
+                                  accSelections={accSelections} 
+                                  setAccSelections={setAccSelections} 
+                                  accMakerList={accMakerList} 
+                                  accModelList={accModelList} 
+                                />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Snap Acting Relay</td>
+                              <td className="acc-options-group" colSpan={3}>
+                                <AccessorySelector 
+                                  accTypeKey="snapActingRelay" 
+                                  accSelections={accSelections} 
+                                  setAccSelections={setAccSelections} 
+                                  accMakerList={accMakerList} 
+                                  accModelList={accModelList} 
+                                />
+                              </td>
+                            </tr>
                     </tbody>
                   </table>
                 </div>
@@ -1675,6 +1645,21 @@ const EstimateDetailPage: React.FC = () => {
       </div>
     </div>
   );
+
+  useEffect(() => {
+    if (tempEstimateNo) {
+      loadExistingData();
+    }
+  }, [tempEstimateNo, loadExistingData]); // loadExistingData 추가
+
+  useEffect(() => {
+    // types와 accModelList가 모두 로드된 후에만 loadInitialSpecification을 호출
+    if (tempEstimateNo && types.length > 0 && accModelList.length > 0) {
+      if (selectedValve && selectedValve.sheetID > 0) {
+        loadInitialSpecification(selectedValve.sheetID);
+      }
+    }
+  }, [selectedValve?.sheetID, tempEstimateNo, types, accModelList]); // types와 accModelList 추가
 
   return (
     <div className="estimate-detail-page">

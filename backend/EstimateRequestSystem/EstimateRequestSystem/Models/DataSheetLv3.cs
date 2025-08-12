@@ -128,13 +128,29 @@ namespace EstimateRequestSystem.Models
         
         // Acc 관련 필드 (DB 스키마에 맞춤)
         public string? PosCode { get; set; }
+        public string? PosAccTypeCode { get; set; } // New column for Positioner AccTypeCode
+        public string? PosAccMakerCode { get; set; } // New column for Positioner AccMakerCode (CHAR(1))
         public string? SolCode { get; set; }
+        public string? SolAccTypeCode { get; set; } // New column for Solenoid AccTypeCode
+        public string? SolAccMakerCode { get; set; } // New column for Solenoid AccMakerCode (CHAR(1))
         public string? LimCode { get; set; }
+        public string? LimAccTypeCode { get; set; } // New column for Limit Switch AccTypeCode
+        public string? LimAccMakerCode { get; set; } // New column for Limit Switch AccMakerCode (CHAR(1))
         public string? ASCode { get; set; }
+        public string? ASAccTypeCode { get; set; } // New column for Air Set AccTypeCode
+        public string? ASAccMakerCode { get; set; } // New column for Air Set AccMakerCode (CHAR(1))
         public string? VolCode { get; set; }
+        public string? VolAccTypeCode { get; set; } // New column for Volume Booster AccTypeCode
+        public string? VolAccMakerCode { get; set; } // New column for Volume Booster AccMakerCode (CHAR(1))
         public string? AirOpCode { get; set; }
+        public string? AirOpAccTypeCode { get; set; } // New column for Air Operated AccTypeCode
+        public string? AirOpAccMakerCode { get; set; } // New column for Air Operated AccMakerCode (CHAR(1))
         public string? LockupCode { get; set; }
+        public string? LockupAccTypeCode { get; set; } // New column for Lock Up AccTypeCode
+        public string? LockupAccMakerCode { get; set; } // New column for Lock Up AccMakerCode (CHAR(1))
         public string? SnapActCode { get; set; }
+        public string? SnapActAccTypeCode { get; set; } // New column for Snap Acting Relay AccTypeCode
+        public string? SnapActAccMakerCode { get; set; } // New column for Snap Acting Relay AccMakerCode (CHAR(1))
 
         // Navigation properties
         public virtual EstimateSheetLv1 EstimateSheet { get; set; } = null!;
