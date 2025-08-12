@@ -153,5 +153,11 @@ namespace EstimateRequestSystem.Services
 
         // Act Series-Size 조회를 위한 새로운 메서드
         Task<List<object>> GetActSeriesSizeListAsync();
+
+        // 사양 저장
+        Task<bool> SaveSpecificationAsync(string tempEstimateNo, int sheetID, SaveSpecificationRequestDto specification); // DTO 변경
+
+        // 사양 조회
+        Task<SpecificationResponseDto?> GetSpecificationAsync(string tempEstimateNo, int sheetID);
     }
 } 

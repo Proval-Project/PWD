@@ -80,6 +80,7 @@ const EstimateDetailPage: React.FC = () => {
   const [types, setTypes] = useState<TypeData[]>([]);
   const [valves, setValves] = useState<ValveData[]>([]);
   const [selectedValve, setSelectedValve] = useState<ValveData | null>(null);
+  const [selectedType, setSelectedType] = useState<string>('');
   
   // 마스터 데이터
   const [bodyValveList, setBodyValveList] = useState<BodyValveData[]>([]);
@@ -127,6 +128,56 @@ const EstimateDetailPage: React.FC = () => {
     snapActingRelay: { modelCode: '', makerCode: '', specification: '' }
   });
 
+  // TagNo별 사용자 선택값 임시 저장 (TagNo 변경 시 복원용)
+  const [tempSelections, setTempSelections] = useState<{
+    [sheetID: number]: {
+      body: any;
+      trim: any;
+      act: any;
+      acc: any;
+    };
+  }>({});
+
+  // 현재 선택값을 tempSelections에 저장하는 함수
+  const saveCurrentSelections = (sheetID: number) => {
+    if (sheetID) {
+      setTempSelections(prev => ({
+        ...prev,
+        [sheetID]: {
+          body: { ...bodySelections },
+          trim: { ...trimSelections },
+          act: { ...actSelections },
+          acc: { ...accSelections }
+        }
+      }));
+      console.log(`${sheetID}의 선택값들을 임시 저장했습니다.`);
+    }
+  };
+
+  // valve 선택 시 호출되는 함수
+  const handleValveSelection = (valve: ValveData) => {
+    console.log('선택된 valve의 sheetID:', valve.sheetID); // sheetID 로그 추가
+    
+    // 현재 선택된 valve가 있다면 선택값들을 저장
+    if (selectedValve) {
+      saveCurrentSelections(selectedValve.sheetID);
+    }
+    
+    // 새로운 valve 선택
+    setSelectedValve(valve);
+    
+    // 이 SheetID에 저장된 선택값이 있는지 확인
+    if (tempSelections[valve.sheetID]) {
+      // 저장된 선택값이 있음: 복원
+      console.log(`${valve.sheetID}의 저장된 선택값을 복원합니다.`);
+      restoreTempSelections(valve.sheetID);
+    } else {
+      // 저장된 선택값이 없음: DB에서 초기 데이터 로드
+      console.log(`${valve.sheetID}의 초기 데이터를 DB에서 로드합니다.`);
+      loadInitialSpecification(valve.sheetID);
+    }
+  };
+
                     // Body 섹션 선택 상태 관리
                   const [bodySelections, setBodySelections] = useState({
                     bonnetType: '',
@@ -145,7 +196,8 @@ const EstimateDetailPage: React.FC = () => {
                     materialTrim: '',
                     sizePortUnit: '',
                     sizePort: '',
-                    form: ''
+                    form: '',
+                    option: '' // Trim Option 필드 추가
                   });
                 
                   // ACT 섹션 선택 상태 관리
@@ -410,6 +462,8 @@ const EstimateDetailPage: React.FC = () => {
   const loadExistingData = async () => {
     if (!tempEstimateNo) return;
     
+    console.log('현재 tempEstimateNo:', tempEstimateNo); // tempEstimateNo 로그 추가
+    
     try {
       // currentUserId는 임시로 'admin' 사용 (실제로는 로그인된 사용자 ID를 사용해야 함)
       const response = await getEstimateDetail(tempEstimateNo, 'admin');
@@ -528,9 +582,9 @@ const EstimateDetailPage: React.FC = () => {
         setValves(valvesData);
         
         // 첫 번째 valve를 기본 선택
-        if (valvesData.length > 0) {
-          setSelectedValve(valvesData[0]);
-        }
+        // if (valvesData.length > 0) {
+        //   setSelectedValve(valvesData[0]);
+        // }
       }
       
       // 기타 요청사항 설정
@@ -582,6 +636,79 @@ const EstimateDetailPage: React.FC = () => {
     }
   };
 
+  // 사양 저장 함수
+  const handleSaveSpecification = async () => {
+    try {
+      if (!selectedValve) {
+        alert('저장할 밸브를 선택해주세요.');
+        return;
+      }
+
+      const specificationData = {
+        valveId: selectedValve.body.typeCode,
+        body: {
+          bonnetType: bodySelections.bonnetType || '',
+          materialBody: bodySelections.materialBody || '',
+          // materialTrim: trimSelections.materialTrim || '', // Body에서 Trim으로 이동
+          // option: selectedValve.body.option || '', // Trim으로 이동 및 trimSelections.option 사용
+          rating: bodySelections.rating || '',
+          connection: bodySelections.connection || '',
+          sizeUnit: bodySelections.sizeBodyUnit || '', // BodySizeUnit 추가
+          size: bodySelections.sizeBody || '' // sizeBody를 size로 사용
+        },
+        trim: {
+          type: trimSelections.trimType || '',
+          series: trimSelections.trimSeries || '',
+          portSize: trimSelections.sizePort || '', // sizePort를 portSize로 사용
+          form: trimSelections.form || '',
+          materialTrim: trimSelections.materialTrim || '', // Trim에 materialTrim 추가
+          option: trimSelections.option || '' // Trim에 option 값 추가
+        },
+        actuator: {
+          type: actSelections.actionType || '',
+          series: actSelections.series || '',
+          size: actSelections.size || '',
+          hw: actSelections.hw || ''
+        },
+        accessories: {
+          maker: accSelections.positioner?.makerCode || '',
+          model: accSelections.positioner?.modelCode || '',
+          
+          // 모든 악세사리 필드들 추가
+          PosCode: accSelections.positioner?.modelCode || '',
+          SolCode: accSelections.solenoidValve?.modelCode || '',
+          LimCode: accSelections.limitSwitch?.modelCode || '',
+          ASCode: accSelections.airSet?.modelCode || '',
+          VolCode: accSelections.volumeBooster?.modelCode || '',
+          AirOpCode: accSelections.airOperatedValve?.modelCode || '',
+          LockupCode: accSelections.lockUpValve?.modelCode || '',
+          SnapActCode: accSelections.snapActingRelay?.modelCode || ''
+        }
+      };
+
+      // 디버깅용 로그 추가
+      console.log('선택된 밸브 정보:', selectedValve);
+      console.log('전송할 사양 데이터:', specificationData);
+
+      const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/requests/${selectedValve.sheetID}/specification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(specificationData),
+      });
+
+      if (response.ok) {
+        alert('사양이 성공적으로 저장되었습니다.');
+      } else {
+        alert('사양 저장에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('사양 저장 중 오류 발생:', error);
+      alert('사양 저장 중 오류가 발생했습니다.');
+    }
+  };
+
   // 초기화
   useEffect(() => {
     console.log('EstimateDetailPage 초기화 시작');
@@ -600,7 +727,7 @@ const EstimateDetailPage: React.FC = () => {
       console.log('loadExistingData 호출 시작');
       loadExistingData();
     }
-  }, [bodyValveList, bodyRatingList, tempEstimateNo]);
+  }, [bodyValveList.length, bodyRatingList.length, tempEstimateNo]);
 
   // bodyValveList가 로드된 후 타입 정보 업데이트
   useEffect(() => {
@@ -624,6 +751,236 @@ const EstimateDetailPage: React.FC = () => {
     }
   }, [bodyValveList]);
 
+  // selectedValve가 변경될 때마다 기존 사양 데이터 로드
+  useEffect(() => {
+    if (selectedValve) {
+      // 초기 로드만 필요하므로 여기서는 아무것도 하지 않음
+      // handleValveSelection에서 처리됨
+    }
+  }, [selectedValve]);
+
+  // selectedType이 변경되면 selectedValve를 초기화하여 Step 3를 숨김
+  useEffect(() => {
+      setSelectedValve(null);
+  }, [selectedType]);
+
+  // 초기 사양 데이터 로드 (DB에서 불러오기)
+  const loadInitialSpecification = async (sheetID: number) => {
+    console.log('loadInitialSpecification 호출됨, sheetID:', sheetID); // sheetID 로그 추가
+    
+    try {
+      if (!tempEstimateNo) {
+        console.error("tempEstimateNo가 없습니다.");
+        return;
+      }
+      const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/specification/${sheetID}`);
+      if (response.ok) {
+        const specificationData = await response.json();
+        console.log('API 응답 데이터:', specificationData); // API 응답 로그 추가
+        
+        console.log('--- 실제 Body 데이터 구조 ---', specificationData.body);
+        console.log('--- 실제 Trim 데이터 구조 ---', specificationData.trim);
+        console.log('--- 실제 Actuator 데이터 구조 ---', specificationData.actuator);
+
+        // 주요 필드별 값 확인 로그 추가
+        console.log('--- Body ---');
+        console.log('BonnetType:', specificationData.body?.bonnetType);
+        console.log('MaterialBody:', specificationData.body?.materialBody);
+        console.log('Size:', specificationData.body?.size);
+        console.log('Rating:', specificationData.body?.rating);
+        console.log('Connection:', specificationData.body?.connection);
+        console.log('--- Trim ---');
+        console.log('TrimType:', specificationData.trim?.type);
+        console.log('TrimSeries:', specificationData.trim?.series);
+        console.log('MaterialTrim:', specificationData.body?.materialTrim);
+        console.log('PortSize:', specificationData.trim?.portSize);
+        console.log('Form:', specificationData.trim?.form);
+        console.log('--- Actuator ---');
+        console.log('ActType:', specificationData.actuator?.type);
+        console.log('ActSeries:', specificationData.actuator?.series);
+        console.log('ActSize:', specificationData.actuator?.size);
+        console.log('ActHW:', specificationData.actuator?.hw);
+        console.log('--- 실제 Accessories 데이터 구조 ---', specificationData.accessories);
+        // Body 사양 데이터 설정 (초기값만) - null 처리 개선
+        if (specificationData.body) {
+          console.log('Body 데이터:', specificationData.body); // Body 데이터 로그 추가
+          setBodySelections(prev => ({
+            ...prev,
+            bonnetType: specificationData.body.bonnetTypeCode || '',
+            materialBody: specificationData.body.materialBodyCode || '',
+            sizeBodyUnit: specificationData.body.sizeUnit || '',
+            sizeBody: specificationData.body.sizeCode || '',
+            ratingUnit: specificationData.body.ratingUnit || '',
+            rating: specificationData.body.ratingCode || '',
+            connection: specificationData.body.connectionCode || ''
+          }));
+        }
+        
+        // Trim 사양 데이터 설정 (초기값만) - null 처리 개선
+        if (specificationData.trim) {
+          console.log('Trim 데이터:', specificationData.trim); // Trim 데이터 로그 추가
+          setTrimSelections(prev => ({
+            ...prev,
+            trimType: specificationData.trim.typeCode || '',
+            trimSeries: specificationData.trim.seriesCode || '',
+            materialTrim: specificationData.body?.materialTrimCode || '',
+            sizePortUnit: specificationData.trim.portSizeUnit || '',
+            sizePort: specificationData.trim.portSizeCode || '',
+            form: specificationData.trim.formCode || '',
+            option: specificationData.body.optionCode || '' // Body에서 Option 값을 가져옴
+          }));
+        }
+        
+        // Actuator 사양 데이터 설정 (초기값만) - null 처리 개선
+        if (specificationData.actuator) {
+          console.log('Actuator 데이터:', specificationData.actuator); // Actuator 데이터 로그 추가
+          const seriesCode = specificationData.actuator.seriesCode || '';
+          setActSelections(prev => ({
+            ...prev,
+            actionType: specificationData.actuator.typeCode || '',
+            series: seriesCode,
+            size: specificationData.actuator.sizeCode || '',
+            hw: specificationData.actuator.hwCode || ''
+          }));
+
+          // Series 코드가 있으면 해당 Size 목록을 가져옴
+          if (seriesCode) {
+            fetchActSizeList(seriesCode);
+          }
+        }
+        
+        // Accessory 사양 데이터 설정 (초기값만) - null 처리 개선
+        if (specificationData.accessories) {
+          // accessories 객체 구조 대응
+          const accSelectionsObj = {
+            positioner: { modelCode: '', makerCode: '', specification: '' },
+            solenoidValve: { modelCode: '', makerCode: '', specification: '' },
+            limitSwitch: { modelCode: '', makerCode: '', specification: '' },
+            airSet: { modelCode: '', makerCode: '', specification: '' },
+            volumeBooster: { modelCode: '', makerCode: '', specification: '' },
+            airOperatedValve: { modelCode: '', makerCode: '', specification: '' },
+            lockUpValve: { modelCode: '', makerCode: '', specification: '' },
+            snapActingRelay: { modelCode: '', makerCode: '', specification: '' }
+          };
+          const apiToFrontKeyMap = {
+            positioner: 'positioner',
+            solenoid: 'solenoidValve',
+            limiter: 'limitSwitch',
+            airSupply: 'airSet',
+            volumeBooster: 'volumeBooster',
+            airOperator: 'airOperatedValve',      // 실제 응답 키 'airOperator'로 변경
+            lockUp: 'lockUpValve',            // 실제 응답 키 'lockUp'으로 변경
+            snapActingRelay: 'snapActingRelay'
+          };
+          Object.entries(apiToFrontKeyMap).forEach(([apiKey, frontKey]) => {
+            const accObj = specificationData.accessories[apiKey];
+            if (accObj && accObj.modelCode) {
+              const modelInfo = accModelList.find(item => item.accModelCode === accObj.modelCode);
+              accSelectionsObj[frontKey as keyof typeof accSelectionsObj] = {
+                modelCode: accObj.modelCode,
+                makerCode: modelInfo ? modelInfo.accMakerCode : '',
+                specification: modelInfo ? modelInfo.accSize : ''
+              };
+            }
+          });
+          setAccSelections(accSelectionsObj);
+        } else if (specificationData.PosCode || specificationData.SolCode) {
+          // DataSheet 칼럼 구조 fallback
+          const accSelectionsObj = {
+            positioner: { modelCode: '', makerCode: '', specification: '' },
+            solenoidValve: { modelCode: '', makerCode: '', specification: '' },
+            limitSwitch: { modelCode: '', makerCode: '', specification: '' },
+            airSet: { modelCode: '', makerCode: '', specification: '' },
+            volumeBooster: { modelCode: '', makerCode: '', specification: '' },
+            airOperatedValve: { modelCode: '', makerCode: '', specification: '' },
+            lockUpValve: { modelCode: '', makerCode: '', specification: '' },
+            snapActingRelay: { modelCode: '', makerCode: '', specification: '' }
+          };
+          const codeToKeyMap = {
+            PosCode: 'positioner',
+            SolCode: 'solenoidValve',
+            LimCode: 'limitSwitch',
+            ASCode: 'airSet',
+            VolCode: 'volumeBooster',
+            AirOpCode: 'airOperatedValve',
+            LockupCode: 'lockUpValve',
+            SnapActCode: 'snapActingRelay'
+          };
+          Object.entries(codeToKeyMap).forEach(([col, key]) => {
+            const modelCode = specificationData[col];
+            if (modelCode) {
+              const modelInfo = accModelList.find(item => item.accModelCode === modelCode);
+              accSelectionsObj[key as keyof typeof accSelectionsObj] = {
+                modelCode,
+                makerCode: modelInfo ? modelInfo.accMakerCode : '',
+                specification: modelInfo ? modelInfo.accSize : ''
+              };
+            }
+          });
+          setAccSelections(accSelectionsObj);
+        } else {
+            // 액세서리 데이터가 없는 경우 모든 선택 초기화
+            setAccSelections({
+                positioner: { modelCode: '', makerCode: '', specification: '' },
+                solenoidValve: { modelCode: '', makerCode: '', specification: '' },
+                limitSwitch: { modelCode: '', makerCode: '', specification: '' },
+                airSet: { modelCode: '', makerCode: '', specification: '' },
+                volumeBooster: { modelCode: '', makerCode: '', specification: '' },
+                airOperatedValve: { modelCode: '', makerCode: '', specification: '' },
+                lockUpValve: { modelCode: '', makerCode: '', specification: '' },
+                snapActingRelay: { modelCode: '', makerCode: '', specification: '' }
+            });
+        }
+      } else {
+        console.log('API 응답 실패:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.log('초기 사양 데이터 로드 실패:', error);
+    }
+  };
+
+  // TagNo 변경 시 임시 저장된 선택값 복원
+  const restoreTempSelections = (sheetID: number) => {
+    const tempData = tempSelections[sheetID];
+    if (tempData) {
+      console.log(`${sheetID}의 임시 저장된 선택값들을 복원합니다:`, tempData);
+      
+      // Body 선택값 복원
+      if (tempData.body) {
+        setBodySelections(prev => ({
+          ...prev,
+          ...tempData.body
+        }));
+      }
+      
+      // Trim 선택값 복원
+      if (tempData.trim) {
+        setTrimSelections(prev => ({
+          ...prev,
+          ...tempData.trim
+        }));
+      }
+      
+      // Actuator 선택값 복원
+      if (tempData.act) {
+        setActSelections(prev => ({
+          ...prev,
+          ...tempData.act
+        }));
+      }
+      
+      // Accessory 선택값 복원
+      if (tempData.acc) {
+        setAccSelections(prev => ({
+          ...prev,
+          ...tempData.acc
+        }));
+      }
+    } else {
+      console.log(`${sheetID}의 임시 저장된 선택값이 없습니다.`);
+    }
+  };
+
   // Step 1, 2, 3 통합 섹션
   const StepsSection = () => (
     <div className="step-section">
@@ -634,9 +991,16 @@ const EstimateDetailPage: React.FC = () => {
       {/* Step 1: Type 선정 */}
       <div className="step-subsection">
         <h4>Step 1: Type 선정</h4>
+        <div className="type-header">
+          <p className="step-description">견적에 필요한 밸브 타입을 선택하고 관리합니다.</p>
+        </div>
         <div className="type-list">
           {types.map((type, index) => (
-            <div key={type.id} className="type-item">
+            <div 
+              key={type.id} 
+              className={`type-item ${selectedType === type.id ? 'selected' : ''}`}
+              onClick={() => setSelectedType(type.id)}
+            >
               <span className="type-name">{type.name}</span>
               <span className="type-count">({type.count})</span>
             </div>
@@ -644,21 +1008,33 @@ const EstimateDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Step 2: 주문 */}
+      {/* Step 2: TagNo 선택 */}
       <div className="step-subsection">
-        <h4>Step 2: 주문</h4>
-        <div className="valve-list">
-          {valves.map((valve, index) => (
-            <div 
-              key={valve.id} 
-              className={`valve-item ${selectedValve?.id === valve.id ? 'selected' : ''}`}
-              onClick={() => setSelectedValve(valve)}
-            >
-              <span className="valve-tag">{valve.tagNo}</span>
-              <span className="valve-qty">({valve.qty})</span>
-            </div>
-          ))}
-        </div>
+        <h4>Step 2: TagNo 선택</h4>
+        <p className="step-description">선택된 Type에 따라 TagNo를 선택합니다.</p>
+        {!selectedType ? (
+          <div className="no-type-selected">
+            Step 1에서 Type을 선택하면 해당 Type의 TagNo를 선택할 수 있습니다.
+          </div>
+        ) : (
+          <div className="valve-list">
+            {valves
+              .filter(valve => {
+                const selectedTypeData = types.find(t => t.id === selectedType);
+                return selectedTypeData && valve.body.type === selectedTypeData.name;
+              })
+              .map((valve, index) => (
+                <div 
+                  key={valve.id} 
+                  className={`valve-item ${selectedValve?.id === valve.id ? 'selected' : ''}`}
+                  onClick={() => handleValveSelection(valve)}
+                >
+                  <span className="valve-tag">{valve.tagNo}</span>
+                  <span className="valve-qty">({valve.qty})</span>
+                </div>
+              ))}
+          </div>
+        )}
       </div>
 
                 {/* Step 3: 상세사양 입력 */}
@@ -844,6 +1220,17 @@ const EstimateDetailPage: React.FC = () => {
                         ))}
                       </select>
                     </div>
+                    <div className="spec-item">
+                      <label>Option:</label>
+                      <select value={trimSelections.option} onChange={(e) => handleTrimChange('option', e.target.value)}>
+                        <option value="">선택하세요</option>
+                        {trimOptionList && trimOptionList.length > 0 && trimOptionList.map((item: any) => (
+                          <option key={item.trimOptionCode} value={item.trimOptionCode}>
+                            {item.trimOption}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
 
@@ -877,10 +1264,10 @@ const EstimateDetailPage: React.FC = () => {
                       <label>Size:</label>
                       <select value={actSelections.size} onChange={(e) => handleActChange('size', e.target.value)} disabled={!actSelections.series}>
                         <option value="">선택하세요</option>
-                        {actSelections.series && actSizeList && actSizeList.length > 0 && 
+                        {actSizeList && actSizeList.length > 0 && 
                           actSizeList.map((item: any) => (
                             <option key={item.actSizeCode} value={item.actSizeCode}>
-                              {item.actSize}
+                              {item.actSize} {/* actSizeName -> actSize로 변경 */}
                             </option>
                           ))
                         }
@@ -923,7 +1310,7 @@ const EstimateDetailPage: React.FC = () => {
            onChange={(e) => handleAccModelChange('positioner', e.target.value)}
          >
            <option value="">선택하세요</option>
-                                     {accModelList && accModelList.length > 0 && accModelList
+                                     {accModelList && accModelList
                               .filter((item: any) => 
                                 item.accTypeCode === 'A' && 
                                 (!accSelections.positioner.makerCode || item.accMakerCode === accSelections.positioner.makerCode)
@@ -1100,7 +1487,7 @@ const EstimateDetailPage: React.FC = () => {
                             {accMakerList && accMakerList.length > 0 && accMakerList
                               .filter((item: any) => item.accTypeCode === 'E')
                               .map((item: any) => (
-                                <option key={item.accModelCode} value={item.accMakerCode}>
+                                <option key={item.accMakerCode} value={item.accMakerCode}>
                                   {item.accMakerName}
                                 </option>
                               ))}
@@ -1232,6 +1619,15 @@ const EstimateDetailPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* 저장 버튼 */}
+              <div className="save-section">
+                <button 
+                  className="btn btn-primary save-specification-btn"
+                  onClick={handleSaveSpecification}
+                >
+                  사양 저장
+                </button>
+              </div>
 
         </div>
       )}

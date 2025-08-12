@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getDraftEstimates } from '../../api/estimateRequest';
+import { getDraftEstimates, assignEstimate } from '../../api/estimateRequest';
 import './EstimateManagementPage.css';
 
 interface DraftItem {
@@ -133,6 +133,31 @@ const EstimateManagementPage: React.FC = () => {
   const handlePageChange = (page: number) => {
     fetchData(page);
   };
+  // 견적 상세보기
+  const handleViewDetail = (tempEstimateNo: string) => {
+    navigate(`/dashboard/estimate-detail/${tempEstimateNo}`);
+  };
+
+  // 견적 담당 처리
+  const handleAssign = async (tempEstimateNo: string) => {
+    try {
+      // 현재 로그인한 사용자 ID를 사용 (실제로는 인증 시스템에서 가져와야 함)
+      const currentUserId = 'current_user_id'; // TODO: 실제 사용자 ID로 교체
+      
+      const result = await assignEstimate(tempEstimateNo, currentUserId);
+      
+      if (result.message === '견적 담당 처리 완료') {
+        alert('견적 담당 처리 완료!');
+        // 견적 목록 새로고침
+        fetchData(1);
+      } else {
+        alert('견적 담당 처리에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('견적 담당 처리 중 오류 발생:', error);
+      alert('견적 담당 처리 중 오류가 발생했습니다.');
+    }
+  };
 
   // 날짜 포맷팅
   const formatDate = (dateString: string) => {
@@ -232,12 +257,13 @@ const EstimateManagementPage: React.FC = () => {
               <th>수량</th>
               <th>상태</th>
               <th>프로젝트</th>
+              <th>담당</th>
             </tr>
           </thead>
           <tbody>
             {items.length === 0 ? (
               <tr>
-                <td colSpan={6} className="no-data">데이터가 없습니다.</td>
+                <td colSpan={7} className="no-data">데이터가 없습니다.</td>
               </tr>
             ) : (
               items.map((item, index) => (
@@ -255,8 +281,23 @@ const EstimateManagementPage: React.FC = () => {
                       {item.statusText || '알 수 없음'}
                     </span>
                   </td>
-                  <td>{item.project || '-'}</td>
-                </tr>
+                                      <td>{item.project || '-'}</td>
+                    <td>
+                      <button 
+                        onClick={() => handleViewDetail(item.tempEstimateNo)}
+                        className="btn btn-primary btn-sm me-2"
+                      >
+                        상세보기
+                      </button>
+                      <button 
+                        onClick={() => handleAssign(item.tempEstimateNo)}
+                        className="btn btn-success btn-sm"
+                        disabled={item.status === 2} // 이미 담당된 경우 비활성화
+                      >
+                        {item.status === 2 ? '담당중' : '담당!'}
+                      </button>
+                    </td>
+                  </tr>
               ))
             )}
           </tbody>

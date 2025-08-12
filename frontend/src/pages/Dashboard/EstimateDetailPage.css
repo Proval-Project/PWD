@@ -660,3 +660,115 @@
     margin-top: 15px;
   }
 }
+
+/* 저장 버튼 스타일 */
+.save-section {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+  padding: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.save-specification-btn {
+  background: #28a745;
+  color: white;
+  padding: 12px 30px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.save-specification-btn:hover {
+  background: #218838;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.save-specification-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Step1, Step2 계층 구조 스타일 */
+.type-header {
+  margin-bottom: 20px;
+}
+
+.step-description {
+  color: #666;
+  font-size: 14px;
+  margin: 0 0 15px 0;
+}
+
+.type-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  margin: 8px 0;
+  background: #f8f9fa;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.type-item:hover {
+  background: #e9ecef;
+  border-color: #dee2e6;
+}
+
+.type-item.selected {
+  background: #007bff;
+  color: white;
+  border-color: #0056b3;
+}
+
+.type-item.selected:hover {
+  background: #0056b3;
+}
+
+.no-type-selected {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin: 10px 0;
+  font-style: italic;
+}
+
+.valve-list {
+  margin-top: 15px;
+}
+
+.valve-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  margin: 6px 0;
+  background: #f8f9fa;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.valve-item:hover {
+  background: #e9ecef;
+  border-color: #dee2e6;
+}
+
+.valve-item.selected {
+  background: #28a745;
+  color: white;
+  border-color: #218838;
+}
+
+.valve-item.selected:hover {
+  background: #218838;
+}

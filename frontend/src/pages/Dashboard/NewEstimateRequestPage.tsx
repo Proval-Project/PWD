@@ -2673,7 +2673,7 @@ const NewEstimateRequestPage: React.FC = () => {
                   items={types.map(item => item.id)}
                   strategy={verticalListSortingStrategy}
                 >
-                  {types.map((item) => (
+                  {types.map((item, index) => (
                     <SortableItem key={item.id} id={item.id}>
                       <div 
                         className={`type-item ${selectedType === item.id ? 'selected' : ''}`}

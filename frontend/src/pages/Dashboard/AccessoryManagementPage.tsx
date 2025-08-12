@@ -722,21 +722,24 @@ const AccessoryManagementPage: React.FC = () => {
   // Acc 데이터 변환
   const transformAccData = (data: any[], section: string): MasterDataItem[] => {
     return data.map(item => {
-      let code: string;
-      let name: string;
+      let code: string = '';
+      let name: string = '';
+      let series: string | undefined = undefined; // maker, model은 series가 있을 수 있음
 
       switch (section) {
         case 'type':
-          code = item.code || '';
-          name = item.name || '';
+          code = item.accTypeCode || '';
+          name = item.accTypeName || '';
           break;
         case 'maker':
           code = item.accMakerCode || '';
           name = item.accMakerName || '';
+          series = item.accTypeCode || ''; // series 필드에 Type 코드를 할당
           break;
         case 'model':
           code = item.accModelCode || '';
           name = item.accModelName || '';
+          series = item.accMakerCode || ''; // series 필드에 Maker 코드를 할당
           break;
         default:
           code = item.accTypeCode || item.accMakerCode || item.accModelCode || '';
@@ -746,7 +749,8 @@ const AccessoryManagementPage: React.FC = () => {
       return {
         category: 'acc',
         code,
-        name
+        name,
+        series
       };
     });
   };
@@ -803,11 +807,11 @@ const AccessoryManagementPage: React.FC = () => {
         case 'type':
           return ['코드', 'Acc Type'];
         case 'maker':
-          return ['코드', 'Acc Maker'];
+          return ['코드', 'Acc Maker', 'Acc Type'];
         case 'model':
-          return ['코드', 'Acc Model'];
+          return ['코드', 'Acc Model', 'Acc Maker'];
         default:
-          return ['코드', '제조사'];
+          return ['코드', '이름'];
       }
     }
     
@@ -1737,6 +1741,10 @@ const AccessoryManagementPage: React.FC = () => {
                         삭제
                       </button>
                     </td>
+                    {/* ACC Maker/Model 섹션에서 추가 컬럼 표시 */}
+                    {activeTab === 'acc' && (selectedAccSection === 'maker' || selectedAccSection === 'model') ? (
+                      <td className="series-cell">{item.series || '-'}</td>
+                    ) : null}
                   </tr>
                 ))}
               </tbody>

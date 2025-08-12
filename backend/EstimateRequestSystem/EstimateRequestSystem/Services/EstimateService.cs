@@ -71,152 +71,139 @@ namespace EstimateRequestSystem.Services
                 estimateSheet.CustomerRequirement = dto.CustomerRequirement ?? "";
             }
 
-            // 2. 기존 EstimateRequest 데이터 삭제
-            var existingRequests = await _context.EstimateRequest
-                .Where(er => er.TempEstimateNo == tempEstimateNo)
-                .ToListAsync();
-            _context.EstimateRequest.RemoveRange(existingRequests);
-
-            // 3. 기존 DataSheetLv3 데이터 삭제
-            var existingDataSheets = await _context.DataSheetLv3
-                .Where(ds => ds.TempEstimateNo == tempEstimateNo)
-                .ToListAsync();
-            _context.DataSheetLv3.RemoveRange(existingDataSheets);
-
-            // 4. 기존 첨부파일 데이터 삭제 (중요: 삭제된 첨부파일을 DB에서도 제거)
-            var existingAttachments = await _context.EstimateAttachment
-                .Where(a => a.TempEstimateNo == tempEstimateNo)
-                .ToListAsync();
-            _context.EstimateAttachment.RemoveRange(existingAttachments);
-
-            // 새로운 데이터 삽입
-            // 전체 데이터베이스에서 가장 큰 SheetID 조회
-            int maxSheetID = await _context.EstimateRequest
-                .Select(er => (int?)er.SheetID)
-                .MaxAsync() ?? 0;
-            int sheetID = maxSheetID + 1;
-            foreach (var typeSelection in dto.TypeSelections)
+            // 2. 기존 EstimateRequest 및 DataSheetLv3 삭제
+            var existingRequests = _context.EstimateRequest.Where(er => er.TempEstimateNo == tempEstimateNo);
+            if (await existingRequests.AnyAsync())
             {
-                foreach (var valveSelection in typeSelection.Valves)
+                var sheetIdsToDelete = await existingRequests.Select(er => er.SheetID).ToListAsync();
+                var existingDataSheets = _context.DataSheetLv3.Where(ds => ds.TempEstimateNo == tempEstimateNo && sheetIdsToDelete.Contains(ds.SheetID));
+                
+                if (await existingDataSheets.AnyAsync())
                 {
-                    foreach (var tagNo in valveSelection.TagNos)
+                    _context.DataSheetLv3.RemoveRange(existingDataSheets);
+                }
+                _context.EstimateRequest.RemoveRange(existingRequests);
+                await _context.SaveChangesAsync();
+            }
+
+            // 3. 새 데이터 추가
+            if (dto.TypeSelections != null && dto.TypeSelections.Any())
+            {
+                foreach (var typeSelection in dto.TypeSelections)
+                {
+                    foreach (var valveSelection in typeSelection.Valves)
                     {
-                        // 기존 SheetID가 있으면 사용, 없으면 새로 생성
-                        var currentSheetID = tagNo.SheetID ?? sheetID;
-                        if (tagNo.SheetID == null)
+                        foreach (var tagNo in valveSelection.TagNos)
                         {
-                            sheetID++; // 새로운 경우에만 증가
+                            var estimateRequest = new EstimateRequest
+                            {
+                                TempEstimateNo = tempEstimateNo,
+                                SheetID = tagNo.SheetID.Value,
+                                SheetNo = tagNo.SheetNo,
+                                ValveType = valveSelection.ValveSeriesCode,
+                                Tagno = tagNo.Tagno,
+                                Qty = tagNo.Qty,
+                                Medium = tagNo.Medium,
+                                Fluid = tagNo.Fluid,
+                                IsQM = tagNo.IsQM,
+                                QMUnit = tagNo.QMUnit,
+                                QMMax = tagNo.QMMax,
+                                QMNor = tagNo.QMNor,
+                                QMMin = tagNo.QMMin,
+                                QNUnit = tagNo.QNUnit,
+                                QNMax = tagNo.QNMax,
+                                QNNor = tagNo.QNNor,
+                                QNMin = tagNo.QNMin,
+                                IsP2 = tagNo.IsP2,
+                                IsDensity = tagNo.IsDensity,
+                                PressureUnit = tagNo.PressureUnit,
+                                InletPressureMaxQ = tagNo.InletPressureMaxQ,
+                                InletPressureNorQ = tagNo.InletPressureNorQ,
+                                InletPressureMinQ = tagNo.InletPressureMinQ,
+                                OutletPressureMaxQ = tagNo.OutletPressureMaxQ,
+                                OutletPressureNorQ = tagNo.OutletPressureNorQ,
+                                OutletPressureMinQ = tagNo.OutletPressureMinQ,
+                                DifferentialPressureMaxQ = tagNo.DifferentialPressureMaxQ,
+                                DifferentialPressureNorQ = tagNo.DifferentialPressureNorQ,
+                                DifferentialPressureMinQ = tagNo.DifferentialPressureMinQ,
+                                TemperatureUnit = tagNo.TemperatureUnit,
+                                InletTemperatureQ = tagNo.InletTemperatureQ,
+                                InletTemperatureNorQ = tagNo.InletTemperatureNorQ,
+                                InletTemperatureMinQ = tagNo.InletTemperatureMinQ,
+                                DensityUnit = tagNo.DensityUnit,
+                                Density = tagNo.Density,
+                                MolecularWeightUnit = tagNo.MolecularWeightUnit,
+                                MolecularWeight = tagNo.MolecularWeight,
+                                BodySizeUnit = string.IsNullOrEmpty(tagNo.BodySizeUnit) ? null : tagNo.BodySizeUnit,
+                                BodySize = string.IsNullOrEmpty(tagNo.BodySize) ? null : tagNo.BodySize,
+                                BodyMat = string.IsNullOrEmpty(tagNo.BodyMat) ? null : tagNo.BodyMat,
+                                TrimMat = string.IsNullOrEmpty(tagNo.TrimMat) ? null : tagNo.TrimMat,
+                                TrimOption = string.IsNullOrEmpty(tagNo.TrimOption) ? null : tagNo.TrimOption,
+                                BodyRating = await GetBodyRatingCodeAsync(tagNo.BodyRating),
+                                ActType = await GetActTypeCodeAsync(tagNo.ActType),
+                                IsHW = tagNo.IsHW,
+                                IsPositioner = tagNo.IsPositioner,
+                                PositionerType = tagNo.PositionerType,
+                                ExplosionProof = tagNo.ExplosionProof,
+                                TransmitterType = tagNo.TransmitterType,
+                                IsSolenoid = tagNo.IsSolenoid,
+                                IsLimSwitch = tagNo.IsLimSwitch,
+                                IsAirSet = tagNo.IsAirSet,
+                                IsVolumeBooster = tagNo.IsVolumeBooster,
+                                IsAirOperated = tagNo.IsAirOperated,
+                                IsLockUp = tagNo.IsLockUp,
+                                IsSnapActingRelay = tagNo.IsSnapActingRelay
+                            };
+
+                            _context.EstimateRequest.Add(estimateRequest);
+
+                            // DataSheetLv3에도 동일한 데이터 저장
+                            var dataSheetLv3 = new DataSheetLv3
+                            {
+                                TempEstimateNo = tempEstimateNo,
+                                SheetID = tagNo.SheetID.Value,
+                                Medium = tagNo.Medium,
+                                Fluid = tagNo.Fluid,
+                                IsQM = tagNo.IsQM,
+                                IsP2 = tagNo.IsP2,
+                                IsDensity = tagNo.IsDensity,
+                                QMUnit = tagNo.QMUnit,
+                                QMMax = tagNo.QMMax,
+                                QMNor = tagNo.QMNor,
+                                QMMin = tagNo.QMMin,
+                                QNUnit = tagNo.QNUnit,
+                                QNMax = tagNo.QNMax,
+                                QNNor = tagNo.QNNor,
+                                QNMin = tagNo.QNMin,
+                                PressureUnit = tagNo.PressureUnit,
+                                InletPressureMaxQ = tagNo.InletPressureMaxQ,
+                                InletPressureNorQ = tagNo.InletPressureNorQ,
+                                InletPressureMinQ = tagNo.InletPressureMinQ,
+                                OutletPressureMaxQ = tagNo.OutletPressureMaxQ,
+                                OutletPressureNorQ = tagNo.OutletPressureNorQ,
+                                OutletPressureMinQ = tagNo.OutletPressureMinQ,
+                                DifferentialPressureMaxQ = tagNo.DifferentialPressureMaxQ,
+                                DifferentialPressureNorQ = tagNo.DifferentialPressureNorQ,
+                                DifferentialPressureMinQ = tagNo.DifferentialPressureMinQ,
+                                TemperatureUnit = tagNo.TemperatureUnit,
+                                InletTemperatureQ = tagNo.InletTemperatureQ,
+                                InletTemperatureNorQ = tagNo.InletTemperatureNorQ,
+                                InletTemperatureMinQ = tagNo.InletTemperatureMinQ,
+                                DensityUnit = tagNo.DensityUnit,
+                                Density = tagNo.Density,
+                                MolecularWeightUnit = tagNo.MolecularWeightUnit,
+                                MolecularWeight = tagNo.MolecularWeight,
+                                BodySizeUnit = string.IsNullOrEmpty(tagNo.BodySizeUnit) ? null : tagNo.BodySizeUnit,
+                                BodySize = string.IsNullOrEmpty(tagNo.BodySize) ? null : tagNo.BodySize,
+                                BodyMat = await GetBodyMatCodeAsync(tagNo.BodyMat),
+                                TrimMat = await GetTrimMatCodeAsync(tagNo.TrimMat),
+                                TrimOption = await GetTrimOptionCodeAsync(tagNo.TrimOption),
+                                Rating = await GetBodyRatingCodeAsync(tagNo.BodyRating),
+                                ActType = await GetActTypeCodeAsync(tagNo.ActType),
+                                HW = await GetActHWCodeAsync(tagNo.IsHW)
+                            };
+                            _context.DataSheetLv3.Add(dataSheetLv3);
                         }
-                        
-                        var estimateRequest = new EstimateRequest
-                        {
-                            TempEstimateNo = tempEstimateNo,
-                            SheetID = currentSheetID,
-                            SheetNo = tagNo.SheetNo,
-                            EstimateNo = null, // NULL 값
-                            ValveType = string.IsNullOrEmpty(valveSelection.ValveSeriesCode) ? null : valveSelection.ValveSeriesCode, // FK 코드 설정 (NULL 허용)
-                            Tagno = tagNo.Tagno,
-                            Qty = tagNo.Qty,
-                            Medium = tagNo.Medium,
-                            Fluid = tagNo.Fluid,
-                            IsQM = tagNo.IsQM,
-                            QMUnit = tagNo.QMUnit,
-                            QMMax = tagNo.QMMax,
-                            QMNor = tagNo.QMNor,
-                            QMMin = tagNo.QMMin,
-                            QNUnit = tagNo.QNUnit,
-                            QNMax = tagNo.QNMax,
-                            QNNor = tagNo.QNNor,
-                            QNMin = tagNo.QNMin,
-                            IsP2 = tagNo.IsP2,
-                            IsDensity = tagNo.IsDensity,
-                            PressureUnit = tagNo.PressureUnit,
-                            InletPressureMaxQ = tagNo.InletPressureMaxQ,
-                            InletPressureNorQ = tagNo.InletPressureNorQ,
-                            InletPressureMinQ = tagNo.InletPressureMinQ,
-                            OutletPressureMaxQ = tagNo.OutletPressureMaxQ,
-                            OutletPressureNorQ = tagNo.OutletPressureNorQ,
-                            OutletPressureMinQ = tagNo.OutletPressureMinQ,
-                            DifferentialPressureMaxQ = tagNo.DifferentialPressureMaxQ,
-                            DifferentialPressureNorQ = tagNo.DifferentialPressureNorQ,
-                            DifferentialPressureMinQ = tagNo.DifferentialPressureMinQ,
-                            TemperatureUnit = tagNo.TemperatureUnit,
-                            InletTemperatureQ = tagNo.InletTemperatureQ,
-                            InletTemperatureNorQ = tagNo.InletTemperatureNorQ,
-                            InletTemperatureMinQ = tagNo.InletTemperatureMinQ,
-                            DensityUnit = tagNo.DensityUnit,
-                            Density = tagNo.Density,
-                            MolecularWeightUnit = tagNo.MolecularWeightUnit,
-                            MolecularWeight = tagNo.MolecularWeight,
-                            BodySizeUnit = string.IsNullOrEmpty(tagNo.BodySizeUnit) ? null : tagNo.BodySizeUnit,
-                            BodySize = string.IsNullOrEmpty(tagNo.BodySize) ? null : tagNo.BodySize,
-                            BodyMat = string.IsNullOrEmpty(tagNo.BodyMat) ? null : tagNo.BodyMat,
-                            TrimMat = string.IsNullOrEmpty(tagNo.TrimMat) ? null : tagNo.TrimMat,
-                            TrimOption = string.IsNullOrEmpty(tagNo.TrimOption) ? null : tagNo.TrimOption,
-                            BodyRating = string.IsNullOrEmpty(tagNo.BodyRating) ? null : tagNo.BodyRating,
-                            ActType = tagNo.ActType, // 임시저장/견적요청에서는 NULL
-                            IsHW = tagNo.IsHW,
-                            IsPositioner = tagNo.IsPositioner,
-                            PositionerType = tagNo.PositionerType,
-                            ExplosionProof = tagNo.ExplosionProof,
-                            TransmitterType = tagNo.TransmitterType,
-                            IsSolenoid = tagNo.IsSolenoid,
-                            IsLimSwitch = tagNo.IsLimSwitch,
-                            IsAirSet = tagNo.IsAirSet,
-                            IsVolumeBooster = tagNo.IsVolumeBooster,
-                            IsAirOperated = tagNo.IsAirOperated,
-                            IsLockUp = tagNo.IsLockUp,
-                            IsSnapActingRelay = tagNo.IsSnapActingRelay
-                        };
-
-                        _context.EstimateRequest.Add(estimateRequest);
-
-                        // DataSheetLv3에도 동일한 데이터 저장
-                        var dataSheetLv3 = new DataSheetLv3
-                        {
-                            TempEstimateNo = tempEstimateNo,
-                            SheetID = sheetID,
-                            Medium = tagNo.Medium,
-                            Fluid = tagNo.Fluid,
-                            IsQM = tagNo.IsQM,
-                            IsP2 = tagNo.IsP2,
-                            IsDensity = tagNo.IsDensity,
-                            QMUnit = tagNo.QMUnit,
-                            QMMax = tagNo.QMMax,
-                            QMNor = tagNo.QMNor,
-                            QMMin = tagNo.QMMin,
-                            QNUnit = tagNo.QNUnit,
-                            QNMax = tagNo.QNMax,
-                            QNNor = tagNo.QNNor,
-                            QNMin = tagNo.QNMin,
-                            PressureUnit = tagNo.PressureUnit,
-                            InletPressureMaxQ = tagNo.InletPressureMaxQ,
-                            InletPressureNorQ = tagNo.InletPressureNorQ,
-                            InletPressureMinQ = tagNo.InletPressureMinQ,
-                            OutletPressureMaxQ = tagNo.OutletPressureMaxQ,
-                            OutletPressureNorQ = tagNo.OutletPressureNorQ,
-                            OutletPressureMinQ = tagNo.OutletPressureMinQ,
-                            DifferentialPressureMaxQ = tagNo.DifferentialPressureMaxQ,
-                            DifferentialPressureNorQ = tagNo.DifferentialPressureNorQ,
-                            DifferentialPressureMinQ = tagNo.DifferentialPressureMinQ,
-                            TemperatureUnit = tagNo.TemperatureUnit,
-                            InletTemperatureQ = tagNo.InletTemperatureQ,
-                            InletTemperatureNorQ = tagNo.InletTemperatureNorQ,
-                            InletTemperatureMinQ = tagNo.InletTemperatureMinQ,
-                            DensityUnit = tagNo.DensityUnit,
-                            Density = tagNo.Density,
-                            MolecularWeightUnit = tagNo.MolecularWeightUnit,
-                            MolecularWeight = tagNo.MolecularWeight,
-
-                            BodySizeUnit = string.IsNullOrEmpty(tagNo.BodySizeUnit) ? null : tagNo.BodySizeUnit,
-                            BodySize = string.IsNullOrEmpty(tagNo.BodySize) ? null : tagNo.BodySize,
-                            BodyMat = string.IsNullOrEmpty(tagNo.BodyMat) ? null : tagNo.BodyMat,
-                            TrimMat = string.IsNullOrEmpty(tagNo.TrimMat) ? null : tagNo.TrimMat,
-                            TrimOption = string.IsNullOrEmpty(tagNo.TrimOption) ? null : tagNo.TrimOption,
-                        };
-
-                        _context.DataSheetLv3.Add(dataSheetLv3);
-                        sheetID++;
                     }
                 }
             }
@@ -286,152 +273,142 @@ namespace EstimateRequestSystem.Services
                 estimateSheet.Status = (int)EstimateStatus.Requested; // 견적요청 상태
             }
 
-            // 2. 기존 EstimateRequest 데이터 삭제
-            var existingRequests = await _context.EstimateRequest
-                .Where(er => er.TempEstimateNo == tempEstimateNo)
-                .ToListAsync();
-            _context.EstimateRequest.RemoveRange(existingRequests);
-
-            // 3. 기존 DataSheetLv3 데이터 삭제
-            var existingDataSheets = await _context.DataSheetLv3
-                .Where(ds => ds.TempEstimateNo == tempEstimateNo)
-                .ToListAsync();
-            _context.DataSheetLv3.RemoveRange(existingDataSheets);
-
-            // 새로운 데이터 삽입 (SaveDraft와 동일한 로직)
-            // 전체 데이터베이스에서 가장 큰 SheetID 조회
-            int maxSheetID = await _context.EstimateRequest
-                .Select(er => (int?)er.SheetID)
-                .MaxAsync() ?? 0;
-            int sheetID = maxSheetID + 1;
-            foreach (var typeSelection in dto.TypeSelections)
+            // 2. 기존 EstimateRequest 및 DataSheetLv3 삭제
+            var existingRequests = _context.EstimateRequest.Where(er => er.TempEstimateNo == tempEstimateNo);
+            if (await existingRequests.AnyAsync())
             {
-                foreach (var valveSelection in typeSelection.Valves)
+                var sheetIdsToDelete = await existingRequests.Select(er => er.SheetID).ToListAsync();
+                var existingDataSheets = _context.DataSheetLv3.Where(ds => ds.TempEstimateNo == tempEstimateNo && sheetIdsToDelete.Contains(ds.SheetID));
+
+                if (await existingDataSheets.AnyAsync())
                 {
-                    foreach (var tagNo in valveSelection.TagNos)
+                    _context.DataSheetLv3.RemoveRange(existingDataSheets);
+                }
+                _context.EstimateRequest.RemoveRange(existingRequests);
+                await _context.SaveChangesAsync();
+            }
+
+            // 3. 새 데이터 추가
+            if (dto.TypeSelections != null && dto.TypeSelections.Any())
+            {
+                 foreach (var typeSelection in dto.TypeSelections)
+                {
+                    foreach (var valveSelection in typeSelection.Valves)
                     {
-                        // 기존 SheetID가 있으면 사용, 없으면 새로 생성
-                        var currentSheetID = tagNo.SheetID ?? sheetID;
-                        if (tagNo.SheetID == null)
+                        foreach (var tagNo in valveSelection.TagNos)
                         {
-                            sheetID++; // 새로운 경우에만 증가
+                            var estimateRequest = new EstimateRequest
+                            {
+                                TempEstimateNo = tempEstimateNo,
+                                SheetID = tagNo.SheetID.Value,
+                                SheetNo = tagNo.SheetNo,
+                                ValveType = valveSelection.ValveSeriesCode,
+                                Tagno = tagNo.Tagno,
+                                Qty = tagNo.Qty,
+                                Medium = tagNo.Medium,
+                                Fluid = tagNo.Fluid,
+                                IsQM = tagNo.IsQM,
+                                QMUnit = tagNo.QMUnit,
+                                QMMax = tagNo.QMMax,
+                                QMNor = tagNo.QMNor,
+                                QMMin = tagNo.QMMin,
+                                QNUnit = tagNo.QNUnit,
+                                QNMax = tagNo.QNMax,
+                                QNNor = tagNo.QNNor,
+                                QNMin = tagNo.QNMin,
+                                IsP2 = tagNo.IsP2,
+                                IsDensity = tagNo.IsDensity,
+                                PressureUnit = tagNo.PressureUnit,
+                                InletPressureMaxQ = tagNo.InletPressureMaxQ,
+                                InletPressureNorQ = tagNo.InletPressureNorQ,
+                                InletPressureMinQ = tagNo.InletPressureMinQ,
+                                OutletPressureMaxQ = tagNo.OutletPressureMaxQ,
+                                OutletPressureNorQ = tagNo.OutletPressureNorQ,
+                                OutletPressureMinQ = tagNo.OutletPressureMinQ,
+                                DifferentialPressureMaxQ = tagNo.DifferentialPressureMaxQ,
+                                DifferentialPressureNorQ = tagNo.DifferentialPressureNorQ,
+                                DifferentialPressureMinQ = tagNo.DifferentialPressureMinQ,
+                                TemperatureUnit = tagNo.TemperatureUnit,
+                                InletTemperatureQ = tagNo.InletTemperatureQ,
+                                InletTemperatureNorQ = tagNo.InletTemperatureNorQ,
+                                InletTemperatureMinQ = tagNo.InletTemperatureMinQ,
+                                DensityUnit = tagNo.DensityUnit,
+                                Density = tagNo.Density,
+                                MolecularWeightUnit = tagNo.MolecularWeightUnit,
+                                MolecularWeight = tagNo.MolecularWeight,
+                                BodySizeUnit = string.IsNullOrEmpty(tagNo.BodySizeUnit) ? null : tagNo.BodySizeUnit,
+                                BodySize = string.IsNullOrEmpty(tagNo.BodySize) ? null : tagNo.BodySize,
+                                BodyMat = string.IsNullOrEmpty(tagNo.BodyMat) ? null : tagNo.BodyMat,
+                                TrimMat = string.IsNullOrEmpty(tagNo.TrimMat) ? null : tagNo.TrimMat,
+                                TrimOption = string.IsNullOrEmpty(tagNo.TrimOption) ? null : tagNo.TrimOption,
+                                BodyRating = await GetBodyRatingCodeAsync(tagNo.BodyRating),
+                                ActType = await GetActTypeCodeAsync(tagNo.ActType),
+                                IsHW = tagNo.IsHW,
+                                IsPositioner = tagNo.IsPositioner,
+                                PositionerType = tagNo.PositionerType,
+                                ExplosionProof = tagNo.ExplosionProof,
+                                TransmitterType = tagNo.TransmitterType,
+                                IsSolenoid = tagNo.IsSolenoid,
+                                IsLimSwitch = tagNo.IsLimSwitch,
+                                IsAirSet = tagNo.IsAirSet,
+                                IsVolumeBooster = tagNo.IsVolumeBooster,
+                                IsAirOperated = tagNo.IsAirOperated,
+                                IsLockUp = tagNo.IsLockUp,
+                                IsSnapActingRelay = tagNo.IsSnapActingRelay
+                            };
+                            _context.EstimateRequest.Add(estimateRequest);
+
+                            var dataSheetLv3 = new DataSheetLv3
+                            {
+                                TempEstimateNo = tempEstimateNo,
+                                SheetID = tagNo.SheetID.Value,
+                                Medium = tagNo.Medium,
+                                Fluid = tagNo.Fluid,
+                                IsQM = tagNo.IsQM,
+                                IsP2 = tagNo.IsP2,
+                                IsDensity = tagNo.IsDensity,
+                                QMUnit = tagNo.QMUnit,
+                                QMMax = tagNo.QMMax,
+                                QMNor = tagNo.QMNor,
+                                QMMin = tagNo.QMMin,
+                                QNUnit = tagNo.QNUnit,
+                                QNMax = tagNo.QNMax,
+                                QNNor = tagNo.QNNor,
+                                QNMin = tagNo.QNMin,
+                                PressureUnit = tagNo.PressureUnit,
+                                InletPressureMaxQ = tagNo.InletPressureMaxQ,
+                                InletPressureNorQ = tagNo.InletPressureNorQ,
+                                InletPressureMinQ = tagNo.InletPressureMinQ,
+                                OutletPressureMaxQ = tagNo.OutletPressureMaxQ,
+                                OutletPressureNorQ = tagNo.OutletPressureNorQ,
+                                OutletPressureMinQ = tagNo.OutletPressureMinQ,
+                                DifferentialPressureMaxQ = tagNo.DifferentialPressureMaxQ,
+                                DifferentialPressureNorQ = tagNo.DifferentialPressureNorQ,
+                                DifferentialPressureMinQ = tagNo.DifferentialPressureMinQ,
+                                TemperatureUnit = tagNo.TemperatureUnit,
+                                InletTemperatureQ = tagNo.InletTemperatureQ,
+                                InletTemperatureNorQ = tagNo.InletTemperatureNorQ,
+                                InletTemperatureMinQ = tagNo.InletTemperatureMinQ,
+                                DensityUnit = tagNo.DensityUnit,
+                                Density = tagNo.Density,
+                                MolecularWeightUnit = tagNo.MolecularWeightUnit,
+                                MolecularWeight = tagNo.MolecularWeight,
+                                BodySizeUnit = string.IsNullOrEmpty(tagNo.BodySizeUnit) ? null : tagNo.BodySizeUnit,
+                                BodySize = string.IsNullOrEmpty(tagNo.BodySize) ? null : tagNo.BodySize,
+                                BodyMat = await GetBodyMatCodeAsync(tagNo.BodyMat),
+                                TrimMat = await GetTrimMatCodeAsync(tagNo.TrimMat),
+                                TrimOption = await GetTrimOptionCodeAsync(tagNo.TrimOption),
+                                Rating = await GetBodyRatingCodeAsync(tagNo.BodyRating),
+                                ActType = await GetActTypeCodeAsync(tagNo.ActType),
+                                HW = await GetActHWCodeAsync(tagNo.IsHW)
+                            };
+                            _context.DataSheetLv3.Add(dataSheetLv3);
                         }
-                        
-                        var estimateRequest = new EstimateRequest
-                        {
-                            TempEstimateNo = tempEstimateNo,
-                            SheetID = currentSheetID,
-                            SheetNo = tagNo.SheetNo,
-                            EstimateNo = null, // NULL 값
-                            ValveType = string.IsNullOrEmpty(valveSelection.ValveSeriesCode) ? null : valveSelection.ValveSeriesCode, // FK 코드 설정 (NULL 허용)
-                            Tagno = tagNo.Tagno,
-                            Qty = tagNo.Qty,
-                            Medium = tagNo.Medium,
-                            Fluid = tagNo.Fluid,
-                            IsQM = tagNo.IsQM,
-                            QMUnit = tagNo.QMUnit,
-                            QMMax = tagNo.QMMax,
-                            QMNor = tagNo.QMNor,
-                            QMMin = tagNo.QMMin,
-                            QNUnit = tagNo.QNUnit,
-                            QNMax = tagNo.QNMax,
-                            QNNor = tagNo.QNNor,
-                            QNMin = tagNo.QNMin,
-                            IsP2 = tagNo.IsP2,
-                            IsDensity = tagNo.IsDensity,
-                            PressureUnit = tagNo.PressureUnit,
-                            InletPressureMaxQ = tagNo.InletPressureMaxQ,
-                            InletPressureNorQ = tagNo.InletPressureNorQ,
-                            InletPressureMinQ = tagNo.InletPressureMinQ,
-                            OutletPressureMaxQ = tagNo.OutletPressureMaxQ,
-                            OutletPressureNorQ = tagNo.OutletPressureNorQ,
-                            OutletPressureMinQ = tagNo.OutletPressureMinQ,
-                            DifferentialPressureMaxQ = tagNo.DifferentialPressureMaxQ,
-                            DifferentialPressureNorQ = tagNo.DifferentialPressureNorQ,
-                            DifferentialPressureMinQ = tagNo.DifferentialPressureMinQ,
-                            TemperatureUnit = tagNo.TemperatureUnit,
-                            InletTemperatureQ = tagNo.InletTemperatureQ,
-                            InletTemperatureNorQ = tagNo.InletTemperatureNorQ,
-                            InletTemperatureMinQ = tagNo.InletTemperatureMinQ,
-                            DensityUnit = tagNo.DensityUnit,
-                            Density = tagNo.Density,
-                            MolecularWeightUnit = tagNo.MolecularWeightUnit,
-                            MolecularWeight = tagNo.MolecularWeight,
-                            BodySizeUnit = string.IsNullOrEmpty(tagNo.BodySizeUnit) ? null : tagNo.BodySizeUnit,
-                            BodySize = string.IsNullOrEmpty(tagNo.BodySize) ? null : tagNo.BodySize,
-                            BodyMat = string.IsNullOrEmpty(tagNo.BodyMat) ? null : tagNo.BodyMat,
-                            TrimMat = string.IsNullOrEmpty(tagNo.TrimMat) ? null : tagNo.TrimMat,
-                            TrimOption = string.IsNullOrEmpty(tagNo.TrimOption) ? null : tagNo.TrimOption,
-                            BodyRating = string.IsNullOrEmpty(tagNo.BodyRating) ? null : tagNo.BodyRating,
-                            ActType = tagNo.ActType,
-                            IsHW = tagNo.IsHW,
-                            IsPositioner = tagNo.IsPositioner,
-                            PositionerType = tagNo.PositionerType,
-                            ExplosionProof = tagNo.ExplosionProof,
-                            TransmitterType = tagNo.TransmitterType,
-                            IsSolenoid = tagNo.IsSolenoid,
-                            IsLimSwitch = tagNo.IsLimSwitch,
-                            IsAirSet = tagNo.IsAirSet,
-                            IsVolumeBooster = tagNo.IsVolumeBooster,
-                            IsAirOperated = tagNo.IsAirOperated,
-                            IsLockUp = tagNo.IsLockUp,
-                            IsSnapActingRelay = tagNo.IsSnapActingRelay
-                        };
-
-                        _context.EstimateRequest.Add(estimateRequest);
-
-                        // DataSheetLv3에도 동일한 데이터 저장
-                        var dataSheetLv3 = new DataSheetLv3
-                        {
-                            TempEstimateNo = tempEstimateNo,
-                            SheetID = sheetID,
-                            Medium = tagNo.Medium,
-                            Fluid = tagNo.Fluid,
-                            IsQM = tagNo.IsQM,
-                            IsP2 = tagNo.IsP2,
-                            IsDensity = tagNo.IsDensity,
-                            QMUnit = tagNo.QMUnit,
-                            QMMax = tagNo.QMMax,
-                            QMNor = tagNo.QMNor,
-                            QMMin = tagNo.QMMin,
-                            QNUnit = tagNo.QNUnit,
-                            QNMax = tagNo.QNMax,
-                            QNNor = tagNo.QNNor,
-                            QNMin = tagNo.QNMin,
-                            PressureUnit = tagNo.PressureUnit,
-                            InletPressureMaxQ = tagNo.InletPressureMaxQ,
-                            InletPressureNorQ = tagNo.InletPressureNorQ,
-                            InletPressureMinQ = tagNo.InletPressureMinQ,
-                            OutletPressureMaxQ = tagNo.OutletPressureMaxQ,
-                            OutletPressureNorQ = tagNo.OutletPressureNorQ,
-                            OutletPressureMinQ = tagNo.OutletPressureMinQ,
-                            DifferentialPressureMaxQ = tagNo.DifferentialPressureMaxQ,
-                            DifferentialPressureNorQ = tagNo.DifferentialPressureNorQ,
-                            DifferentialPressureMinQ = tagNo.DifferentialPressureMinQ,
-                            TemperatureUnit = tagNo.TemperatureUnit,
-                            InletTemperatureQ = tagNo.InletTemperatureQ,
-                            InletTemperatureNorQ = tagNo.InletTemperatureNorQ,
-                            InletTemperatureMinQ = tagNo.InletTemperatureMinQ,
-                            DensityUnit = tagNo.DensityUnit,
-                            Density = tagNo.Density,
-                            MolecularWeightUnit = tagNo.MolecularWeightUnit,
-                            MolecularWeight = tagNo.MolecularWeight,
-                            BodySizeUnit = string.IsNullOrEmpty(tagNo.BodySizeUnit) ? null : tagNo.BodySizeUnit,
-                            BodySize = string.IsNullOrEmpty(tagNo.BodySize) ? null : tagNo.BodySize,
-                            BodyMat = string.IsNullOrEmpty(tagNo.BodyMat) ? null : tagNo.BodyMat,
-                            TrimMat = string.IsNullOrEmpty(tagNo.TrimMat) ? null : tagNo.TrimMat,
-                            TrimOption = string.IsNullOrEmpty(tagNo.TrimOption) ? null : tagNo.TrimOption,
-                            ActType = null, // 임시저장/견적요청에서는 NULL
-                            HW = tagNo.IsHW == true ? "0" : null // IsHW가 true면 기본값 "0" (None), false면 null
-                        };
-
-                        _context.DataSheetLv3.Add(dataSheetLv3);
-                        sheetID++;
                     }
                 }
             }
 
-            // 첨부파일 정보 저장
+            // 4. 첨부파일 처리
             if (dto.Attachments != null && dto.Attachments.Any())
             {
                 foreach (var attachmentInfo in dto.Attachments)
@@ -1103,53 +1080,60 @@ namespace EstimateRequestSystem.Services
         // Utility methods
         public async Task<string> GenerateTempEstimateNoAsync()
         {
-            string tempEstimateNo;
-            bool isDuplicate;
+            var today = DateTime.Now;
+            var datePrefix = today.ToString("yyyyMMdd");
             
-            do
-            {
-                var today = DateTime.Now.ToString("yyyyMMdd");
-                
-                // 오늘 날짜의 기존 TempEstimateNo 개수 확인
-                var todayCount = await _context.EstimateSheetLv1
-                    .CountAsync(es => es.TempEstimateNo.StartsWith($"TEMP{today}-"));
-                
-                // 다음 번호 생성 (001부터 시작)
-                var nextNumber = todayCount + 1;
-                tempEstimateNo = $"TEMP{today}-{nextNumber:D3}";
-                
-                // 중복 체크
-                isDuplicate = await _context.EstimateSheetLv1
-                    .AnyAsync(es => es.TempEstimateNo == tempEstimateNo);
-                    
-            } while (isDuplicate);
+            // 오늘 날짜로 생성된 TempEstimateNo 중 가장 큰 번호 찾기
+            var existingNumbers = await _context.EstimateSheetLv1
+                .Where(es => es.TempEstimateNo.StartsWith($"TEMP{datePrefix}-"))
+                .Select(es => es.TempEstimateNo)
+                .ToListAsync();
 
-            // EstimateSheetLv1 레코드 생성
+            int maxNumber = 0;
+            foreach (var number in existingNumbers)
+            {
+                var parts = number.Split('-');
+                if (parts.Length == 2 && int.TryParse(parts[1], out int num))
+                {
+                    maxNumber = Math.Max(maxNumber, num);
+                }
+            }
+
+            var nextNumber = maxNumber + 1;
+            var tempEstimateNo = $"TEMP{datePrefix}-{nextNumber:D3}";
+
+            Console.WriteLine($"새로운 TempEstimateNo 생성: {tempEstimateNo}");
+
+            // 1. EstimateSheetLv1 생성
             var estimateSheet = new EstimateSheetLv1
             {
                 TempEstimateNo = tempEstimateNo,
-                CustomerID = null, // 저장 시점에 결정
-                WriterID = null, // 저장 시점에 결정
-                ManagerID = null, // NULL 허용
-                CurEstimateNo = null, // NULL 허용
-                PrevEstimateNo = null, // NULL 허용
-                Status = 1, // 임시저장 상태
+                CustomerID = "customer1", // 기본값
+                WriterID = "customer1",   // 기본값
+                ManagerID = null,
+                CurEstimateNo = null,
+                PrevEstimateNo = null,
+                Status = (int)EstimateStatus.Draft,
                 Project = "",
-                CustomerRequirement = ""
+                CustomerRequirement = "",
+                StaffComment = ""
             };
-
             _context.EstimateSheetLv1.Add(estimateSheet);
 
-            // DataSheetLv3 기본 레코드 생성 (SheetID = 1)
-            var dataSheetLv3 = new DataSheetLv3
+            // 2. EstimateRequest 기본 레코드 생성 (SheetID = 1)
+            var estimateRequest = new EstimateRequest
             {
                 TempEstimateNo = tempEstimateNo,
                 SheetID = 1,
+                EstimateNo = null,
+                SheetNo = 1,
+                ValveType = null,
+                Tagno = "",
+                UnitPrice = null,
+                Qty = 1,
                 Medium = "",
                 Fluid = "",
                 IsQM = false,
-                IsP2 = false,
-                IsDensity = false,
                 QMUnit = "m³/h",
                 QMMax = 0,
                 QMNor = 0,
@@ -1158,6 +1142,8 @@ namespace EstimateRequestSystem.Services
                 QNMax = 0,
                 QNNor = 0,
                 QNMin = 0,
+                IsP2 = false,
+                IsDensity = false,
                 PressureUnit = "bar(g)",
                 InletPressureMaxQ = 0,
                 InletPressureNorQ = 0,
@@ -1176,104 +1162,62 @@ namespace EstimateRequestSystem.Services
                 Density = 0,
                 MolecularWeightUnit = "g/mol",
                 MolecularWeight = 0,
-                CalculatedCvUnit = "",
-                CalculatedCvMaxQ = 0,
-                CalculatedCvNorQ = 0,
-                CalculatedCvMinQ = 0,
-                SS100Max = 0,
-                SS100Nor = 0,
-                SS100Min = 0,
-                U1Unit = "",
-                U1Max = 0,
-                U1Nor = 0,
-                U1Min = 0,
-                U2Max = 0,
-                U2Nor = 0,
-                U2Min = 0,
-                LpAeMax = 0,
-                LpAeNor = 0,
-                LpAeMin = 0,
-                WarningStateMax = "",
-                WarningStateNor = "",
-                WarningStateMin = "",
-                WarningTypeMax = "",
-                WarningTypeNor = "",
-                WarningTypeMin = "",
-                FluidPUnit = "",
-                FluidP1Max = 0,
-                FluidP1Nor = 0,
-                FluidP1Min = 0,
-                FluidP2Max = 0,
-                FluidP2Nor = 0,
-                FluidP2Min = 0,
-                FluidN1Max = 0,
-                FluidN1Nor = 0,
-                FluidN1Min = 0,
-                FluidN1Unit = "",
-                FluidV1Max = 0,
-                Fluidv1Nor = 0,
-                FluidV1Min = 0,
-                FluidV1Unit = "",
-                FluidPV1Max = 0,
-                FluidPV1Nor = 0,
-                FluidPV1Min = 0,
-                FluidPV1Unit = "",
-                FluidTV1Max = 0,
-                FluidTV1Nor = 0,
-                FluidTV1Min = 0,
-                FluidTV1Unit = "",
-                FluidCF1Max = 0,
-                FluidCF1Nor = 0,
-                FluidCF1Min = 0,
-                FluidCF1Unit = "",
-                ValveType = null, // NULL 허용
-                FlowDirection = "",
-                ValvePerformClass = "",
-                Protection = "",
-                BasicCharacter = "",
-                TheoreticalRangeability = 0,
-                FlowCoeffUnit = "",
-                FlowCoeff = 0,
-                NorFlowCoeff = 0,
-                SizePressureClass = "",
-                SuggestedValveSize = 0,
-                BonnetType = null, // NULL 허용
-                BodyMat = null, // NULL 허용
-
-                BodySize = null, // NULL 허용
-                Rating = null, // NULL 허용
-                Connection = null, // NULL 허용
-                TrimType = null, // NULL 허용
-                TrimSeries = null, // NULL 허용
-                TrimMat = null, // NULL 허용
-                TrimOption = null, // NULL 허용
-                TrimPortSize = null, // NULL 허용
-                TrimForm = null, // NULL 허용
-                ActType = null, // NULL 허용
-                ActSeriesCode = null, // NULL 허용
-                ActSize = null, // NULL 허용
-                HW = null, // NULL 허용
-                PosCode = null, // NULL 허용
-                SolCode = null, // NULL 허용
-                LimCode = null, // NULL 허용
-                ASCode = null, // NULL 허용
-                VolCode = null, // NULL 허용
-                AirOpCode = null, // NULL 허용
-                LockupCode = null, // NULL 허용
-                SnapActCode = null // NULL 허용
+                BodySizeUnit = "",
+                BodySize = null,
+                BodyMat = null,
+                TrimMat = null,
+                TrimOption = null,
+                BodyRating = null,
+                ActType = null,
+                IsHW = false,
+                IsPositioner = false,
+                PositionerType = null,
+                ExplosionProof = null,
+                TransmitterType = null,
+                IsSolenoid = false,
+                IsLimSwitch = false,
+                IsAirSet = false,
+                IsVolumeBooster = false,
+                IsAirOperated = false,
+                IsLockUp = false,
+                IsSnapActingRelay = false
             };
+            _context.EstimateRequest.Add(estimateRequest);
 
-            _context.DataSheetLv3.Add(dataSheetLv3);
+            // 3. DataSheetLv3 기본 레코드 생성 (SheetID = 1)
+            var dataSheet = new DataSheetLv3
+            {
+                TempEstimateNo = tempEstimateNo,
+                SheetID = 1,
+                BodySize = null,
+                BodyMat = null,
+                Rating = null,
+                Connection = null,
+                BonnetType = null,
+                TrimSeries = null,
+                TrimType = null,
+                TrimPortSize = null,
+                TrimMat = null,
+                TrimOption = null,
+                ActSeriesCode = null,
+                ActType = null,
+                ActSize = null,
+                HW = null
+            };
+            _context.DataSheetLv3.Add(dataSheet);
+
             await _context.SaveChangesAsync();
-
+            
+            Console.WriteLine($"TempEstimateNo {tempEstimateNo} 생성 완료 - EstimateSheetLv1, EstimateRequest, DataSheetLv3 모두 생성됨");
+            
             return tempEstimateNo;
         }
 
         public async Task<int> GetNextSheetIDAsync(string tempEstimateNo)
         {
-            // 전체 데이터베이스에서 가장 큰 SheetID 조회 (TempEstimateNo 무관)
-            var maxSheetID = await _context.EstimateRequest
-                .Select(er => (int?)er.SheetID)
+            // DataSheetLv3 테이블에서 가장 큰 SheetID 조회
+            var maxSheetID = await _context.DataSheetLv3
+                .Select(ds => (int?)ds.SheetID)
                 .MaxAsync() ?? 0;
 
             return maxSheetID + 1;
@@ -1321,7 +1265,7 @@ namespace EstimateRequestSystem.Services
         public async Task<List<object>> GetTrimOptionListAsync()
 {
     var optionList = await _context.TrimOptionList
-        .Select(o => new { trimOptionCode = o.TrimOptionCode, trimOptionName = o.TrimOptionName })
+        .Select(o => new { trimOptionCode = o.TrimOptionCode, trimOption = o.TrimOptionName }) // trimOptionName을 trimOption으로 변경
         .OrderBy(o => o.trimOptionCode)
         .ToListAsync();
     return optionList.Cast<object>().ToList();
@@ -3312,6 +3256,549 @@ namespace EstimateRequestSystem.Services
             {
                 return false;
             }
+        }
+
+        // SaveSpecificationAsync 메서드 바로 위에 추가
+private string? ConvertEmptyToNull(string? value)
+{
+    return string.IsNullOrWhiteSpace(value) ? null : value;
+}
+
+
+        public async Task<bool> SaveSpecificationAsync(string tempEstimateNo, int sheetID, SaveSpecificationRequestDto specification)
+        {
+            try
+            {
+                Console.WriteLine($"SaveSpecificationAsync 시작 - TempEstimateNo: {tempEstimateNo}, SheetID: {sheetID}");
+                
+                // 실제 이름을 코드로 변환
+                var bodySizeCode = await GetBodySizeCodeAsync(specification.Body.SizeUnit, specification.Body.Size); // SizeUnit 추가
+                var bodyMatCode = await GetBodyMatCodeAsync(specification.Body.MaterialBody);
+                var trimTypeCode = await GetTrimTypeCodeAsync(specification.Trim.Type);
+                var actTypeCode = await GetActTypeCodeAsync(specification.Actuator.Type);
+                var actSizeCode = await GetActSizeCodeAsync(specification.Actuator.Series, specification.Actuator.Size);
+                var actHWCode = await GetActHWCodeAsync(specification.Actuator.HW);
+                
+                Console.WriteLine($"코드 변환 결과 - BodySizeUnit: {specification.Body.SizeUnit}, BodySize: {specification.Body.Size} -> {bodySizeCode}"); // 로그 업데이트
+                Console.WriteLine($"코드 변환 결과 - BodyMat: {specification.Body.MaterialBody} -> {bodyMatCode}");
+                Console.WriteLine($"코드 변환 결과 - TrimType: {specification.Trim.Type} -> {trimTypeCode}");
+                Console.WriteLine($"코드 변환 결과 - ActType: {specification.Actuator.Type} -> {actTypeCode}");
+                Console.WriteLine($"코드 변환 결과 - ActSize: {specification.Actuator.Size} -> {actSizeCode}");
+                Console.WriteLine($"코드 변환 결과 - ActHW: {specification.Actuator.HW} -> {actHWCode}");
+                
+                // 기존 DataSheetLv3 데이터가 있는지 확인 (TempEstimateNo + SheetID로 검색)
+                var existingDataSheet = await _context.DataSheetLv3
+                    .FirstOrDefaultAsync(ds => ds.TempEstimateNo == tempEstimateNo && ds.SheetID == sheetID);
+
+                Console.WriteLine($"기존 DataSheetLv3 검색 결과: {(existingDataSheet != null ? "존재함" : "존재하지 않음")}");
+
+                if (existingDataSheet != null)
+                {
+                    Console.WriteLine("기존 데이터 업데이트 시작");
+                    // 기존 데이터 업데이트 (코드 사용)
+                    existingDataSheet.ValveType = ConvertEmptyToNull(specification.ValveId);
+                    existingDataSheet.BonnetType = ConvertEmptyToNull(specification.Body.BonnetType);
+                    existingDataSheet.BodyMat = ConvertEmptyToNull(bodyMatCode);
+                    existingDataSheet.TrimMat = ConvertEmptyToNull(specification.Trim.MaterialTrim); // DTO 변경에 따라 수정
+                    existingDataSheet.TrimOption = ConvertEmptyToNull(await GetTrimOptionCodeAsync(specification.Trim.Option)); // DTO 변경에 따라 수정
+                    existingDataSheet.Rating = ConvertEmptyToNull(specification.Body.Rating);
+                    existingDataSheet.Connection = ConvertEmptyToNull(specification.Body.Connection);
+                    existingDataSheet.BodySize = ConvertEmptyToNull(bodySizeCode);
+                    
+                    existingDataSheet.TrimType = ConvertEmptyToNull(trimTypeCode);
+                    existingDataSheet.TrimSeries = ConvertEmptyToNull(specification.Trim.Series);
+                    existingDataSheet.TrimPortSize = ConvertEmptyToNull(specification.Trim.PortSize);
+                    existingDataSheet.TrimForm = ConvertEmptyToNull(specification.Trim.Form);
+                    
+                    existingDataSheet.ActType = ConvertEmptyToNull(actTypeCode);
+                    existingDataSheet.ActSeriesCode = ConvertEmptyToNull(specification.Actuator.Series);
+                    existingDataSheet.ActSize = ConvertEmptyToNull(actSizeCode);
+                    existingDataSheet.HW = ConvertEmptyToNull(actHWCode);
+                    
+                    // 악세사리 필드들 업데이트
+                    existingDataSheet.PosCode = ConvertEmptyToNull(specification.Accessories.PosCode);
+                    existingDataSheet.SolCode = ConvertEmptyToNull(specification.Accessories.SolCode);
+                    existingDataSheet.LimCode = ConvertEmptyToNull(specification.Accessories.LimCode);
+                    existingDataSheet.ASCode = ConvertEmptyToNull(specification.Accessories.ASCode);
+                    existingDataSheet.VolCode = ConvertEmptyToNull(specification.Accessories.VolCode);
+                    existingDataSheet.AirOpCode = ConvertEmptyToNull(specification.Accessories.AirOpCode);
+                    existingDataSheet.LockupCode = ConvertEmptyToNull(specification.Accessories.LockupCode);
+                    existingDataSheet.SnapActCode = ConvertEmptyToNull(specification.Accessories.SnapActCode);
+                    
+                    Console.WriteLine("기존 데이터 업데이트 완료");
+                }
+                else
+                {
+                    Console.WriteLine("새 데이터 생성 시작");
+                    // 새 데이터 생성 (코드 사용)
+                    var newDataSheet = new DataSheetLv3
+                    {
+                        TempEstimateNo = tempEstimateNo,
+                        SheetID = sheetID, // 기존 SheetID 사용
+                        ValveType = ConvertEmptyToNull(specification.ValveId),
+                        BonnetType = ConvertEmptyToNull(specification.Body.BonnetType),
+                        BodyMat = ConvertEmptyToNull(bodyMatCode),
+                        TrimMat = ConvertEmptyToNull(specification.Trim.MaterialTrim), // DTO 변경에 따라 수정
+                        TrimOption = ConvertEmptyToNull(await GetTrimOptionCodeAsync(specification.Trim.Option)), // DTO 변경에 따라 수정
+                        Rating = ConvertEmptyToNull(specification.Body.Rating),
+                        Connection = ConvertEmptyToNull(specification.Body.Connection),
+                        BodySize = ConvertEmptyToNull(bodySizeCode),
+                        
+                        TrimType = ConvertEmptyToNull(trimTypeCode),
+                        TrimSeries = ConvertEmptyToNull(specification.Trim.Series),
+                        TrimPortSize = ConvertEmptyToNull(specification.Trim.PortSize),
+                        TrimForm = ConvertEmptyToNull(specification.Trim.Form),
+                        
+                        ActType = ConvertEmptyToNull(actTypeCode),
+                        ActSeriesCode = ConvertEmptyToNull(specification.Actuator.Series),
+                        ActSize = ConvertEmptyToNull(actSizeCode),
+                        HW = ConvertEmptyToNull(actHWCode),
+                        
+                        // 악세사리 필드들 저장
+                        PosCode = ConvertEmptyToNull(specification.Accessories.PosCode),
+                        SolCode = ConvertEmptyToNull(specification.Accessories.SolCode),
+                        LimCode = ConvertEmptyToNull(specification.Accessories.LimCode),
+                        ASCode = ConvertEmptyToNull(specification.Accessories.ASCode),
+                        VolCode = ConvertEmptyToNull(specification.Accessories.VolCode),
+                        AirOpCode = ConvertEmptyToNull(specification.Accessories.AirOpCode),
+                        LockupCode = ConvertEmptyToNull(specification.Accessories.LockupCode),
+                        SnapActCode = ConvertEmptyToNull(specification.Accessories.SnapActCode)
+                    };
+
+                    _context.DataSheetLv3.Add(newDataSheet);
+                    Console.WriteLine("새 데이터 생성 완료");
+                }
+
+                Console.WriteLine("SaveChangesAsync 시작");
+                await _context.SaveChangesAsync();
+                Console.WriteLine("SaveChangesAsync 완료");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"사양 저장 중 예외 발생: {ex.Message}");
+                Console.WriteLine($"스택 트레이스: {ex.StackTrace}");
+                return false;
+            }
+        }
+         public async Task<bool> AssignEstimateAsync(string tempEstimateNo, string managerId)
+        {
+            try
+            {
+                Console.WriteLine($"=== 견적 담당 처리 시작 ===");
+                Console.WriteLine($"TempEstimateNo: {tempEstimateNo}");
+                Console.WriteLine($"ManagerID: {managerId}");
+
+                // EstimateSheetLv1 조회
+                var estimateSheet = await _context.EstimateSheetLv1
+                    .FirstOrDefaultAsync(e => e.TempEstimateNo == tempEstimateNo);
+
+                if (estimateSheet == null)
+                {
+                    Console.WriteLine("견적 시트를 찾을 수 없습니다.");
+                    return false;
+                }
+
+                // Status를 2(견적 진행중)로 업데이트
+                estimateSheet.Status = 2;
+                estimateSheet.ManagerID = managerId;
+
+                Console.WriteLine($"견적 상태 업데이트: Status={estimateSheet.Status}, ManagerID={estimateSheet.ManagerID}");
+
+                // 데이터베이스에 저장
+                await _context.SaveChangesAsync();
+                Console.WriteLine("견적 담당 처리 완료");
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"견적 담당 처리 중 오류 발생: {ex.Message}");
+                return false;
+            }
+        }
+
+        // ... existing code ...
+
+        // 실제 이름을 코드로 변환하는 헬퍼 메서드들
+        private async Task<string?> GetBodySizeCodeAsync(string? sizeUnit, string? bodySizeCode) // 시그니처 변경
+        {
+            if (string.IsNullOrEmpty(sizeUnit) || string.IsNullOrEmpty(bodySizeCode)) return null;
+
+            // BodySizeList에서 sizeUnit과 bodySizeCode로 찾아서 유효성 검사
+            var exists = await _context.BodySizeList.AnyAsync(bs => bs.SizeUnit == sizeUnit && bs.BodySizeCode == bodySizeCode);
+
+            return exists ? bodySizeCode : null;
+        }
+
+        private async Task<string?> GetBodyMatCodeAsync(string? matCode)
+        {
+            if (string.IsNullOrEmpty(matCode)) return null;
+            
+            // 변경된 로직: 이미 코드를 받고 있으므로 코드를 그대로 반환
+            return matCode;
+        }
+
+        private async Task<string?> GetTrimTypeCodeAsync(string? typeCode)
+        {
+            if (string.IsNullOrEmpty(typeCode)) return null;
+            
+            // 변경된 로직: 이미 코드를 받고 있으므로 코드를 그대로 반환 (선택적으로 유효성 검증)
+            return typeCode;
+        }
+
+        private async Task<string?> GetActTypeCodeAsync(string? typeCode)
+        {
+            if (string.IsNullOrEmpty(typeCode)) return null;
+            
+            // 변경된 로직: 이미 코드를 받고 있으므로 코드를 그대로 반환
+            return typeCode;
+        }
+
+        private async Task<string?> GetActSizeCodeAsync(string? seriesCode, string? sizeCode) // sizeName을 sizeCode로 변경
+        {
+            if (string.IsNullOrEmpty(seriesCode) || string.IsNullOrEmpty(sizeCode)) return null;
+
+            // ActSizeList에서 시리즈 코드와 사이즈 코드로 찾기
+            var actSizeEntry = await _context.ActSizeList
+                .FirstOrDefaultAsync(asize => asize.ActSeriesCode == seriesCode && asize.ActSizeCode == sizeCode);
+
+            return actSizeEntry?.ActSizeCode;
+        }
+
+        private async Task<string?> GetActHWCodeAsync(string? hwCode)
+        {
+            if (string.IsNullOrEmpty(hwCode)) return null;
+            
+            // 변경된 로직: 이미 코드를 받고 있으므로 코드를 그대로 반환
+            return hwCode;
+        }
+
+        // 코드를 실제 이름으로 변환하는 헬퍼 메서드들
+        private async Task<string> GetBonnetTypeNameAsync(string bonnetCode)
+        {
+            Console.WriteLine($"[GetBonnetTypeNameAsync] 찾는 코드: '{bonnetCode}'");
+            var bonnet = await _context.BodyBonnetList
+                .FirstOrDefaultAsync(b => b.BonnetCode == bonnetCode);
+            Console.WriteLine($"[GetBonnetTypeNameAsync] 찾은 이름: '{bonnet?.BonnetType}'");
+            return bonnet?.BonnetType ?? "";
+        }
+
+        private async Task<string> GetBodyMatNameAsync(string bodyMatCode)
+        {
+            Console.WriteLine($"[GetBodyMatNameAsync] 찾는 코드: '{bodyMatCode}'");
+            var bodyMat = await _context.BodyMatList
+                .FirstOrDefaultAsync(bm => bm.BodyMatCode == bodyMatCode);
+            Console.WriteLine($"[GetBodyMatNameAsync] 찾은 이름: '{bodyMat?.BodyMat}'");
+            return bodyMat?.BodyMat ?? "";
+        }
+
+        private async Task<string> GetTrimMatNameAsync(string trimMatCode)
+        {
+            Console.WriteLine($"[GetTrimMatNameAsync] 찾는 코드: '{trimMatCode}'");
+            var trimMat = await _context.TrimMatList
+                .FirstOrDefaultAsync(tm => tm.TrimMatCode == trimMatCode);
+            Console.WriteLine($"[GetTrimMatNameAsync] 찾은 이름: '{trimMat?.TrimMat}'");
+            return trimMat?.TrimMat ?? "";
+        }
+
+        private async Task<string> GetTrimOptionNameAsync(string trimOptionCode)
+        {
+            Console.WriteLine($"[GetTrimOptionNameAsync] 찾는 코드: '{trimOptionCode}'");
+            var trimOption = await _context.TrimOptionList
+                .FirstOrDefaultAsync(to => to.TrimOptionCode == trimOptionCode);
+            Console.WriteLine($"[GetTrimOptionNameAsync] 찾은 이름: '{trimOption?.TrimOptionName}'");
+            return trimOption?.TrimOptionName ?? "";
+        }
+
+        private async Task<string> GetBodyRatingNameAsync(string ratingCode)
+        {
+            Console.WriteLine($"[GetBodyRatingNameAsync] 찾는 코드: '{ratingCode}'");
+            var rating = await _context.BodyRatingList
+                .FirstOrDefaultAsync(br => br.RatingCode == ratingCode);
+            Console.WriteLine($"[GetBodyRatingNameAsync] 찾은 이름: '{rating?.RatingName}'");
+            return rating?.RatingName ?? "";
+        }
+
+        private async Task<string> GetBodyConnectionNameAsync(string connectionCode)
+        {
+            Console.WriteLine($"[GetBodyConnectionNameAsync] 찾는 코드: '{connectionCode}'");
+            var connection = await _context.BodyConnectionList
+                .FirstOrDefaultAsync(bc => bc.ConnectionCode == connectionCode);
+            Console.WriteLine($"[GetBodyConnectionNameAsync] 찾은 이름: '{connection?.Connection}'");
+            return connection?.Connection ?? "";
+        }
+
+        private async Task<string> GetBodySizeNameAsync(string bodySizeCode)
+        {
+            Console.WriteLine($"[GetBodySizeNameAsync] 찾는 코드: '{bodySizeCode}'");
+            var bodySize = await _context.BodySizeList
+                .FirstOrDefaultAsync(bs => bs.BodySizeCode == bodySizeCode);
+            Console.WriteLine($"[GetBodySizeNameAsync] 찾은 이름: '{bodySize?.BodySize}'");
+            return bodySize?.BodySize ?? "";
+        }
+
+        private async Task<string> GetTrimTypeNameAsync(string trimTypeCode)
+        {
+            Console.WriteLine($"[GetTrimTypeNameAsync] 찾는 코드: '{trimTypeCode}'");
+            var trimType = await _context.TrimTypeList
+                .FirstOrDefaultAsync(tt => tt.TrimTypeCode == trimTypeCode);
+            Console.WriteLine($"[GetTrimTypeNameAsync] 찾은 이름: '{trimType?.TrimType}'");
+            return trimType?.TrimType ?? "";
+        }
+
+        private async Task<string> GetTrimSeriesNameAsync(string trimSeriesCode)
+        {
+            Console.WriteLine($"[GetTrimSeriesNameAsync] 찾는 코드: '{trimSeriesCode}'");
+            var trimSeries = await _context.TrimSeriesList
+                .FirstOrDefaultAsync(ts => ts.TrimSeriesCode == trimSeriesCode);
+            Console.WriteLine($"[GetTrimSeriesNameAsync] 찾은 이름: '{trimSeries?.TrimSeries}'");
+            return trimSeries?.TrimSeries ?? "";
+        }
+
+        private async Task<string> GetTrimPortSizeNameAsync(string portSizeCode)
+        {
+            Console.WriteLine($"[GetTrimPortSizeNameAsync] 찾는 코드: '{portSizeCode}'");
+            var portSize = await _context.TrimPortSizeList
+                .FirstOrDefaultAsync(ps => ps.PortSizeCode == portSizeCode);
+            Console.WriteLine($"[GetTrimPortSizeNameAsync] 찾은 이름: '{portSize?.PortSize}'");
+            return portSize?.PortSize ?? "";
+        }
+
+        private async Task<string> GetTrimFormNameAsync(string formCode)
+        {
+            Console.WriteLine($"[GetTrimFormNameAsync] 찾는 코드: '{formCode}'");
+            var form = await _context.TrimFormList
+                .FirstOrDefaultAsync(f => f.TrimFormCode == formCode);
+            Console.WriteLine($"[GetTrimFormNameAsync] 찾은 이름: '{form?.TrimForm}'");
+            return form?.TrimForm ?? "";
+        }
+
+        private async Task<string> GetActTypeNameAsync(string actTypeCode)
+        {
+            Console.WriteLine($"[GetActTypeNameAsync] 찾는 코드: '{actTypeCode}'");
+            var actType = await _context.ActTypeList
+                .FirstOrDefaultAsync(at => at.ActTypeCode == actTypeCode);
+            Console.WriteLine($"[GetActTypeNameAsync] 찾은 이름: '{actType?.ActType}'");
+            return actType?.ActType ?? "";
+        }
+
+        private async Task<string> GetActSeriesNameAsync(string actSeriesCode)
+        {
+            Console.WriteLine($"[GetActSeriesNameAsync] 찾는 코드: '{actSeriesCode}'");
+            var actSeries = await _context.ActSeriesList
+                .FirstOrDefaultAsync(as_ => as_.ActSeriesCode == actSeriesCode);
+            Console.WriteLine($"[GetActSeriesNameAsync] 찾은 이름: '{actSeries?.ActSeries}'");
+            return actSeries?.ActSeries ?? "";
+        }
+
+        private async Task<string> GetActSizeNameAsync(string? actSeriesCode, string actSizeCode)
+        {
+            Console.WriteLine($"[GetActSizeNameAsync] 찾는 시리즈 코드: '{actSeriesCode}', 사이즈 코드: '{actSizeCode}'");
+            if (string.IsNullOrEmpty(actSeriesCode) || string.IsNullOrEmpty(actSizeCode))
+                return "";
+            
+            var actSize = await _context.ActSizeList
+                .FirstOrDefaultAsync(asize => asize.ActSeriesCode == actSeriesCode && asize.ActSizeCode == actSizeCode);
+            Console.WriteLine($"[GetActSizeNameAsync] 찾은 이름: '{actSize?.ActSize}'");
+            return actSize?.ActSize ?? "";
+        }
+
+        private async Task<string> GetActHWNameAsync(string hwCode)
+        {
+            Console.WriteLine($"[GetActHWNameAsync] 찾는 코드: '{hwCode}'");
+            var hw = await _context.ActHWList
+                .FirstOrDefaultAsync(ah => ah.HWCode == hwCode);
+            Console.WriteLine($"[GetActHWNameAsync] 찾은 이름: '{hw?.HW}'");
+            return hw?.HW ?? "";
+        }
+
+        private async Task<string?> GetTrimOptionCodeAsync(string? optionCode)
+        {
+            if (string.IsNullOrEmpty(optionCode)) return null;
+            
+            // 변경된 로직: 이미 코드를 받고 있으므로 코드를 그대로 반환
+            return optionCode;
+        }
+
+        // 사양 조회 메서드
+        public async Task<SpecificationResponseDto?> GetSpecificationAsync(string tempEstimateNo, int sheetID)
+        {
+            try
+            {
+                Console.WriteLine($"GetSpecificationAsync 호출됨, TempEstimateNo: {tempEstimateNo}, SheetID: {sheetID}");
+                
+                var dataSheet = await _context.DataSheetLv3
+                    .FirstOrDefaultAsync(d => d.TempEstimateNo == tempEstimateNo && d.SheetID == sheetID);
+    
+                if (dataSheet == null)
+                {
+                    Console.WriteLine($"DataSheetLv3 TempEstimateNo: {tempEstimateNo}, SheetID: {sheetID}에 대한 데이터를 찾을 수 없습니다.");
+                    return null;
+                }
+
+                Console.WriteLine($"SheetID {sheetID}의 원본 데이터: BonnetType={dataSheet.BonnetType}, BodyMat={dataSheet.BodyMat}, TrimMat={dataSheet.TrimMat}, TrimOption={dataSheet.TrimOption}");
+
+                // 코드를 실제 이름으로 변환
+                var bonnetType = dataSheet.BonnetType != null ? 
+                    await GetBonnetTypeNameAsync(dataSheet.BonnetType) : "";
+                var bodyMat = dataSheet.BodyMat != null ? 
+                    await GetBodyMatNameAsync(dataSheet.BodyMat) : "";
+                var trimMat = dataSheet.TrimMat != null ? 
+                    await GetTrimMatNameAsync(dataSheet.TrimMat) : "";
+                var trimOption = dataSheet.TrimOption != null ? 
+                    await GetTrimOptionNameAsync(dataSheet.TrimOption) : "";
+                var rating = dataSheet.Rating != null ? 
+                    await GetBodyRatingNameAsync(dataSheet.Rating) : "";
+                var connection = dataSheet.Connection != null ? 
+                    await GetBodyConnectionNameAsync(dataSheet.Connection) : "";
+                var bodySize = dataSheet.BodySize != null ? 
+                    await GetBodySizeNameAsync(dataSheet.BodySize) : "";
+                var trimType = dataSheet.TrimType != null ? 
+                    await GetTrimTypeNameAsync(dataSheet.TrimType) : "";
+                var trimSeries = dataSheet.TrimSeries != null ? 
+                    await GetTrimSeriesNameAsync(dataSheet.TrimSeries) : "";
+                
+                // Trim Port Size와 Unit 조회
+                var trimPortSizeInfo = dataSheet.TrimPortSize != null ? await _context.TrimPortSizeList.FirstOrDefaultAsync(p => p.PortSizeCode == dataSheet.TrimPortSize) : null;
+                var trimPortSize = trimPortSizeInfo?.PortSize ?? "";
+                var trimPortSizeUnit = trimPortSizeInfo?.PortSizeUnit ?? "";
+
+                // Rating Unit 조회
+                var ratingInfo = dataSheet.Rating != null ? await _context.BodyRatingList.FirstOrDefaultAsync(r => r.RatingCode == dataSheet.Rating) : null;
+                var ratingUnit = ratingInfo?.RatingUnit ?? "";
+
+                var trimForm = dataSheet.TrimForm != null ? 
+                    await GetTrimFormNameAsync(dataSheet.TrimForm) : "";
+                var actType = dataSheet.ActType != null ? 
+                    await GetActTypeNameAsync(dataSheet.ActType) : "";
+                var actSeries = dataSheet.ActSeriesCode != null ? (await _context.ActSeriesList.FirstOrDefaultAsync(s => s.ActSeriesCode == dataSheet.ActSeriesCode))?.ActSeries ?? "" : "";
+                var actSize = dataSheet.ActSize != null ? (await _context.ActSizeList.FirstOrDefaultAsync(s => s.ActSizeCode == dataSheet.ActSize && s.ActSeriesCode == dataSheet.ActSeriesCode))?.ActSize ?? "" : "";
+                var hw = dataSheet.HW != null ? (await _context.ActHWList.FirstOrDefaultAsync(h => h.HWCode == dataSheet.HW))?.HW ?? "" : "";
+
+                Console.WriteLine($"변환된 데이터: BonnetType={bonnetType}, BodyMat={bodyMat}, TrimMat={trimMat}, TrimOption={trimOption}");
+
+                // Accessories 정보 조회
+                var accessories = new AccessorySpecificationResponseDto
+                {
+                    Positioner = await GetAccessoryDetailAsync(dataSheet.PosCode),
+                    Solenoid = await GetAccessoryDetailAsync(dataSheet.SolCode),
+                    Limiter = await GetAccessoryDetailAsync(dataSheet.LimCode),
+                    AirSupply = await GetAccessoryDetailAsync(dataSheet.ASCode),
+                    VolumeBooster = await GetAccessoryDetailAsync(dataSheet.VolCode),
+                    AirOperator = await GetAccessoryDetailAsync(dataSheet.AirOpCode),
+                    LockUp = await GetAccessoryDetailAsync(dataSheet.LockupCode),
+                    SnapActingRelay = await GetAccessoryDetailAsync(dataSheet.SnapActCode)
+                };
+
+                return new SpecificationResponseDto
+                {
+                    SheetID = dataSheet.SheetID,
+                    ValveId = dataSheet.ValveType,
+                    Body = new BodySpecificationResponseDto
+                    {
+                        BonnetTypeCode = dataSheet.BonnetType ?? "",
+                        BonnetTypeName = bonnetType,
+                        MaterialBodyCode = dataSheet.BodyMat ?? "",
+                        MaterialBodyName = bodyMat,
+                        MaterialTrimCode = dataSheet.TrimMat ?? "",
+                        MaterialTrimName = trimMat,
+                        OptionCode = dataSheet.TrimOption ?? "",
+                        OptionName = trimOption,
+                        RatingCode = dataSheet.Rating ?? "",
+                        RatingName = rating,
+                        RatingUnit = ratingUnit,
+                        ConnectionCode = dataSheet.Connection ?? "",
+                        ConnectionName = connection,
+                        SizeCode = dataSheet.BodySize ?? "",
+                        SizeName = bodySize,
+                        SizeUnit = dataSheet.BodySizeUnit ?? ""
+                    },
+                    Trim = new TrimSpecificationResponseDto
+                    {
+                        TypeCode = dataSheet.TrimType ?? "",
+                        TypeName = trimType,
+                        SeriesCode = dataSheet.TrimSeries ?? "",
+                        SeriesName = trimSeries,
+                        PortSizeCode = dataSheet.TrimPortSize ?? "",
+                        PortSizeName = trimPortSize,
+                        PortSizeUnit = trimPortSizeUnit,
+                        FormCode = dataSheet.TrimForm ?? "",
+                        FormName = trimForm
+                    },
+                    Actuator = new ActuatorSpecificationResponseDto
+                    {
+                        TypeCode = dataSheet.ActType ?? "",
+                        TypeName = actType,
+                        SeriesCode = dataSheet.ActSeriesCode ?? "",
+                        SeriesName = actSeries,
+                        SizeCode = dataSheet.ActSize ?? "",
+                        SizeName = actSize,
+                        HWCode = dataSheet.HW ?? "",
+                        HWName = hw
+                    },
+                    Accessories = accessories
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"사양 조회 중 오류 발생: {ex.Message}");
+                return null;
+            }
+        }
+
+        private async Task<AccessoryDetailDto?> GetAccessoryDetailAsync(string? modelCode)
+        {
+            if (string.IsNullOrEmpty(modelCode))
+            {
+                return null;
+            }
+
+            var model = await _context.AccModelList
+                                      .FirstOrDefaultAsync(m => m.AccModelCode == modelCode);
+
+            if (model == null)
+            {
+                return new AccessoryDetailDto { ModelCode = modelCode }; // 코드만 반환
+            }
+
+            var maker = await _context.AccMakerList
+                                      .FirstOrDefaultAsync(m => m.AccMakerCode == model.AccMakerCode);
+
+            return new AccessoryDetailDto
+            {
+                TypeCode = model.AccTypeCode,
+                ModelCode = model.AccModelCode,
+                ModelName = model.AccModelName,
+                MakerCode = model.AccMakerCode,
+                MakerName = maker?.AccMakerName
+            };
+        }
+
+        private async Task<string?> GetTrimMatCodeAsync(string? trimMatName)
+        {
+            if (string.IsNullOrEmpty(trimMatName)) return null;
+            var trimMat = await _context.TrimMatList.FirstOrDefaultAsync(m => m.TrimMat == trimMatName);
+            return trimMat?.TrimMatCode ?? trimMatName; // 못찾으면 원래 이름 반환
+        }
+
+        private async Task<string?> GetBodyRatingCodeAsync(string? ratingName)
+        {
+            if (string.IsNullOrEmpty(ratingName)) return null;
+            var rating = await _context.BodyRatingList.FirstOrDefaultAsync(r => r.RatingName == ratingName);
+            return rating?.RatingCode ?? ratingName;
+        }
+
+
+        private async Task<string?> GetActHWCodeAsync(bool? isHw)
+        {
+            if (!isHw.HasValue || !isHw.Value) return null;
+            // 프론트엔드에서는 'Yes'/'No' 문자열로 관리하지만, DTO에서는 bool? 타입.
+            // 여기서는 bool 값을 기준으로 코드를 찾는다. 'Yes' -> '1', 'No'/'None' -> '0' 또는 다른 코드
+            // 여기서는 간단하게 bool 값을 문자열로 변환하여 사용
+            var hwName = isHw.Value ? "Yes" : "No";
+            var hw = await _context.ActHWList.FirstOrDefaultAsync(h => h.HW == hwName);
+            return hw?.HWCode;
         }
     }
 } 

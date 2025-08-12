@@ -405,3 +405,17 @@ export const getEstimateDetail = async (tempEstimateNo: string, currentUserId: s
   const response = await axios.get(`${ESTIMATE_API_BASE_URL}/estimate/sheets/${tempEstimateNo}/detail?currentUserId=${currentUserId}`);
   return response.data;
 }; 
+
+export const assignEstimate = async (tempEstimateNo: string, managerId: string) => {
+  const response = await fetch(`${ESTIMATE_API_BASE_URL}/estimate/sheets/${tempEstimateNo}/assign`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      managerId: managerId,
+      status: 2
+    })
+  });
+  return response.json();
+};

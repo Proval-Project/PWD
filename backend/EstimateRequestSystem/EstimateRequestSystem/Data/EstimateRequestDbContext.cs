@@ -192,6 +192,12 @@ namespace EstimateRequestSystem.Data
                     .HasForeignKey(e => e.TempEstimateNo)
                     .OnDelete(DeleteBehavior.Restrict);
 
+                // EstimateRequest와의 관계 추가 (복합키 TempEstimateNo + SheetID)
+                entity.HasOne<EstimateRequest>()
+                    .WithMany()
+                    .HasForeignKey(e => new { e.TempEstimateNo, e.SheetID })
+                    .OnDelete(DeleteBehavior.Restrict);
+
                 entity.HasOne(e => e.ActHW)
                     .WithMany()
                     .HasForeignKey(e => e.HW)

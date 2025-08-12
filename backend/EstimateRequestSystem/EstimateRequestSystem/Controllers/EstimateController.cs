@@ -618,6 +618,81 @@ namespace EstimateRequestSystem.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpPost("sheets/{tempEstimateNo}/assign")]
+        public async Task<IActionResult> AssignEstimate(string tempEstimateNo, [FromBody] EstimateAssignDto request)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(request.ManagerId))
+                {
+                    return BadRequest("담당자 ID가 필요합니다.");
+                }
+
+                var result = await _estimateService.AssignManagerAsync(tempEstimateNo, request.ManagerId);
+                
+                if (result)
+                {
+                    return Ok(new { message = "견적 담당 처리 완료" });
+                }
+                else
+                {
+                    return BadRequest("견적 담당 처리에 실패했습니다.");
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"서버 오류: {ex.Message}" });
+            }
+        }
+
+                    // 사양 저장
+            [HttpPost("sheets/{tempEstimateNo}/requests/{sheetID}/specification")]
+            public async Task<ActionResult> SaveSpecification(string tempEstimateNo, int sheetID, [FromBody] SaveSpecificationRequestDto specification) // DTO 변경
+            {
+                try
+                {
+                    // 요청 데이터 로깅
+                    Console.WriteLine($"사양 저장 요청 - TempEstimateNo: {tempEstimateNo}, SheetID: {sheetID}");
+                    Console.WriteLine($"ValveId: {specification.ValveId}");
+                    Console.WriteLine($"Body: {System.Text.Json.JsonSerializer.Serialize(specification.Body)}");
+                    Console.WriteLine($"Trim: {System.Text.Json.JsonSerializer.Serialize(specification.Trim)}");
+                    Console.WriteLine($"Actuator: {System.Text.Json.JsonSerializer.Serialize(specification.Actuator)}");
+                    Console.WriteLine($"Accessories: {System.Text.Json.JsonSerializer.Serialize(specification.Accessories)}");
+
+                    var success = await _estimateService.SaveSpecificationAsync(tempEstimateNo, sheetID, specification);
+                    if (!success)
+                        return BadRequest(new { message = "사양 저장에 실패했습니다." });
+
+                    return Ok(new { message = "사양이 성공적으로 저장되었습니다." });
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"사양 저장 중 예외 발생: {ex.Message}");
+                    Console.WriteLine($"스택 트레이스: {ex.StackTrace}");
+                    return BadRequest(new { message = ex.Message });
+                }
+            }
+
+        // 기존 사양 데이터 조회
+        [HttpGet("sheets/{tempEstimateNo}/specification/{sheetID}")]
+        public async Task<ActionResult<SpecificationResponseDto>> GetSpecification(string tempEstimateNo, int sheetID)
+        {
+            try
+            {
+                var specification = await _estimateService.GetSpecificationAsync(tempEstimateNo, sheetID);
+                
+                if (specification == null)
+                    return NotFound(new { message = "해당 SheetID의 사양 데이터를 찾을 수 없습니다." });
+
+                return Ok(specification);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"GetSpecification 예외 발생: {ex.Message}");
+                return BadRequest(new { message = $"사양 데이터 조회 중 오류가 발생했습니다: {ex.Message}" });
+            }
+        }
     }
 
     // 상태 업데이트 요청 DTO
