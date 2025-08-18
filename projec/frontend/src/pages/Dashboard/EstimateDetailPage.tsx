@@ -1,0 +1,2922 @@
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { getEstimateDetail } from '../../api/estimateRequest';
+import './DashboardPages.css';
+import './EstimateDetailPage.css';
+
+// 크로스플랫폼 경로 처리를 위한 유틸리티 함수
+const isManagerFile = (filePath: string): boolean => {
+  if (!filePath) return false;
+  
+  // Windows와 Unix 경로 모두 지원
+  const normalizedPath = filePath.replace(/\\/g, '/'); // Windows 백슬래시를 슬래시로 변환
+  
+  // 다양한 경로 패턴 지원
+  const managerFilePatterns = [
+    '/ResultFiles/',
+    '\\ResultFiles\\',
+    'ResultFiles/',
+    'ResultFiles\\'
+  ];
+  
+  return managerFilePatterns.some(pattern => normalizedPath.includes(pattern));
+};
+
+// 경로에서 managerFileType 추출하는 크로스플랫폼 함수
+const extractManagerFileType = (filePath: string): string | null => {
+  if (!filePath) return null;
+  
+  const normalizedPath = filePath.replace(/\\/g, '/');
+  const pathParts = normalizedPath.split('/');
+  const resultFilesIndex = pathParts.findIndex(part => part === 'ResultFiles');
+  
+  if (resultFilesIndex !== -1 && resultFilesIndex + 1 < pathParts.length) {
+    return pathParts[resultFilesIndex + 1];
+  }
+  
+  return null;
+};
+
+// CustomerRequest 파일인지 확인하는 크로스플랫폼 함수
+const isCustomerFile = (filePath: string): boolean => {
+  if (!filePath) return false;
+  
+  const normalizedPath = filePath.replace(/\\/g, '/');
+  
+  const customerFilePatterns = [
+    '/CustomerRequest/',
+    '\\CustomerRequest\\',
+    'CustomerRequest/',
+    'CustomerRequest\\'
+  ];
+  
+  return customerFilePatterns.some(pattern => normalizedPath.includes(pattern));
+};
+
+interface AccessorySelectorProps {
+  accTypeKey: string;
+  accSelections: { [key: string]: { typeCode: string; makerCode: string; modelCode: string; specification: string; }; };
+  setAccSelections: React.Dispatch<React.SetStateAction<{
+    positioner: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    solenoid: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    limiter: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    airSupply: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    volumeBooster: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    airOperator: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    lockUp: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    snapActingRelay: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+  }>>;
+  accMakerList: any[];
+  accModelList: any[];
+}
+
+interface ValveData {
+  id: string;
+  tagNo: string;
+  qty: number;
+  order: number;
+  sheetID: number;
+  typeId: string;
+  fluid: {
+    medium: string;
+    fluid: string;
+    density: string;
+    molecular: string;
+    t1: { max: number; normal: number; min: number; };
+    p1: { max: number; normal: number; min: number; };
+    p2: { max: number; normal: number; min: number; };
+    dp: { max: number; normal: number; min: number; };
+    qm: { max: number; normal: number; min: number; unit: string; };
+    qn: { max: number; normal: number; min: number; unit: string; };
+    pressureUnit: string;
+    temperatureUnit: string;
+  };
+  body: {
+    type: string;
+    typeCode: string;
+    size: string;
+    sizeUnit: string;
+    materialBody: string;
+    materialTrim: string;
+    option: string;
+    rating: string;
+    ratingUnit: string;
+  };
+  actuator: {
+    type: string;
+    hw: string;
+  };
+  accessory: {
+    positioner: { type: string; exists: boolean; };
+    explosionProof: string;
+    transmitter: { type: string; exists: boolean; };
+    solenoidValve: boolean;
+    limitSwitch: boolean;
+    airSet: boolean;
+    volumeBooster: boolean;
+    airOperatedValve: boolean;
+    lockupValve: boolean;
+    snapActingRelay: boolean;
+  };
+  isQM: boolean;
+  isP2: boolean;
+  isN1: boolean;
+  isDensity: boolean;
+  isHW: boolean;
+}
+
+interface TypeData {
+  id: string;
+  name: string;
+  code: string;
+  count: number;
+  order: number;
+}
+
+interface BodyValveData {
+  valveSeries: string;
+  valveSeriesCode: string;
+}
+
+// 🔑 파일 관련 타입 추가
+interface EstimateAttachment {
+  attachmentID: number;
+  tempEstimateNo: string;
+  fileName: string;
+  filePath: string;
+  fileSize: number;
+  uploadDate: string;
+  uploadUserID: string | null;
+  managerFileType: string;
+}
+
+const EstimateDetailPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { tempEstimateNo } = useParams<{ tempEstimateNo: string }>();
+  
+  // 상태 관리
+  const [types, setTypes] = useState<TypeData[]>([]);
+  const [valves, setValves] = useState<ValveData[]>([]);
+  const [selectedValve, setSelectedValve] = useState<ValveData | null>(null);
+  const [selectedType, setSelectedType] = useState<string>('');
+  
+  // 마스터 데이터
+  const [bodyValveList, setBodyValveList] = useState<BodyValveData[]>([]);
+  const [bodySizeList, setBodySizeList] = useState<any[]>([]);
+  const [bodyMatList, setBodyMatList] = useState<any[]>([]);
+  const [trimMatList, setTrimMatList] = useState<any[]>([]);
+  const [trimOptionList, setTrimOptionList] = useState<any[]>([]);
+  const [bodyRatingList, setBodyRatingList] = useState<any[]>([]);
+  
+  // Step 3 마스터 데이터
+  const [bodyBonnetList, setBodyBonnetList] = useState<any[]>([]);
+  const [bodyConnectionList, setBodyConnectionList] = useState<any[]>([]);
+  const [trimTypeList, setTrimTypeList] = useState<any[]>([]);
+  const [trimSeriesList, setTrimSeriesList] = useState<any[]>([]);
+  const [trimPortSizeList, setTrimPortSizeList] = useState<any[]>([]);
+  const [trimFormList, setTrimFormList] = useState<any[]>([]);
+  const [actTypeList, setActTypeList] = useState<any[]>([]);
+  const [actSeriesList, setActSeriesList] = useState<any[]>([]);
+  const [actSizeList, setActSizeList] = useState<any[]>([]);
+  const [actHWList, setActHWList] = useState<any[]>([]);
+  const [accMakerList, setAccMakerList] = useState<any[]>([]);
+  const [accModelList, setAccModelList] = useState<any[]>([]);
+  
+  // 기타 데이터
+  const [customerRequirement, setCustomerRequirement] = useState(''); // 고객 요청사항
+  const [staffComment, setStaffComment] = useState(''); // 관리자 코멘트
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const [customerAttachments, setCustomerAttachments] = useState<any[]>([]); // 고객 요청 첨부파일
+  const [managerAttachments, setManagerAttachments] = useState<any[]>([]); // 관리 첨부파일
+  const [currentStatus, setCurrentStatus] = useState<string>('견적요청');
+  const [isReadOnly, setIsReadOnly] = useState(false); // 읽기 전용 상태 추가
+
+  // 🔑 파일 관리 상태 추가
+  const [managerFiles, setManagerFiles] = useState<EstimateAttachment[]>([]);
+  const [customerFiles, setCustomerFiles] = useState<EstimateAttachment[]>([]);
+  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+
+  // 🔑 PDF 업로드 관련 state 추가
+  const [selectedPdfFiles, setSelectedPdfFiles] = useState<{ [key: string]: File | null }>({
+    datasheet: null,
+    cvlist: null,
+    vllist: null,
+    singlequote: null,
+    multiquote: null
+  });
+
+  // 🔑 PDF 뷰어를 위한 state 추가
+  const [uploadedPdfUrls, setUploadedPdfUrls] = useState<{ [key: string]: string | null }>({
+    datasheet: null,
+    cvlist: null,
+    vllist: null,
+    singlequote: null,
+    multiquote: null
+  });
+
+  // 🔑 파일 입력 ref 추가
+  const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({
+    datasheet: null,
+    cvlist: null,
+    vllist: null,
+    singlequote: null,
+    multiquote: null
+  });
+
+  // ACC 섹션 선택 상태 관리
+  const [accSelections, setAccSelections] = useState<{
+    positioner: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    solenoid: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    limiter: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    airSupply: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    volumeBooster: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    airOperator: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    lockUp: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+    snapActingRelay: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
+  }>({ // 각 악세사리의 typeCode를 하드코딩된 값으로 초기화
+    positioner: { typeCode: 'A', makerCode: '', modelCode: '', specification: '' },
+    solenoid: { typeCode: 'B', makerCode: '', modelCode: '', specification: '' },
+    limiter: { typeCode: 'C', makerCode: '', modelCode: '', specification: '' },
+    airSupply: { typeCode: 'D', makerCode: '', modelCode: '', specification: '' },
+    volumeBooster: { typeCode: 'E', makerCode: '', modelCode: '', specification: '' },
+    airOperator: { typeCode: 'F', makerCode: '', modelCode: '', specification: '' },
+    lockUp: { typeCode: 'G', makerCode: '', modelCode: '', specification: '' },
+    snapActingRelay: { typeCode: 'H', makerCode: '', modelCode: '', specification: '' },
+  });
+
+  // 모든 상태 변수 선언 후, 렌더링 시 accSelections 상태 로깅
+  //console.log('EstimateDetailPage render - accSelections:', accSelections);
+
+  // TagNo별 사용자 선택값 임시 저장 (TagNo 변경 시 복원용)
+  const [tempSelections, setTempSelections] = useState<{
+    [sheetID: number]: {
+      body: any;
+      trim: any;
+      act: any;
+      acc: any;
+    };
+  }>({});
+
+  // 현재 선택값을 tempSelections에 저장하는 함수
+  const saveCurrentSelections = (sheetID: number) => {
+    if (sheetID) {
+      setTempSelections(prev => ({
+        ...prev,
+        [sheetID]: {
+          body: { ...bodySelections },
+          trim: { ...trimSelections },
+          act: { ...actSelections },
+          acc: { ...accSelections }
+        }
+      }));
+      //console.log(`${sheetID}의 선택값들을 임시 저장했습니다.`);
+    }
+  };
+
+  // valve 선택 시 호출되는 함수
+  const handleValveSelection = (valve: ValveData) => {
+    //console.log('선택된 valve의 sheetID:', valve.sheetID); // sheetID 로그 추가
+    
+    // 현재 선택된 valve가 있다면 선택값들을 저장
+    if (selectedValve) {
+      saveCurrentSelections(selectedValve.sheetID);
+    }
+    
+    // 새로운 valve 선택
+    setSelectedValve(valve);
+    
+    // 이 SheetID에 저장된 선택값이 있는지 확인
+    if (tempSelections[valve.sheetID]) {
+      // 저장된 선택값이 있음: 복원
+      //console.log(`${valve.sheetID}의 저장된 선택값을 복원합니다.`);
+      restoreTempSelections(valve.sheetID);
+    } else {
+      // 저장된 선택값이 없음: DB에서 초기 데이터 로드
+      //console.log(`${valve.sheetID}의 초기 데이터를 DB에서 로드합니다.`);
+      loadInitialSpecification(valve.sheetID);
+    }
+  };
+
+                    // Body 섹션 선택 상태 관리
+                  const [bodySelections, setBodySelections] = useState({
+                    bonnetType: '',
+                    bonnetTypeCode: '', // Code 값 추가
+                    materialBody: '',
+                    materialBodyCode: '', // Code 값 추가
+                    sizeBodyUnit: '',
+                    sizeBody: '',
+                    sizeBodyUnitCode: '', // Code 값 추가
+                    sizeBodyCode: '', // Code 값 추가
+                    ratingUnit: '',
+                    rating: '',
+                    ratingUnitCode: '', // Code 값 추가
+                    ratingCode: '', // Code 값 추가
+                    connection: '',
+                    connectionCode: '' // Code 값 추가
+                  });
+                
+                  // Trim 섹션 선택 상태 관리
+                  const [trimSelections, setTrimSelections] = useState({
+                    trimType: '',
+                    trimTypeCode: '', // Code 값 추가
+                    trimSeries: '',
+                    trimSeriesCode: '', // Code 값 추가
+                    materialTrim: '',
+                    materialTrimCode: '', // Code 값 추가
+                    sizePortUnit: '',
+                    sizePort: '',
+                    sizePortUnitCode: '', // Code 값 추가
+                    sizePortCode: '', // Code 값 추가
+                    form: '',
+                    formCode: '', // Code 값 추가
+                    option: '' // Trim Option 필드 추가
+                  });
+                
+                  // ACT 섹션 선택 상태 관리
+                  const [actSelections, setActSelections] = useState({
+                    actionType: '',
+                    actionTypeCode: '', // Code 값 추가
+                    series: '',
+                    seriesCode: '', // Code 값 추가
+                    size: '',
+                    sizeCode: '', // Code 값 추가
+                    hw: '',
+                    hwCode: '' // Code 값 추가
+                  });
+
+  // 상태 및 프로젝트 정보
+  const [projectName, setProjectName] = useState<string>('');
+
+  // BodyValveList 가져오기
+  const fetchBodyValveList = async () => {
+    try {
+      const response = await fetch('http://localhost:5135/api/estimate/body-valve-list');
+      const data = await response.json();
+      setBodyValveList(data);
+    } catch (error) {
+      console.error('BodyValveList 가져오기 실패:', error);
+    }
+  };
+
+  // ACT Size 목록 가져오기
+  const fetchActSizeList = async (actSeriesCode: string) => {
+    try {
+      console.log('fetchActSizeList 시작:', actSeriesCode);
+      const response = await fetch(`http://localhost:5135/api/masterdata/act/size?actSeriesCode=${actSeriesCode}`);
+      const data = await response.json();
+      console.log('ACT Size API 응답:', data);
+      setActSizeList(data || []);
+    } catch (error) {
+      console.error('ACT Size 목록 가져오기 실패:', error);
+      setActSizeList([]);
+    }
+  };
+
+  // 🔑 파일 관리 함수들 추가
+  const fetchManagerFiles = async () => {
+    if (!tempEstimateNo) return;
+    
+    try {
+      setIsLoadingFiles(true);
+      console.log('🔄 fetchManagerFiles 시작 - tempEstimateNo:', tempEstimateNo);
+      const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/attachments`);
+      console.log('📡 API 응답 상태:', response.status, response.ok);
+      
+      if (response.ok) {
+        const attachments = await response.json();
+        console.log('📥 API 응답 데이터:', attachments);
+        console.log('📥 API 응답 데이터 길이:', attachments.length);
+        
+        // 🔑 ResultFiles 경로의 모든 파일 가져오기 (엑셀 + PDF)
+        const allManagerFiles = attachments.filter((att: any) => {
+          const filePath = att.path || att.filePath;
+          const isManagerFileResult = filePath && isManagerFile(filePath);
+          console.log('🔍 파일 필터링 체크:', att.name || att.fileName, '경로:', filePath, '관리파일여부:', isManagerFileResult);
+          return isManagerFileResult;
+        }).map((att: any) => {
+          // 경로에서 managerFileType 추출 (크로스플랫폼)
+          const filePath = att.path || att.filePath;
+          att.managerFileType = extractManagerFileType(filePath);
+          console.log('🏷️ 추출된 managerFileType:', att.managerFileType);
+          return att;
+        });
+        
+        setManagerFiles(allManagerFiles);
+        console.log('✅ 관리자 파일 목록 로드 완료:', allManagerFiles.length, '개');
+        console.log('🔍 필터링된 관리 파일들:', allManagerFiles);
+      } else {
+        console.error('❌ API 응답 실패:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.error('관리자 파일 목록 조회 중 오류:', error);
+    } finally {
+      setIsLoadingFiles(false);
+    }
+  };
+
+  const fetchCustomerFiles = async () => {
+    if (!tempEstimateNo) return;
+    
+    try {
+      setIsLoadingFiles(true);
+      console.log('🔄 fetchCustomerFiles 시작 - tempEstimateNo:', tempEstimateNo);
+      const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/attachments`);
+      console.log('📡 API 응답 상태:', response.status, response.ok);
+      
+      if (response.ok) {
+        const attachments = await response.json();
+        console.log('📥 API 응답 데이터:', attachments);
+        console.log('📥 API 응답 데이터 길이:', attachments.length);
+        
+        // 🔑 NewEstimateRequestPage와 동일한 로직으로 수정
+        // 고객 파일은 ResultFiles가 아닌 경로에 있는 파일들
+        const customerFiles = attachments.filter((att: any) => {
+          const filePath = att.path || att.filePath;
+          const isCustomerFile = filePath && !isManagerFile(filePath);
+          console.log('🔍 파일 필터링 체크:', att.name || att.fileName, '경로:', filePath, '고객파일여부:', isCustomerFile);
+          return isCustomerFile;
+        });
+        
+        setCustomerFiles(customerFiles);
+        console.log('✅ 고객 파일 목록 로드 완료:', customerFiles.length, '개');
+        console.log('🔍 필터링된 고객 파일들:', customerFiles);
+      } else {
+        console.error('❌ API 응답 실패:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.error('고객 파일 목록 조회 중 오류:', error);
+    } finally {
+      setIsLoadingFiles(false);
+    }
+  };
+
+  const deleteFile = async (managerFileType: string) => {
+    if (!tempEstimateNo) return;
+    
+    if (!window.confirm('정말로 이 파일을 삭제하시겠습니까?')) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/files/${managerFileType}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        // 파일 목록 새로고침
+        await fetchManagerFiles();
+        alert('파일이 삭제되었습니다.');
+      } else {
+        alert('파일 삭제에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('파일 삭제 중 오류:', error);
+      alert('파일 삭제 중 오류가 발생했습니다.');
+    }
+  };
+
+  const downloadFile = async (filePath: string, fileName: string) => {
+    try {
+      // 🔑 파일 다운로드 API 수정 - 새로 추가된 API 사용
+      const response = await fetch(`http://localhost:5135/api/estimate/attachments/download?filePath=${encodeURIComponent(filePath)}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        // 🔑 다운로드 실패 시 상세 에러 정보 표시
+        const errorText = await response.text();
+        console.error('파일 다운로드 실패:', response.status, errorText);
+        alert(`파일 다운로드에 실패했습니다. (${response.status})\n${errorText}`);
+      }
+    } catch (error) {
+      console.error('파일 다운로드 중 오류:', error);
+      alert('파일 다운로드 중 오류가 발생했습니다.');
+    }
+  };
+
+  const getFileTypeDisplayName = (managerFileType: string) => {
+    const typeMap: { [key: string]: string } = {
+      'cvlist': 'CV List',
+      'vllist': 'VL List',
+      'datasheet': 'DataSheet',
+      'singlequote': '단품견적서',
+      'multiquote': '다수량견적서'
+    };
+    return typeMap[managerFileType] || managerFileType;
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString('ko-KR');
+  };
+
+  // 🔑 PDF 업로드 관련 함수들 추가
+  const handlePdfUpload = (event: React.ChangeEvent<HTMLInputElement>, fileType: string) => {
+    // 🔑 화면 이동 방지
+    event.preventDefault();
+    
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.type !== 'application/pdf') {
+        alert('PDF 파일만 업로드 가능합니다.');
+        return;
+      }
+      
+      // 🔑 상태 업데이트를 비동기로 처리하여 화면 이동 방지
+      setTimeout(() => {
+        setSelectedPdfFiles(prev => ({
+          ...prev,
+          [fileType]: file
+        }));
+      }, 0);
+    }
+  };
+
+  // 🔑 파일 선택을 위한 별도 함수 추가
+  const handleFileSelect = (fileType: string) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf';
+    input.style.display = 'none';
+    
+    input.onchange = (e) => {
+      const target = e.target as HTMLInputElement;
+      if (target.files && target.files[0]) {
+        const file = target.files[0];
+        if (file.type !== 'application/pdf') {
+          alert('PDF 파일만 업로드 가능합니다.');
+          return;
+        }
+        
+        setSelectedPdfFiles(prev => ({
+          ...prev,
+          [fileType]: file
+        }));
+      }
+    };
+    
+    document.body.appendChild(input);
+    input.click();
+    document.body.removeChild(input);
+  };
+
+                    // Body 섹션 이벤트 핸들러들
+                  const handleBodyChange = (field: string, value: string) => {
+                    setBodySelections(prev => {
+                      const newSelections = { ...prev, [field]: value };
+                      
+                      // Bonnet Type 변경 시 코드 값도 함께 업데이트
+                      if (field === 'bonnetType') {
+                        const selectedItem = bodyBonnetList.find(item => item.bonnetCode === value);
+                        if (selectedItem) {
+                          newSelections.bonnetTypeCode = selectedItem.bonnetCode;
+                        }
+                      }
+                      
+                      // Material Body 변경 시 코드 값도 함께 업데이트
+                      if (field === 'materialBody') {
+                        const selectedItem = bodyMatList.find(item => item.bodyMatCode === value);
+                        if (selectedItem) {
+                          newSelections.materialBodyCode = selectedItem.bodyMatCode;
+                        }
+                      }
+                      
+                      // Connection 변경 시 코드 값도 함께 업데이트
+                      if (field === 'connection') {
+                        const selectedItem = bodyConnectionList.find(item => item.connectionCode === value);
+                        if (selectedItem) {
+                          newSelections.connectionCode = selectedItem.connectionCode;
+                        }
+                      }
+                      
+                      // Unit이 변경되면 해당하는 값 초기화
+                      if (field === 'sizeBodyUnit') {
+                        newSelections.sizeBody = '';
+                        newSelections.sizeBodyCode = '';
+                      }
+                      if (field === 'ratingUnit') {
+                        newSelections.rating = '';
+                        newSelections.ratingCode = '';
+                      }
+                      
+                      return newSelections;
+                    });
+                  };
+
+                    // Trim 섹션 이벤트 핸들러들
+                  const handleTrimChange = (field: string, value: string) => {
+                    setTrimSelections(prev => {
+                      const newSelections = { ...prev, [field]: value };
+                      
+                      // Trim Type 변경 시 코드 값도 함께 업데이트
+                      if (field === 'trimType') {
+                        const selectedItem = trimTypeList.find(item => item.trimTypeCode === value);
+                        if (selectedItem) {
+                          newSelections.trimTypeCode = selectedItem.trimTypeCode;
+                        }
+                      }
+                      
+                      // Trim Series 변경 시 코드 값도 함께 업데이트
+                      if (field === 'trimSeries') {
+                        const selectedItem = trimSeriesList.find(item => item.trimSeriesCode === value);
+                        if (selectedItem) {
+                          newSelections.trimSeriesCode = selectedItem.trimSeriesCode;
+                        }
+                      }
+                      
+                      // Material Trim 변경 시 코드 값도 함께 업데이트
+                      if (field === 'materialTrim') {
+                        const selectedItem = trimMatList.find(item => item.trimMatCode === value);
+                        if (selectedItem) {
+                          newSelections.materialTrimCode = selectedItem.trimMatCode;
+                        }
+                      }
+                      
+                      // Form 변경 시 코드 값도 함께 업데이트
+                      if (field === 'form') {
+                        const selectedItem = trimFormList.find(item => item.trimFormCode === value);
+                        if (selectedItem) {
+                          newSelections.formCode = selectedItem.trimFormCode;
+                        }
+                      }
+                      
+                      // Unit이 변경되면 해당하는 값 초기화
+                      if (field === 'sizePortUnit') {
+                        newSelections.sizePort = '';
+                        newSelections.sizePortCode = '';
+                      }
+                      
+                      return newSelections;
+                    });
+                  };
+
+                    // ACT 섹션 이벤트 핸들러들
+                  const handleActChange = (field: string, value: string) => {
+                    //console.log('ACT Change:', field, value);
+                    setActSelections(prev => {
+                      const newSelections = { ...prev, [field]: value };
+                      
+                      // Action Type 변경 시 코드 값도 함께 업데이트
+                      if (field === 'actionType') {
+                        const selectedItem = actTypeList.find(item => item.actTypeCode === value);
+                        if (selectedItem) {
+                          newSelections.actionTypeCode = selectedItem.actTypeCode;
+                        }
+                      }
+                      
+                      // Series 변경 시 코드 값도 함께 업데이트
+                      if (field === 'series') {
+                        const selectedItem = actSeriesList.find(item => item.actSeriesCode === value);
+                        if (selectedItem) {
+                          newSelections.seriesCode = selectedItem.actSeriesCode;
+                        }
+                        
+                        newSelections.size = '';
+                        //console.log('Series 변경됨:', value);
+                        // Series가 선택되면 해당하는 Size 목록 가져오기
+                        if (value) {
+                          //console.log('fetchActSizeList 호출:', value);
+                          fetchActSizeList(value);
+                        } else {
+                          //console.log('actSizeList 초기화');
+                          setActSizeList([]);
+                        }
+                      }
+                      
+                      // Size 변경 시 코드 값도 함께 업데이트
+                      if (field === 'size') {
+                        const selectedItem = actSizeList.find(item => item.actSizeCode === value);
+                        if (selectedItem) {
+                          newSelections.sizeCode = selectedItem.actSizeCode;
+                        }
+                      }
+                      
+                      // H.W 변경 시 코드 값도 함께 업데이트
+                      if (field === 'hw') {
+                        const selectedItem = actHWList.find(item => item.hwCode === value);
+                        if (selectedItem) {
+                          newSelections.hwCode = selectedItem.hwCode;
+                        }
+                      }
+                      
+                      return newSelections;
+                    });
+                  };
+
+
+
+  // 악세사리 데이터 가져오기 (재시도 로직 포함)
+  const fetchAccessoryData = async (retryCount = 0): Promise<boolean> => {
+    const maxRetries = 3;
+    
+    try {
+      console.log(`악세사리 데이터 로딩 시도 ${retryCount + 1}/${maxRetries + 1}...`);
+      
+      const accSearchRes = await fetch('http://localhost:5135/api/masterdata/acc/search');
+      
+      if (accSearchRes.ok) {
+        const accSearchData = await accSearchRes.json();
+        console.log('악세사리 검색 데이터 로딩 성공:', accSearchData.length, '개');
+        
+        // 메이커와 모델 데이터 분리
+        const allAccMakerData: any[] = [];
+        const allAccModelData: any[] = [];
+        
+        accSearchData.forEach((item: any) => {
+          // 메이커 데이터 (중복 제거)
+          const existingMaker = allAccMakerData.find(maker => 
+            maker.accMakerCode === item.accMakerCode && maker.accTypeCode === item.accTypeCode
+          );
+          if (!existingMaker) {
+            allAccMakerData.push({
+              accMakerCode: item.accMakerCode,
+              accMakerName: item.accMakerName,
+              accTypeCode: item.accTypeCode
+            });
+          }
+          
+          // 모델 데이터
+          allAccModelData.push({
+            accMakerCode: item.accMakerCode,
+            accModelCode: item.accModelCode,
+            accModelName: item.accModelName,
+            accSize: item.accSize,
+            accTypeCode: item.accTypeCode
+          });
+        });
+        
+        setAccMakerList(allAccMakerData);
+        setAccModelList(allAccModelData);
+        console.log('악세사리 데이터 설정 완료 - 메이커:', allAccMakerData.length, '개, 모델:', allAccModelData.length, '개');
+        
+        // 악세사리 데이터 로드 완료 후 accSelections 초기화
+        const initialAccSelections = {
+          positioner: { typeCode: 'Positioner', makerCode: '', modelCode: '', specification: '' },
+          solenoid: { typeCode: 'Solenoid', makerCode: '', modelCode: '', specification: '' },
+          limiter: { typeCode: 'Limit', makerCode: '', modelCode: '', specification: '' },
+          airSupply: { typeCode: 'Airset', makerCode: '', modelCode: '', specification: '' },
+          volumeBooster: { typeCode: 'Volume', makerCode: '', modelCode: '', specification: '' },
+          airOperator: { typeCode: 'Airoperate', makerCode: '', modelCode: '', specification: '' },
+          lockUp: { typeCode: 'Lockup', makerCode: '', modelCode: '', specification: '' },
+          snapActingRelay: { typeCode: 'Snapacting', makerCode: '', modelCode: '', specification: '' },
+        };
+        setAccSelections(initialAccSelections);
+        
+        return true; // 성공
+      } else {
+        console.error('악세사리 검색 API 응답 실패:', accSearchRes.status, accSearchRes.statusText);
+        return false; // 실패
+      }
+    } catch (error) {
+      console.error('악세사리 검색 데이터 로드 실패:', error);
+      return false; // 실패
+    }
+  };
+
+  // 마스터 데이터 가져오기
+  const fetchMasterData = async () => {
+    try {
+      // Step 1, 2 마스터 데이터 (EstimateController)
+      const [sizeRes, matRes, trimMatRes, optionRes, ratingRes] = await Promise.all([
+        fetch('http://localhost:5135/api/estimate/body-size-list'),
+        fetch('http://localhost:5135/api/estimate/body-mat-list'),
+        fetch('http://localhost:5135/api/estimate/trim-mat-list'),
+        fetch('http://localhost:5135/api/estimate/trim-option-list'),
+        fetch('http://localhost:5135/api/estimate/body-rating-list')
+      ]);
+      
+      const [sizeData, matData, trimMatData, optionData, ratingData] = await Promise.all([
+        sizeRes.json(),
+        matRes.json(),
+        trimMatRes.json(),
+        optionRes.json(),
+        ratingRes.json()
+      ]);
+      
+      setBodySizeList(sizeData || []);
+      setBodyMatList(matData || []);
+      setTrimMatList(trimMatData || []);
+      setTrimOptionList(optionData || []);
+      setBodyRatingList(ratingData || []);
+      //console.log('BodyRatingList 로드됨:', ratingData); // 디버깅 로그 추가
+
+      // Step 3 마스터 데이터 (MasterDataController)
+      const [bodyBonnetRes, bodyConnectionRes, trimTypeRes, trimSeriesRes, trimPortSizeRes, trimFormRes, 
+            actTypeRes, actSeriesRes, actHWRes] = await Promise.all([
+        fetch('http://localhost:5135/api/masterdata/body/bonnet'),
+        fetch('http://localhost:5135/api/masterdata/body/connection'),
+        fetch('http://localhost:5135/api/masterdata/trim-type'),
+        fetch('http://localhost:5135/api/masterdata/trim/series'),
+        fetch('http://localhost:5135/api/masterdata/trim/port-size'),
+        fetch('http://localhost:5135/api/masterdata/trim/form'),
+        fetch('http://localhost:5135/api/masterdata/act/type'),
+        fetch('http://localhost:5135/api/masterdata/act/series'),
+        fetch('http://localhost:5135/api/masterdata/act/hw')
+      ]);
+
+      // 각 API 응답을 개별적으로 처리하여 에러 발생 시에도 다른 데이터는 로드할 수 있도록 함
+      let bodyBonnetData = [], bodyConnectionData = [], trimTypeData = [], trimSeriesData = [], 
+          trimPortSizeData = [], trimFormData = [], actTypeData = [], actSeriesData = [], 
+          actHWData = [];
+
+      try {
+        bodyBonnetData = await bodyBonnetRes.json();
+        //console.log('Body Bonnet 데이터 로드 성공:', bodyBonnetData.length);
+      } catch (e) {
+        console.error('Body Bonnet 데이터 파싱 실패:', e);
+      }
+
+      try {
+        bodyConnectionData = await bodyConnectionRes.json();
+        //console.log('Body Connection 데이터 로드 성공:', bodyConnectionData.length);
+      } catch (e) {
+        console.error('Body Connection 데이터 파싱 실패:', e);
+      }
+
+      try {
+        trimTypeData = await trimTypeRes.json();
+        //console.log('Trim Type 데이터 로드 성공:', trimTypeData.length);
+      } catch (e) {
+        console.error('Trim Type 데이터 파싱 실패:', e);
+      }
+
+      try {
+        trimSeriesData = await trimSeriesRes.json();
+        //console.log('Trim Series 데이터 로드 성공:', trimSeriesData.length);
+      } catch (e) {
+        console.error('Trim Series 데이터 파싱 실패:', e);
+      }
+
+      try {
+        trimPortSizeData = await trimPortSizeRes.json();
+        //console.log('Trim Port Size 데이터 로드 성공:', trimPortSizeData.length);
+      } catch (e) {
+        console.error('Trim Port Size 데이터 파싱 실패:', e);
+      }
+
+      try {
+        trimFormData = await trimFormRes.json();
+        //console.log('Trim Form 데이터 로드 성공:', trimFormData.length);
+      } catch (e) {
+        console.error('Trim Form 데이터 파싱 실패:', e);
+      }
+
+      try {
+        actTypeData = await actTypeRes.json();
+        //console.log('Act Type 데이터 로드 성공:', actTypeData.length);
+      } catch (e) {
+        console.error('Act Type 데이터 파싱 실패:', e);
+      }
+
+      try {
+        actSeriesData = await actSeriesRes.json();
+        //console.log('Act Series 데이터 로드 성공:', actSeriesData.length);
+      } catch (e) {
+        console.error('Act Series 데이터 파싱 실패:', e);
+      }
+
+      try {
+        actHWData = await actHWRes.json();
+        //console.log('Act HW 데이터 로드 성공:', actHWData.length);
+      } catch (e) {
+        console.error('Act HW 데이터 파싱 실패:', e);
+      }
+
+
+
+      // 악세사리 데이터 로딩은 별도 함수로 분리하여 재시도 가능하도록 함
+      await fetchAccessoryData();
+
+
+
+      setBodyBonnetList(bodyBonnetData || []);
+      setBodyConnectionList(bodyConnectionData || []);
+      setTrimTypeList(trimTypeData || []);
+      setTrimSeriesList(trimSeriesData || []);
+      setTrimPortSizeList(trimPortSizeData || []);
+      setTrimFormList(trimFormData || []);
+      setActTypeList(actTypeData || []);
+      setActSeriesList(actSeriesData || []);
+      setActHWList(actHWData || []);
+
+    } catch (error) {
+      console.error('마스터 데이터 가져오기 실패:', error);
+      
+      // 개별 API 응답 상태 확인을 위한 로깅 추가
+      //console.log('마스터 데이터 로딩 상태:');
+      //console.log('- Body Size:', bodySizeList.length);
+      //console.log('- Body Material:', bodyMatList.length);
+      //console.log('- Trim Material:', trimMatList.length);
+      //
+      
+      // 에러 발생 시 빈 배열로 설정
+      setBodySizeList([]);
+      setBodyMatList([]);
+      setTrimMatList([]);
+      setTrimOptionList([]);
+      setBodyRatingList([]);
+      setBodyBonnetList([]);
+      setBodyConnectionList([]);
+      setTrimTypeList([]);
+      setTrimSeriesList([]);
+      setTrimPortSizeList([]);
+      setTrimFormList([]);
+      setActTypeList([]);
+      setActSeriesList([]);
+      setActHWList([]);
+      setAccMakerList([]);
+      setAccModelList([]);
+    }
+  };
+
+  // 품번 생성 함수 - 섹션별로 구분
+  const generatePartNumber = useMemo(() => {
+    try {
+      // BODY 섹션 (6자리) - 코드 사용
+      const bodySection = [
+        bodySelections.bonnetTypeCode || '0',
+        '2', // valveSeries 기본값
+        bodySelections.materialBodyCode || '0',
+        bodySelections.sizeBodyCode || '0',
+        bodySelections.ratingCode || '0',
+        bodySelections.connectionCode || '0'
+      ].join('');
+      
+      // TRIM 섹션 (6자리) - 코드 사용
+      const trimSection = [
+        trimSelections.trimTypeCode || '0',
+        trimSelections.trimSeriesCode || '0',
+        trimSelections.materialTrimCode || '0',
+        trimSelections.sizePortCode || '0',
+        trimSelections.sizePortCode || '0', // 중복
+        trimSelections.formCode || '0'
+      ].join('');
+      
+      // ACT 섹션 (4자리) - 코드 사용
+      const actSection = [
+        actSelections.actionTypeCode || '0',
+        actSelections.seriesCode || '0',
+        actSelections.sizeCode || '0',
+        actSelections.hwCode || '0'
+      ].join('');
+      
+      // ACC 섹션 (11자리)
+      const accSection = [
+        accSelections.positioner.makerCode || '0',
+        accSelections.positioner.modelCode || '0',
+        accSelections.solenoid.makerCode || '0',
+        accSelections.solenoid.modelCode || '0',
+        accSelections.limiter.makerCode || '0',
+        accSelections.limiter.modelCode || '0',
+        accSelections.airSupply.modelCode || '0',
+        accSelections.volumeBooster.modelCode || '0',
+        accSelections.airOperator.modelCode || '0',
+        accSelections.lockUp.modelCode || '0',
+        accSelections.snapActingRelay.modelCode || '0'
+      ].join('');
+      
+      // 섹션을 '-'로 구분하여 반환
+      return `${bodySection}-${trimSection}-${actSection}-${accSection}`;
+      
+    } catch (error) {
+      console.error('품번 생성 중 오류:', error);
+      return '000000-000000-0000-00000000000';
+    }
+  }, [bodySelections, trimSelections, actSelections, accSelections]);
+
+  // 기존 데이터 로드
+  const loadExistingData = useCallback(async () => {
+    if (!tempEstimateNo) return;
+    
+    //console.log('현재 tempEstimateNo:', tempEstimateNo); // tempEstimateNo 로그 추가
+    
+    try {
+      // 현재 로그인한 사용자 정보 가져오기
+      const userStr = localStorage.getItem('user');
+      const currentUser = userStr ? JSON.parse(userStr) : null;
+
+      // currentUserId는 임시로 'admin' 사용 (실제로는 로그인된 사용자 ID를 사용해야 함)
+      const response = await getEstimateDetail(tempEstimateNo, currentUser?.userId || 'admin'); // 실제 사용자 ID 사용
+      const data = response;
+      
+      //console.log('견적 상세 데이터:', data);
+      
+      // 프로젝트명 설정
+      if (data.estimateSheet && data.estimateSheet.project) {
+        setProjectName(data.estimateSheet.project);
+      }
+      
+      // 현재 상태 설정
+      if (data.estimateSheet && data.estimateSheet.statusText) {
+        //console.log('API 응답의 StatusText:', data.estimateSheet.statusText); // 이 라인 추가
+        setCurrentStatus(data.estimateSheet.statusText);
+      } else {
+        //console.log('API 응답에 estimateSheet.statusText가 없거나 비어있습니다.'); // 이 라인 추가
+      }
+      
+      // 읽기 전용 상태 설정
+      const isStatusThree = data.estimateSheet?.status === 3; // 상태가 3 (견적처리중)인지
+      const isCurrentUserManager = currentUser?.userId === data.estimateSheet?.managerID; // 현재 사용자가 담당자인지
+      
+      const shouldBeReadOnly = !(isStatusThree && isCurrentUserManager); // 둘 다 참일 때만 false (수정 가능)
+      setIsReadOnly(shouldBeReadOnly);
+      //console.log('EstimateDetailPage isReadOnly 설정됨:', shouldBeReadOnly);
+      //console.log('  status:', data.estimateSheet?.status, '(3이면 견적처리중)');
+      //console.log('  managerID:', data.estimateSheet?.managerID);
+      //console.log('  currentUser.userId:', currentUser?.userId);
+      
+      // EstimateRequest 데이터를 기반으로 types와 valves 설정
+      if (data.estimateRequests && data.estimateRequests.length > 0) {
+        // Type 정보 설정
+        const typeMap = new Map<string, { count: number; order: number }>();
+        
+        data.estimateRequests.forEach((req: any) => {
+          const valveType = req.valveType;
+          if (typeMap.has(valveType)) {
+            typeMap.get(valveType)!.count += req.tagNos.reduce((sum: number, tag: any) => sum + tag.qty, 0);
+          } else {
+            const totalQty = req.tagNos.reduce((sum: number, tag: any) => sum + tag.qty, 0);
+            typeMap.set(valveType, { count: totalQty, order: typeMap.size + 1 });
+          }
+        });
+        
+        const typesData = Array.from(typeMap.entries()).map(([code, info]) => {
+          // bodyValveList가 로드되지 않은 경우를 대비하여 기본값 설정
+          const valveInfo = bodyValveList.find(v => v.valveSeriesCode === code);
+          return {
+            id: code,
+            name: valveInfo ? valveInfo.valveSeries : `Valve Type ${code}`,
+            code: code,
+            count: info.count,
+            order: info.order
+          };
+        });
+        
+        setTypes(typesData);
+        
+        // Valve 정보 설정 - TagNoDetailDto를 기반으로 변환
+        const valvesData: ValveData[] = [];
+        data.estimateRequests.forEach((req: any) => {
+          req.tagNos.forEach((tag: any) => {
+            // Body Type 이름 가져오기
+            const valveInfo = bodyValveList.find(v => v.valveSeriesCode === req.valveType);
+            const bodyTypeName = valveInfo ? valveInfo.valveSeries : `Valve Type ${req.valveType}`;
+            
+            // Rating Unit 가져오기 (bodyRatingList에서 찾기)
+            const ratingInfo = bodyRatingList.find(r => r.ratingCode === tag.bodyRating);
+            const ratingUnit = ratingInfo ? ratingInfo.ratingUnit : '';
+            
+            valvesData.push({
+              id: `${tag.sheetID}`,
+              tagNo: tag.tagNo,
+              qty: tag.qty,
+              order: tag.sheetID,
+              sheetID: tag.sheetID,
+              typeId: req.valveType,
+              fluid: {
+                medium: tag.medium || '',
+                fluid: tag.fluid || '',
+                density: tag.density || '',
+                molecular: tag.molecularWeight || '',
+                t1: { max: tag.inletTemperatureQ || 0, normal: tag.inletTemperatureNorQ || 0, min: tag.inletTemperatureMinQ || 0 },
+                p1: { max: tag.inletPressureMaxQ || 0, normal: tag.inletPressureNorQ || 0, min: tag.inletPressureMinQ || 0 },
+                p2: { max: tag.outletPressureMaxQ || 0, normal: tag.outletPressureNorQ || 0, min: tag.outletPressureMinQ || 0 },
+                dp: { max: tag.differentialPressureMaxQ || 0, normal: tag.differentialPressureNorQ || 0, min: tag.differentialPressureMinQ || 0 },
+                qm: { max: tag.qmMax || 0, normal: tag.qmNor || 0, min: tag.qmMin || 0, unit: tag.qmUnit || '' },
+                qn: { max: tag.qnMax || 0, normal: tag.qnNor || 0, min: tag.qnMin || 0, unit: tag.qnUnit || '' },
+                pressureUnit: tag.pressureUnit || '',
+                temperatureUnit: tag.temperatureUnit || ''
+              },
+              body: {
+                type: bodyTypeName, // Body Type 이름 설정
+                typeCode: req.valveType || '',
+                size: tag.bodySize || '',
+                sizeUnit: tag.bodySizeUnit || '',
+                materialBody: tag.bodyMat || '',
+                materialTrim: tag.trimMat || '',
+                option: tag.trimOption || '',
+                rating: tag.bodyRating || '',
+                ratingUnit: ratingUnit // Rating Unit 설정
+              },
+              actuator: {
+                type: tag.actType || '',
+                hw: tag.isHW ? 'Yes' : 'No'
+              },
+              accessory: {
+                positioner: { type: tag.positionerType || '', exists: tag.isPositioner || false },
+                explosionProof: tag.explosionProof || '',
+                transmitter: { type: tag.transmitterType || '', exists: !!tag.transmitterType },
+                solenoidValve: tag.isSolenoid || false,
+                limitSwitch: tag.isLimSwitch || false,
+                airSet: tag.isAirSet || false,
+                volumeBooster: tag.isVolumeBooster || false,
+                airOperatedValve: tag.isAirOperated || false,
+                lockupValve: tag.isLockUp || false,
+                snapActingRelay: tag.isSnapActingRelay || false
+              },
+              isQM: tag.isQM || false,
+              isP2: tag.isP2 || false,
+              isN1: false, // EstimateRequestDetailDto에는 isN1이 없음
+              isDensity: tag.isDensity || false,
+              isHW: tag.isHW || false
+            });
+          });
+        });
+        
+        setValves(valvesData);
+        
+        // 첫 번째 valve를 기본 선택
+        // if (valvesData.length > 0) {
+        //   setSelectedValve(valvesData[0]);
+        // }
+      }
+      
+      // 기타 요청사항 설정
+      if (data.estimateSheet && data.estimateSheet.customerRequirement) {
+        setCustomerRequirement(data.estimateSheet.customerRequirement);
+      }
+      
+      // 관리자 코멘트 설정
+      if (data.estimateSheet && data.estimateSheet.staffComment) {
+        setStaffComment(data.estimateSheet.staffComment);
+      }
+      
+      // 첨부파일 설정 - 고객 요청과 관리 첨부파일 분리
+      if (data.attachments && data.attachments.length > 0) {
+        const customerFiles: any[] = [];
+        const managerFiles: any[] = [];
+        
+        data.attachments.forEach((att: any) => {
+          if (att.filePath && isCustomerFile(att.filePath)) {
+            customerFiles.push(att);
+          } else if (att.filePath && isManagerFile(att.filePath)) {
+            managerFiles.push(att);
+          }
+        });
+        
+        setCustomerAttachments(customerFiles);
+        setManagerAttachments(managerFiles);
+        
+        // 기존 호환성 유지
+        const fileList = data.attachments.map((att: any) => ({
+          name: att.fileName || 'Unknown',
+          size: att.fileSize || 0
+        } as any));
+        setAttachments(fileList);
+      }
+      
+    } catch (error) {
+      console.error('기존 데이터 로드 실패:', error);
+    }
+  }, [tempEstimateNo, bodyValveList, bodyRatingList]);
+
+  // 상태 변경 처리
+  const handleStatusChange = async (newStatus: string) => {
+    try {
+      // 상태 텍스트를 숫자 코드로 변환하는 헬퍼 함수
+      const getStatusCodeFromText = (statusText: string): number => {
+        switch (statusText) {
+          case '임시저장': return 1;
+          case '견적요청': return 2;
+          case '견적처리중': return 3;
+          case '견적완료': return 4;
+          case '주문': return 5;
+          default: return -1; // 알 수 없는 상태
+        }
+      };
+
+      const newStatusCode = getStatusCodeFromText(newStatus);
+      
+      // 현재 사용자 정보와 견적 정보 가져오기
+      const userStr = localStorage.getItem('user');
+      const currentUser = userStr ? JSON.parse(userStr) : null;
+      
+      // 견적 상세 정보 가져오기 (isReadOnly 계산을 위해)
+      if (!tempEstimateNo) {
+        throw new Error('tempEstimateNo가 없습니다.');
+      }
+      const estimateResponse = await getEstimateDetail(tempEstimateNo, currentUser?.userId || 'admin');
+      const estimateData = estimateResponse;
+
+      // 견적요청 상태(2)에서만 견적처리중(3)으로 변경 가능
+      // if (currentStatusCode === 2 && newStatusCode === 3) {
+        // 상태 변경 API 호출
+        const response = await fetch(`/api/estimate/sheets/${tempEstimateNo}/status`, { // API 경로 수정
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: newStatusCode }), // 숫자 상태 코드로 전송
+        });
+
+        if (response.ok) {
+          setCurrentStatus(newStatus); // UI 상태 업데이트 (문자열로 유지)
+          
+          // 상태 변경 후 isReadOnly 재계산
+          const newStatusCode = getStatusCodeFromText(newStatus);
+          const isStatusThree = newStatusCode === 3; // 상태가 3 (견적처리중)인지
+          const isCurrentUserManager = currentUser?.userId === estimateData.estimateSheet?.managerID; // 현재 사용자가 담당자인지
+          const shouldBeReadOnly = !(isStatusThree && isCurrentUserManager); // 둘 다 참일 때만 false (수정 가능)
+          setIsReadOnly(shouldBeReadOnly);
+          alert('상태가 성공적으로 변경되었습니다.'); // 메시지 일반화
+          // 상태 변경 후 상세 정보를 다시 불러오는 로직이 필요할 수 있습니다.
+          // loadEstimateDetail(); // 상세 정보를 불러오는 함수가 있다면 호출
+        } else {
+          // 응답 본문을 읽어서 더 자세한 오류 메시지 확인
+          const errorData = await response.json();
+          throw new Error(errorData.message || '상태 변경에 실패했습니다.');
+        }
+      // } else { // 이 else 블록도 제거합니다.
+      //   alert('견적요청 상태에서만 견적처리중으로 변경할 수 있습니다.');
+      // }
+    } catch (error: any) {
+      console.error('상태 변경 실패:', error.message);
+      alert(`상태 변경에 실패했습니다: ${error.message}`);
+    }
+  };
+
+  // 첨부파일 관련 함수들
+  const handleDownloadFile = async (file: any, type: 'customer' | 'manager') => {
+    try {
+      if (type === 'customer' && !file.fileName.toLowerCase().endsWith('.pdf')) {
+        alert('고객은 PDF 파일만 다운로드할 수 있습니다.');
+        return;
+      }
+      
+      // 파일 다운로드 API 호출
+              const response = await fetch(`/api/estimate/attachments/${file.attachmentID}/download`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file.fileName;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        alert('파일 다운로드에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('파일 다운로드 오류:', error);
+      alert('파일 다운로드 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleUploadManagerFile = async (fileType: string) => {
+    const file = selectedPdfFiles[fileType];
+    if (!file) {
+      alert('업로드할 PDF 파일을 선택해주세요.');
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // 🔑 쿼리 파라미터로 전송하도록 수정
+      const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/attachments?uploadUserID=admin&fileType=manager&managerFileType=${fileType}`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (response.ok) {
+        alert('PDF 파일이 성공적으로 업로드되었습니다.');
+        
+        // 🔑 파일 목록 새로고침 - 더 확실하게 처리
+        console.log('🔄 파일 업로드 완료, 목록 새로고침 시작');
+        await fetchManagerFiles();
+        await fetchCustomerFiles();
+        
+        // 🔑 추가로 잠시 후 한 번 더 새로고침 (백엔드 처리 지연 고려)
+        setTimeout(async () => {
+          console.log('🔄 지연 새로고침 실행');
+          await fetchManagerFiles();
+          await fetchCustomerFiles();
+        }, 1000);
+        
+        // 🔑 엑셀 파일도 함께 새로고침 (백엔드 교체 로직 문제 해결)
+        setTimeout(async () => {
+          console.log('🔄 엑셀 파일 새로고침 실행');
+          await fetchManagerFiles();
+          await fetchCustomerFiles();
+        }, 2000);
+        
+        // 선택된 파일 초기화
+        setSelectedPdfFiles(prev => ({
+          ...prev,
+          [fileType]: null
+        }));
+        
+        // 파일 입력 초기화 - 해당 ID의 입력만 초기화
+        const fileInput = document.getElementById(`pdf-${fileType}`) as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+      } else {
+        const error = await response.json();
+        alert(`PDF 업로드 실패: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('PDF 업로드 중 오류:', error);
+      alert('PDF 업로드 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleGenerateDatasheet = async () => {
+    try {
+      // TODO: 사용자가 나중에 제공할 Datasheet 생성 로직
+      alert('Datasheet 생성 기능은 준비 중입니다.');
+    } catch (error) {
+      console.error('Datasheet 생성 오류:', error);
+      alert('Datasheet 생성 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleGenerateFile = async (managerFileType: string) => {
+    try {
+      let apiEndpoint = '';
+      let fileTypeName = '';
+      
+      switch (managerFileType) {
+        case 'cvlist':
+          apiEndpoint = `http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/generate-cv`;
+          fileTypeName = 'CV 리스트';
+          break;
+        case 'vllist':
+          apiEndpoint = `http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/generate-vl`;
+          fileTypeName = 'VL 리스트';
+          break;
+        case 'datasheet':
+          apiEndpoint = `http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/generate-datasheet`;
+          fileTypeName = 'DataSheet';
+          break;
+        case 'singlequote':
+          apiEndpoint = `http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/generate-single-quote`;
+          fileTypeName = '단품견적서';
+          break;
+        case 'multiquote':
+          apiEndpoint = `http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/generate-multi-quote`;
+          fileTypeName = '다수량견적서';
+          break;
+        default:
+          alert('지원하지 않는 파일 타입입니다.');
+          return;
+      }
+      
+      console.log(`${fileTypeName} 생성 시작:`, tempEstimateNo);
+      
+      const response = await fetch(apiEndpoint, {
+        method: 'POST'
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        alert(`${fileTypeName}가 성공적으로 생성되었습니다!\n\n생성된 파일:\n${result.fileName}`);
+        console.log(`${fileTypeName} 생성 성공:`, result);
+        
+        // 🔑 파일 생성 완료 후 자동 새로고침 추가
+        await fetchManagerFiles();
+        await fetchCustomerFiles();
+        
+        // 기존 첨부파일 목록도 새로고침
+        loadExistingData();
+      } else {
+        const error = await response.json();
+        alert(`${fileTypeName} 생성 실패: ${error.message}`);
+        console.error(`${fileTypeName} 생성 실패:`, error);
+      }
+    } catch (error) {
+      console.error('파일 생성 오류:', error);
+      alert('파일 생성 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleDeleteManagerFile = async (file: any) => {
+    try {
+      if (window.confirm('정말로 이 파일을 삭제하시겠습니까?')) {
+        const response = await fetch(`/api/estimate/attachments/${file.attachmentID}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.ok) {
+          alert('파일이 성공적으로 삭제되었습니다.');
+          loadExistingData(); // 첨부파일 목록 새로고침
+        } else {
+          alert('파일 삭제에 실패했습니다.');
+        }
+      }
+    } catch (error) {
+      console.error('파일 삭제 오류:', error);
+      alert('파일 삭제 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 사양 저장 함수
+  const handleSaveSpecification = useCallback(async () => {
+    try {
+      if (!selectedValve) {
+        alert('저장할 밸브를 선택해주세요.');
+        return;
+      }
+
+      const specificationData = {
+        valveId: selectedValve.body.typeCode,
+        body: {
+          bonnetType: bodySelections.bonnetType || '',
+          materialBody: bodySelections.materialBody || '',
+          // materialTrim: trimSelections.materialTrim || '', // Body에서 Trim으로 이동
+          // option: selectedValve.body.option || '', // Trim으로 이동 및 trimSelections.option 사용
+          rating: bodySelections.ratingCode || '', // ratingCode 사용 (Code 값)
+          ratingUnit: bodySelections.ratingUnitCode || '', // ratingUnitCode 사용 (Code 값)
+          connection: bodySelections.connection || '',
+          sizeUnit: bodySelections.sizeBodyUnitCode || '', // sizeBodyUnitCode 사용 (Code 값)
+          size: bodySelections.sizeBodyCode || '' // sizeBodyCode 사용 (Code 값)
+        },
+        trim: {
+          type: trimSelections.trimType || '',
+          series: trimSelections.trimSeries || '',
+          portSize: trimSelections.sizePortCode || '', // sizePortCode 사용 (Code 값)
+          portSizeUnit: trimSelections.sizePortUnitCode || '', // sizePortUnitCode 사용 (Code 값)
+          form: trimSelections.form || '',
+          materialTrim: trimSelections.materialTrim || '', // Trim에 materialTrim 추가
+          option: trimSelections.option || '' // Trim에 option 값 추가
+        },
+        actuator: {
+          type: actSelections.actionType || '',
+          series: actSelections.series || '',
+          size: actSelections.size || '',
+          hw: actSelections.hw || ''
+        },
+        accessories: {
+          PosCode: accSelections.positioner?.modelCode || null,
+          PosMakerCode: accSelections.positioner?.makerCode || null,
+          SolCode: accSelections.solenoid?.modelCode || null,
+          SolMakerCode: accSelections.solenoid?.makerCode || null,
+          LimCode: accSelections.limiter?.modelCode || null,
+          LimMakerCode: accSelections.limiter?.makerCode || null,
+          ASCode: accSelections.airSupply?.modelCode || null,
+          ASMakerCode: accSelections.airSupply?.makerCode || null,
+          VolCode: accSelections.volumeBooster?.modelCode || null,
+          VolMakerCode: accSelections.volumeBooster?.makerCode || null,
+          AirOpCode: accSelections.airOperator?.modelCode || null,
+          AirOpMakerCode: accSelections.airOperator?.makerCode || null,
+          LockupCode: accSelections.lockUp?.modelCode || null,
+          LockupMakerCode: accSelections.lockUp?.makerCode || null,
+          SnapActCode: accSelections.snapActingRelay?.modelCode || null,
+          SnapActMakerCode: accSelections.snapActingRelay?.makerCode || null,
+        },
+      };
+
+      // 디버깅용 로그 추가
+      console.log('선택된 밸브 정보:', selectedValve);
+      console.log('전송할 사양 데이터:', specificationData);
+      console.log('=== 디버깅 상세 정보 ===');
+      console.log('bodySelections:', bodySelections);
+      console.log('trimSelections:', trimSelections);
+      console.log('=== 전송될 데이터 상세 ===');
+      console.log('Body Size:', bodySelections.sizeBodyCode);
+      console.log('Body SizeUnit:', bodySelections.sizeBodyUnitCode);
+      console.log('Body Rating:', bodySelections.ratingCode);
+      console.log('Trim PortSize:', trimSelections.sizePortCode);
+      console.log('Trim PortSizeUnit:', trimSelections.sizePortUnitCode);
+
+      const saveSpecDto = {
+        ...specificationData,
+        Accessories: specificationData.accessories,
+      };
+
+      console.log('사양 저장 요청 DTO:', saveSpecDto); // DTO 전체 로그
+      console.log('악세사리 전송 데이터 (handleSaveSpecification):', saveSpecDto.Accessories); // 악세사리 데이터만 상세 로그
+
+      try {
+        const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/requests/${selectedValve.sheetID}/specification`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(saveSpecDto),
+        });
+
+        if (response.ok) {
+          alert('사양이 성공적으로 저장되었습니다.');
+        } else {
+          alert('사양 저장에 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('사양 저장 중 오류 발생:', error);
+        alert('사양 저장 중 오류가 발생했습니다.');
+      }
+    } catch (error) {
+      console.error('사양 저장 중 오류 발생:', error);
+      alert('사양 저장 중 오류가 발생했습니다.');
+    }
+  }, [selectedValve, bodySelections, trimSelections, actSelections, accSelections, tempEstimateNo]);
+
+  const AccessorySelector: React.FC<AccessorySelectorProps> = ({
+    accTypeKey,
+    accSelections,
+    setAccSelections,
+    accMakerList,
+    accModelList,
+  }) => {
+    const [makerSearchTerm, setMakerSearchTerm] = useState('');
+    const [modelSearchTerm, setModelSearchTerm] = useState('');
+    const [specSearchTerm, setSpecSearchTerm] = useState('');
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isSelected, setIsSelected] = useState(false); // 선택 여부 상태 추가
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    const currentAcc = accSelections[accTypeKey];
+    const typeCode = currentAcc?.typeCode;
+
+    // 컴포넌트 마운트 시 또는 accSelections 변경 시 입력 필드 초기화 및 선택 상태 설정
+    useEffect(() => {
+      if (currentAcc?.modelCode) {
+        const selectedMakerName = accMakerList.find(maker => maker.accMakerCode === currentAcc?.makerCode)?.accMakerName || '';
+        const selectedModelName = accModelList.find(model => model.accModelCode === currentAcc?.modelCode)?.accModelName || '';
+        setMakerSearchTerm(selectedMakerName);
+        setModelSearchTerm(selectedModelName);
+        setSpecSearchTerm(currentAcc.specification || '');
+        setIsSelected(true); // 모델이 이미 선택되어 있으면 isSelected를 true로
+      } else {
+        setMakerSearchTerm('');
+        setModelSearchTerm('');
+        setSpecSearchTerm('');
+        setIsSelected(false); // 모델이 없으면 isSelected를 false로
+      }
+    }, [currentAcc, accMakerList, accModelList]);
+
+
+
+    // 통합 검색 필터링 로직
+    const filteredModels = useMemo(() => {
+      const allSearchTerms = [
+        makerSearchTerm,
+        modelSearchTerm,
+        specSearchTerm
+      ].filter(term => term);
+
+      if (allSearchTerms.length === 0) {
+        // 검색어가 없으면 해당 타입 코드와 일치하는 전체 모델 반환
+        return accModelList.filter(item => item.accTypeCode === typeCode);
+      }
+
+      const lowerCaseSearchWords = allSearchTerms.map(term => term.toLowerCase().split(' ').filter(word => word)).flat();
+
+      return accModelList.filter(item => {
+        if (!typeCode || item.accTypeCode !== typeCode) {
+          return false;
+        }
+
+        const makerName = (accMakerList.find(maker => maker.accMakerCode === item.accMakerCode)?.accMakerName || '').toLowerCase();
+        const modelName = (item.accModelName || '').toLowerCase();
+        const specification = (item.accSize || '').toLowerCase();
+
+        // 모든 검색 단어를 모든 필드에서 AND 검색
+        return lowerCaseSearchWords.every(word =>
+          makerName.includes(word) || modelName.includes(word) || specification.includes(word)
+        );
+      });
+    }, [makerSearchTerm, modelSearchTerm, specSearchTerm, accModelList, accMakerList, typeCode]);
+
+    // 악세사리 선택 핸들러
+    const handleSelectAccessory = (selectedModel: any) => {
+      setAccSelections(prev => ({
+        ...prev,
+        [accTypeKey]: {
+          typeCode: selectedModel.accTypeCode,
+          makerCode: selectedModel.accMakerCode,
+          modelCode: selectedModel.accModelCode,
+          specification: selectedModel.accSize || '',
+        },
+      }));
+      // 선택 시 세 입력 필드를 선택된 값으로 채우기
+      const selectedMakerName = accMakerList.find(maker => maker.accMakerCode === selectedModel.accMakerCode)?.accMakerName || '';
+      setMakerSearchTerm(selectedMakerName);
+      setModelSearchTerm(selectedModel.accModelName || '');
+      setSpecSearchTerm(selectedModel.accSize || '');
+      setIsDropdownOpen(false);
+      setIsSelected(true); // 선택 완료 시 isSelected를 true로
+    };
+
+    // 선택 해제 핸들러
+    const handleReset = () => {
+      setAccSelections(prev => ({
+        ...prev,
+        [accTypeKey]: {
+          typeCode: typeCode || '', // 기존 typeCode 유지
+          makerCode: '',
+          modelCode: '',
+          specification: '',
+        },
+      }));
+      setMakerSearchTerm('');
+      setModelSearchTerm('');
+      setSpecSearchTerm('');
+      setIsSelected(false); // 선택 해제 시 isSelected를 false로
+      setIsDropdownOpen(false); // 드롭다운 닫기
+    };
+
+    // 외부 클릭 감지 (드롭다운 닫기)
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+          setIsDropdownOpen(false);
+        }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }, []);
+
+
+    return (
+      <div className="accessory-selector" ref={dropdownRef}>
+        <div className="input-group">
+          <input
+            type="text"
+            placeholder="메이커"
+            value={makerSearchTerm}
+            onChange={(e) => {if (!isSelected) {setMakerSearchTerm(e.target.value); setIsDropdownOpen(true);}}}
+            onFocus={() => {if (!isSelected) setIsDropdownOpen(true);}}
+            readOnly={isSelected || isReadOnly} // isReadOnly 상태에 따라 읽기 전용
+          />
+          <input
+            type="text"
+            placeholder="모델명"
+            value={modelSearchTerm}
+            onChange={(e) => {if (!isSelected) {setModelSearchTerm(e.target.value); setIsDropdownOpen(true);}}}
+            onFocus={() => {if (!isSelected) setIsDropdownOpen(true);}}
+            readOnly={isSelected || isReadOnly}
+          />
+          <input
+            type="text"
+            placeholder="규격"
+            value={specSearchTerm}
+            onChange={(e) => {if (!isSelected) {setSpecSearchTerm(e.target.value); setIsDropdownOpen(true);}}}
+            onFocus={() => {if (!isSelected) setIsDropdownOpen(true);}}
+            readOnly={isSelected || isReadOnly}
+          />
+          {isSelected && (
+            <button type="button" onClick={handleReset} className="reset-button" disabled={isReadOnly}>초기화</button>
+          )}
+        </div>
+        {isDropdownOpen && (
+          <ul className="dropdown-list">
+            {filteredModels.length > 0 ? (
+              filteredModels.map((item: any) => (
+                <li
+                  key={`${item.accTypeCode}-${item.accMakerCode}-${item.accModelCode}`}
+                  onClick={() => {if (!isReadOnly) handleSelectAccessory(item);}} // isReadOnly일 때 클릭 불가
+                >
+                  <span className="dropdown-maker">{accMakerList.find(maker => maker.accMakerCode === item.accMakerCode)?.accMakerName || ''}</span>
+                  <span className="dropdown-model">{item.accModelName}</span>
+                  <span className="dropdown-spec">{item.accSize || ''}</span>
+                </li>
+              ))
+            ) : ( 
+              <li>검색 결과가 없습니다.</li>
+            )}
+          </ul>
+        )}
+      </div>
+    );
+  };
+  // 초기화
+  useEffect(() => {
+    console.log('EstimateDetailPage 초기화 시작');
+    fetchBodyValveList();
+    fetchMasterData();
+  }, []); // 의존성 배열 비움 - 초기 로드만 필요
+
+  // bodyValveList와 bodyRatingList가 로드된 후 기존 데이터 로드
+  useEffect(() => {
+    console.log('useEffect 실행:', { 
+      bodyValveListLength: bodyValveList.length, 
+      bodyRatingListLength: bodyRatingList.length, 
+      tempEstimateNo 
+    });
+    if (bodyValveList.length > 0 && bodyRatingList.length > 0 && tempEstimateNo) {
+      console.log('loadExistingData 호출 시작');
+      loadExistingData();
+    }
+  }, [bodyValveList.length, bodyRatingList.length, tempEstimateNo]); // loadExistingData 의존성 제거
+
+  // bodyValveList가 로드된 후 타입 정보 업데이트
+  useEffect(() => {
+    if (bodyValveList.length > 0 && types.length > 0) {
+      const updatedTypes = types.map(type => {
+        const valveInfo = bodyValveList.find(v => v.valveSeriesCode === type.code);
+        return {
+          ...type,
+          name: valveInfo ? valveInfo.valveSeries : type.name
+        };
+      });
+      
+      // 실제로 변경된 경우에만 업데이트
+      const hasChanges = updatedTypes.some((updatedType, index) => 
+        updatedType.name !== types[index].name
+      );
+      
+      if (hasChanges) {
+        setTypes(updatedTypes);
+      }
+    }
+  }, [bodyValveList]); // types 의존성 제거 - 무한 루프 방지
+
+  // selectedValve가 변경될 때마다 기존 사양 데이터 로드
+  useEffect(() => {
+    if (selectedValve) {
+      // 초기 로드만 필요하므로 여기서는 아무것도 하지 않음
+      // handleValveSelection에서 처리됨
+    }
+  }, [selectedValve]);
+
+  // selectedType이 변경되면 selectedValve를 초기화하여 Step 3를 숨김
+  useEffect(() => {
+      setSelectedValve(null);
+  }, [selectedType]);
+
+  // 초기 사양 데이터 로드 (DB에서 불러오기)
+  const loadInitialSpecification = async (sheetID: number) => {
+    console.log('loadInitialSpecification 호출됨, sheetID:', sheetID); // sheetID 로그 추가
+    
+    try {
+      if (!tempEstimateNo) {
+        console.error("tempEstimateNo가 없습니다.");
+        return;
+      }
+      const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/specification/${sheetID}`);
+      if (response.ok) {
+        const specificationData = await response.json();
+        console.log('--- 실제 Accessories 데이터 구조 ---', specificationData.accessories);
+        
+        if (specificationData.accessories) {
+          console.log('개별 악세사리 데이터 (Positioner):', specificationData.accessories.positioner);
+          console.log('개별 악세사리 데이터 (Solenoid):', specificationData.accessories.solenoid);
+          console.log('개별 악세사리 데이터 (AirOperator):', specificationData.accessories.airOperator);
+          console.log('개별 악세사리 데이터 (LockUp):', specificationData.accessories.lockUp);
+        }
+        
+        // Body 사양 데이터 설정 (초기값만) - null 처리 개선
+        if (specificationData.body) {
+          console.log('Body 데이터:', specificationData.body); // Body 데이터 로그 추가
+          setBodySelections(prev => ({
+            ...prev,
+            bonnetType: specificationData.body.bonnetTypeCode || '',
+            bonnetTypeCode: specificationData.body.bonnetTypeCode || '',
+            materialBody: specificationData.body.materialBodyCode || '',
+            materialBodyCode: specificationData.body.materialBodyCode || '',
+            sizeBodyUnit: specificationData.body.sizeUnit || '',
+            sizeBody: specificationData.body.sizeCode || '',
+            sizeBodyUnitCode: specificationData.body.sizeUnit || '', // Code 값 추가
+            sizeBodyCode: specificationData.body.sizeCode || '', // Code 값 추가
+            ratingUnit: (() => {
+              if (specificationData.body.ratingUnit && bodyRatingList.length > 0) {
+                const ratingItem = bodyRatingList.find(item => item.ratingUnitCode === specificationData.body.ratingUnit);
+                return ratingItem ? ratingItem.ratingUnit : '';
+              }
+              return '';
+            })(), // ratingUnitCode에 해당하는 ratingUnit 이름 찾기
+            rating: specificationData.body.ratingCode || '',
+            ratingUnitCode: (() => {
+              if (specificationData.body.ratingUnit && bodyRatingList.length > 0) {
+                const ratingItem = bodyRatingList.find(item => item.ratingUnitCode === specificationData.body.ratingUnit);
+                return ratingItem ? ratingItem.ratingUnitCode : '';
+              }
+              return '';
+            })(), // ratingUnitCode에 해당하는 ratingUnitCode 찾기
+            ratingCode: specificationData.body.ratingCode || '', // Code 값 추가
+            connection: specificationData.body.connectionCode || '',
+            connectionCode: specificationData.body.connectionCode || ''
+          }));
+        }
+        
+        // Trim 사양 데이터 설정 (초기값만) - null 처리 개선
+        if (specificationData.trim) {
+          console.log('Trim 데이터:', specificationData.trim); // Trim 데이터 로그 추가
+          setTrimSelections(prev => ({
+            ...prev,
+            trimType: specificationData.trim.typeCode || '',
+            trimTypeCode: specificationData.trim.typeCode || '',
+            trimSeries: specificationData.trim.seriesCode || '',
+            trimSeriesCode: specificationData.trim.seriesCode || '',
+            materialTrim: specificationData.body?.materialTrimCode || '',
+            materialTrimCode: specificationData.body?.materialTrimCode || '',
+            sizePortUnit: specificationData.trim.portSizeUnit || '',
+            sizePort: specificationData.trim.portSizeCode || '',
+            sizePortUnitCode: specificationData.trim.portSizeUnit || '', // Code 값 추가
+            sizePortCode: specificationData.trim.portSizeCode || '', // Code 값 추가
+            form: specificationData.trim.formCode || '',
+            formCode: specificationData.trim.formCode || '',
+            option: specificationData.body?.optionCode || '' // Body에서 Option 값을 가져옴
+          }));
+        }
+        
+        // Actuator 사양 데이터 설정 (초기값만) - null 처리 개선
+        if (specificationData.actuator) {
+          console.log('Actuator 데이터:', specificationData.actuator); // Actuator 데이터 로그 추가
+          const seriesCode = specificationData.actuator.seriesCode || '';
+          setActSelections(prev => ({
+            ...prev,
+            actionType: specificationData.actuator.typeCode || '',
+            actionTypeCode: specificationData.actuator.typeCode || '',
+            series: seriesCode,
+            seriesCode: seriesCode,
+            size: specificationData.actuator.sizeCode || '',
+            sizeCode: specificationData.actuator.sizeCode || '',
+            hw: specificationData.actuator.hwCode || '',
+            hwCode: specificationData.actuator.hwCode || ''
+          }));
+
+          // Series 코드가 있으면 해당 Size 목록을 가져옴
+          if (seriesCode) {
+            fetchActSizeList(seriesCode);
+          }
+        }
+        
+        // Accessory 사양 데이터 설정 - 기존 데이터가 있으면 로드, 없으면 fetchMasterData에서 초기화됨
+        if (specificationData.accessories) {
+          const newAccSelections = {
+            positioner: { typeCode: 'Positioner', makerCode: '', modelCode: '', specification: '' },
+            solenoid: { typeCode: 'Solenoid', makerCode: '', modelCode: '', specification: '' },
+            limiter: { typeCode: 'Limit', makerCode: '', modelCode: '', specification: '' },
+            airSupply: { typeCode: 'Airset', makerCode: '', modelCode: '', specification: '' },
+            volumeBooster: { typeCode: 'Volume', makerCode: '', modelCode: '', specification: '' },
+            airOperator: { typeCode: 'Airoperate', makerCode: '', modelCode: '', specification: '' },
+            lockUp: { typeCode: 'Lockup', makerCode: '', modelCode: '', specification: '' },
+            snapActingRelay: { typeCode: 'Snapacting', makerCode: '', modelCode: '', specification: '' },
+          };
+
+          const accKeys: Array<keyof typeof specificationData.accessories> = [
+            'positioner', 'solenoid', 'limiter', 'airSupply',
+            'volumeBooster', 'airOperator', 'lockUp', 'snapActingRelay',
+          ];
+
+          accKeys.forEach(key => {
+            const accObj = specificationData.accessories[key];
+            console.log(`로딩될 악세사리 데이터 (${String(key)}):`, accObj);
+            // 1. 데이터 개수 확인
+console.log('accModelList 길이:', accModelList.length);
+console.log('accMakerList 길이:', accMakerList.length);
+
+// 2. Positioner 데이터 확인
+console.log('Positioner 모델들:', accModelList.filter(item => item.accTypeCode === 'Positioner'));
+console.log('Positioner 메이커들:', accMakerList.filter(item => item.accTypeCode === 'Positioner'));
+
+// 3. 데이터 구조 확인
+console.log('첫 번째 모델:', accModelList[0]);
+console.log('첫 번째 메이커:', accMakerList[0]);
+            if (accObj && accObj.makerCode && accObj.modelCode) {
+              // 실제 데이터가 있는 경우에만 설정
+              newAccSelections[key as keyof typeof newAccSelections] = {
+                typeCode: accObj.typeCode || newAccSelections[key as keyof typeof newAccSelections].typeCode,
+                makerCode: accObj.makerCode || '',
+                modelCode: accObj.modelCode || '',
+                specification: accObj.specification || '',
+              };
+              console.log(`새로운 AccSelections (${String(key)}) 데이터 설정됨:`, newAccSelections[key as keyof typeof newAccSelections]);
+            }
+            // 데이터가 없으면 기본값 유지 (fetchMasterData에서 설정됨)
+          });
+          console.log('최종 업데이트될 AccSelections:', newAccSelections);
+          setAccSelections(newAccSelections);
+        }
+        // 액세서리 데이터가 없는 경우 fetchMasterData에서 초기화됨
+      } else {
+        console.log('API 응답 실패:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.log('초기 사양 데이터 로드 실패:', error);
+    }
+  };
+
+  // TagNo 변경 시 임시 저장된 선택값 복원
+  const restoreTempSelections = (sheetID: number) => {
+    const tempData = tempSelections[sheetID];
+    if (tempData) {
+      console.log(`${sheetID}의 임시 저장된 선택값들을 복원합니다:`, tempData);
+      
+      // Body 선택값 복원
+      if (tempData.body) {
+        setBodySelections(prev => ({
+          ...prev,
+          ...tempData.body
+        }));
+      }
+      
+      // Trim 선택값 복원
+      if (tempData.trim) {
+        setTrimSelections(prev => ({
+          ...prev,
+          ...tempData.trim
+        }));
+      }
+      
+      // Actuator 선택값 복원
+      if (tempData.act) {
+        setActSelections(prev => ({
+          ...prev,
+          ...tempData.act
+        }));
+      }
+      
+      // Accessory 선택값 복원
+      if (tempData.acc) {
+        setAccSelections(prev => ({
+          ...prev,
+          ...tempData.acc
+        }));
+      }
+    } else {
+      console.log(`${sheetID}의 임시 저장된 선택값이 없습니다.`);
+    }
+  };
+
+  // Step 1, 2, 3 통합 섹션
+  const StepsSection = () => (
+    <div className="step-section">
+      <div className="step-header">
+        <h3>견적 상세 정보</h3>
+      </div>
+      
+      {/* Step 1: Type 선정 */}
+      <div className="step-subsection">
+        <h4>Step 1: Type 선정</h4>
+        <div className="type-header">
+          <p className="step-description">견적에 필요한 밸브 타입을 선택하고 관리합니다.</p>
+        </div>
+        <div className="type-list">
+          {types.map((type, index) => (
+            <div 
+              key={type.id} 
+              className={`type-item ${selectedType === type.id ? 'selected' : ''}`}
+              onClick={() => setSelectedType(type.id)}
+            >
+              <span className="type-name">{type.name}</span>
+              <span className="type-count">({type.count})</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Step 2: TagNo 선택 */}
+      <div className="step-subsection">
+        <div className="d-flex justify-content-between align-items-center">
+          <h4>Step 2: TagNo 선택</h4>
+          {selectedValve && (
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => {
+                const sheetId = selectedValve?.sheetID || 1;
+                window.open(`http://localhost:5001?estimateNo=${tempEstimateNo}&sheetId=${sheetId}`, '_blank');
+              }}
+            >
+              🔬 CONVAL 분석
+            </button>
+          )}
+        </div>
+        <p className="step-description">선택된 Type에 따라 TagNo를 선택합니다.</p>
+        {!selectedType ? (
+          <div className="no-type-selected">
+            Step 1에서 Type을 선택하면 해당 Type의 TagNo를 선택할 수 있습니다.
+          </div>
+        ) : (
+          <div className="valve-list">
+            {valves
+              .filter(valve => {
+                const selectedTypeData = types.find(t => t.id === selectedType);
+                return selectedTypeData && valve.body.type === selectedTypeData.name;
+              })
+              .map((valve, index) => (
+                <div 
+                  key={valve.id} 
+                  className={`valve-item ${selectedValve?.id === valve.id ? 'selected' : ''}`}
+                  onClick={() => handleValveSelection(valve)}
+                >
+                  <span className="valve-tag">{valve.tagNo}</span>
+                  <span className="valve-qty">({valve.qty})</span>
+                </div>
+              ))}
+          </div>
+        )}
+      </div>
+
+                {/* Step 3: 상세사양 입력 */}
+          {selectedValve && (
+            <div className="step-subsection">
+              <h4>Step 3: 상세사양 입력</h4>
+              <div className="specification-grid">
+                {/* BODY 섹션 */}
+                <div className="spec-section">
+                  <h4>BODY</h4>
+                  <div className="spec-grid">
+                    <div className="spec-item">
+                      <label>Bonnet Type:</label>
+                      <select value={bodySelections.bonnetType} onChange={(e) => handleBodyChange('bonnetType', e.target.value)} disabled={isReadOnly}>
+                        <option value="">선택하세요</option>
+                        {bodyBonnetList && bodyBonnetList.length > 0 && bodyBonnetList.map((item: any) => (
+                          <option key={item.bonnetCode} value={item.bonnetCode}>
+                            {item.bonnet}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="spec-item">
+                      <label>Material Body:</label>
+                      <select value={bodySelections.materialBody} onChange={(e) => handleBodyChange('materialBody', e.target.value)} disabled={isReadOnly}>
+                        <option value="">선택하세요</option>
+                        {bodyMatList && bodyMatList.length > 0 && bodyMatList.map((item: any) => (
+                          <option key={item.bodyMatCode} value={item.bodyMatCode}>
+                            {item.bodyMat}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="spec-item">
+                      <label>Size Body:</label>
+                      <div className="size-input-group">
+                        <select value={bodySelections.sizeBodyUnitCode} onChange={(e) => {
+                          handleBodyChange('sizeBodyUnit', e.target.value);
+                          handleBodyChange('sizeBodyUnitCode', e.target.value);
+                        }} disabled={isReadOnly}>
+                          <option value="">Unit 선택</option>
+                          {bodySizeList && bodySizeList.length > 0 && 
+                            bodySizeList
+                              .map(item => item.sizeUnit)
+                              .filter((unit, index, arr) => arr.indexOf(unit) === index)
+                              .map((unit: string) => (
+                                <option key={unit} value={unit}>
+                                  {unit}
+                                </option>
+                              ))
+                          }
+                        </select>
+                        <select value={bodySelections.sizeBodyCode} onChange={(e) => {
+                          const selectedItem = bodySizeList.find(item => item.bodySizeCode === e.target.value);
+                          if (selectedItem) {
+                            handleBodyChange('sizeBody', selectedItem.bodySize);
+                            handleBodyChange('sizeBodyCode', selectedItem.bodySizeCode);
+                          }
+                        }} disabled={!bodySelections.sizeBodyUnit || isReadOnly}>
+                          <option value="">값 선택</option>
+                          {bodySelections.sizeBodyUnit && bodySizeList && bodySizeList.length > 0 && 
+                            bodySizeList
+                              .filter(item => item.sizeUnit === bodySelections.sizeBodyUnit)
+                              .map((item: any) => (
+                                <option key={item.bodySizeCode} value={item.bodySizeCode}>
+                                  {item.bodySize}
+                                </option>
+                              ))
+                          }
+                        </select>
+                      </div>
+                    </div>
+                    <div className="spec-item">
+                      <label>Rating:</label>
+                      <div className="rating-input-group">
+                        <select value={bodySelections.ratingUnit} onChange={(e) => {
+                          const selectedUnit = bodyRatingList.find(item => item.ratingUnit === e.target.value);
+                          if (selectedUnit) {
+                            handleBodyChange('ratingUnit', selectedUnit.ratingUnit);
+                            handleBodyChange('ratingUnitCode', selectedUnit.ratingUnitCode);
+                          }
+                        }} disabled={isReadOnly}>
+                          <option value="">Unit 선택</option>
+                          {bodyRatingList && bodyRatingList.length > 0 && 
+                            bodyRatingList
+                              .map(item => item.ratingUnit)
+                              .filter((unit, index, arr) => arr.indexOf(unit) === index)
+                              .map((unit: string) => (
+                                <option key={unit} value={unit}>
+                                  {unit}
+                                </option>
+                              ))
+                          }
+                        </select>
+                        <select value={bodySelections.ratingCode} onChange={(e) => {
+                          const selectedItem = bodyRatingList.find(item => item.ratingCode === e.target.value);
+                          if (selectedItem) {
+                            handleBodyChange('rating', selectedItem.ratingName);
+                            handleBodyChange('ratingCode', selectedItem.ratingCode);
+                          }
+                        }} disabled={!bodySelections.ratingUnitCode || isReadOnly}>
+                          <option value="">값 선택</option>
+                          {bodySelections.ratingUnit && bodyRatingList && bodyRatingList.length > 0 && 
+                            bodyRatingList
+                              .filter(item => item.ratingUnit === bodySelections.ratingUnit)
+                              .map((item: any) => (
+                                <option key={item.ratingCode} value={item.ratingCode}>
+                                  {item.ratingName}
+                                </option>
+                              ))
+                          }
+                        </select>
+                      </div>
+                    </div>
+                    <div className="spec-item">
+                      <label>Connection:</label>
+                      <select value={bodySelections.connection} onChange={(e) => handleBodyChange('connection', e.target.value)} disabled={isReadOnly}>
+                        <option value="">선택하세요</option>
+                        {bodyConnectionList && bodyConnectionList.length > 0 && bodyConnectionList.map((item: any) => (
+                          <option key={item.connectionCode} value={item.connectionCode}>
+                            {item.connection}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Trim 섹션 */}
+                <div className="spec-section">
+                  <h4>Trim</h4>
+                  <div className="spec-grid">
+                    <div className="spec-item">
+                      <label>Trim Type:</label>
+                      <select value={trimSelections.trimType} onChange={(e) => handleTrimChange('trimType', e.target.value)} disabled={isReadOnly}>
+                        <option value="">선택하세요</option>
+                        {trimTypeList && trimTypeList.length > 0 && trimTypeList.map((item: any) => (
+                          <option key={item.trimTypeCode} value={item.trimTypeCode}>
+                            {item.trimType}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="spec-item">
+                      <label>Trim Series:</label>
+                      <select value={trimSelections.trimSeries} onChange={(e) => handleTrimChange('trimSeries', e.target.value)} disabled={isReadOnly}>
+                        <option value="">선택하세요</option>
+                        {trimSeriesList && trimSeriesList.length > 0 && trimSeriesList.map((item: any) => (
+                          <option key={item.trimSeriesCode} value={item.trimSeriesCode}>
+                            {item.trimSeries}
+                          </option>
+                          ))}
+                        </select>
+                    </div>
+                    <div className="spec-item">
+                      <label>Material Trim:</label>
+                      <select value={trimSelections.materialTrim} onChange={(e) => handleTrimChange('materialTrim', e.target.value)} disabled={isReadOnly}>
+                        <option value="">선택하세요</option>
+                        {trimMatList && trimMatList.length > 0 && trimMatList.map((item: any) => (
+                          <option key={item.trimMatCode} value={item.trimMatCode}>
+                            {item.trimMat}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="spec-item">
+                      <label>Option:</label>
+                      <select value={trimSelections.option} onChange={(e) => handleTrimChange('option', e.target.value)} disabled={isReadOnly}>
+                        <option value="">선택하세요</option>
+                        {trimOptionList && trimOptionList.length > 0 && trimOptionList.map((item: any) => (
+                          <option key={item.trimOptionCode} value={item.trimOptionCode}>
+                            {item.trimOption}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="spec-item">
+                      <label>Size Port:</label>
+                      <div className="size-input-group">
+                        <select value={trimSelections.sizePortUnitCode} onChange={(e) => {
+                          handleTrimChange('sizePortUnit', e.target.value);
+                          handleTrimChange('sizePortUnitCode', e.target.value);
+                        }} disabled={isReadOnly}>
+                          <option value="">Unit 선택</option>
+                          {trimPortSizeList && trimPortSizeList.length > 0 && 
+                            trimPortSizeList
+                              .map(item => item.portSizeUnit)
+                              .filter((unit, index, arr) => arr.indexOf(unit) === index)
+                              .map((unit: string) => (
+                                <option key={unit} value={unit}>
+                                  {unit}
+                                </option>
+                              ))
+                          }
+                        </select>
+                        <select value={trimSelections.sizePortCode} onChange={(e) => {
+                          const selectedItem = trimPortSizeList.find(item => item.portSizeCode === e.target.value);
+                          if (selectedItem) {
+                            handleTrimChange('sizePort', selectedItem.portSize);
+                            handleTrimChange('sizePortCode', selectedItem.portSizeCode);
+                          }
+                        }} disabled={!trimSelections.sizePortUnit || isReadOnly}>
+                          <option value="">값 선택</option>
+                          {trimSelections.sizePortUnit && trimPortSizeList && trimPortSizeList.length > 0 && 
+                            trimPortSizeList
+                              .filter(item => item.portSizeUnit === trimSelections.sizePortUnit)
+                              .map((item: any) => (
+                                <option key={item.portSizeCode} value={item.portSizeCode}>
+                                  {item.portSize}
+                                </option>
+                              ))
+                          }
+                        </select>
+                      </div>
+                    </div>
+                    <div className="spec-item">
+                      <label>Form:</label>
+                      <select value={trimSelections.form} onChange={(e) => handleTrimChange('form', e.target.value)} disabled={isReadOnly}>
+                        <option value="">선택하세요</option>
+                        {trimFormList && trimFormList.length > 0 && trimFormList.map((item: any) => (
+                          <option key={item.trimFormCode} value={item.trimFormCode}>
+                            {item.trimForm}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ACT 섹션 */}
+                <div className="spec-section">
+                  <h4>ACT</h4>
+                  <div className="spec-grid">
+                    <div className="spec-item">
+                      <label>Action Type:</label>
+                      <select value={actSelections.actionType} onChange={(e) => handleActChange('actionType', e.target.value)} disabled={isReadOnly}>
+                        <option value="">선택하세요</option>
+                        {actTypeList && actTypeList.length > 0 && actTypeList.map((item: any) => (
+                          <option key={item.actTypeCode} value={item.actTypeCode}>
+                            {item.actType}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="spec-item">
+                      <label>Series:</label>
+                      <select value={actSelections.series} onChange={(e) => handleActChange('series', e.target.value)} disabled={isReadOnly}>
+                        <option value="">선택하세요</option>
+                        {actSeriesList && actSeriesList.length > 0 && actSeriesList.map((item: any) => (
+                          <option key={item.actSeriesCode} value={item.actSeriesCode}>
+                            {item.actSeries}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="spec-item">
+                      <label>Size:</label>
+                      <select value={actSelections.size} onChange={(e) => handleActChange('size', e.target.value)} disabled={!actSelections.series || isReadOnly}>
+                        <option value="">선택하세요</option>
+                        {actSizeList && actSizeList.length > 0 && 
+                          actSizeList.map((item: any) => (
+                            <option key={item.actSizeCode} value={item.actSizeCode}>
+                              {item.actSize} {/* actSizeName -> actSize로 변경 */}
+                            </option>
+                          ))
+                        }
+                      </select>
+                    </div>
+                    <div className="spec-item">
+                      <label>H.W:</label>
+                      <select value={actSelections.hw} onChange={(e) => handleActChange('hw', e.target.value)} disabled={isReadOnly}>
+                        <option value="">선택하세요</option>
+                        {actHWList && actHWList.length > 0 && actHWList.map((item: any) => (
+                          <option key={item.hwCode} value={item.hwCode}>
+                            {item.hw}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ACC 섹션 - 사진과 동일한 3열 구조로 변경 */}
+              <div className="acc-section">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <h4>ACC</h4>
+                  <button 
+                    onClick={async () => {
+                      console.log('악세사리 데이터 강제 리로드 시작...');
+                      const success = await fetchAccessoryData();
+                      if (success) {
+                        alert('악세사리 데이터가 성공적으로 로드되었습니다!');
+                      } else {
+                        alert('악세사리 데이터 로드에 실패했습니다. 다시 시도해주세요.');
+                      }
+                    }}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#007bff',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '12px'
+                    }}
+                    title="악세사리 데이터 강제 리로드"
+                  >
+                    🔄 악세사리 리로드
+                  </button>
+                  <span style={{ fontSize: '11px', color: '#666', marginLeft: '10px' }}>
+                    메이커: {accMakerList.length}개, 모델: {accModelList.length}개
+                  </span>
+                </div>
+                <div className="acc-table">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>선택목록</th>
+                        <th>메이커</th>
+                        <th>모델명</th>
+                        <th>규격</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                              <td>Positioner</td>
+                              <td className="acc-options-group" colSpan={3}>
+                                <AccessorySelector 
+                                  accTypeKey="positioner" 
+                                  accSelections={accSelections} 
+                                  setAccSelections={setAccSelections} 
+                                  accMakerList={accMakerList} 
+                                  accModelList={accModelList} 
+                                />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Solenoid Valve</td>
+                              <td className="acc-options-group" colSpan={3}>
+                                <AccessorySelector 
+                                  accTypeKey="solenoid" 
+                                  accSelections={accSelections} 
+                                  setAccSelections={setAccSelections} 
+                                  accMakerList={accMakerList} 
+                                  accModelList={accModelList} 
+                                />
+                              </td>
+                            </tr>
+                      <tr>
+                      <td>Limit Switch</td>
+                              <td className="acc-options-group" colSpan={3}>
+                                <AccessorySelector 
+                                  accTypeKey="limiter" 
+                                  accSelections={accSelections} 
+                                  setAccSelections={setAccSelections} 
+                                  accMakerList={accMakerList} 
+                                  accModelList={accModelList} 
+                                />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Air Set</td>
+                              <td className="acc-options-group" colSpan={3}>
+                                <AccessorySelector 
+                                  accTypeKey="airSupply" 
+                                  accSelections={accSelections} 
+                                  setAccSelections={setAccSelections} 
+                                  accMakerList={accMakerList} 
+                                  accModelList={accModelList} 
+                                />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Volume Booster</td>
+                              <td className="acc-options-group" colSpan={3}>
+                                <AccessorySelector 
+                                  accTypeKey="volumeBooster" 
+                                  accSelections={accSelections} 
+                                  setAccSelections={setAccSelections} 
+                                  accMakerList={accMakerList} 
+                                  accModelList={accModelList} 
+                                />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Air Operated Valve</td>
+                              <td className="acc-options-group" colSpan={3}>
+                                <AccessorySelector 
+                                  accTypeKey="airOperator" 
+                                  accSelections={accSelections} 
+                                  setAccSelections={setAccSelections} 
+                                  accMakerList={accMakerList} 
+                                  accModelList={accModelList} 
+                                />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Lock-Up Valve</td>
+                              <td className="acc-options-group" colSpan={3}>
+                                <AccessorySelector 
+                                  accTypeKey="lockUp" 
+                                  accSelections={accSelections} 
+                                  setAccSelections={setAccSelections} 
+                                  accMakerList={accMakerList} 
+                                  accModelList={accModelList} 
+                                />
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>Snap Acting Relay</td>
+                              <td className="acc-options-group" colSpan={3}>
+                                <AccessorySelector 
+                                  accTypeKey="snapActingRelay" 
+                                  accSelections={accSelections} 
+                                  setAccSelections={setAccSelections} 
+                                  accMakerList={accMakerList} 
+                                  accModelList={accModelList} 
+                                />
+                              </td>
+                            </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* 저장 버튼 */}
+              <div className="save-section">
+                <button 
+                  className="btn btn-primary save-specification-btn"
+                  onClick={handleSaveSpecification}
+                  disabled={isReadOnly} // isReadOnly 상태에 따라 비활성화
+                >
+                  사양 저장
+                </button>
+              </div>
+
+              {/* 🔑 관리 첨부파일 섹션을 StepsSection 안으로 이동 */}
+              <ManagerAttachmentsSection />
+        </div>
+      )}
+    </div>
+  );
+
+  // 고객 요청사항 섹션 (항상 readonly)
+  const CustomerRequirementSection = () => (
+    <div className="step-section">
+      <div className="step-header">
+        <h3>고객 요청사항</h3>
+      </div>
+      <div className="customer-requirement-content">
+        <textarea
+          value={customerRequirement}
+          onChange={() => {}} // 변경 불가
+          readOnly={true} // 항상 readonly
+          placeholder="고객 요청사항이 없습니다."
+          className="customer-requirement-textarea"
+        />
+      </div>
+    </div>
+  );
+
+  // 관리자 코멘트 섹션
+  const StaffCommentSection = () => (
+    <div className="step-section">
+      <div className="step-header">
+        <h3>관리자 코멘트</h3>
+      </div>
+      <div className="staff-comment-content">
+        <textarea
+          value={staffComment}
+          onChange={(e) => !isReadOnly && setStaffComment(e.target.value)}
+          readOnly={isReadOnly}
+          placeholder="관리자 코멘트가 없습니다."
+          className="staff-comment-textarea"
+        />
+      </div>
+    </div>
+  );
+
+  // 고객 요청 첨부파일 섹션 (다운로드만 가능)
+  const CustomerAttachmentsSection = () => (
+    <div className="step-section">
+      <div className="step-header">
+        <h3>고객 요청 첨부파일</h3>
+      </div>
+      <div className="attachments-content">
+        {customerAttachments.length > 0 ? (
+          <div className="attachment-list">
+            {customerAttachments.map((file, index) => (
+              <div key={index} className="attachment-item">
+                <span className="file-name">{file.fileName}</span>
+                <span className="file-size">({(file.fileSize / 1024).toFixed(2)} KB)</span>
+                <button 
+                  className="btn btn-primary btn-sm"
+                  onClick={() => handleDownloadFile(file, 'customer')}
+                  disabled={!file.fileName.toLowerCase().endsWith('.pdf')}
+                >
+                  PDF 다운로드
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="no-attachments">
+            고객 요청 첨부파일이 없습니다.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // 관리 첨부파일 섹션 (업로드, 다운로드, 생성 가능)
+  const ManagerAttachmentsSection = () => (
+    <div className="step-section">
+      <div className="step-header">
+        <h3>🔑 관리 첨부파일</h3>
+        <div className="file-actions">
+          <button 
+            className="btn btn-secondary btn-sm"
+            onClick={() => {
+              fetchManagerFiles();
+              fetchCustomerFiles();
+            }}
+            disabled={isLoadingFiles}
+          >
+            {isLoadingFiles ? '새로고침 중...' : '새로고침'}
+          </button>
+        </div>
+      </div>
+      
+      {/* 파일 목록 표시 */}
+      <div className="file-list-container">
+        <h4>📁 생성된 엑셀 파일 목록</h4>
+        
+
+        
+        {isLoadingFiles ? (
+          <div className="loading">파일 목록을 불러오는 중...</div>
+        ) : managerFiles.length === 0 ? (
+          <div className="no-files">생성된 파일이 없습니다.</div>
+        ) : (
+          <div className="file-grid">
+            {/* 🔑 엑셀 파일만 필터링해서 표시 */}
+            {managerFiles
+              .filter((file) => file.fileName.toLowerCase().endsWith('.xlsx'))
+              .map((file) => (
+              <div key={file.attachmentID} className="file-card">
+                <div className="file-header">
+                  <h5>{getFileTypeDisplayName(file.managerFileType)}</h5>
+                  <span className="file-date">{formatDate(file.uploadDate)}</span>
+                </div>
+                <div className="file-info">
+                  <p className="file-name">{file.fileName}</p>
+                  <p className="file-size">크기: {formatFileSize(file.fileSize)}</p>
+                  {file.uploadUserID && (
+                    <p className="upload-user">업로드: {file.uploadUserID}</p>
+                  )}
+                </div>
+                <div className="file-actions">
+                  <button 
+                    className="btn btn-primary btn-sm"
+                    onClick={() => downloadFile(file.filePath, file.fileName)}
+                  >
+                    📥 다운로드
+                  </button>
+                  <button 
+                    className="btn btn-danger btn-sm"
+                    onClick={() => deleteFile(file.managerFileType)}
+                  >
+                    🗑️ 삭제
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* 기존 파일 생성 버튼들 */}
+      <div className="file-generation-section">
+        <h4>📝 엑셀 파일 생성</h4>
+        <div className="generation-buttons">
+          <button 
+            className="btn btn-success btn-sm"
+            onClick={() => handleGenerateFile('cvlist')}
+            disabled={isReadOnly}
+          >
+            📊 CV 리스트 생성
+          </button>
+          <button 
+            className="btn btn-success btn-sm"
+            onClick={() => handleGenerateFile('vllist')}
+            disabled={isReadOnly}
+          >
+            📋 VL 리스트 생성
+          </button>
+          <button 
+            className="btn btn-success btn-sm"
+            onClick={() => handleGenerateFile('datasheet')}
+            disabled={isReadOnly}
+          >
+            📄 DataSheet 생성
+          </button>
+          <button 
+            className="btn btn-success btn-sm"
+            onClick={() => handleGenerateFile('singlequote')}
+            disabled={isReadOnly}
+          >
+            💰 단품견적서 생성
+          </button>
+          <button 
+            className="btn btn-success btn-sm"
+            onClick={() => handleGenerateFile('multiquote')}
+            disabled={isReadOnly}
+          >
+            📊 다수량견적서 생성
+          </button>
+        </div>
+      </div>
+
+      {/* 🔑 생성된 엑셀 파일 목록을 여기로 이동 */}
+      <div className="file-list-section">
+        <h4>📄 업로드된 PDF 파일 목록</h4>
+        
+
+        
+        {isLoadingFiles ? (
+          <div className="loading">파일 목록을 불러오는 중...</div>
+        ) : managerFiles.length === 0 ? (
+          <div className="no-files">업로드된 PDF 파일이 없습니다.</div>
+        ) : (
+          <div className="file-grid">
+            {managerFiles
+              .filter(file => file.fileName.toLowerCase().endsWith('.pdf')) // 🔑 PDF 파일만 필터링
+              .map((file) => {
+                return (
+                  <div key={file.attachmentID} className="file-card" style={{ borderLeft: '4px solid #e74c3c' }}>
+                    <div className="file-header">
+                      <h5>
+                        📄 {getFileTypeDisplayName(file.managerFileType)} (PDF)
+                      </h5>
+                      <span className="file-date">{formatDate(file.uploadDate)}</span>
+                    </div>
+                    <div className="file-info">
+                      <p className="file-name">{file.fileName}</p>
+                      <p className="file-size">크기: {formatFileSize(file.fileSize)}</p>
+                      {file.uploadUserID && (
+                        <p className="upload-user">업로드: {file.uploadUserID}</p>
+                      )}
+                    </div>
+                    <div className="file-actions">
+                      <button 
+                        className="btn btn-primary btn-sm"
+                        onClick={() => downloadFile(file.filePath, file.fileName)}
+                      >
+                        📥 다운로드
+                      </button>
+                      <button 
+                        className="btn btn-danger btn-sm"
+                        onClick={() => deleteFile(file.managerFileType)}
+                      >
+                        🗑️ 삭제
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        )}
+      </div>
+
+      {/* 🔑 PDF 업로드 섹션 추가 */}
+      <div className="pdf-upload-section">
+        <h4>📄 PDF 업로드</h4>
+        <div className="pdf-upload-grid">
+          {/* DataSheet PDF 업로드 */}
+          <div className="pdf-upload-item">
+            <h5>📄 DataSheet PDF</h5>
+            <button 
+              className="btn btn-outline-secondary btn-sm"
+              onClick={() => handleFileSelect('datasheet')}
+              disabled={isReadOnly}
+              style={{ marginBottom: '15px', width: '100%' }}
+            >
+              📁 PDF 파일 선택
+            </button>
+            <div className="file-status">
+              {selectedPdfFiles.datasheet ? (
+                <span className="file-selected">✅ {selectedPdfFiles.datasheet.name}</span>
+              ) : (
+                <span className="no-file">📁 PDF 파일을 선택해주세요</span>
+              )}
+            </div>
+            <button 
+              className="btn btn-primary btn-sm"
+              onClick={() => handleUploadManagerFile('datasheet')}
+              disabled={isReadOnly || !selectedPdfFiles.datasheet}
+            >
+              📤 PDF 업로드
+            </button>
+          </div>
+
+          {/* CV 리스트 PDF 업로드 */}
+          <div className="pdf-upload-item">
+            <h5>📊 CV 리스트 PDF</h5>
+            <button 
+              className="btn btn-outline-secondary btn-sm"
+              onClick={() => handleFileSelect('cvlist')}
+              disabled={isReadOnly}
+              style={{ marginBottom: '15px', width: '100%' }}
+            >
+              📁 PDF 파일 선택
+            </button>
+            <div className="file-status">
+              {selectedPdfFiles.cvlist ? (
+                <span className="file-selected">✅ {selectedPdfFiles.cvlist.name}</span>
+              ) : (
+                <span className="no-file">📁 PDF 파일을 선택해주세요</span>
+              )}
+            </div>
+            <button 
+              className="btn btn-primary btn-sm"
+              onClick={() => handleUploadManagerFile('cvlist')}
+              disabled={isReadOnly || !selectedPdfFiles.cvlist}
+            >
+              📤 PDF 업로드
+            </button>
+          </div>
+
+          {/* VL 리스트 PDF 업로드 */}
+          <div className="pdf-upload-item">
+            <h5>📋 VL 리스트 PDF</h5>
+            <button 
+              className="btn btn-outline-secondary btn-sm"
+              onClick={() => handleFileSelect('vllist')}
+              disabled={isReadOnly}
+              style={{ marginBottom: '15px', width: '100%' }}
+            >
+              📁 PDF 파일 선택
+            </button>
+                         <div className="file-status">
+               {selectedPdfFiles.vllist ? (
+                 <span className="file-selected">✅ {selectedPdfFiles.vllist.name}</span>
+               ) : (
+                 <span className="no-file">📁 PDF 파일을 선택해주세요</span>
+               )}
+             </div>
+            <button 
+              className="btn btn-primary btn-sm"
+              onClick={() => handleUploadManagerFile('vllist')}
+              disabled={isReadOnly || !selectedPdfFiles.vllist}
+            >
+              📤 PDF 업로드
+            </button>
+          </div>
+
+          {/* 단품견적서 PDF 업로드 */}
+          <div className="pdf-upload-item">
+            <h5>💰 단품견적서 PDF</h5>
+            <button 
+              className="btn btn-outline-secondary btn-sm"
+              onClick={() => handleFileSelect('singlequote')}
+              disabled={isReadOnly}
+              style={{ marginBottom: '15px', width: '100%' }}
+            >
+              📁 PDF 파일 선택
+            </button>
+            <div className="file-status">
+              {selectedPdfFiles.singlequote ? (
+                <span className="file-selected">✅ {selectedPdfFiles.singlequote.name}</span>
+              ) : (
+                <span className="no-file">📁 PDF 파일을 선택해주세요</span>
+              )}
+            </div>
+            <button 
+              className="btn btn-primary btn-sm"
+              onClick={() => handleUploadManagerFile('singlequote')}
+              disabled={isReadOnly || !selectedPdfFiles.singlequote}
+            >
+              📤 PDF 업로드
+            </button>
+          </div>
+
+          {/* 다수량견적서 PDF 업로드 */}
+          <div className="pdf-upload-item">
+            <h5>📊 다수량견적서 PDF</h5>
+            <button 
+              className="btn btn-outline-secondary btn-sm"
+              onClick={() => handleFileSelect('multiquote')}
+              disabled={isReadOnly}
+              style={{ marginBottom: '15px', width: '100%' }}
+            >
+              📁 PDF 파일 선택
+            </button>
+            <div className="file-status">
+              {selectedPdfFiles.multiquote ? (
+                <span className="file-selected">✅ {selectedPdfFiles.multiquote.name}</span>
+              ) : (
+                <span className="no-file">📁 PDF 파일을 선택해주세요</span>
+              )}
+            </div>
+            <button 
+              className="btn btn-primary btn-sm"
+              onClick={() => handleUploadManagerFile('multiquote')}
+              disabled={isReadOnly || !selectedPdfFiles.multiquote}
+            >
+              📤 PDF 업로드
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  useEffect(() => {
+    if (tempEstimateNo) {
+      loadExistingData();
+      // 🔑 파일 목록 조회 추가
+      fetchManagerFiles();
+      fetchCustomerFiles();
+    }
+  }, [tempEstimateNo, loadExistingData]); // loadExistingData 추가
+
+  useEffect(() => {
+    // types와 accModelList가 모두 로드된 후에만 loadInitialSpecification을 호출
+    if (tempEstimateNo && types.length > 0 && accModelList.length > 0) {
+      if (selectedValve && selectedValve.sheetID > 0) {
+        loadInitialSpecification(selectedValve.sheetID);
+      }
+    }
+  }, [selectedValve?.sheetID, tempEstimateNo, types, accModelList]); // types와 accModelList 추가
+
+  return (
+    <div className="estimate-detail-page">
+      {/* 헤더 */}
+      <div className="page-header">
+        <button className="back-button" onClick={() => navigate(-1)}>
+          ← 견적요청
+        </button>
+        <h1>사양 선정</h1>
+        <div className="header-actions">
+          <button className="btn btn-secondary">견적 세부 정보 한눈에 보기</button>
+          <button className="btn btn-secondary">견적 서류 다운로드</button>
+        </div>
+      </div>
+
+      {/* 상태 및 프로젝트 정보 */}
+      <div className="status-section">
+        <div className="status-group">
+          <label>진행상태:</label>
+          <select 
+            value={currentStatus} 
+            onChange={(e) => {
+              const newStatus = e.target.value;
+              if (newStatus !== currentStatus) {
+                handleStatusChange(newStatus);
+              }
+            }}
+            className="status-select"
+          >
+            <option value="견적요청">견적요청</option>
+            <option value="견적처리중">견적처리중</option>
+            <option value="견적완료">견적완료</option>
+            <option value="주문">주문</option>
+          </select>
+        </div>
+        <div className="project-group">
+          <label>프로젝트명:</label>
+          <input type="text" value={projectName} readOnly={isReadOnly} className="project-input" />
+        </div>
+      </div>
+
+      {/* 메인 콘텐츠 */}
+      <div className="main-content">
+        <div className="steps-container">
+          <StepsSection />
+          <CustomerRequirementSection />
+          <StaffCommentSection />
+          <CustomerAttachmentsSection />
+          <ManagerAttachmentsSection />
+        </div>
+        
+        {/* 품번 표시 섹션 - 한 줄 모눈종이 */}
+        <div className="part-number-section">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">생성된 품번</h3>
+          <div className="part-number-single-line">
+            {generatePartNumber.split('').map((char, index) => (
+              <div 
+                key={index}
+                className={`char-box ${char === '0' ? 'empty-char' : 'filled-char'}`}
+                title={`위치 ${index}: ${char}`}
+              >
+                {char}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  };
+  
+  export default EstimateDetailPage;

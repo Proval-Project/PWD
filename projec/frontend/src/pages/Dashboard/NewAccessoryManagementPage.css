@@ -1,0 +1,187 @@
+.new-accessory-management-page {
+    padding: 24px;
+    background-color: #f4f7f9;
+}
+
+.main-tabs-container {
+    background-color: white;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 24px;
+}
+
+.main-tabs-container h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 16px;
+    color: #333;
+}
+
+.main-tabs {
+    display: flex;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.main-tab-button {
+    padding: 10px 20px;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    color: #6c757d;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px; 
+    transition: all 0.2s ease-in-out;
+}
+
+.main-tab-button.active {
+    color: #007bff;
+    border-bottom-color: #007bff;
+}
+
+.main-tab-button:hover {
+    color: #0056b3;
+}
+
+.content-wrapper {
+    background-color: white;
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.section-selector {
+    padding: 16px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin-bottom: 24px;
+}
+
+.section-selector h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 16px;
+    color: #333;
+}
+
+.section-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.section-button {
+    padding: 8px 16px;
+    border: 1px solid #ced4da;
+    background-color: #fff;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.section-button.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.section-button:hover {
+    background-color: #e9ecef;
+}
+
+.section-button.active:hover {
+    background-color: #0056b3;
+}
+
+.table-area {
+    margin-top: 24px;
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.table-header h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+}
+
+.search-input {
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+
+.control-btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid #ced4da;
+    background-color: #f8f9fa;
+}
+
+.add-btn {
+    background-color: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px;
+    border: 1px solid #dee2e6;
+    text-align: left;
+}
+
+thead {
+    background-color: #f8f9fa;
+}
+
+.action-btn {
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 5px;
+    border: 1px solid transparent;
+}
+
+.edit-btn {
+    background-color: #007bff;
+    color: white;
+}
+
+.delete-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+.accessory-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.placeholder-content {
+    padding: 40px;
+    text-align: center;
+    color: #6c757d;
+    font-size: 18px;
+}
+
+table tbody tr.selected {
+    background-color: #e0eaff;
+}

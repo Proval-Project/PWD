@@ -1,0 +1,6 @@
+@EstimateRequestSystem_HostAddress = http://localhost:5135
+
+GET {{EstimateRequestSystem_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

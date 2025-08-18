@@ -1,0 +1,32 @@
+{
+  "templates": {
+    "datasheet": {
+      "excel": "templates/datasheet_template.xlsx",
+      "pdf": "templates/datasheet_template.pdf",
+      "description": "DataSheet 템플릿"
+    },
+    "cvlist": {
+      "excel": "templates/cvlist_template.xlsx",
+      "pdf": "templates/cvlist_template.pdf",
+      "description": "CV 리스트 템플릿"
+    },
+    "vllist": {
+      "excel": "templates/vllist_template.xlsx",
+      "pdf": "templates/vllist_template.pdf",
+      "description": "VL 리스트 템플릿"
+    },
+    "singlequote": {
+      "excel": "templates/singlequote_template.xlsx",
+      "pdf": "templates/singlequote_template.pdf",
+      "description": "단품 견적서 템플릿"
+    },
+    "multiquote": {
+      "excel": "templates/multiquote_template.xlsx",
+      "pdf": "templates/multiquote_template.pdf",
+      "description": "다수량 견적서 템플릿"
+    }
+  },
+  "defaultFileType": "excel",
+  "allowedExtensions": [".xlsx", ".xls", ".pdf"],
+  "maxFileSize": 10485760
+}

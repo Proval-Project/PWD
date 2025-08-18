@@ -1,0 +1,630 @@
+/* NewEstimateRequest.css - 견적 요청 페이지 전용 스타일 */
+
+/* EstimateDetailPage와 동일한 스타일 적용 */
+.estimate-detail-page {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.back-button {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.back-button:hover {
+  background: #5a6268;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+}
+
+.btn-primary {
+  background: #007bff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #0056b3;
+}
+
+.status-section {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.project-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.project-group label {
+  font-weight: bold;
+  color: #495057;
+}
+
+.project-input {
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+  color: #495057;
+}
+
+.main-content {
+  margin-bottom: 30px;
+}
+
+.steps-container {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.step-section {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.step-header {
+  background: #f8f9fa;
+  padding: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.step-header h3 {
+  margin: 0;
+  color: #495057;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.step-subsection {
+  padding: 20px;
+  border-bottom: 1px solid #e0e0e0;
+  position: relative;
+}
+
+.step-subsection:last-child {
+  border-bottom: none;
+}
+
+.step-subsection h4 {
+  margin: 0 0 15px 0;
+  color: #495057;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.step-description {
+  margin: 5px 0 15px 0;
+  font-size: 14px;
+  color: #666;
+  font-weight: normal;
+}
+
+/* Type 관련 스타일 */
+.type-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.type-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.type-actions button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  background: #007bff;
+  color: white;
+}
+
+.type-actions button:hover {
+  background: #0056b3;
+}
+
+.type-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.type-item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.type-item.selected {
+  border: 2px solid #007bff !important;
+  background: #e3f2fd !important;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2) !important;
+}
+
+/* 더 구체적인 선택자로 강제 적용 */
+.step-subsection .type-item.selected {
+  border: 2px solid #007bff !important;
+  background: #e3f2fd !important;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2) !important;
+}
+
+/* 최고 우선순위로 강제 적용 */
+div.type-item.selected {
+  border: 2px solid #007bff !important;
+  background: #e3f2fd !important;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2) !important;
+}
+
+/* 인라인 스타일보다 우선 적용 */
+.type-item.selected[class*="selected"] {
+  border: 2px solid #007bff !important;
+  background: #e3f2fd !important;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2) !important;
+}
+
+.type-select {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.type-count {
+  width: 100px;
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.remove-type-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  background: #dc3545;
+  color: white;
+}
+
+.remove-type-btn:hover {
+  background: #c82333;
+}
+
+/* 드롭다운 스타일 */
+.valve-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.dropdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f9fa;
+}
+
+.dropdown-header h4 {
+  margin: 0;
+  color: #495057;
+  font-size: 1.1rem;
+}
+
+.dropdown-header button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  background: #6c757d;
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.dropdown-header button:hover {
+  background: #5a6268;
+}
+
+.dropdown-content {
+  padding: 0;
+}
+
+.dropdown-item {
+  padding: 12px 15px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s;
+}
+
+.dropdown-item:hover {
+  background: #f8f9fa;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+/* 기타요청사항 스타일 */
+.other-requests-content {
+  padding: 20px;
+}
+
+.other-requests-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 15px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 14px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.other-requests-textarea:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.25);
+}
+
+/* 첨부파일 스타일 */
+.attachments-content {
+  padding: 20px;
+}
+
+.file-input {
+  width: 100%;
+  padding: 10px;
+  border: 2px dashed #ced4da;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  cursor: pointer;
+}
+
+.file-input:hover {
+  border-color: #007bff;
+}
+
+.attachment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.attachment-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.attachment-item:hover {
+  background: #e9ecef;
+}
+
+.file-name {
+  font-weight: 500;
+  color: #495057;
+}
+
+.file-size {
+  color: #6c757d;
+  font-size: 12px;
+}
+
+.delete-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  background: #dc3545;
+  color: white;
+}
+
+.delete-btn:hover {
+  background: #c82333;
+}
+
+/* 하단 액션 버튼들 */
+.bottom-actions {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 30px 0;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* 기존 견적요청 페이지 스타일 유지 */
+.specification-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.spec-section {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.spec-section h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #333;
+  font-weight: 600;
+}
+
+.spec-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+}
+
+.spec-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.spec-item label {
+  font-weight: 500;
+  color: #555;
+  font-size: 14px;
+}
+
+.spec-item input,
+.spec-item select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.acc-section {
+  grid-column: 1 / -1;
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+.acc-section h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #333;
+  font-weight: 600;
+}
+
+.acc-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 15px;
+}
+
+.acc-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.acc-item label {
+  font-weight: 500;
+  color: #555;
+  font-size: 14px;
+}
+
+.acc-item input,
+.acc-item select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1200px) {
+  .specification-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .acc-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .estimate-detail-page {
+    padding: 10px;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .status-section {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .specification-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .acc-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .bottom-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+/* 🔑 관리 첨부파일 스타일 */
+.manager-file-section {
+  margin-bottom: 30px;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.file-type-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.file-type-header h4 {
+  margin: 0;
+  color: #495057;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.file-type-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.info-text {
+  color: #6c757d;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.file-list {
+  min-height: 60px;
+}
+
+.file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  margin-bottom: 8px;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.file-name {
+  font-weight: 500;
+  color: #495057;
+  flex: 1;
+}
+
+.file-size {
+  color: #6c757d;
+  font-size: 12px;
+  margin: 0 15px;
+}
+
+.file-item .btn {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+/* 파일 타입별 아이콘 색상 */
+.file-type-header h4[data-type="datasheet"] {
+  color: #28a745;
+}
+
+.file-type-header h4[data-type="cvlist"] {
+  color: #17a2b8;
+}
+
+.file-type-header h4[data-type="vllist"] {
+  color: #ffc107;
+}
+
+.file-type-header h4[data-type="singlequote"] {
+  color: #dc3545;
+}
+
+.file-type-header h4[data-type="multiquote"] {
+  color: #6f42c1;
+}
