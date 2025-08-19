@@ -459,6 +459,11 @@ namespace EstimateRequestSystem.Controllers
             try
             {
                 Console.WriteLine("✅ 파일 업로드 시작");
+                // customer 업로드 시 managerFileType이 비어 있으면 "customer"로 통일
+                if (fileType == "customer" && string.IsNullOrEmpty(managerFileType))
+                {
+                    managerFileType = "customer";
+                }
                 var attachment = await _estimateService.UploadAttachmentAsync(tempEstimateNo, file, uploadUserID, fileType, managerFileType);
                 Console.WriteLine("✅ 파일 업로드 성공");
                 return CreatedAtAction(nameof(GetAttachments), new { tempEstimateNo }, attachment);
@@ -688,6 +693,55 @@ namespace EstimateRequestSystem.Controllers
             }
         }
 
+        // 견적 완료 처리: CurEstimateNo 생성 및 상태=완료 저장
+        [HttpPost("sheets/{tempEstimateNo}/complete")]
+        public async Task<IActionResult> CompleteEstimate(string tempEstimateNo)
+        {
+            try
+            {
+                var curNo = await _estimateService.CompleteEstimateAsync(tempEstimateNo);
+                if (string.IsNullOrEmpty(curNo))
+                    return NotFound(new { message = "견적을 찾을 수 없습니다." });
+                return Ok(new { curEstimateNo = curNo, statusText = "견적완료" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        // 완료 취소 → 진행중으로 되돌리기
+        [HttpPost("sheets/{tempEstimateNo}/complete/cancel")]
+        public async Task<IActionResult> CancelCompletion(string tempEstimateNo)
+        {
+            try
+            {
+                var ok = await _estimateService.CancelCompletionAsync(tempEstimateNo);
+                if (!ok) return NotFound(new { message = "견적을 찾을 수 없습니다." });
+                return Ok(new { statusText = "견적처리중" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        // 주문 확정 → 상태=주문
+        [HttpPost("sheets/{tempEstimateNo}/order/confirm")]
+        public async Task<IActionResult> ConfirmOrder(string tempEstimateNo)
+        {
+            try
+            {
+                var ok = await _estimateService.ConfirmOrderAsync(tempEstimateNo);
+                if (!ok) return NotFound(new { message = "견적을 찾을 수 없습니다." });
+                return Ok(new { statusText = "주문" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
                     // 사양 저장
             [HttpPost("sheets/{tempEstimateNo}/requests/{sheetID}/specification")]
             public async Task<ActionResult> SaveSpecification(string tempEstimateNo, int sheetID, [FromBody] SaveSpecificationRequestDto specification) // DTO 변경
@@ -712,6 +766,30 @@ namespace EstimateRequestSystem.Controllers
                 {
                     Console.WriteLine($"사양 저장 중 예외 발생: {ex.Message}");
                     Console.WriteLine($"스택 트레이스: {ex.StackTrace}");
+                    return BadRequest(new { message = ex.Message });
+                }
+            }
+
+            // 사양 일괄 저장 (해당 tempEstimateNo의 모든 SheetID 대상)
+            [HttpPost("sheets/{tempEstimateNo}/specification/bulk")]
+            public async Task<ActionResult> BulkSaveSpecification(string tempEstimateNo, [FromBody] BulkSaveSpecificationRequestDto request)
+            {
+                try
+                {
+                    if (request?.Items == null || request.Items.Count == 0)
+                        return BadRequest(new { message = "저장할 항목이 없습니다." });
+
+                    var okAll = true;
+                    foreach (var item in request.Items)
+                    {
+                        var saved = await _estimateService.SaveSpecificationAsync(tempEstimateNo, item.SheetID, item.Specification);
+                        if (!saved) okAll = false;
+                    }
+                    if (!okAll) return BadRequest(new { message = "일괄 저장에 실패했습니다." });
+                    return Ok(new { message = "모든 태그에 사양을 일괄 저장했습니다." });
+                }
+                catch (Exception ex)
+                {
                     return BadRequest(new { message = ex.Message });
                 }
             }

@@ -74,6 +74,11 @@ namespace EstimateRequestSystem.Services
         // 견적 상세 조회
         Task<EstimateDetailResponseDto?> GetEstimateDetailAsync(string tempEstimateNo, string currentUserId);
 
+        // 견적 완료/주문 확정
+        Task<string?> CompleteEstimateAsync(string tempEstimateNo);
+        Task<bool> CancelCompletionAsync(string tempEstimateNo);
+        Task<bool> ConfirmOrderAsync(string tempEstimateNo);
+
         // 파일 생성 메서드들
         Task<string> GenerateCVListAsync(string tempEstimateNo);
         Task<string> GenerateVLListAsync(string tempEstimateNo);
@@ -171,6 +176,7 @@ namespace EstimateRequestSystem.Services
 
         // 사양 저장
         Task<bool> SaveSpecificationAsync(string tempEstimateNo, int sheetID, SaveSpecificationRequestDto specification); // DTO 변경
+        Task<bool> BulkSaveSpecificationAsync(string tempEstimateNo, SaveSpecificationRequestDto specification);
 
         // 사양 조회
         Task<SpecificationResponseDto?> GetSpecificationAsync(string tempEstimateNo, int sheetID);

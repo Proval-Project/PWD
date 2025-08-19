@@ -1,5 +1,16 @@
 namespace EstimateRequestSystem.DTOs
 {
+    public class BulkSaveSpecificationItemDto
+    {
+        public int SheetID { get; set; }
+        public SaveSpecificationRequestDto Specification { get; set; } = new SaveSpecificationRequestDto();
+    }
+
+    public class BulkSaveSpecificationRequestDto
+    {
+        public List<BulkSaveSpecificationItemDto> Items { get; set; } = new List<BulkSaveSpecificationItemDto>();
+    }
+
     // 견적 상세 조회 응답 DTO
     public class EstimateDetailResponseDto
     {
@@ -18,9 +29,11 @@ namespace EstimateRequestSystem.DTOs
         public string? PrevEstimateNo { get; set; }
         public string CustomerID { get; set; } = string.Empty;
         public string CustomerName { get; set; } = string.Empty; // 회사명
+        public string CustomerUserName { get; set; } = string.Empty; // 고객 사용자 이름(User.Name)
         public string WriterID { get; set; } = string.Empty;
         public string WriterName { get; set; } = string.Empty; // 작성자명
         public string? ManagerID { get; set; }
+        public string ManagerName { get; set; } = string.Empty; // 담당자명
         public int Status { get; set; }
         public string StatusText { get; set; } = string.Empty;
         public string? Project { get; set; }

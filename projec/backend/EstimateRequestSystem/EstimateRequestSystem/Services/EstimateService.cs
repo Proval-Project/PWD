@@ -920,6 +920,8 @@ namespace EstimateRequestSystem.Services
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             "application/x-hwp",
             "application/haansofthwp",
+            "application/vnd.ms-powerpoint",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
             "image/jpeg",
             "image/png",
             "image/gif",
@@ -928,8 +930,11 @@ namespace EstimateRequestSystem.Services
             "image/webp",
             "text/plain",
             "application/zip",
+            "application/x-zip-compressed",
             "application/x-rar-compressed",
-            "application/x-7z-compressed"
+            "application/x-7z-compressed",
+            // 일부 브라우저/클라이언트에서 문서/압축파일을 octet-stream으로 전송하는 경우 허용
+            "application/octet-stream"
         };
 
         // Attachment operations
@@ -950,31 +955,33 @@ namespace EstimateRequestSystem.Services
             // 🔑 attachmentID 기반 중복 체크 (더 정확한 방법)
             var originalFileName = Path.GetFileName(file.FileName); // 🔑 변수 선언을 먼저!
             
-            var existingAttachment = await _context.EstimateAttachment
-    .FirstOrDefaultAsync(a => a.TempEstimateNo == tempEstimateNo && 
-                            a.ManagerFileType == managerFileType
-                            );
+            // 관리자 파일 타입에 대해서만 '교체' 동작 수행 (customer는 누적 저장)
+            if (fileType == "manager" && !string.IsNullOrEmpty(managerFileType) && managerFileType != "customer")
+            {
+                var existingAttachment = await _context.EstimateAttachment
+                    .FirstOrDefaultAsync(a => a.TempEstimateNo == tempEstimateNo && a.ManagerFileType == managerFileType);
 
-if (existingAttachment != null)
-{
-    // 기존 파일 삭제
-    if (File.Exists(existingAttachment.FilePath))
-    {
-        try
-        {
-            File.Delete(existingAttachment.FilePath);
-            Console.WriteLine($"✅ 기존 파일 삭제 완료: {existingAttachment.FilePath}");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"⚠️ 기존 파일 삭제 실패: {ex.Message}");
-        }
-    }
-    
-    // 기존 DB 레코드도 삭제
-    _context.EstimateAttachment.Remove(existingAttachment);
-    await _context.SaveChangesAsync();
-    Console.WriteLine($"✅ 기존 DB 레코드 삭제 완료");
+                if (existingAttachment != null)
+                {
+                    // 기존 파일 삭제
+                    if (File.Exists(existingAttachment.FilePath))
+                    {
+                        try
+                        {
+                            File.Delete(existingAttachment.FilePath);
+                            Console.WriteLine($"✅ 기존 파일 삭제 완료: {existingAttachment.FilePath}");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"⚠️ 기존 파일 삭제 실패: {ex.Message}");
+                        }
+                    }
+
+                    // 기존 DB 레코드도 삭제
+                    _context.EstimateAttachment.Remove(existingAttachment);
+                    await _context.SaveChangesAsync();
+                    Console.WriteLine($"✅ 기존 DB 레코드 삭제 완료");
+                }
             }
 
             // 폴더 크기 제한 (100MB)
@@ -992,7 +999,12 @@ if (existingAttachment != null)
             }
             else
             {
-                filesFolder = Path.Combine(Directory.GetCurrentDirectory(), "files", tempEstimateNo, "CustomerRequest");
+                // 고객 파일도 ResultFiles/customer 경로에 저장하도록 변경
+                if (string.IsNullOrEmpty(managerFileType))
+                {
+                    managerFileType = "customer";
+                }
+                filesFolder = Path.Combine(Directory.GetCurrentDirectory(), "files", tempEstimateNo, "ResultFiles", "customer");
             }
             
             Console.WriteLine($"📁 파일 저장 경로: {filesFolder}");
@@ -1587,6 +1599,67 @@ if (existingAttachment != null)
             return true;
         }
 
+        private async Task<string> GenerateCurEstimateNoAsync()
+        {
+            var today = DateTime.Now;
+            var datePrefix = today.ToString("yyyyMMdd");
+            var prefix = $"YA{datePrefix}-";
+
+            var existingNumbers = await _context.EstimateSheetLv1
+                .Where(es => es.CurEstimateNo != null && es.CurEstimateNo.StartsWith(prefix))
+                .Select(es => es.CurEstimateNo!)
+                .ToListAsync();
+
+            var maxSeq = 0;
+            foreach (var no in existingNumbers)
+            {
+                var parts = no.Split('-');
+                if (parts.Length == 2 && int.TryParse(parts[1], out int seq))
+                    maxSeq = Math.Max(maxSeq, seq);
+            }
+
+            var next = maxSeq + 1;
+            return $"{prefix}{next:D3}";
+        }
+
+        public async Task<string?> CompleteEstimateAsync(string tempEstimateNo)
+        {
+            var sheet = await _context.EstimateSheetLv1.FirstOrDefaultAsync(x => x.TempEstimateNo == tempEstimateNo);
+            if (sheet == null) return null;
+
+            if (string.IsNullOrEmpty(sheet.CurEstimateNo))
+            {
+                sheet.CurEstimateNo = await GenerateCurEstimateNoAsync();
+            }
+            sheet.Status = (int)EstimateStatus.Completed; // 견적완료(가정: 4)
+            await _context.SaveChangesAsync();
+            return sheet.CurEstimateNo;
+        }
+
+        public async Task<bool> CancelCompletionAsync(string tempEstimateNo)
+        {
+            var sheet = await _context.EstimateSheetLv1.FirstOrDefaultAsync(x => x.TempEstimateNo == tempEstimateNo);
+            if (sheet == null) return false;
+            // 이전 완료 번호를 보존하고 현재 번호는 해제하여 재발급 가능하게 함
+            if (!string.IsNullOrEmpty(sheet.CurEstimateNo))
+            {
+                sheet.PrevEstimateNo = sheet.CurEstimateNo;
+                sheet.CurEstimateNo = null;
+            }
+            sheet.Status = (int)EstimateStatus.InProgress; // 진행중으로 되돌림
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> ConfirmOrderAsync(string tempEstimateNo)
+        {
+            var sheet = await _context.EstimateSheetLv1.FirstOrDefaultAsync(x => x.TempEstimateNo == tempEstimateNo);
+            if (sheet == null) return false;
+            sheet.Status = (int)EstimateStatus.Ordered; // 주문
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         // 임시저장 목록 조회
         public async Task<EstimateInquiryResponseDto> GetDraftEstimatesAsync(EstimateInquiryRequestDto request, string currentUserId, string? customerId = null)
         {
@@ -1835,9 +1908,11 @@ if (existingAttachment != null)
                     PrevEstimateNo = estimateSheet.PrevEstimateNo,
                     CustomerID = estimateSheet.CustomerID ?? "",
                     CustomerName = estimateSheet.Customer?.CompanyName ?? estimateSheet.CustomerID ?? "",
+                    CustomerUserName = estimateSheet.Customer?.Name ?? estimateSheet.CustomerID ?? "",
                     WriterID = estimateSheet.WriterID ?? "",
                     WriterName = estimateSheet.Writer?.Name ?? estimateSheet.WriterID ?? "",
                     ManagerID = estimateSheet.ManagerID,
+                    ManagerName = estimateSheet.Manager?.Name ?? estimateSheet.ManagerID ?? "",
                     Status = estimateSheet.Status,
                     StatusText = EstimateStatusExtensions.ToKoreanText(estimateSheet.Status),
                     Project = estimateSheet.Project,
@@ -3942,6 +4017,29 @@ private string? ConvertEmptyToNull(string? value)
             {
                 Console.WriteLine($"사양 저장 중 예외 발생: {ex.Message}");
                 Console.WriteLine($"스택 트레이스: {ex.StackTrace}");
+                return false;
+            }
+        }
+
+        public async Task<bool> BulkSaveSpecificationAsync(string tempEstimateNo, SaveSpecificationRequestDto specification)
+        {
+            try
+            {
+                var sheetIds = await _context.EstimateRequest
+                    .Where(er => er.TempEstimateNo == tempEstimateNo)
+                    .Select(er => er.SheetID)
+                    .ToListAsync();
+
+                var okAll = true;
+                foreach (var sid in sheetIds)
+                {
+                    var ok = await SaveSpecificationAsync(tempEstimateNo, sid, specification);
+                    if (!ok) okAll = false;
+                }
+                return okAll;
+            }
+            catch
+            {
                 return false;
             }
         }
@@ -6275,7 +6373,7 @@ public async Task<List<EstimateAttachmentResponseDto>> GetManagerFilesAsync(stri
 {
     var attachments = await _context.EstimateAttachment
         .Where(ea => ea.TempEstimateNo == tempEstimateNo && 
-                    !string.IsNullOrEmpty(ea.ManagerFileType))
+                    !string.IsNullOrEmpty(ea.ManagerFileType) && ea.ManagerFileType != "customer")
         .OrderBy(ea => ea.ManagerFileType)
         .ThenBy(ea => ea.UploadDate)
         .Select(ea => new EstimateAttachmentResponseDto
@@ -6298,7 +6396,7 @@ public async Task<List<EstimateAttachmentResponseDto>> GetCustomerFilesAsync(str
 {
     var attachments = await _context.EstimateAttachment
         .Where(ea => ea.TempEstimateNo == tempEstimateNo && 
-                    string.IsNullOrEmpty(ea.ManagerFileType))
+                    (string.IsNullOrEmpty(ea.ManagerFileType) || ea.ManagerFileType == "customer"))
         .OrderBy(ea => ea.UploadDate)
         .Select(ea => new EstimateAttachmentResponseDto
         {

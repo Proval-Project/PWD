@@ -1,20 +1,22 @@
 .dashboard-layout {
   display: flex;
-  min-height: 100vh;
 }
 
 .dashboard-main {
   flex: 1;
-  margin-left: 220px; /* 사이드바 너비와 맞춤 */
-  background-color: #ffffff;
-  min-height: 100vh;
-  padding: 15px;
+  padding: 0; /* 공통 여백을 완전히 제거하여 모든 페이지가 사이드바에 붙도록 함 */
+  margin-left: 220px;
+  transition: margin-left 0.3s ease;
+  overflow-x: hidden;
 }
 
-/* 반응형 디자인 */
+/* 768px 이하 화면에서는 사이드바가 상단으로 가므로 여백 제거 */
 @media (max-width: 768px) {
+  .dashboard-layout {
+    flex-direction: column;
+  }
+
   .dashboard-main {
     margin-left: 0;
-    padding: 10px;
   }
 } 

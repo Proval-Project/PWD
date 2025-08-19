@@ -1,9 +1,140 @@
+/* 컴팩트 UI 적용을 위한 전반적인 스타일 수정 */
+
+:root {
+  --font-size-normal: 13px;
+  --font-size-small: 11px;
+  --padding-base: 15px;
+  --padding-small: 8px;
+  --gap-base: 15px;
+  --gap-small: 8px;
+}
+
+.estimate-detail-page {
+  /* 최상위 컨테이너는 어떠한 간격도 만들지 않도록 합니다. */
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+/* 페이지의 직계 자식들에게 직접 좌우 패딩을 부여하여 정렬합니다. */
+.estimate-detail-page > .page-header,
+.estimate-detail-page > .status-section,
+.estimate-detail-page > .main-content {
+  padding-left: 24px;
+  padding-right: 24px;
+  box-sizing: border-box;
+}
+
+/* main-content는 이제 패딩을 갖지 않고, 너비를 100% 채우는 컨테이너가 됩니다. */
+.main-content {
+  padding-left: 0;
+  padding-right: 0;
+  /* 기존의 다른 스타일은 유지 */
+}
+
+/* 실제 콘텐츠를 담는 steps-container에 패딩을 적용합니다. */
+.steps-container {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+/* content-card가 실제 보이는 카드 역할을 하도록 스타일을 집중시킵니다. */
+.content-card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 24px;
+}
+
+.page-header {
+  margin-bottom: var(--gap-base);
+  padding-bottom: var(--padding-base);
+}
+
+.btn {
+  padding: var(--padding-small) 12px;
+  font-size: var(--font-size-small);
+}
+
+.status-section {
+  gap: var(--gap-base);
+  margin-bottom: var(--gap-base);
+  padding: var(--padding-base);
+}
+
+
+.estimate-detail-page .step-section {
+  padding: var(--padding-base);
+}
+
+.estimate-detail-page .step-header h3 {
+  font-size: 8px;
+  padding-bottom: 0px;
+}
+
+.estimate-detail-page .step-subsection {
+  padding: var(--padding-base);
+  margin-bottom: var(--gap-base);
+}
+
+.estimate-detail-page .step-subsection h4 {
+  font-size: 14px;
+  margin-bottom: var(--gap-base);
+  padding-bottom: var(--padding-small);
+}
+
+/* Step 1 & 2 리스트 아이템 */
+.estimate-detail-page .type-item, 
+.estimate-detail-page .valve-item {
+  padding: var(--padding-small);
+  gap: var(--gap-small);
+}
+
+/* Step 3 상세사양 */
+.estimate-detail-page .specification-grid {
+  gap: var(--gap-base);
+}
+.estimate-detail-page .spec-section {
+  padding: var(--padding-base);
+  min-height: 100px;
+}
+.estimate-detail-page .spec-grid {
+  gap: var(--gap-small);
+}
+.estimate-detail-page .spec-item label {
+  font-size: var(--font-size-small);
+}
+.estimate-detail-page .spec-item select,
+.size-input-group select,
+.rating-input-group select {
+  padding: 0px 0px;
+  font-size: 4px;
+}
+
+/* ACC 테이블 */
+.estimate-detail-page .acc-table {
+  padding: 0px;
+}
+.estimate-detail-page .acc-table th,
+.estimate-detail-page .acc-table td {
+  padding: 0px;
+}
+.estimate-detail-page .acc-table input {
+  padding: 0px 0px;
+  font-size: 8px;
+}
+
+/* 가로 배치 컨테이너 높이 재조정 */
+.step-col {
+  height: calc(100vh - 240px); /* 헤더 높이 등을 고려하여 재조정 */
+}
+
 /* EstimateDetailPage.css - 사양 선정 페이지 전용 스타일 */
 
 
 .estimate-detail-page {
   padding: 20px;
-  max-width: 1400px;
+  max-width: 100%; /* 최대 너비 제한 제거 */
   margin: 0 auto;
 }
 
@@ -54,18 +185,16 @@
 
 .status-section {
   display: flex;
-  gap: 30px;
-  margin-bottom: 30px;
-  padding: 20px;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 4px 8px;
   background: #f8f9fa;
   border-radius: 8px;
+  height: 50px;
+  align-items: center;
 }
 
-.status-group, .project-group {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
+.status-group, .project-group { display: flex; flex-direction: column; gap: 4px; }
 
 .status-group label, .project-group label {
   font-weight: bold;
@@ -91,15 +220,8 @@
   border-color: #007bff;
 }
 
-.project-input {
-  padding: 8px 12px;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  font-size: 14px;
-  background: #e9ecef;
-  color: #495057;
-  cursor: not-allowed;
-}
+.project-group { flex: 9; justify-content: center; }
+.project-input { width: 100%; height: 28px; padding: 2px 6px; font-size: 12px; }
 
 .main-content {
   margin-bottom: 30px;
@@ -108,7 +230,98 @@
 .steps-container {
   display: flex;
   flex-direction: column;
-  gap: 30px;
+  gap: 0px;
+}
+
+/* 새로운 가로 배치 컨테이너 */
+.steps-horizontal-container {
+  display: grid;
+  grid-template-columns: 1.6fr 1.9fr 5.5fr; /* 비율 기반으로 변경 */
+  gap: 20px;
+  align-items: start;
+}
+
+/* 가로 3열 내부: .step-col은 이제 시각적 스타일이 없는 순수한 '칸'이 됩니다. */
+.step-col {
+  min-width: 0; /* 너비 축소를 위해 이 속성은 유지합니다. */
+  /* height, overflow, padding, border 등은 모두 제거하고 아래로 옮깁니다. */
+}
+
+.step-col .step-subsection {
+  height: 100%;
+  border: none;
+  padding: 5px;
+  margin-bottom: 0;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+/* Step 3 스크롤 제거 및 내부 컴팩트화 */
+.step-col:nth-child(3) {
+  height: auto;
+  overflow-y: visible;
+  padding: 10px;
+}
+
+.step-col:nth-child(3) .step-subsection {
+  padding: 5px;
+}
+
+.step-col:nth-child(3) .spec-section,
+.step-col:nth-child(3) .acc-section {
+  padding: 0px;
+  border: 0px solid #f0f0f0;
+}
+
+.step-col:nth-child(3) .specification-grid {
+  gap: 0px;
+}
+
+.step-col:nth-child(3) .spec-section h4,
+.step-col:nth-child(3) .acc-section h4 {
+  font-size: 8px;
+  margin: 0 0 0px 0;
+  padding-bottom: 0px;
+}
+
+.step-col:nth-child(3) .spec-item {
+  gap: 0px;
+}
+
+.step-col:nth-child(3) .spec-item label {
+  font-size: 8px;
+  font-weight: 500;
+  color: #555;
+}
+
+.step-col:nth-child(3) .spec-item input,
+.step-col:nth-child(3) .spec-item select,
+.step-col:nth-child(3) .size-input-group select,
+.step-col:nth-child(3) .rating-input-group select {
+  padding: 0px 0px;
+  font-size: 8px;
+  height: 10px;
+}
+
+/* ACC 테이블 컴팩트화 */
+.step-col:nth-child(3) .acc-table {
+  padding: 0;
+}
+.step-col:nth-child(3) .acc-table th,
+.step-col:nth-child(3) .acc-table td {
+  padding: 0px;
+  font-size: 8px;
+}
+
+.step-col:nth-child(3) .acc-options-group {
+  gap: 0px;
+}
+
+.step-col:nth-child(3) .acc-options-group select,
+.step-col:nth-child(3) .acc-options-group input {
+  font-size: 8px;
+  padding: 0px 0px;
+  height: 10px;
 }
 
 /* 사양 선정 페이지 전용 스타일 */
@@ -116,22 +329,102 @@
   background: white;
   border: 1px solid #dee2e6;
   border-radius: 8px;
-  padding: 20px;
+  padding: 15px; /* 내부 여백부터 줄입니다. */
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+  /* 높이는 유지하되, 스크롤을 비활성화하여 내용이 넘치지 않도록 합니다. */
+  height: calc(100vh - 280px); /* 280px -> 320px 로 수정하여 높이를 줄입니다. */
+  overflow: hidden; /* 스크롤바를 숨깁니다. 내용이 넘치면 잘립니다. */
+  word-break: break-all;
+}
+
+/* --- step-section 내부를 강제로 컴팩트하게 만드는 스타일 --- */
+
+/* 내부 모든 요소의 폰트 크기를 줄입니다. */
+.estimate-detail-page .step-section * {
+  font-size: 10px !important; /* 이전 12px */
+  line-height: 1.2 !important; /* 줄 간격도 최소화 */
+}
+
+/* 내부 제목들의 위아래 간격을 줄입니다. */
+.estimate-detail-page .step-section h3,
+.estimate-detail-page .step-section h4 {
+  font-size: 12px !important; /* 이전 14px */
+  margin: 3px 0 !important;   /* 이전 5px */
+  padding-bottom: 2px !important; /* 이전 4px */
+}
+
+/* 리스트와 아이템의 간격을 최소화합니다. */
+.estimate-detail-page .step-section .type-list,
+.estimate-detail-page .step-section .valve-list {
+  gap: 2px; /* 이전 3px */
+}
+.estimate-detail-page .step-section .type-item,
+.estimate-detail-page .step-section .valve-item {
+  padding: 2px 4px; /* 이전 4px 6px */
+  margin: 1px 0;    /* 이전 2px */
+}
+
+/* Step 3 그리드와 입력 필드를 최소화합니다. */
+.estimate-detail-page .step-section .specification-grid {
+  gap: 0px; /* 이전 8px */
+}
+.estimate-detail-page .step-section .spec-section {
+  padding: 0px; /* 이전 8px */
+}
+.estimate-detail-page .step-section .spec-item label {
+  font-size: 8px !important; /* 이전 11px */
+  margin-bottom: 0px;
+}
+.estimate-detail-page .step-section .spec-item input,
+.estimate-detail-page .step-section .spec-item select {
+  padding: 0px 0px; /* 이전 2px 4px */
+  height: 10px;     /* 이전 24px */
+}
+
+/* ACC 테이블을 최소화합니다. */
+.estimate-detail-page .step-section .acc-table th,
+.estimate-detail-page .step-section .acc-table td {
+  padding: 0px 0px; /* 이전 3px 5px */
+}
+
+/* ACC 테이블을 극단적으로 압축하여 높이를 줄입니다. (acc만 잘리는 문제 해결) */
+.estimate-detail-page .step-section .acc-table {
+  padding: 0px; /* 테이블 자체의 패딩도 줄입니다. */
+}
+.estimate-detail-page .step-section .acc-table th,
+.estimate-detail-page .step-section .acc-table td {
+  padding: 0px 0px !important; /* 상하 패딩을 거의 0으로 만듭니다. */
+}
+/* ACC 테이블 내부의 모든 입력 요소 높이를 줄입니다. */
+.estimate-detail-page .step-section .acc-table input,
+.estimate-detail-page .step-section .acc-table select {
+  height: 10px !important;       /* 높이를 대폭 줄입니다. */
+  padding: 0px 0px !important;   /* 내부 패딩을 최소화합니다. */
+  font-size: 8px !important;     /* 폰트도 작게 맞춥니다. */
+}
+.estimate-detail-page .step-section .acc-options-group {
+    gap: 2px; /* 입력 요소들 간의 간격도 줄입니다. */
+}
+
+.step-section:nth-child(1) {
+  height: 500px; /* 원하는 높이로 수정하세요 */
 }
 
 .estimate-detail-page .step-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin: 0;
+  padding: 2px 0; /* 위아래 여백 최소화 */
 }
 
 .estimate-detail-page .step-header h3 {
   margin: 0;
   color: #495057;
-  border-bottom: 2px solid #007bff;
-  padding-bottom: 10px;
+  border-bottom: 0;
+  padding: 0; /* 제목 자체의 상하 패딩 제거 */
+  line-height: 1.1;
 }
 
 .estimate-detail-page .step-header .header-actions {
@@ -183,7 +476,7 @@
 .estimate-detail-page .specification-content {
   display: flex;
   flex-direction: column;
-  gap: 25px;
+  gap: 0px;
 }
 
 .estimate-detail-page .tag-info {
@@ -197,42 +490,43 @@
 /* Step 3 상세사양 입력을 가로 배치로 변경 */
 .estimate-detail-page .specification-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3열로 고정 */
-  gap: 20px;
-  margin-top: 20px;
+  /* 고정된 3열 대신, 공간에 따라 자동으로 열 개수가 변하도록 수정 (핵심 수정) */
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+  gap: 0px;
+  margin-top: 0px;
 }
 
 .estimate-detail-page .spec-section {
   background: #f8f9fa;
-  padding: 20px;
+  padding: 0px;
   border-radius: 6px;
   border: 1px solid #dee2e6;
-  min-height: 300px; /* 최소 높이 설정 */
+  min-height: 100px; /* 최소 높이 설정 (300px -> 200px로 수정) */
 }
 
 .estimate-detail-page .spec-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
+  gap: 0px;
 }
 
 .estimate-detail-page .spec-item {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 0px;
 }
 
 .estimate-detail-page .spec-item label {
   font-weight: bold;
   color: #495057;
-  font-size: 12px;
+  font-size: 8px;
 }
 
-.estimate-detail-page .spec-item input {
-  padding: 6px 8px;
-  border: 1px solid #ced4da;
+.estimate-detail-page .spec-item select {
+  padding: 0px 0px;
+  border: 0px solid #ced4da;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 4px;
   background: #e9ecef;
   color: #495057;
   text-align: center;
@@ -266,28 +560,28 @@
 }
 
 .estimate-detail-page .spec-section h4 {
-  margin: 0 0 15px 0;
+  margin: 0 0 0px 0;
   color: #495057;
   border-bottom: 1px solid #007bff;
-  padding-bottom: 8px;
-  font-size: 16px;
+  padding-bottom: 0px;
+  font-size: 8px;
 }
 
 .estimate-detail-page .acc-section {
-  margin-top: 30px;
-  padding: 20px;
+  margin-top: 0px;
+  padding: 0px;
   background: #f8f9fa;
   border-radius: 8px;
   border: 1px solid #e0e0e0;
 }
 
 .estimate-detail-page .acc-section h4 {
-  margin: 0 0 20px 0;
+  margin: 0 0 0px 0;
   color: #495057;
-  font-size: 16px;
+  font-size: 8px;
   font-weight: bold;
   border-bottom: 1px solid #007bff;
-  padding-bottom: 8px;
+  padding-bottom: 0px;
 }
 
 .estimate-detail-page .acc-grid {
@@ -299,20 +593,20 @@
 .estimate-detail-page .acc-item {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 0px;
 }
 
 .estimate-detail-page .acc-item label {
   font-weight: bold;
   color: #495057;
-  font-size: 12px;
+  font-size: 8px;
 }
 
 .estimate-detail-page .acc-item input {
-  padding: 6px 8px;
-  border: 1px solid #ced4da;
+  padding: 0px 0px;
+  border: 0px solid #ced4da;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 8px;
   background: #e9ecef;
   color: #495057;
   text-align: center;
@@ -351,8 +645,8 @@
 .estimate-detail-page .bottom-specs {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-  margin-top: 20px;
+  gap: 0px;
+  margin-top: 0px;
 }
 
 .estimate-detail-page .fluid-section, 
@@ -479,13 +773,13 @@
 
 .estimate-detail-page .customer-requirement-textarea {
   width: 100%;
-  min-height: 120px;
-  padding: 15px;
+  min-height: 30px;
+  padding: 0px;
   border: 1px solid #ced4da;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 8px;
   line-height: 1.5;
-  resize: vertical;
+  resize: none;
   background-color: #f8f9fa;
   color: #495057;
 }
@@ -526,22 +820,19 @@
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
-/* 첨부파일 섹션 */
-.estimate-detail-page .attachments-content {
-  padding: 20px;
-}
+
 
 .estimate-detail-page .attachment-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0px;
 }
 
 .estimate-detail-page .attachment-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 15px;
+  padding: 0px 0px;
   background-color: #f8f9fa;
   border: 1px solid #e9ecef;
   border-radius: 6px;
@@ -678,14 +969,14 @@
 
 /* ACC 섹션 테이블 스타일 */
 .estimate-detail-page .acc-section {
-  margin-top: 20px;
+  margin-top: 0px;
 }
 
 .estimate-detail-page .acc-table {
   background: #f8f9fa;
   border-radius: 6px;
   border: 1px solid #dee2e6;
-  padding: 20px;
+  padding: 0px;
 }
 
 .estimate-detail-page .acc-table table {
@@ -695,7 +986,7 @@
 
 .estimate-detail-page .acc-table th {
   background: #e9ecef;
-  padding: 12px;
+  padding: 0px;
   text-align: left;
   font-weight: bold;
   color: #495057;
@@ -703,7 +994,7 @@
 }
 
 .estimate-detail-page .acc-table td {
-  padding: 12px;
+  padding: 0px;
   border-bottom: 1px solid #dee2e6;
   vertical-align: middle;
 }
@@ -716,7 +1007,7 @@
 
 .estimate-detail-page .acc-table input {
   width: 100%;
-  padding: 8px;
+  padding: 0px;
   border: 1px solid #ced4da;
   border-radius: 4px;
   background-color: white;
@@ -754,6 +1045,19 @@
   .estimate-detail-page .options-grid {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   }
+
+  /* 좁은 화면에서는 세로 스택 -> 이 규칙을 주석 처리하여 항상 가로 레이아웃 유지 */
+  /*
+  .steps-horizontal-container {
+    grid-template-columns: 1fr;
+  }
+  */
+
+  .step-col {
+    height: auto;
+    max-height: 60vh; /* 모바일에서는 최대 높이 제한 */
+    overflow-y: auto;
+  }
 }
 
 @media (max-width: 768px) {
@@ -764,7 +1068,7 @@
   
   .estimate-detail-page .other-requests-content,
   .estimate-detail-page .attachments-content {
-    padding: 15px;
+    padding: 0px;
   }
   
   .estimate-detail-page .fluid-section,
@@ -776,18 +1080,14 @@
 }
 
 /* 저장 버튼 스타일 */
-.save-section {
-  display: flex;
-  justify-content: center;
-  margin-top: 30px;
-  padding: 20px;
-  border-top: 1px solid #e0e0e0;
-}
+.save-section { display: flex; justify-content: flex-end; margin: 0; padding: 0; border: 0; }
+.content-card .status-section .save-section { flex: 1; }
+.save-specification-btn { height: 32px; padding: 0 10px; font-size: 12px; border-radius: 8px; }
 
 .save-specification-btn {
   background: #28a745;
   color: white;
-  padding: 12px 30px;
+  padding: 5px 10px;
   font-size: 16px;
   font-weight: 600;
   border-radius: 6px;
@@ -895,7 +1195,7 @@
 
 .accessory-selector input[type="text"] {
   width: 100%;
-  padding: 8px 12px;
+  padding: 0px 0px;
   border: 1px solid #ced4da;
   border-radius: 4px;
   box-sizing: border-box; /* 패딩이 너비에 포함되도록 */
@@ -920,11 +1220,11 @@
 }
 
 .accessory-selector .dropdown-list li {
-  padding: 10px 12px;
+  padding: 0px 0px;
   cursor: pointer;
   border-bottom: 1px solid #eee;
   display: flex; /* 자식 요소들을 가로로 정렬 */
-  gap: 10px; /* 각 섹션 사이의 간격 */
+  gap: 0px; /* 각 섹션 사이의 간격 */
   justify-content: space-between; /* 요소들 사이에 공간 균등 분배 */
   align-items: center; /* 세로 중앙 정렬 */
 }
@@ -956,8 +1256,8 @@
 }
 
 .selected-accessory-display {
-  margin-top: 5px;
-  font-size: 0.9em;
+  margin-top: 0px;
+  font-size: 0.8em;
   color: #6c757d;
   white-space: nowrap;
   overflow: hidden;
@@ -967,8 +1267,8 @@
 .accessory-selector .input-group {
   display: flex;
   flex-direction: row; /* 명시적으로 가로 정렬 */
-  gap: 10px; /* 입력 필드 간 간격 */
-  margin-bottom: 5px; /* 검색 결과 드롭다운과의 간격 */
+  gap: 0px; /* 입력 필드 간 간격 */
+  margin-bottom: 0px; /* 검색 결과 드롭다운과의 간격 */
   align-items: center; /* 세로 중앙 정렬 */
   justify-content: space-between; /* 요소들 사이에 공간 균등 분배 */
 }
@@ -991,6 +1291,16 @@
 
 .reset-button:hover {
   background: #c82333;
+}
+
+/* AccessorySelector 내부 초기화 버튼을 더 컴팩트하게 */
+.accessory-selector .reset-button {
+  padding: 0px 6px !important;   /* 위아래 0으로 줄여 10px 미만 유지 */
+  font-size: 10px !important;
+  line-height: 12px !important;
+  height: 16px !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
 }
 
 /* 품번 생성 섹션 - 한 줄 모눈종이 */
@@ -1047,19 +1357,41 @@
 .part-number-section {
   position: fixed;
   bottom: 0;
-  left: 0;
+  left: 220px; /* 사이드바 너비 */
   right: 0;
+  width: calc(100% - 220px); /* 전체 너비에서 사이드바 너비 제외 */
   z-index: 1000;
   background: white;
   border-top: 3px solid #007bff;
   box-shadow: 0 -4px 12px rgba(0,0,0,0.15);
-  margin-top: 0;
-  border-radius: 8px 8px 0 0;
+  padding: 20px 24px; /* 내부 패딩을 steps-container와 동일하게 맞춤 */
+  box-sizing: border-box; /* 패딩을 너비 계산에 포함 */
 }
 
 /* 메인 콘텐츠에 하단 여백 추가 (품번 섹션이 가려지지 않도록) */
 .main-content {
-  margin-bottom: 200px; /* 품번 섹션 높이만큼 여백 추가 */
+  margin-bottom: 150px; /* 품번 섹션 높이를 고려한 충분한 여백 */
+}
+
+/* "진행상태" 섹션과 메인 카드 사이의 간격 */
+.main-content {
+  margin-top: 20px;
+  margin-bottom: 150px; /* 품번 섹션 높이를 고려한 충분한 여백 */
+  /* 이 클래스에 적용된 다른 padding-left, padding-right를 모두 덮어씁니다. */
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+
+/* 새로운 흰색 카드 컨테이너 스타일 */
+.content-card {
+  /* 실제 콘텐츠를 담는 카드에 보기 좋은 여백을 설정 */
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* 🔑 관리 첨부파일 스타일 */
@@ -1361,3 +1693,275 @@
   color: #6c757d;
   font-style: italic;
 }
+
+.page-header, .status-section, .content-card {
+  /* 각 섹션의 좌우 여백은 부모를 따르도록 하고, 상하 여백만 지정 */
+  padding-left: initial; /* initial 값으로 되돌려 부모의 padding을 따르게 함 */
+  padding-right: initial;
+}
+
+/* 기존에 있던 패딩값들을 유지하며 좌우만 0으로 만듭니다 */
+.page-header {
+  padding-top: 0;
+  padding-bottom: 20px;
+}
+.status-section {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+.content-card {
+  padding-top: 20px;
+  padding-bottom: 20px;
+  /* padding: 20px 20px 20px 10px; 이전 설정 제거 */
+}
+
+.content-card {
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* 카드 내부로 들어온 헤더 스타일 조정 */
+.content-card .page-header {
+  padding: 0 0 20px 0;
+  margin-bottom: 20px;
+}
+
+/* 카드 내부로 들어온 상태 섹션 스타일 조정 */
+.content-card .status-section {
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+/* 기존 .status-section 규칙은 위에서 새로 정의했으므로 수정 또는 제거 */
+.status-section {
+  /* ... 기존에 독립적일 때의 스타일들 제거 ... */
+  background: none;
+  border-radius: 0;
+  border-bottom: none;
+}
+.main-content { margin-left:0 !important; }
+
+/* 고객 요청 사항과 첨부파일을 '가로로' 묶는 블록 스타일 */
+.customer-request-block {
+  display: flex; /* 자식 요소들을 가로로 나열 */
+  gap: 20px; /* 두 섹션 사이의 간격 */
+  background: transparent; /* 배경은 각 섹션이 갖도록 투명하게 변경 */
+  border: none;
+  box-shadow: none;
+}
+
+/* 묶인 블록 내부의 섹션들이 각각의 카드가 되도록 스타일 복원 및 flex 설정 */
+.customer-request-block .step-section {
+  flex: 1; /* 사용 가능한 공간을 균등하게 차지 */
+  min-width: 0; /* 내용이 많아도 줄어들 수 있도록 */
+  height: 100px;
+  
+  /* 개별 카드 스타일을 다시 적용 */
+  background: white;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-radius: 8px;
+
+  /* 상하 패딩을 줄여서 높이를 타이트하게 만듭니다. */
+  padding-top: 0px;
+  padding-bottom: 0px;
+}
+
+/* 이전에 추가했던 세로 구분선은 더 이상 필요 없으므로 제거 */
+.customer-request-block .step-section + .step-section {
+  border-top: none;
+}
+
+/* customer 블록 내부의 불필요한 여백을 모두 제거합니다. */
+
+/* 제목을 감싸는 div의 여백 제거 */
+.customer-request-block .step-header {
+  margin-bottom: 0px; /* 제목과 내용 사이 최소 간격만 남김 */
+  padding: 0;
+}
+
+/* 제목(h3) 자체가 가진 브라우저 기본 마진 제거 */
+.customer-request-block .step-header h3 {
+  margin: 0;
+  padding: 0;
+}
+
+/* 내용을 감싸는 div의 여백 제거 */
+.customer-request-block .customer-requirement-content {
+  padding: 0;
+}
+
+/* 첨부파일 섹션 */
+.estimate-detail-page .attachments-content {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  margin-left: 0px;
+  margin-right: 0px;
+  height: 40px; /* 기준 높이 */
+  padding: 0px;
+  overflow-y: auto; /* 고정 높이에서 세로 스크롤 */
+  overflow-x: hidden; /* 가로 스크롤 숨김 */
+}
+
+/* 고객 요청 첨부파일 하위 요소 크기 맞춤 */
+.attachment-list { max-height: 40px; overflow-y: auto; }
+.attachment-item { height: 20px; padding: 0 6px; font-size: 10px; }
+.attachment-item .file-name { font-size: 10px; }
+.attachment-item .file-size { font-size: 10px; margin: 0 6px; }
+.attachment-item .btn.btn-sm { height: 18px; padding: 0 6px; font-size: 10px; }
+
+/* 고객 파일 업로드 버튼 높이 보강 */
+.customer-upload-btn {
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+  line-height: 1.3;
+}
+
+/* 상단 첨부 블록(관리/고객) 전용 여백/높이 보강 */
+.top-attachments-row .step-section {
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+}
+.top-attachments-row .attachments-content {
+  height: auto !important;
+  min-height: 64px !important;
+  padding: 8px 10px !important;
+  overflow: visible;
+}
+.top-attachments-row .pdf-upload-item {
+  padding: 8px 0 !important;
+}
+
+/* 고객 업로드 아래에 표시되는 컴팩트 PDF 리스트 스타일 */
+.file-grid.compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+.file-card.compact {
+  padding: 8px;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+}
+.file-card.compact .file-name { font-size: 10px; margin: 4px 0; }
+.file-card.compact .file-size { font-size: 10px; color: #6c757d; }
+.file-card.compact .file-actions .btn { padding: 2px 6px; font-size: 10px; }
+
+.doc-issue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 12px;
+}
+.doc-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.doc-label {
+  font-weight: 600;
+  font-size: 12px;
+}
+.icon-download {
+  background: none;
+  border: 0;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 6px;
+  line-height: 1;
+}
+.icon-download:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 고객 업로더 */
+.customer-uploader { padding: 10px; }
+.uploader-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.uploader-header h3 { margin:0; font-size:14px; font-weight:700; }
+.btn-xs { padding:4px 10px; font-size:12px; border:1px solid #ced4da; border-radius:10px; background:#f8f9fa; }
+.uploader-list { border:1px solid #e9ecef; border-radius:10px; background:#fff; padding:6px 8px; max-height:180px; overflow:auto; }
+.uploader-item { display:flex; align-items:center; gap:8px; padding:6px 4px; border-bottom:1px solid #f1f3f5; }
+.uploader-item:last-child { border-bottom:0; }
+.file-icon { width:16px; height:16px; display:inline-block; }
+.file-name { flex:1; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.remove-btn { background:none; border:none; font-size:14px; cursor:pointer; color:#6c757d; }
+.remove-btn:hover { color:#dc3545; }
+
+/* 견적 서류 발급 리스트 */
+.doc-issue-list { display:flex; flex-direction:column; gap:10px; padding:4px 8px; }
+.doc-item { display:flex; align-items:center; justify-content:space-between; }
+.doc-label { font-size:12px; font-weight:600; }
+.icon-download { background:none; border:0; font-size:18px; cursor:pointer; padding:2px 4px; }
+.icon-download:hover { transform: translateY(1px); }
+.icon-download.loading { opacity: 0.6; cursor: wait; }
+
+/* 상단 첨부 블록 컴팩트화 */
+.top-attachments-row .step-section { padding: 6px 8px !important; }
+.top-attachments-row .step-header h3 { font-size: 12px !important; margin: 0 0 0px 0 !important; }
+.top-attachments-row .customer-uploader .uploader-list { max-height: 120px; padding: 4px 6px; }
+.top-attachments-row .uploader-item { padding: 4px 2px; gap: 6px; }
+.top-attachments-row .doc-issue-list { gap: 6px; padding: 2px 4px; }
+.top-attachments-row .doc-label { font-size: 11px; }
+.top-attachments-row .icon-download { font-size: 16px; }
+
+/* 상단 우측 미니 패널 */
+.mini-tools-panel {
+  position: static;
+  width: 100%;
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+  margin-bottom: 8px;
+  height: 120px; /* 고정 높이 */
+}
+.mini-tools-panel .step-section { padding: 8px; border: 1px solid #e9ecef; border-radius: 10px; background:#fff; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.mini-tools-panel .doc-issue-list { gap: 6px; }
+.mini-tools-panel .uploader-list { max-height: 120px; }
+.mini-tools-panel .estimate-summary-card { flex: 3 1 0 !important; }
+.mini-tools-panel .step-section:has(.doc-issue-list) { flex: 1 1 0 !important; }
+.mini-tools-panel .customer-uploader { flex: 1 1 0 !important; }
+.mini-tools-panel .quote-actions { flex: 0.5 1 0 !important; display:flex; flex-direction:column; justify-content:space-between; gap:8px; }
+.start-btn { background:#28a745; color:#fff; border:none; border-radius:16px; height:72px; font-weight:700; }
+.end-btn { background:#8f8f8f; color:#fff; border:none; border-radius:16px; height:72px; font-weight:700; }
+.start-btn.done { background:#3c29ff; color:#fff; }
+
+/* 완료취소 / 주문확정 / 견적마감 스타일 가이드에 가깝게 */
+.start-btn.done { background:#ff3b2f !important; } /* 완료취소: 빨강 */
+.end-btn.done-order { background:#28a745 !important; } /* 주문확정: 초록 */
+
+/* 견적완료(파랑) 버튼 */
+.complete-btn { background:#3c29ff; color:#fff; border:none; border-radius:16px; height:72px; font-weight:700; }
+
+/* 본문 우측 여백 복원 */
+.main-content { padding-right: 0; }
+
+/* 견적 세부 정보 미니 카드 */
+.estimate-summary-card { padding:6px; height: 100%; overflow: auto; }
+.summary-grid { display:flex; flex-direction:column; gap:4px; max-height: 100%; overflow:auto; }
+.summary-row { display:flex; justify-content:space-between; font-size:10px; line-height: 1.2; }
+.summary-row .k { color:#6c757d; }
+.summary-row .v { font-weight:600; }
+
+/* 미니 패널이 본문을 가리지 않도록 우측 여백 확보 */
+.main-content { padding-right: 360px; }
+
+/* --- mini tools hard compact overrides --- */
+.mini-tools-panel .step-section { height: 120px !important; padding: 4px 6px !important; display: flex; flex-direction: column; overflow: hidden; }
+.mini-tools-panel .estimate-summary-card .summary-row { font-size: 10px !important; line-height: 1.2; }
+.mini-tools-panel .doc-issue-list { gap: 4px !important; padding: 2px 4px !important; overflow: auto; }
+.mini-tools-panel .doc-issue-list .doc-label { font-size: 11px !important; }
+.mini-tools-panel .icon-download { font-size: 16px !important; padding: 2px 4px !important; }
+.mini-tools-panel .customer-uploader .uploader-header { margin-bottom: 4px !important; }
+.mini-tools-panel .customer-uploader .uploader-header h3 { font-size: 12px !important; }
+.mini-tools-panel .customer-uploader .uploader-list { max-height: 84px !important; padding: 4px 6px !important; overflow: auto; }
+.mini-tools-panel .customer-uploader .uploader-item { padding: 3px 2px !important; gap: 6px !important; }
+.mini-tools-panel .customer-uploader .file-name { font-size: 11px !important; }
+.mini-tools-panel .step-section:has(.doc-issue-list) { font-size: 8px !important; padding: 0 !important; }
+.mini-tools-panel .step-section:has(.doc-issue-list) .step-header { margin: 0 !important; padding: 0 !important; }
+.mini-tools-panel .step-section:has(.doc-issue-list) .step-header h3 { font-size: 11px !important; margin: 0 !important; font-weight: 600; }
+.mini-tools-panel .step-section:has(.doc-issue-list) .doc-issue-list { padding: 0 !important; gap: 2px !important; }
