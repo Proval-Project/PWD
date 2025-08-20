@@ -64,7 +64,7 @@ function App() {
             </div>
           </nav>
 
-          <main className="main-content">
+          <main className="app-shell">
             <Routes>
               <Route path="/" element={
                 <div className="home-page">

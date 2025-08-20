@@ -72,6 +72,14 @@ const isCustomerFile = (filePath: string): boolean => {
   return customerFilePatterns.some(pattern => normalizedPath.includes(pattern));
 };
 
+// ResultFiles/customer 파일인지 확인 (고객에게 제공되는 결과 문서)
+const isResultCustomerFile = (filePath: string): boolean => {
+  if (!filePath) return false;
+  const normalizedPath = filePath.replace(/\\/g, '/').toLowerCase();
+  // 트레일링 슬래시 유무와 대소문자 차이 허용
+  return normalizedPath.includes('/resultfiles/customer');
+};
+
 interface ValveData {
   id: string;  // 드래그앤드롭용 고유 ID
   tagNo: string;
@@ -221,6 +229,13 @@ const NewEstimateRequestPage: React.FC = () => {
   const [customerRequirement, setCustomerRequirement] = useState('');
   const [otherRequests, setOtherRequests] = useState('');
   const [isReadOnly, setIsReadOnly] = useState<boolean>(false); // READONLY 모드 상태
+  const [backendStatusText, setBackendStatusText] = useState<string>(''); // 백엔드 상태 텍스트
+  const [backendStatus, setBackendStatus] = useState<number | null>(null);   // 백엔드 상태 코드 (1~5)
+
+  // 요약 카드 표시용 파생 값들
+  const totalQty = useMemo(() => valves.reduce((sum, v) => sum + (Number(v.qty) || 0), 0), [valves]);
+  const statusText = useMemo(() => (isReadOnly ? '조회' : (valves.length > 0 ? '작성중' : '신규')), [isReadOnly, valves.length]);
+  const uiStatusText = useMemo(() => backendStatusText || statusText, [backendStatusText, statusText]);
   
   // 🔑 관리 첨부파일 상태 추가
   const [managerAttachments, setManagerAttachments] = useState<any[]>([]);
@@ -614,32 +629,27 @@ const NewEstimateRequestPage: React.FC = () => {
   const [uploadingFiles, setUploadingFiles] = useState<boolean>(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]); // 임시 저장할 파일들
   
-  // 첨부파일을 attachments 상태와 동기화
+  // 첨부파일을 attachments 상태와 동기화 (임시 선택 파일도 표시)
   useEffect(() => {
     console.log('🔄 fileAttachments 변경됨:', fileAttachments);
     
-    // 무한 루프 방지: attachments 상태가 이미 동일한지 확인
-    const attachmentFiles = fileAttachments
-      .filter(att => !att.isPending) // 임시 파일 제외
-      .map(att => ({
+    const attachmentFiles = fileAttachments.map(att => ({
         name: att.name,
         size: att.size,
-        path: att.filePath || att.path || '',  // filePath 또는 path 사용
-        id: att.attachmentId || att.id
+      path: att.filePath || att.path || '',
+      id: att.attachmentId || att.id || att.uniqueId,
+      isPending: !!att.isPending,
       }));
     
     console.log('💾 attachments로 변환됨:', attachmentFiles);
     
-    // 현재 attachments 상태와 비교하여 다를 때만 업데이트
     setAttachments(prev => {
       const prevString = JSON.stringify(prev);
       const newString = JSON.stringify(attachmentFiles);
-      
       if (prevString === newString) {
         console.log('🔄 attachments 상태 동일, 업데이트 생략');
         return prev;
       }
-      
       console.log('🔄 attachments 상태 변경됨 - fileAttachments에서 동기화');
       return attachmentFiles;
     });
@@ -901,27 +911,14 @@ const NewEstimateRequestPage: React.FC = () => {
       
       if (response.ok) {
         const attachments = await response.json();
-        console.log('📥 API 응답 데이터:', attachments);
-        console.log('📥 API 응답 데이터 길이:', attachments.length);
-        
-        // 🔑 백엔드에서 ManagerFileType을 전달하지 않으므로 경로 기반으로 필터링
-        const managerFiles = attachments.filter((att: any) => {
-          // 🔑 path 또는 filePath 필드 사용 (백엔드 응답 구조에 따라)
-          const filePath = att.path || att.filePath;
-          const isManagerFileResult = filePath && isManagerFile(filePath);
-          console.log('🔍 파일 필터링 체크:', att.name || att.fileName, '경로:', filePath, '관리파일여부:', isManagerFileResult);
-          return isManagerFileResult;
-        }).map((att: any) => {
-          // 경로에서 managerFileType 추출 (크로스플랫폼)
-          const filePath = att.path || att.filePath;
-          att.managerFileType = extractManagerFileType(filePath);
-          console.log('🏷️ 추출된 managerFileType:', att.managerFileType);
-          return att;
+        // ResultFiles/customer만 남김 (경로/managerFileType 모두 고려)
+        const customerResultFiles = (attachments || []).filter((att: any) => {
+          const p = att.path || att.filePath;
+          const type = (att.managerFileType || att.ManagerFileType || '').toString().toLowerCase();
+          return isResultCustomerFile(p) || type === 'customer';
         });
-        
-        setManagerAttachments(managerFiles);
-        console.log('✅ 관리 첨부파일 로드 완료:', managerFiles.length, '개');
-        console.log('🔍 필터링된 관리 파일들:', managerFiles);
+        setManagerAttachments(customerResultFiles);
+        console.log('✅ 관리 첨부파일(고객용) 로드 완료:', customerResultFiles.length, '개');
       } else {
         console.error('❌ API 응답 실패:', response.status, response.statusText);
       }
@@ -1024,6 +1021,23 @@ const NewEstimateRequestPage: React.FC = () => {
       // 기본 정보 설정
       setTempEstimateNo(loadTempEstimateNo);
       setProjectName(existingData.project || '');
+      // 상태 텍스트/코드 저장 (최상위 또는 estimateSheet 내부 모두 대응)
+      const statusTextServer = existingData?.statusText ?? existingData?.estimateSheet?.statusText ?? '';
+      const statusCodeServer = existingData?.status ?? existingData?.estimateSheet?.status;
+      if (statusTextServer) setBackendStatusText(statusTextServer);
+      if (typeof statusCodeServer === 'number') {
+        setBackendStatus(statusCodeServer);
+      } else if (statusTextServer) {
+        const map: Record<string, number> = {
+          '임시저장': 1,
+          '견적요청': 2,
+          '견적처리중': 3,
+          '견적완료': 4,
+          '주문': 5,
+        };
+        const code = map[statusTextServer.trim()];
+        if (code) setBackendStatus(code);
+      }
       setCustomerRequirement(existingData.customerRequirement || '');
       
       // EstimateRequest 데이터가 있으면 복원
@@ -1294,7 +1308,10 @@ const NewEstimateRequestPage: React.FC = () => {
       
       if (existingData.attachments && existingData.attachments.length > 0) {
         console.log('첨부파일 데이터:', existingData.attachments);
-        const loadedAttachments = existingData.attachments.map((att: any) => ({
+        // CustomerRequest 폴더의 항목만 하단 첨부파일에 표시
+        const loadedAttachments = existingData.attachments
+          .filter((att: any) => isCustomerFile(att.filePath || att.path))
+          .map((att: any) => ({
           id: att.attachmentID,           // 백엔드 API 응답: attachmentID
           name: att.fileName,             // 백엔드 API 응답: fileName
           size: att.fileSize || 0,        // 백엔드 API 응답: fileSize
@@ -1530,24 +1547,10 @@ const NewEstimateRequestPage: React.FC = () => {
         })),
         Project: projectName,
         CustomerRequirement: customerRequirement,
-        CustomerID: selectedCustomer?.userID || currentUser?.userId || 'admin', // 선택된 고객 ID 또는 현재 사용자 ID
-        WriterID: currentUser?.userId || 'admin', // 현재 로그인한 사용자 ID
-        Attachments: (() => {
-          console.log('📎 저장 시 attachments 상태 사용:', attachments);
-          
-          const mappedAttachments = attachments.map(att => {
-            console.log('첨부파일 매핑 (SaveDraft):', att);
-            return {
-              FileName: att.name,
-              FilePath: att.path || `files/${currentTempEstimateNo}/CustomerRequest/${att.name}`,
-              FileSize: att.size,
-              UploadUserID: currentUser?.userId || 'admin'
-            };
-          });
-          
-          console.log('최종 Attachments 배열:', mappedAttachments);
-          return mappedAttachments;
-        })()
+        CustomerID: selectedCustomer?.userID || currentUser?.userId || 'admin',
+        WriterID: currentUser?.userId || 'admin',
+        // 첨부는 업로드 API만 사용하고 여기서는 전송하지 않음(중복 방지)
+        Attachments: []
       };
 
       console.log('전송할 데이터:', JSON.stringify(saveData, null, 2));
@@ -1674,25 +1677,10 @@ const NewEstimateRequestPage: React.FC = () => {
         })),
         Project: projectName,
         CustomerRequirement: customerRequirement,
-        StaffComment: '', // 직원 코멘트 추가
-        CustomerID: selectedCustomer?.userID || currentUser?.userId || 'admin', // 선택된 고객 ID 또는 현재 사용자 ID
-        WriterID: currentUser?.userId || 'admin', // 현재 로그인한 사용자 ID
-        Attachments: (() => {
-          console.log('📎 제출 시 attachments 상태 사용:', attachments);
-          
-          const mappedAttachments = attachments.map(att => {
-            console.log('첨부파일 매핑 (SubmitEstimate):', att);
-            return {
-              FileName: att.name,
-              FilePath: att.path || `files/${currentTempEstimateNo}/CustomerRequest/${att.name}`,
-              FileSize: att.size,
-              UploadUserID: currentUser?.userId || 'admin'
-            };
-          });
-          
-          console.log('최종 Attachments 배열 (Submit):', mappedAttachments);
-          return mappedAttachments;
-        })()
+        StaffComment: '',
+        CustomerID: selectedCustomer?.userID || currentUser?.userId || 'admin',
+        WriterID: currentUser?.userId || 'admin',
+        Attachments: []
       };
 
       console.log('Submit Data - CustomerRequirement:', customerRequirement);
@@ -1752,14 +1740,14 @@ const NewEstimateRequestPage: React.FC = () => {
   const handleValveClick = (valve: ValveData) => {
     setCurrentValve(valve);
     // Step 3로 스크롤 이동
-    setTimeout(() => {
-      if (specSectionRef.current) {
-        specSectionRef.current.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start' 
-        });
-      }
-    }, 100);
+   // setTimeout(() => {
+      //if (specSectionRef.current) {
+        //specSectionRef.current.scrollIntoView({ 
+          //behavior: 'smooth', 
+          //block: 'start' 
+        //});
+      //}
+    //}, 100);
   };
 
   // 입력 필드 값 업데이트 함수
@@ -1938,7 +1926,7 @@ const NewEstimateRequestPage: React.FC = () => {
     <div className="type-section">
       <div className="type-header">
         <h3>Step 1: Type 선정</h3>
-        <p className="step-description">견적에 필요한 밸브 타입을 선택하고 관리합니다.</p>
+        <p className="step-description-req">견적에 필요한 밸브 타입을 선택하고 관리합니다.</p>
         <div className="type-actions">
           <button onClick={handleAddType}>추가</button>
           <button onClick={() => selectedType && handleRemoveType(types.findIndex(type => type.id === selectedType))}>삭제</button>
@@ -2025,8 +2013,6 @@ const NewEstimateRequestPage: React.FC = () => {
   return (
       <div className="valve-section">
         <div className="valve-header">
-          <h3>Step 2: TagNo 추가</h3>
-          <p className="step-description">선택된 Type에 대한 TagNo를 추가하고 관리합니다.</p>
           <div className="valve-actions">
             <button 
               onClick={handleAddValve} 
@@ -2099,15 +2085,15 @@ const NewEstimateRequestPage: React.FC = () => {
   // 상세 사양 입력 섹션
   const SpecificationSection = () => {
     const handleTagNoClick = () => {
-      if (tagNoRef.current) {
-        tagNoRef.current.scrollIntoView({ behavior: 'smooth' });
-      }
+      //if (tagNoRef.current) {
+        //tagNoRef.current.scrollIntoView({ behavior: 'smooth' });
+      //}
     };
 
     return (
       <div className="spec-section">
         <h3>Step 3: 상세사양 입력</h3>
-        <p className="step-description">선택된 TagNo의 상세 사양을 입력합니다.</p>
+        <p className="step-description-req">선택된 TagNo의 상세 사양을 입력합니다.</p>
         {currentValve ? (
           <div className="spec-content">
             <div className="spec-header">
@@ -2165,8 +2151,8 @@ const NewEstimateRequestPage: React.FC = () => {
               
             <div className="spec-grid">
               <div className="fluid-section">
-                <h3>Fluid</h3>
                   <div className="fluid-row">
+                  <h4>Fluid</h4>
                     <label>Medium:</label>
                     <input
                       id="fluid-medium" 
@@ -2195,8 +2181,8 @@ const NewEstimateRequestPage: React.FC = () => {
                   </div>
                   
                   <div className="fluid-row">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <div style={{ fontSize: '10px' }}>
+                    <div className="radio-group">
+                      <div className="radio-label">
                         <label><input type="radio" name="densityType" value="Density" checked={currentValve.isDensity} onChange={(e) => handleRadioChange('isDensity', e.target.checked)} disabled={isReadOnly} /></label>
                 </div>
                       <label>Density:</label>
@@ -2208,20 +2194,14 @@ const NewEstimateRequestPage: React.FC = () => {
                         onChange={(e) => handleFluidFieldChange('density', e.target.value)}
                         placeholder={!currentValve.isDensity ? 'Molecular 선택 시 사용 불가' : ''}
                         disabled={!currentValve.isDensity || isReadOnly}
-                        style={{ 
-                          width: '150px',
-                          backgroundColor: !currentValve.isDensity ? '#f0f0f0' : 'white',
-                          color: !currentValve.isDensity ? '#999' : 'black',
-                          border: !currentValve.isDensity ? '1px solid #ccc' : '1px solid #ddd',
-                          opacity: !currentValve.isDensity ? 0.6 : 1
-                        }}
+                        className={!currentValve.isDensity ? 'disabled-input' : ''}
                       />
               </div>
             </div>
 
                   <div className="fluid-row">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <div style={{ fontSize: '10px' }}>
+                    <div className="radio-group">
+                      <div className="radio-label">
                         <label><input type="radio" name="densityType" value="Molecular" checked={!currentValve.isDensity} onChange={(e) => handleRadioChange('isDensity', !e.target.checked)} disabled={isReadOnly} /></label>
               </div>
                       <label>Molecular:</label>
@@ -2233,13 +2213,7 @@ const NewEstimateRequestPage: React.FC = () => {
                         onChange={(e) => handleFluidFieldChange('molecular', e.target.value)}
                         placeholder={currentValve.isDensity ? 'Density 선택 시 사용 불가' : ''}
                         disabled={currentValve.isDensity || isReadOnly}
-                        style={{ 
-                          width: '150px',
-                          backgroundColor: currentValve.isDensity ? '#f0f0f0' : 'white',
-                          color: currentValve.isDensity ? '#999' : 'black',
-                          border: currentValve.isDensity ? '1px solid #ccc' : '1px solid #ddd',
-                          opacity: currentValve.isDensity ? 0.6 : 1
-                        }}
+                        className={currentValve.isDensity ? 'disabled-input' : ''}
                                 />
                               </div>
                   </div>
@@ -2340,9 +2314,9 @@ const NewEstimateRequestPage: React.FC = () => {
                             p2
                     </div>
                         </td>
-                        <td><input id="p2-max" name="p2Max" type="number" value={currentValve.fluid.p2.max === 0 ? '' : currentValve.fluid.p2.max} onChange={(e) => handleFluidConditionChange('p2', 'max', parseFloat(e.target.value) || 0)} disabled={!currentValve.isP2 || isReadOnly} style={{ backgroundColor: !currentValve.isP2 ? '#f0f0f0' : 'white', color: !currentValve.isP2 ? '#999' : 'black', border: !currentValve.isP2 ? '1px solid #ccc' : '1px solid #ddd', opacity: !currentValve.isP2 ? 0.6 : 1 }} /></td>
-                        <td><input id="p2-normal" name="p2Normal" type="number" value={currentValve.fluid.p2.normal === 0 ? '' : currentValve.fluid.p2.normal} onChange={(e) => handleFluidConditionChange('p2', 'normal', parseFloat(e.target.value) || 0)} disabled={!currentValve.isP2 || isReadOnly} style={{ backgroundColor: !currentValve.isP2 ? '#f0f0f0' : 'white', color: !currentValve.isP2 ? '#999' : 'black', border: !currentValve.isP2 ? '1px solid #ccc' : '1px solid #ddd', opacity: !currentValve.isP2 ? 0.6 : 1 }} /></td>
-                        <td><input id="p2-min" name="p2Min" type="number" value={currentValve.fluid.p2.min === 0 ? '' : currentValve.fluid.p2.min} onChange={(e) => handleFluidConditionChange('p2', 'min', parseFloat(e.target.value) || 0)} disabled={!currentValve.isP2 || isReadOnly} style={{ backgroundColor: !currentValve.isP2 ? '#f0f0f0' : 'white', color: !currentValve.isP2 ? '#999' : 'black', border: !currentValve.isP2 ? '1px solid #ccc' : '1px solid #ddd', opacity: !currentValve.isP2 ? 0.6 : 1 }} /></td>
+                        <td><input id="p2-max" name="p2Max" type="number" value={currentValve.fluid.p2.max === 0 ? '' : currentValve.fluid.p2.max} onChange={(e) => handleFluidConditionChange('p2', 'max', parseFloat(e.target.value) || 0)} disabled={!currentValve.isP2 || isReadOnly} className={!currentValve.isP2 ? 'disabled-input' : ''} /></td>
+                        <td><input id="p2-normal" name="p2Normal" type="number" value={currentValve.fluid.p2.normal === 0 ? '' : currentValve.fluid.p2.normal} onChange={(e) => handleFluidConditionChange('p2', 'normal', parseFloat(e.target.value) || 0)} disabled={!currentValve.isP2 || isReadOnly} className={!currentValve.isP2 ? 'disabled-input' : ''} /></td>
+                        <td><input id="p2-min" name="p2Min" type="number" value={currentValve.fluid.p2.min === 0 ? '' : currentValve.fluid.p2.min} onChange={(e) => handleFluidConditionChange('p2', 'min', parseFloat(e.target.value) || 0)} disabled={!currentValve.isP2 || isReadOnly} className={!currentValve.isP2 ? 'disabled-input' : ''} /></td>
                         <td>
                           <select 
                             id="p2-unit" 
@@ -2350,7 +2324,7 @@ const NewEstimateRequestPage: React.FC = () => {
                             value={currentValve.fluid.pressureUnit}
                             onChange={(e) => handleUnitChange('pressureUnit', e.target.value)}
                             disabled={!currentValve.isP2 || isReadOnly}
-                            style={{ backgroundColor: !currentValve.isP2 ? '#f0f0f0' : 'white', color: !currentValve.isP2 ? '#999' : 'black', border: !currentValve.isP2 ? '1px solid #ccc' : '1px solid #ddd', opacity: !currentValve.isP2 ? 0.6 : 1 }}
+                            className={!currentValve.isP2 ? 'disabled-input' : ''}
                           >
                             <option value="bar(a)">bar(a)</option>
                             <option value="mbar(a)">mbar(a)</option>
@@ -2395,16 +2369,16 @@ const NewEstimateRequestPage: React.FC = () => {
                       </tr>
                       <tr>
                         <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                        <div style={{ fontSize: '10px' }}>
+                          <div className="radio-group">
+                            <div className="radio-label">
                               <label><input type="radio" name="dpType" value="DP" checked={!currentValve.isP2} onChange={(e) => handleRadioChange('isP2', !e.target.checked)} disabled={isReadOnly} /></label>
                             </div>
                             Δp
           </div>
                         </td>
-                        <td><input id="dp-max" name="dpMax" type="number" value={currentValve.fluid.dp.max === 0 ? '' : currentValve.fluid.dp.max} onChange={(e) => handleFluidConditionChange('dp', 'max', parseFloat(e.target.value) || 0)} disabled={currentValve.isP2 || isReadOnly} style={{ backgroundColor: currentValve.isP2 ? '#f0f0f0' : 'white', color: currentValve.isP2 ? '#999' : 'black', border: currentValve.isP2 ? '1px solid #ccc' : '1px solid #ddd', opacity: currentValve.isP2 ? 0.6 : 1 }} /></td>
-                        <td><input id="dp-normal" name="dpNormal" type="number" value={currentValve.fluid.dp.normal === 0 ? '' : currentValve.fluid.dp.normal} onChange={(e) => handleFluidConditionChange('dp', 'normal', parseFloat(e.target.value) || 0)} disabled={currentValve.isP2 || isReadOnly} style={{ backgroundColor: currentValve.isP2 ? '#f0f0f0' : 'white', color: currentValve.isP2 ? '#999' : 'black', border: currentValve.isP2 ? '1px solid #ccc' : '1px solid #ddd', opacity: currentValve.isP2 ? 0.6 : 1 }} /></td>
-                        <td><input id="dp-min" name="dpMin" type="number" value={currentValve.fluid.dp.min === 0 ? '' : currentValve.fluid.dp.min} onChange={(e) => handleFluidConditionChange('dp', 'min', parseFloat(e.target.value) || 0)} disabled={currentValve.isP2 || isReadOnly} style={{ backgroundColor: currentValve.isP2 ? '#f0f0f0' : 'white', color: currentValve.isP2 ? '#999' : 'black', border: currentValve.isP2 ? '1px solid #ccc' : '1px solid #ddd', opacity: currentValve.isP2 ? 0.6 : 1 }} /></td>
+                        <td><input id="dp-max" name="dpMax" type="number" value={currentValve.fluid.dp.max === 0 ? '' : currentValve.fluid.dp.max} onChange={(e) => handleFluidConditionChange('dp', 'max', parseFloat(e.target.value) || 0)} disabled={currentValve.isP2 || isReadOnly} className={currentValve.isP2 ? 'disabled-input' : ''} /></td>
+                        <td><input id="dp-normal" name="dpNormal" type="number" value={currentValve.fluid.dp.normal === 0 ? '' : currentValve.fluid.dp.normal} onChange={(e) => handleFluidConditionChange('dp', 'normal', parseFloat(e.target.value) || 0)} disabled={currentValve.isP2 || isReadOnly} className={currentValve.isP2 ? 'disabled-input' : ''} /></td>
+                        <td><input id="dp-min" name="dpMin" type="number" value={currentValve.fluid.dp.min === 0 ? '' : currentValve.fluid.dp.min} onChange={(e) => handleFluidConditionChange('dp', 'min', parseFloat(e.target.value) || 0)} disabled={currentValve.isP2 || isReadOnly} className={currentValve.isP2 ? 'disabled-input' : ''} /></td>
                         <td>
                           <select 
                             id="dp-unit" 
@@ -2412,7 +2386,7 @@ const NewEstimateRequestPage: React.FC = () => {
                             value={currentValve.fluid.pressureUnit}
                             onChange={(e) => handleUnitChange('pressureUnit', e.target.value)}
                             disabled={currentValve.isP2 || isReadOnly}
-                            style={{ backgroundColor: currentValve.isP2 ? '#f0f0f0' : 'white', color: currentValve.isP2 ? '#999' : 'black', border: currentValve.isP2 ? '1px solid #ccc' : '1px solid #ddd', opacity: currentValve.isP2 ? 0.6 : 1 }}
+                            className={currentValve.isP2 ? 'disabled-input' : ''}
                           >
                             <option value="bar(a)">bar(a)</option>
                             <option value="mbar(a)">mbar(a)</option>
@@ -2464,9 +2438,9 @@ const NewEstimateRequestPage: React.FC = () => {
                             qm
                           </div>
                         </td>
-                        <td><input id="qm-max" name="qmMax" type="number" value={currentValve.fluid.qm.max === 0 ? '' : currentValve.fluid.qm.max} onChange={(e) => handleFluidConditionChange('qm', 'max', parseFloat(e.target.value) || 0)} disabled={!currentValve.isQM || isReadOnly} style={{ backgroundColor: !currentValve.isQM ? '#f0f0f0' : 'white', color: !currentValve.isQM ? '#999' : 'black', border: !currentValve.isQM ? '1px solid #ccc' : '1px solid #ddd', opacity: !currentValve.isQM ? 0.6 : 1 }} /></td>
-                        <td><input id="qm-normal" name="qmNormal" type="number" value={currentValve.fluid.qm.normal === 0 ? '' : currentValve.fluid.qm.normal} onChange={(e) => handleFluidConditionChange('qm', 'normal', parseFloat(e.target.value) || 0)} disabled={!currentValve.isQM || isReadOnly} style={{ backgroundColor: !currentValve.isQM ? '#f0f0f0' : 'white', color: !currentValve.isQM ? '#999' : 'black', border: !currentValve.isQM ? '1px solid #ccc' : '1px solid #ddd', opacity: !currentValve.isQM ? 0.6 : 1 }} /></td>
-                        <td><input id="qm-min" name="qmMin" type="number" value={currentValve.fluid.qm.min === 0 ? '' : currentValve.fluid.qm.min} onChange={(e) => handleFluidConditionChange('qm', 'min', parseFloat(e.target.value) || 0)} disabled={!currentValve.isQM || isReadOnly} style={{ backgroundColor: !currentValve.isQM ? '#f0f0f0' : 'white', color: !currentValve.isQM ? '#999' : 'black', border: !currentValve.isQM ? '1px solid #ccc' : '1px solid #ddd', opacity: !currentValve.isQM ? 0.6 : 1 }} /></td>
+                        <td><input id="qm-max" name="qmMax" type="number" value={currentValve.fluid.qm.max === 0 ? '' : currentValve.fluid.qm.max} onChange={(e) => handleFluidConditionChange('qm', 'max', parseFloat(e.target.value) || 0)} disabled={!currentValve.isQM || isReadOnly} className={!currentValve.isQM ? 'disabled-input' : ''} /></td>
+                        <td><input id="qm-normal" name="qmNormal" type="number" value={currentValve.fluid.qm.normal === 0 ? '' : currentValve.fluid.qm.normal} onChange={(e) => handleFluidConditionChange('qm', 'normal', parseFloat(e.target.value) || 0)} disabled={!currentValve.isQM || isReadOnly} className={!currentValve.isQM ? 'disabled-input' : ''} /></td>
+                        <td><input id="qm-min" name="qmMin" type="number" value={currentValve.fluid.qm.min === 0 ? '' : currentValve.fluid.qm.min} onChange={(e) => handleFluidConditionChange('qm', 'min', parseFloat(e.target.value) || 0)} disabled={!currentValve.isQM || isReadOnly} className={!currentValve.isQM ? 'disabled-input' : ''} /></td>
                         <td>
                           <select 
                             id="qm-unit" 
@@ -2474,7 +2448,7 @@ const NewEstimateRequestPage: React.FC = () => {
                             value={currentValve.fluid.qm.unit}
                             onChange={(e) => handleFluidConditionChange('qm', 'unit', e.target.value)}
                             disabled={!currentValve.isQM || isReadOnly}
-                            style={{ backgroundColor: !currentValve.isQM ? '#f0f0f0' : 'white', color: !currentValve.isQM ? '#999' : 'black', border: !currentValve.isQM ? '1px solid #ccc' : '1px solid #ddd', opacity: !currentValve.isQM ? 0.6 : 1 }}
+                            className={!currentValve.isQM ? 'disabled-input' : ''}
                           >
                             <option value="m³/h">m³/h</option>
                             <option value="m³/s">m³/s</option>
@@ -2512,16 +2486,16 @@ const NewEstimateRequestPage: React.FC = () => {
                       </tr>
                       <tr>
                         <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <div style={{ fontSize: '10px' }}>
+                          <div className="radio-group">
+                            <div className="radio-label">
                               <label><input type="radio" name="qnType" value="Qn" checked={!currentValve.isQM} onChange={(e) => handleRadioChange('isQM', !e.target.checked)} disabled={isReadOnly} /></label>
                             </div>
                             qn
                           </div>
                         </td>
-                        <td><input id="qn-max" name="qnMax" type="number" value={currentValve.fluid.qn.max === 0 ? '' : currentValve.fluid.qn.max} onChange={(e) => handleFluidConditionChange('qn', 'max', parseFloat(e.target.value) || 0)} disabled={currentValve.isQM || isReadOnly} style={{ backgroundColor: currentValve.isQM ? '#f0f0f0' : 'white', color: currentValve.isQM ? '#999' : 'black', border: currentValve.isQM ? '1px solid #ccc' : '1px solid #ddd', opacity: currentValve.isQM ? 0.6 : 1 }} /></td>
-                        <td><input id="qn-normal" name="qnNormal" type="number" value={currentValve.fluid.qn.normal === 0 ? '' : currentValve.fluid.qn.normal} onChange={(e) => handleFluidConditionChange('qn', 'normal', parseFloat(e.target.value) || 0)} disabled={currentValve.isQM || isReadOnly} style={{ backgroundColor: currentValve.isQM ? '#f0f0f0' : 'white', color: currentValve.isQM ? '#999' : 'black', border: currentValve.isQM ? '1px solid #ccc' : '1px solid #ddd', opacity: currentValve.isQM ? 0.6 : 1 }} /></td>
-                        <td><input id="qn-min" name="qnMin" type="number" value={currentValve.fluid.qn.min === 0 ? '' : currentValve.fluid.qn.min} onChange={(e) => handleFluidConditionChange('qn', 'min', parseFloat(e.target.value) || 0)} disabled={currentValve.isQM || isReadOnly} style={{ backgroundColor: currentValve.isQM ? '#f0f0f0' : 'white', color: currentValve.isQM ? '#999' : 'black', border: currentValve.isQM ? '1px solid #ccc' : '1px solid #ddd', opacity: currentValve.isQM ? 0.6 : 1 }} /></td>
+                        <td><input id="qn-max" name="qnMax" type="number" value={currentValve.fluid.qn.max === 0 ? '' : currentValve.fluid.qn.max} onChange={(e) => handleFluidConditionChange('qn', 'max', parseFloat(e.target.value) || 0)} disabled={currentValve.isQM || isReadOnly} className={currentValve.isQM ? 'disabled-input' : ''} /></td>
+                        <td><input id="qn-normal" name="qnNormal" type="number" value={currentValve.fluid.qn.normal === 0 ? '' : currentValve.fluid.qn.normal} onChange={(e) => handleFluidConditionChange('qn', 'normal', parseFloat(e.target.value) || 0)} disabled={currentValve.isQM || isReadOnly} className={currentValve.isQM ? 'disabled-input' : ''} /></td>
+                        <td><input id="qn-min" name="qnMin" type="number" value={currentValve.fluid.qn.min === 0 ? '' : currentValve.fluid.qn.min} onChange={(e) => handleFluidConditionChange('qn', 'min', parseFloat(e.target.value) || 0)} disabled={currentValve.isQM || isReadOnly} className={currentValve.isQM ? 'disabled-input' : ''} /></td>
                         <td>
                           <select 
                             id="qn-unit" 
@@ -2529,7 +2503,7 @@ const NewEstimateRequestPage: React.FC = () => {
                             value={currentValve.fluid.qn.unit}
                             onChange={(e) => handleFluidConditionChange('qn', 'unit', e.target.value)}
                             disabled={currentValve.isQM || isReadOnly}
-                            style={{ backgroundColor: currentValve.isQM ? '#f0f0f0' : 'white', color: currentValve.isQM ? '#999' : 'black', border: currentValve.isQM ? '1px solid #ccc' : '1px solid #ddd', opacity: currentValve.isQM ? 0.6 : 1 }}
+                            className={currentValve.isQM ? 'disabled-input' : ''}
                           >
                             <option value="m³/h">m³/h</option>
                             <option value="GPM(US)">GPM(US)</option>
@@ -2994,7 +2968,7 @@ const NewEstimateRequestPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="estimate-detail-page">
+    <div className="new-estimate-request-page dashboard-page">
       {/* 헤더 */}
       <div className="page-header">
         <button className="back-button" onClick={() => navigate(-1)}>
@@ -3020,7 +2994,61 @@ const NewEstimateRequestPage: React.FC = () => {
       </div>
 
       {/* 메인 콘텐츠 */}
-      <div className="main-content">
+      {/* 상단 2열 패널: 견적 상세 정보 + 관리 첨부파일 */}
+      <div className="top-two-panel">
+        {/* 견적 상세 정보 */}
+        <div className="mini-card estimate-summary">
+          <div className="mini-card-header">견적 세부 정보</div>
+          <div className="mini-card-body summary-grid">
+            <div className="summary-item"><span className="label">견적번호</span><strong className="value">{tempEstimateNo || '-'}</strong></div>
+            <div className="summary-item"><span className="label">상태</span><strong className="value">{uiStatusText}</strong></div>
+            <div className="summary-item"><span className="label">회사명</span><strong className="value">{selectedCustomer?.companyName || selectedCustomer?.name || '-'}</strong></div>
+            <div className="summary-item"><span className="label">수량</span><strong className="value">{totalQty}</strong></div>
+            <div className="summary-item"><span className="label">요청자</span><strong className="value">{currentUser?.name || currentUser?.userName || '-'}</strong></div>
+            <div className="summary-item"><span className="label">요청일자</span><strong className="value">{new Date().toISOString().slice(0,10).replaceAll('-','.')}</strong></div>
+            <div className="summary-item"><span className="label">담당자</span><strong className="value">-</strong></div>
+            <div className="summary-item"><span className="label">완료일자</span><strong className="value">-</strong></div>
+          </div>
+        </div>
+
+        {/* 관리 첨부파일 (고객용 다운로드) */}
+        <div className="mini-card manager-files">
+          <div className="mini-card-header">관리 첨부파일</div>
+          <div className="mini-card-body">
+            {/* 상태별 안내/표시 */}
+            {(() => {
+              // 완료/주문만 파일 표시, 그 외 상태는 안내 문구
+              // 현재 페이지는 신규/요청 흐름이라 백엔드 status가 없으므로, 간단한 텍스트 기준으로 분기
+              const statusCode = backendStatus;
+              if (statusCode === 4 || statusCode === 5) {
+                return (
+                  managerAttachments && managerAttachments.length > 0 ? (
+                    <ul className="mini-file-list">
+                      {managerAttachments.map((f: any) => (
+                        <li key={f.attachmentID ?? `${f.fileName}-${f.filePath}`}
+                            className="mini-file-item"
+                            title={f.fileName}>
+                          <span className="name">{f.fileName}</span>
+                          <button className="btn btn-link btn-xs" onClick={() => handleDownloadManagerFile(f)}>다운</button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="mini-empty">파일 없음</div>
+                  )
+                );
+              }
+              if (statusCode === 3) {
+                return <div className="mini-empty">담당자 배정되었습니다. 견적서 작성중입니다.</div>;
+              }
+              // 1, 2 또는 상태값이 없을 때 기본 문구
+              return <div className="mini-empty">견적 요청서 작성을 먼저 부탁드립니다. 이후 담당자 배정 도와드리겠습니다.</div>;
+            })()}
+          </div>
+        </div>
+      </div>
+
+      <div className="main-content-detail">
         <div className="steps-container">
           {/* Step 1, 2, 3 통합 섹션 */}
           <div className="step-section">
@@ -3031,8 +3059,8 @@ const NewEstimateRequestPage: React.FC = () => {
             {/* Step 1: Type 선정 */}
             <div className="step-subsection">
               <h4>Step 1: Type 선정</h4>
+              <p className="step-description-req">견적에 필요한 밸브 타입을 선택하고 관리합니다.</p>
               <div className="type-header">
-                <p className="step-description">견적에 필요한 밸브 타입을 선택하고 관리합니다.</p>
                 <div className="type-actions">
                   <button onClick={handleAddType} disabled={isReadOnly}>추가</button>
                   <button onClick={() => selectedType && handleRemoveType(types.findIndex(type => type.id === selectedType))} disabled={isReadOnly}>삭제</button>
@@ -3108,37 +3136,31 @@ const NewEstimateRequestPage: React.FC = () => {
             {/* Step 2: TagNo 추가 */}
             <div className="step-subsection">
               <h4>Step 2: TagNo 추가</h4>
-              <p className="step-description">선택된 타입에 따라 TagNo를 추가하고 관리합니다.</p>
+              <p className="step-description-req">선택된1 타입에 따라 TagNo를 추가하고 관리합니다.</p>
               {ValveSection()}
             </div>
 
             {/* Step 3: 상세사양 입력 */}
             <div className="step-subsection">
               <h4>Step 3: 상세사양 입력</h4>
-              <p className="step-description">BODY, Trim, ACT, Accessory의 상세 사양을 입력합니다.</p>
+              <p className="step-description-req">BODY, Trim, ACT, Accessory의 상세 사양을 입력합니다.</p>
               {SpecificationSection()}
             </div>
           </div>
 
-          {/* 기타요청사항 섹션 */}
-          <div className="step-section">
-            <div className="step-header">
-              <h3>기타요청사항</h3>
-            </div>
-            <div className="other-requests-content">
+          {/* 기타요청사항 + 첨부파일 (2열 컴팩트) */}
+          <div className="step-section compact-two-panel">
+            <div className="compact-box other-requests-compact">
               <CustomerRequirementComponent
                 value={customerRequirement}
                 onChange={setCustomerRequirement}
                 isReadOnly={isReadOnly}
               />
-            </div>
           </div>
 
-          {/* 첨부파일 섹션 */}
-          <div className="step-section">
-            <div className="step-header">
-              <h3>첨부파일</h3>
-              <div className="file-upload-container">
+            <div className="compact-box attachments-compact">
+              <span className="compact-label">첨부파일</span>
+              <div className="file-upload-container compact">
                 <input
                   id="file-upload"
                   name="fileUpload"
@@ -3153,186 +3175,31 @@ const NewEstimateRequestPage: React.FC = () => {
                   style={{ display: 'none' }}
                 />
                 <button 
-                  className="upload-btn"
+                  className="upload-btn compact"
                   onClick={() => document.getElementById('file-upload')?.click()}
                   disabled={uploadingFiles}
                 >
                   {uploadingFiles ? '업로드 중...' : '파일 선택'}
                 </button>
+                <span className="file-count">{attachments?.length || 0}개</span>
               </div>
-            </div>
-            <div className="attachment-list">
-              {(() => {
-                // 🔑 CustomerRequest 폴더에 있는 파일만 필터링 (attachments 사용)
-                const customerFiles = attachments.filter((file: any) => {
-                  // 🔑 path 또는 filePath 필드 사용 (백엔드 응답 구조에 따라)
-                  const filePath = file.path || file.filePath;
-                          const isCustomerFileResult = filePath && isCustomerFile(filePath);
-        console.log('🔍 파일 필터링:', file.name || file.fileName, '경로:', filePath, '고객파일여부:', isCustomerFileResult);
-        return isCustomerFileResult;
-                });
-                
-                if (customerFiles.length === 0) {
-                  return (
-                    <div className="no-files">
-                      첨부된 파일이 없습니다.
-                    </div>
-                  );
-                }
-                
-                return (
-                  <div className="file-list">
-                    {customerFiles.map((file, index) => (
-                        <div key={`${file.id || file.uniqueId || file.attachmentId}-${index}`} className="file-item">
-                          <div className="file-info">
-                            <span className="file-name">{file.name}</span>
-                            <span className="file-size">({(() => {
-                              const fileSize = parseInt(file.size) || 0;
-                              if (fileSize === 0) return '0.00';
-                              const sizeInMB = fileSize / 1024 / 1024;
-                              return sizeInMB.toFixed(2);
-                            })()} MB)</span>
-                          </div>
-                          <div className="file-actions">
-                            <button 
-                              className="delete-btn"
-                              onClick={() => {
-                                const fileId = file.id || file.uniqueId || file.attachmentId;
-                                console.log('🗑️ 삭제 버튼 클릭됨:', {
-                                  fileId: fileId,
-                                  fileName: file.name,
-                                  file: file
-                                });
-                                console.log('🔍 handleDeleteAttachment 함수 호출 시작');
-                                handleDeleteAttachment(fileId, file.filePath);
-                                console.log('🔍 handleDeleteAttachment 함수 호출 완료');
-                              }}
-                            >
-                              삭제
-                            </button>
-                          </div>
-                        </div>
-                    ))}
-                  </div>
-                );
-              })()}
+              {/* 상단 요약 영역에서도 파일명 간단 표시 */}
+              {attachments && attachments.length > 0 && (
+                <ul className="compact-file-list">
+                  {attachments.slice(0, 5).map((f: any, idx: number) => (
+                    <li key={(f.id || f.uniqueId || f.attachmentId || idx) + '-compact'} title={f.name}>
+                      {f.isPending ? '⏳ ' : ''}{f.name}
+                    </li>
+                  ))}
+                  {attachments.length > 5 && (
+                    <li className="more">외 {attachments.length - 5}개…</li>
+                  )}
+                </ul>
+              )}
             </div>
           </div>
 
-          {/* 🔑 관리 첨부파일 섹션 (고객용 - PDF 다운로드만 가능) */}
-          <div className="step-section">
-            <div className="step-header">
-              <h3>관리 첨부파일</h3>
-              <div className="file-type-info">
-                <span className="info-text">PDF 파일만 다운로드 가능</span>
-              </div>
-            </div>
-            
-            {/* DataSheet */}
-            <div className="manager-file-section">
-              <div className="file-type-header">
-                <h4>📄 DataSheet</h4>
-              </div>
-              <div className="file-list">
-                {managerAttachments.filter(f => f.managerFileType === 'datasheet' && f.fileName.toLowerCase().endsWith('.pdf')).map((file, index) => (
-                  <div key={index} className="file-item">
-                    <span className="file-name">{file.fileName}</span>
-                    <span className="file-size">({(file.fileSize / 1024).toFixed(2)} KB)</span>
-                    <button 
-                      className="btn btn-primary btn-sm"
-                      onClick={() => handleDownloadManagerFile(file)}
-                    >
-                      PDF 다운로드
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* CV List */}
-            <div className="manager-file-section">
-              <div className="file-type-header">
-                <h4>📋 CV List</h4>
-              </div>
-              <div className="file-list">
-                {managerAttachments.filter(f => f.managerFileType === 'cvlist' && f.fileName.toLowerCase().endsWith('.pdf')).map((file, index) => (
-                  <div key={index} className="file-item">
-                    <span className="file-name">{file.fileName}</span>
-                    <span className="file-size">({(file.fileSize / 1024).toFixed(2)} KB)</span>
-                    <button 
-                      className="btn btn-primary btn-sm"
-                      onClick={() => handleDownloadManagerFile(file)}
-                    >
-                      PDF 다운로드
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* VL List */}
-            <div className="manager-file-section">
-              <div className="file-type-header">
-                <h4>📊 VL List</h4>
-              </div>
-              <div className="file-list">
-                {managerAttachments.filter(f => f.managerFileType === 'vllist' && f.fileName.toLowerCase().endsWith('.pdf')).map((file, index) => (
-                  <div key={index} className="file-item">
-                    <span className="file-name">{file.fileName}</span>
-                    <span className="file-size">({(file.fileSize / 1024).toFixed(2)} KB)</span>
-                    <button 
-                      className="btn btn-primary btn-sm"
-                      onClick={() => handleDownloadManagerFile(file)}
-                    >
-                      PDF 다운로드
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Single Quote */}
-            <div className="manager-file-section">
-              <div className="file-type-header">
-                <h4>📄 Single Quote</h4>
-              </div>
-              <div className="file-list">
-                {managerAttachments.filter(f => f.managerFileType === 'singlequote' && f.fileName.toLowerCase().endsWith('.pdf')).map((file, index) => (
-                  <div key={index} className="file-item">
-                    <span className="file-name">{file.fileName}</span>
-                    <span className="file-size">({(file.fileSize / 1024).toFixed(2)} KB)</span>
-                    <button 
-                      className="btn btn-primary btn-sm"
-                      onClick={() => handleDownloadManagerFile(file)}
-                    >
-                      PDF 다운로드
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Multi Quote */}
-            <div className="manager-file-section">
-              <div className="file-type-header">
-                <h4>📋 Multi Quote</h4>
-              </div>
-              <div className="file-list">
-                {managerAttachments.filter(f => f.managerFileType === 'multiquote' && f.fileName.toLowerCase().endsWith('.pdf')).map((file, index) => (
-                  <div key={index} className="file-item">
-                    <span className="file-name">{file.fileName}</span>
-                    <span className="file-size">({(file.fileSize / 1024).toFixed(2)} KB)</span>
-                    <button 
-                      className="btn btn-primary btn-sm"
-                      onClick={() => handleDownloadManagerFile(file)}
-                    >
-                      PDF 다운로드
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          {/* 하단 관리 첨부파일 섹션 제거됨 */}
         </div>
       </div>
 

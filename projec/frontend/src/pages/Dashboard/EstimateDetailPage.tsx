@@ -37,7 +37,7 @@ const extractManagerFileType = (filePath: string): string | null => {
   return null;
 };
 
-// CustomerRequest 파일인지 확인하는 크로스플랫폼 함수
+// CustomerRequest 파일인지 확인하는 크로스플랫폼 함수 (하위 고객요청 첨부 영역에 사용)
 const isCustomerFile = (filePath: string): boolean => {
   if (!filePath) return false;
   
@@ -51,6 +51,13 @@ const isCustomerFile = (filePath: string): boolean => {
   ];
   
   return customerFilePatterns.some(pattern => normalizedPath.includes(pattern));
+};
+
+// ResultFiles/customer 파일인지 확인 (상단 "고객 제출 문서 업로드" 전용)
+const isResultCustomerFile = (filePath: string): boolean => {
+  if (!filePath) return false;
+  const normalizedPath = filePath.replace(/\\/g, '/').toLowerCase();
+  return normalizedPath.includes('/resultfiles/customer/');
 };
 
 interface AccessorySelectorProps {
@@ -137,6 +144,8 @@ interface BodyValveData {
   valveSeries: string;
   valveSeriesCode: string;
 }
+
+
 
 // 🔑 파일 관련 타입 추가
 interface EstimateAttachment {
@@ -394,7 +403,7 @@ const EstimateDetailPage: React.FC = () => {
   // BodyValveList 가져오기
   const fetchBodyValveList = async () => {
     try {
-      const response = await fetch('http://localhost:5135/api/estimate/body-valve-list');
+      const response = await fetch('http://localhost:5135/api/estimate/body-valve-list-detail');
       const data = await response.json();
       setBodyValveList(data);
     } catch (error) {
@@ -467,13 +476,14 @@ const EstimateDetailPage: React.FC = () => {
     try {
       setIsLoadingFiles(true);
       console.log('🔄 fetchCustomerFiles 시작 - tempEstimateNo:', tempEstimateNo);
-      const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/customer-files`);
+      const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/attachments`);
       console.log('📡 API 응답 상태:', response.status, response.ok);
       
       if (response.ok) {
         const files = await response.json();
-        setCustomerFiles(files);
-        console.log('✅ 고객 파일 목록 로드 완료:', files.length, '개');
+        const onlyResultCustomer = (files || []).filter((att: any) => isResultCustomerFile(att.filePath || att.path));
+        setCustomerFiles(onlyResultCustomer);
+        console.log('✅ 고객 파일 목록 로드 완료 (ResultFiles/customer 한정):', onlyResultCustomer.length, '개');
       } else {
         console.error('❌ API 응답 실패:', response.status, response.statusText);
       }
@@ -880,6 +890,34 @@ const EstimateDetailPage: React.FC = () => {
         fetch('http://localhost:5135/api/masterdata/act/hw')
       ]);
 
+      // 드래그 앤 드롭 핸들러 (추가)
+const onDragStart = (e: React.DragEvent<HTMLDivElement>, index: number, listKey: 'types' | 'valves') => {
+  e.dataTransfer.setData('text/plain', JSON.stringify({ index, listKey }));
+};
+const onDragOver = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); };
+const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 'types' | 'valves') => {
+  e.preventDefault();
+  const { index } = JSON.parse(e.dataTransfer.getData('text/plain') || '{"index":-1}');
+  if (index < 0) return;
+
+  if (listKey === 'types') {
+    setTypes(prev => {
+      const arr = [...prev];
+      const [moved] = arr.splice(index, 1);
+      arr.splice(dropIndex, 0, moved);
+      return arr;
+    });
+  } else {
+    setValves(prev => {
+      const arr = [...prev];
+      const [moved] = arr.splice(index, 1);
+      arr.splice(dropIndex, 0, moved);
+      // 보기용 sheetNo 재부여(1부터)
+      return arr.map((it, i) => ({ ...it, sheetNo: i + 1 }));
+    });
+  }
+};
+
       // 각 API 응답을 개별적으로 처리하여 에러 발생 시에도 다른 데이터는 로드할 수 있도록 함
       let bodyBonnetData = [], bodyConnectionData = [], trimTypeData = [], trimSeriesData = [], 
           trimPortSizeData = [], trimFormData = [], actTypeData = [], actSeriesData = [], 
@@ -1067,6 +1105,7 @@ const EstimateDetailPage: React.FC = () => {
       
       //console.log('견적 상세 데이터:', data);
       
+      
       // 프로젝트명 설정
       if (data.estimateSheet && data.estimateSheet.project) {
         setProjectName(data.estimateSheet.project);
@@ -1125,6 +1164,7 @@ const EstimateDetailPage: React.FC = () => {
         data.estimateRequests.forEach((req: any) => {
           const valveType = req.valveType;
           if (typeMap.has(valveType)) {
+            
             typeMap.get(valveType)!.count += req.tagNos.reduce((sum: number, tag: any) => sum + tag.qty, 0);
           } else {
             const totalQty = req.tagNos.reduce((sum: number, tag: any) => sum + tag.qty, 0);
@@ -1162,7 +1202,7 @@ const EstimateDetailPage: React.FC = () => {
               id: `${tag.sheetID}`,
               tagNo: tag.tagNo,
               qty: tag.qty,
-              order: tag.sheetID,
+              order: tag.sheetNo ?? tag.sheetID,
               sheetID: tag.sheetID,
               typeId: req.valveType,
               fluid: {
@@ -1214,8 +1254,13 @@ const EstimateDetailPage: React.FC = () => {
             });
           });
         });
+        // sheetNo 기준으로 오름차순 정렬
+
+
+// 정렬된 결과로 상태 반영
+setValves(valvesData);
         
-        setValves(valvesData);
+
         
         // 첫 번째 valve를 기본 선택
         // if (valvesData.length > 0) {
@@ -1423,7 +1468,7 @@ const EstimateDetailPage: React.FC = () => {
     if (customerAddInputRef.current) customerAddInputRef.current.value = '';
   };
 
-  // 고객 첨부 다중 업로드
+  // 고객 첨부 다중 업로드 (ResultFiles/customer에 업로드)
   const uploadCustomerFiles = async (files: File[]) => {
     if (files.length === 0) {
       alert('업로드할 파일을 선택해주세요.');
@@ -1435,7 +1480,8 @@ const EstimateDetailPage: React.FC = () => {
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/attachments?uploadUserID=admin&fileType=customer&managerFileType=customer`, {
+        // manager 업로드 + managerFileType=customer 로 업로드 → ResultFiles/customer에 저장되도록 백엔드 규약 사용
+        const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/attachments?uploadUserID=admin&fileType=manager&managerFileType=customer`, {
           method: 'POST',
           body: formData,
         });
@@ -1507,8 +1553,8 @@ const EstimateDetailPage: React.FC = () => {
   const EstimateSummaryCard = () => {
     const totalQty = (valves || []).reduce((sum, v:any) => sum + (Number(v?.qty) || 0), 0);
     return (
-      <div className="step-section estimate-summary-card">
-        <div className="step-header" style={{ marginBottom: 4 }}>
+      <div className="step-section-detail estimate-summary-card">
+        <div className="step-header-detail" style={{ marginBottom: 4 }}>
           <h3>견적 세부 정보</h3>
         </div>
         <div className="summary-grid">
@@ -1756,48 +1802,70 @@ useEffect(() => {
   setSpecBySheetId(prev => ({ ...prev, [selectedValve.sheetID]: dto }));
 }, [selectedValve?.sheetID, bodySelections, trimSelections, actSelections, accSelections]);
 
-  const handleSaveSpecification = useCallback(async () => {
-    try {
-      if (!selectedValve) {
-        alert('저장할 밸브를 선택해주세요.');
-        return;
-      }
-
-      try {
-        // (선택) 안전장치: 현재 편집 중 태그를 맵에 반영
-if (selectedValve && !specBySheetId[selectedValve.sheetID]) {
-  const dto = buildSaveSpecFromSelections({
-    body: bodySelections, trim: trimSelections, act: actSelections, acc: accSelections,
-    valveTypeCode: selectedValve?.body?.typeCode || ''
+const handleSaveValveOrder = async () => {
+  const sheetIDs = valves.map(v => v.sheetID);           // 현재 화면 순서대로
+  const resp = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/requests/order`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(sheetIDs)
   });
-  setSpecBySheetId(prev => ({ ...prev, [selectedValve.sheetID]: dto }));
-}
+  if (resp.ok) {
+    // 로컬 보기용 sheetNo 싱크
+    setValves(prev => prev.map((v, i) => ({ ...v, sheetNo: i + 1 })));
+    alert('순서가 저장되었습니다.');
+  } else {
+    alert('순서 저장에 실패했습니다.');
+  }
+};
 
-// 맵 전체 → items
-const items = Object.entries(specBySheetId).map(([sid, spec]) => ({
-  sheetID: Number(sid),
-  specification: spec
-}));
+// 순서 저장: 화면의 valves 순서를 SheetNo로 반영
+const saveValveOrder = async () => {
+  if (!tempEstimateNo) return;
+  const sheetIDs = valves.map(v => v.sheetID); // 전체 목록의 현재 순서
+  await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/requests/order`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(sheetIDs),
+  });
+};
+const handleSaveSpecification = useCallback(async () => {
+  try {
+    // 0) 순서 먼저 저장 → SheetNo DB 반영
+    await saveValveOrder();
 
-const resp = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/specification/bulk`, {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ items })
-});
-        if (resp.ok) {
-          alert('모든 태그에 사양이 일괄 저장되었습니다.');
-        } else {
-          alert('사양 일괄 저장에 실패했습니다.');
-        }
-      } catch (error) {
-        console.error('사양 일괄 저장 중 오류 발생:', error);
-        alert('사양 일괄 저장 중 오류가 발생했습니다.');
-      }
-    } catch (error) {
-      console.error('사양 저장 중 오류 발생:', error);
-      alert('사양 저장 중 오류가 발생했습니다.');
-    }
-  }, [selectedValve, bodySelections, trimSelections, actSelections, accSelections, tempEstimateNo]);
+    // 1) 일괄 저장 대상 결정(전체)
+    const template = buildSaveSpecFromSelections({
+      body: bodySelections, trim: trimSelections, act: actSelections, acc: accSelections,
+      valveTypeCode: selectedValve?.body?.typeCode || ''
+    });
+    const items = valves.map(v => ({
+      sheetID: v.sheetID,
+      specification: specBySheetId[v.sheetID]
+        ?? (tempSelections[v.sheetID]
+            ? buildSaveSpecFromSelections({
+                body: tempSelections[v.sheetID].body,
+                trim: tempSelections[v.sheetID].trim,
+                act:  tempSelections[v.sheetID].act,
+                acc:  tempSelections[v.sheetID].acc
+              })
+            : template)
+    }));
+
+    // 2) 일괄 사양 저장
+    const resp = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/specification/bulk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items })
+    });
+
+    if (resp.ok) alert('모든 태그에 사양이 일괄 저장되었습니다.');
+    else alert('사양 일괄 저장에 실패했습니다.');
+  } catch (e) {
+    console.error(e);
+    alert('사양 일괄 저장 중 오류가 발생했습니다.');
+  }
+  // 의존성: valves, specBySheetId, tempSelections, bodySelections, trimSelections, actSelections, accSelections, selectedValve, tempEstimateNo
+}, [valves, specBySheetId, tempSelections, bodySelections, trimSelections, actSelections, accSelections, selectedValve, tempEstimateNo]);
 
   const AccessorySelector: React.FC<AccessorySelectorProps> = ({
     accTypeKey,
@@ -1920,7 +1988,7 @@ const resp = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstima
 
     return (
       <div className="accessory-selector" ref={dropdownRef}>
-        <div className="input-group">
+        <div className="input-group-detail">
           <input
             type="text"
             placeholder="메이커"
@@ -2186,6 +2254,35 @@ console.log('첫 번째 메이커:', accMakerList[0]);
       console.log('초기 사양 데이터 로드 실패:', error);
     }
   };
+  const saveOrder = async () => {
+  const sheetIDs = valves.map(v => v.sheetID);
+  const resp = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/requests/order`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(sheetIDs),
+  });
+  if (resp.ok) {
+    alert('순서가 저장되었습니다.');
+  } else {
+    alert('순서 저장에 실패했습니다.');
+  }
+};
+
+const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+  e.dataTransfer.setData('text/plain', String(index));
+};
+const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => { e.preventDefault(); };
+const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
+  e.preventDefault();
+  const dragIndex = Number(e.dataTransfer.getData('text/plain'));
+  if (Number.isNaN(dragIndex)) return;
+  setValves(prev => {
+    const arr = [...prev];
+    const [moved] = arr.splice(dragIndex, 1);
+    arr.splice(dropIndex, 0, moved);
+    return arr.map((it, i) => ({ ...it, sheetNo: i + 1 }));
+  });
+};
 
   // TagNo 변경 시 임시 저장된 선택값 복원
   const restoreTempSelections = (sheetID: number) => {
@@ -2231,24 +2328,24 @@ console.log('첫 번째 메이커:', accMakerList[0]);
 
   // Step 1, 2, 3 통합 섹션
   const StepsSection = () => (
-    <div className="step-section">
-      <div className="step-header">
+    <div className="step-section-detail">
+      <div className="step-header-detail">
         <h3>견적 상세 정보</h3>
       </div>
 
       <div className="steps-horizontal-container">
-        <div className="step-col">
+        <div className="step-col-detail">
           {/* Step 1: Type 선정 */}
-          <div className="step-subsection">
+          <div className="step-subsection-detail">
             <h4>Step 1: Type 선정</h4>
-            <div className="type-list">
+            <div className="type-list-detail">
               {types.map((type) => (
                 <div
                   key={type.id}
-                  className={`type-item ${selectedType === type.id ? 'selected' : ''}`}
+                  className={`type-item-detail ${selectedType === type.id ? 'selected' : ''}`}
                   onClick={() => handleTypeSelection(type)}
                 >
-                  <span className="type-name">{type.name}</span>
+                  <span className="type-name-detail">{type.name}</span>
                   <span className="type-count">({type.count})</span>
                 </div>
               ))}
@@ -2256,44 +2353,47 @@ console.log('첫 번째 메이커:', accMakerList[0]);
           </div>
         </div>
 
-        <div className="step-col">
+        <div className="step-col-detail">
           {/* Step 2: TagNo 선택 */}
-          <div className="step-subsection">
+          <div className="step-subsection-detail">
             <h4>Step 2: TagNo 선택</h4>
             {selectedType ? (
-              <div className="valve-list">
-                {valves
-                  .filter((valve) => {
-                    const selectedTypeData = types.find(t => t.id === selectedType);
-                    return selectedTypeData && valve.body.type === selectedTypeData.name;
-                  })
-                  .map((valve) => (
+              <div className="valve-list-detail">
+              {valves
+                .filter((valve) => {
+                  const t = types.find(tt => tt.id === selectedType);
+                  return t && valve.body.type === t.name;
+                })
+                .map((valve) => {
+                  const originalIndex = valves.findIndex(v => (v.sheetID ?? v.id) === (valve.sheetID ?? valve.id));
+                  return (
                     <div
-                      key={valve.id}
-                      className={`valve-item ${selectedValve?.id === valve.id ? 'selected' : ''}`}
+                      key={valve.sheetID ?? valve.id}
+                      className={`valve-item-detail ${selectedValve?.id === valve.id ? 'selected' : ''}`}
                       onClick={() => handleValveSelection(valve)}
                     >
-                      <span className="valve-tag">{valve.tagNo}</span>
-                      <span className="valve-qty">({valve.qty})</span>
+                      <span className="valve-tag-detail">{valve.tagNo}</span>
+                      <span className="valve-qty-detail">({valve.qty})</span>
                     </div>
-                  ))}
-              </div>
+                  );
+                })}
+            </div>
             ) : (
               <div className="no-type-selected">Step 1에서 Type을 선택하세요.</div>
             )}
           </div>
         </div>
         
-        {selectedValve && <div className="step-col">
+        {selectedValve && <div className="step-col-detail">
           {/* Step 3: 상세사양 입력 */}
-          <div className="step-subsection">
+          <div className="step-subsection-detail">
             <h4>Step 3: 상세사양 입력</h4>
-            <div className="specification-grid">
+            <div className="specification-grid-detail">
               {/* BODY 섹션 */}
-              <div className="spec-section">
+              <div className="spec-section-detail">
                 <h4>BODY</h4>
-                <div className="spec-grid">
-                  <div className="spec-item">
+                <div className="spec-grid-detail">
+                  <div className="spec-item-detail">
                     <label>Bonnet Type:</label>
                     <select value={bodySelections.bonnetType} onChange={(e) => handleBodyChange('bonnetType', e.target.value)} disabled={isReadOnly}>
                       <option value="">선택하세요</option>
@@ -2304,7 +2404,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
                       ))}
                     </select>
                   </div>
-                  <div className="spec-item">
+                  <div className="spec-item-detail">
                     <label>Material Body:</label>
                     <select value={bodySelections.materialBody} onChange={(e) => handleBodyChange('materialBody', e.target.value)} disabled={isReadOnly}>
                       <option value="">선택하세요</option>
@@ -2315,9 +2415,9 @@ console.log('첫 번째 메이커:', accMakerList[0]);
                       ))}
                     </select>
                   </div>
-                  <div className="spec-item">
+                  <div className="spec-item-detail">
                     <label>Size Body:</label>
-                    <div className="size-input-group">
+                    <div className="size-input-group-detail">
                       <select value={bodySelections.sizeBodyUnitCode} onChange={(e) => {
                         handleBodyChange('sizeBodyUnit', e.target.value);
                         handleBodyChange('sizeBodyUnitCode', e.target.value);
@@ -2354,9 +2454,9 @@ console.log('첫 번째 메이커:', accMakerList[0]);
                       </select>
                     </div>
                   </div>
-                  <div className="spec-item">
+                  <div className="spec-item-detail">
                     <label>Rating:</label>
-                    <div className="rating-input-group">
+                    <div className="rating-input-group-detail">
                       <select value={bodySelections.ratingUnit} onChange={(e) => {
                         const selectedUnit = bodyRatingList.find(item => item.ratingUnit === e.target.value);
                         if (selectedUnit) {
@@ -2396,7 +2496,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
                       </select>
                     </div>
                   </div>
-                  <div className="spec-item">
+                  <div className="spec-item-detail">
                     <label>Connection:</label>
                     <select value={bodySelections.connection} onChange={(e) => handleBodyChange('connection', e.target.value)} disabled={isReadOnly}>
                       <option value="">선택하세요</option>
@@ -2411,10 +2511,10 @@ console.log('첫 번째 메이커:', accMakerList[0]);
               </div>
 
               {/* Trim 섹션 */}
-              <div className="spec-section">
+              <div className="spec-section-detail">
                 <h4>Trim</h4>
-                <div className="spec-grid">
-                  <div className="spec-item">
+                <div className="spec-grid-detail">
+                  <div className="spec-item-detail">
                     <label>Trim Type:</label>
                     <select value={trimSelections.trimType} onChange={(e) => handleTrimChange('trimType', e.target.value)} disabled={isReadOnly}>
                       <option value="">선택하세요</option>
@@ -2425,7 +2525,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
                       ))}
                     </select>
                   </div>
-                  <div className="spec-item">
+                  <div className="spec-item-detail">
                     <label>Trim Series:</label>
                     <select value={trimSelections.trimSeries} onChange={(e) => handleTrimChange('trimSeries', e.target.value)} disabled={isReadOnly}>
                       <option value="">선택하세요</option>
@@ -2436,7 +2536,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
                         ))}
                       </select>
                   </div>
-                  <div className="spec-item">
+                  <div className="spec-item-detail">
                     <label>Material Trim:</label>
                     <select value={trimSelections.materialTrim} onChange={(e) => handleTrimChange('materialTrim', e.target.value)} disabled={isReadOnly}>
                       <option value="">선택하세요</option>
@@ -2447,7 +2547,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
                       ))}
                     </select>
                   </div>
-                  <div className="spec-item">
+                  <div className="spec-item-detail">
                     <label>Option:</label>
                     <select value={trimSelections.option} onChange={(e) => handleTrimChange('option', e.target.value)} disabled={isReadOnly}>
                       <option value="">선택하세요</option>
@@ -2458,9 +2558,9 @@ console.log('첫 번째 메이커:', accMakerList[0]);
                       ))}
                     </select>
                   </div>
-                  <div className="spec-item">
+                  <div className="spec-item-detail">
                     <label>Size Port:</label>
-                    <div className="size-input-group">
+                    <div className="size-input-group-detail">
                       <select value={trimSelections.sizePortUnitCode} onChange={(e) => {
                         handleTrimChange('sizePortUnit', e.target.value);
                         handleTrimChange('sizePortUnitCode', e.target.value);
@@ -2497,7 +2597,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
                       </select>
                     </div>
                   </div>
-                  <div className="spec-item">
+                  <div className="spec-item-detail">
                     <label>Form:</label>
                     <select value={trimSelections.form} onChange={(e) => handleTrimChange('form', e.target.value)} disabled={isReadOnly}>
                       <option value="">선택하세요</option>
@@ -2512,10 +2612,10 @@ console.log('첫 번째 메이커:', accMakerList[0]);
               </div>
 
               {/* ACT 섹션 */}
-              <div className="spec-section">
+              <div className="spec-section-detail">
                 <h4>ACT</h4>
-                <div className="spec-grid">
-                  <div className="spec-item">
+                <div className="spec-grid-detail">
+                  <div className="spec-item-detail">
                     <label>Action Type:</label>
                     <select value={actSelections.actionType} onChange={(e) => handleActChange('actionType', e.target.value)} disabled={isReadOnly}>
                       <option value="">선택하세요</option>
@@ -2526,7 +2626,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
                       ))}
                     </select>
                   </div>
-                  <div className="spec-item">
+                  <div className="spec-item-detail">
                     <label>Series:</label>
                     <select value={actSelections.series} onChange={(e) => handleActChange('series', e.target.value)} disabled={isReadOnly}>
                       <option value="">선택하세요</option>
@@ -2537,7 +2637,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
                       ))}
                     </select>
                   </div>
-                  <div className="spec-item">
+                  <div className="spec-item-detail">
                     <label>Size:</label>
                     <select value={actSelections.size} onChange={(e) => handleActChange('size', e.target.value)} disabled={!actSelections.series || isReadOnly}>
                       <option value="">선택하세요</option>
@@ -2550,7 +2650,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
                       }
                     </select>
                   </div>
-                  <div className="spec-item">
+                  <div className="spec-item-detail">
                     <label>H.W:</label>
                     <select value={actSelections.hw} onChange={(e) => handleActChange('hw', e.target.value)} disabled={isReadOnly}>
                       <option value="">선택하세요</option>
@@ -2566,7 +2666,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
             </div>
 
             {/* ACC 섹션 - 사진과 동일한 3열 구조로 변경 */}
-            <div className="acc-section">
+            <div className="acc-section-detail">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                 <h4>ACC</h4>
                 <button 
@@ -2596,7 +2696,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
                   메이커: {accMakerList.length}개, 모델: {accModelList.length}개
                 </span>
               </div>
-              <div className="acc-table">
+              <div className="acc-table-detail">
                 <table>
                   <thead>
                     <tr>
@@ -2609,7 +2709,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
                   <tbody>
                   <tr>
                             <td>Positioner</td>
-                            <td className="acc-options-group" colSpan={3}>
+                            <td className="acc-options-group-detail" colSpan={3}>
                               <AccessorySelector 
                                 accTypeKey="positioner" 
                                 accSelections={accSelections} 
@@ -2621,7 +2721,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
                           </tr>
                           <tr>
                             <td>Solenoid Valve</td>
-                            <td className="acc-options-group" colSpan={3}>
+                            <td className="acc-options-group-detail" colSpan={3}>
                               <AccessorySelector 
                                 accTypeKey="solenoid" 
                                 accSelections={accSelections} 
@@ -2633,7 +2733,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
                           </tr>
                     <tr>
                     <td>Limit Switch</td>
-                            <td className="acc-options-group" colSpan={3}>
+                            <td className="acc-options-group-detail" colSpan={3}>
                               <AccessorySelector 
                                 accTypeKey="limiter" 
                                 accSelections={accSelections} 
@@ -2645,7 +2745,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
                           </tr>
                           <tr>
                             <td>Air Set</td>
-                            <td className="acc-options-group" colSpan={3}>
+                            <td className="acc-options-group-detail" colSpan={3}>
                               <AccessorySelector 
                                 accTypeKey="airSupply" 
                                 accSelections={accSelections} 
@@ -2657,7 +2757,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
                           </tr>
                           <tr>
                             <td>Volume Booster</td>
-                            <td className="acc-options-group" colSpan={3}>
+                            <td className="acc-options-group-detail" colSpan={3}>
                               <AccessorySelector 
                                 accTypeKey="volumeBooster" 
                                 accSelections={accSelections} 
@@ -2669,7 +2769,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
                           </tr>
                           <tr>
                             <td>Air Operated Valve</td>
-                            <td className="acc-options-group" colSpan={3}>
+                            <td className="acc-options-group-detail" colSpan={3}>
                               <AccessorySelector 
                                 accTypeKey="airOperator" 
                                 accSelections={accSelections} 
@@ -2681,7 +2781,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
                           </tr>
                           <tr>
                             <td>Lock-Up Valve</td>
-                            <td className="acc-options-group" colSpan={3}>
+                            <td className="acc-options-group-detail" colSpan={3}>
                               <AccessorySelector 
                                 accTypeKey="lockUp" 
                                 accSelections={accSelections} 
@@ -2693,7 +2793,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
                           </tr>
                           <tr>
                             <td>Snap Acting Relay</td>
-                            <td className="acc-options-group" colSpan={3}>
+                            <td className="acc-options-group-detail" colSpan={3}>
                               <AccessorySelector 
                                 accTypeKey="snapActingRelay" 
                                 accSelections={accSelections} 
@@ -2715,17 +2815,17 @@ console.log('첫 번째 메이커:', accMakerList[0]);
 
   // 고객 요청사항 섹션 (항상 readonly)
   const CustomerRequirementSection = () => (
-    <div className="step-section">
-      <div className="step-header">
+    <div className="step-section-detail">
+      <div className="step-header-detail">
         <h3>고객 요청사항</h3>
       </div>
-      <div className="customer-requirement-content">
+      <div className="customer-requirement-content-detail">
         <textarea
           value={customerRequirement}
           onChange={() => {}} // 변경 불가
           readOnly={true} // 항상 readonly
           placeholder="고객 요청사항이 없습니다."
-          className="customer-requirement-textarea"
+          className="customer-requirement-textarea-detail"
         />
       </div>
     </div>
@@ -2733,17 +2833,17 @@ console.log('첫 번째 메이커:', accMakerList[0]);
 
   // 관리자 코멘트 섹션
   const StaffCommentSection = () => (
-    <div className="step-section">
-      <div className="step-header">
+    <div className="step-section-detail">
+      <div className="step-header-detail">
         <h3>관리자 코멘트</h3>
       </div>
-      <div className="staff-comment-content">
+      <div className="staff-comment-content-detail">
         <textarea
           value={staffComment}
           onChange={(e) => !isReadOnly && setStaffComment(e.target.value)}
           readOnly={isReadOnly}
           placeholder="관리자 코멘트가 없습니다."
-          className="staff-comment-textarea"
+          className="staff-comment-textarea-detail"
         />
       </div>
     </div>
@@ -2751,17 +2851,17 @@ console.log('첫 번째 메이커:', accMakerList[0]);
 
   // 고객 요청 첨부파일 섹션 (다운로드만 가능)
   const CustomerAttachmentsSection = () => (
-    <div className="step-section">
-      <div className="step-header">
+    <div className="step-section-detail">
+      <div className="step-header-detail">
         <h3>고객 요청 첨부파일</h3>
       </div>
       <div className="attachments-content">
         {customerAttachments.length > 0 ? (
-          <div className="attachment-list">
+          <div className="attachment-list-detail">
             {customerAttachments.map((file, index) => (
-              <div key={index} className="attachment-item">
-                <span className="file-name">{file.fileName}</span>
-                <span className="file-size">({(file.fileSize / 1024).toFixed(2)} KB)</span>
+              <div key={index} className="attachment-item-detail">
+                <span className="file-name-detail">{file.fileName}</span>
+                <span className="file-size-detail">({(file.fileSize / 1024).toFixed(2)} KB)</span>
                 <button 
                   className="btn btn-primary btn-sm"
                   onClick={() => handleDownloadFile(file, 'customer')}
@@ -2783,8 +2883,8 @@ console.log('첫 번째 메이커:', accMakerList[0]);
 
   // 관리 첨부파일 섹션 (업로드, 다운로드, 생성 가능)
   const ManagerAttachmentsSection = () => (
-    <div className="step-section">
-      <div className="step-header">
+    <div className="step-section-detail">
+      <div className="step-header-detail">
         <h3>견적 서류 발급</h3>
       </div>
       <div className="doc-issue-list">
@@ -2846,10 +2946,10 @@ console.log('첫 번째 메이커:', accMakerList[0]);
   }, [selectedValve?.sheetID, tempEstimateNo, types, accModelList]); // types와 accModelList 추가
 
   return (
-    <div className="estimate-detail-page">
+    <div className="estimate-detail-page dashboard-page">
       {/* 헤더 */}
-      <div className="page-header">
-        <button className="back-button" onClick={() => navigate(-1)}>
+      <div className="page-header-detail">
+        <button className="back-button-detail" onClick={() => navigate(-1)}>
           ← 견적요청
         </button>
         <h1>사양 선정</h1>
@@ -2859,10 +2959,10 @@ console.log('첫 번째 메이커:', accMakerList[0]);
       <div className="mini-tools-panel">
         <EstimateSummaryCard />
         <ManagerAttachmentsSection />
-        <div className="step-section customer-uploader">
+        <div className="step-section-detail customer-uploader">
           <div className="uploader-header">
             <h3>고객 제출 문서 업로드</h3>
-            <div className="header-actions">
+            <div className="header-actions-detail">
               <input
                 ref={customerAddInputRef}
                 type="file"
@@ -2886,7 +2986,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
                 return (
                   <div key={file.attachmentID} className="uploader-item">
                     <span className={`file-icon ext-${ext}`} aria-hidden />
-                    <span className="file-name" title={name}>{name}</span>
+                    <span className="file-name-detail" title={name}>{name}</span>
                     <button className="remove-btn" onClick={() => deleteAttachmentById(file.attachmentID)}>✕</button>
                   </div>
                 );
@@ -2921,7 +3021,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
       </div>
 
       {/* 상태 및 프로젝트 정보 */}
-      <div className="status-section">
+      <div className="status-section-detail">
         {/*
         <div className="status-group">
           <label>진행상태:</label>
@@ -2933,7 +3033,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
                 handleStatusChange(newStatus);
               }
             }}
-            className="status-select"
+            className="status-select-detail"
           >
             <option value="견적요청">견적요청</option>
             <option value="견적처리중">견적처리중</option>
@@ -2942,9 +3042,9 @@ console.log('첫 번째 메이커:', accMakerList[0]);
           </select>
         </div>
         */}
-        <div className="project-group">
+        <div className="project-group-detail">
           <label>프로젝트명:</label>
-          <input type="text" value={projectName} readOnly={isReadOnly} className="project-input" />
+          <input type="text" value={projectName} readOnly={isReadOnly} className="project-input-detail" />
         </div>
         
         {/* 저장 버튼 */}
@@ -2960,12 +3060,12 @@ console.log('첫 번째 메이커:', accMakerList[0]);
       </div>
 
       {/* 메인 콘텐츠 */}
-      <div className="main-content">
-        <div className="steps-container">
+      <div className="main-content-detail">
+        <div className="steps-container-detail">
           <StepsSection />
           
           {/* 고객 요청 사항과 첨부파일을 하나의 블록으로 묶음 */}
-          <div className="customer-request-block">
+          <div className="customer-request-block-detail">
             <CustomerRequirementSection />
             <CustomerAttachmentsSection />
           </div>

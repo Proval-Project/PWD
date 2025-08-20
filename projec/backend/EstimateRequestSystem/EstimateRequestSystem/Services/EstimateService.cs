@@ -209,23 +209,7 @@ namespace EstimateRequestSystem.Services
                 }
             }
 
-            // 첨부파일 정보 저장
-            if (dto.Attachments != null && dto.Attachments.Any())
-            {
-                foreach (var attachmentInfo in dto.Attachments)
-                {
-                    var attachment = new EstimateAttachment
-                    {
-                        TempEstimateNo = tempEstimateNo,
-                        FileName = attachmentInfo.FileName,
-                        FilePath = attachmentInfo.FilePath,
-                        FileSize = attachmentInfo.FileSize,
-                        UploadUserID = attachmentInfo.UploadUserID
-                    };
-
-                    _context.EstimateAttachment.Add(attachment);
-                }
-            }
+           
 
             // EstimateSheet 업데이트
             estimateSheet.Project = dto.Project;
@@ -408,23 +392,7 @@ namespace EstimateRequestSystem.Services
                 }
             }
 
-            // 4. 첨부파일 처리
-            if (dto.Attachments != null && dto.Attachments.Any())
-            {
-                foreach (var attachmentInfo in dto.Attachments)
-                {
-                    var attachment = new EstimateAttachment
-                    {
-                        TempEstimateNo = tempEstimateNo,
-                        FileName = attachmentInfo.FileName,
-                        FilePath = attachmentInfo.FilePath,
-                        FileSize = attachmentInfo.FileSize,
-                        UploadUserID = attachmentInfo.UploadUserID
-                    };
-
-                    _context.EstimateAttachment.Add(attachment);
-                }
-            }
+            
 
             // EstimateSheet 상태를 견적요청으로 변경
             estimateSheet.Status = 2; // 견적요청
@@ -999,12 +967,10 @@ namespace EstimateRequestSystem.Services
             }
             else
             {
-                // 고객 파일도 ResultFiles/customer 경로에 저장하도록 변경
-                if (string.IsNullOrEmpty(managerFileType))
-                {
-                    managerFileType = "customer";
-                }
-                filesFolder = Path.Combine(Directory.GetCurrentDirectory(), "files", tempEstimateNo, "ResultFiles", "customer");
+                // 고객 업로드 파일은 CustomerRequest 경로에 저장
+                // ManagerFileType은 명시적으로 'customer'로 남기되, 물리 경로는 CustomerRequest로 분리
+                if (string.IsNullOrEmpty(managerFileType)) managerFileType = "customer";
+                filesFolder = Path.Combine(Directory.GetCurrentDirectory(), "files", tempEstimateNo, "CustomerRequest");
             }
             
             Console.WriteLine($"📁 파일 저장 경로: {filesFolder}");
