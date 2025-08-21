@@ -80,6 +80,26 @@ const isResultCustomerFile = (filePath: string): boolean => {
   return normalizedPath.includes('/resultfiles/customer');
 };
 
+// 단위/사이즈 마스터 데이터 타입
+interface BodySizeUnit {
+  unitCode: string;
+  unitName: string;
+}
+
+interface BodySizeListDto {
+  unitCode: string;
+  bodySizeCode: string;
+  bodySize: string;
+  unitName: string;  // 단위명 (inch, mm 등)
+}
+
+interface TrimPortSizeListDto {
+  portSizeCode: string;
+  unitCode: string;
+  portSize: string;
+  unitName: string;  // 단위명 (inch, mm 등)
+}
+
 interface ValveData {
   id: string;  // 드래그앤드롭용 고유 ID
   tagNo: string;
@@ -569,11 +589,13 @@ const NewEstimateRequestPage: React.FC = () => {
   const densityOptions = ['Density', 'Molecular'];
 
   // DB에서 가져올 마스터 데이터 상태
-  const [bodySizeList, setBodySizeList] = useState<any[]>([]);
+  const [bodySizeUnits, setBodySizeUnits] = useState<BodySizeUnit[]>([]);
+  const [bodySizeList, setBodySizeList] = useState<BodySizeListDto[]>([]);
   const [bodyMatList, setBodyMatList] = useState<any[]>([]);
   const [trimMatList, setTrimMatList] = useState<any[]>([]);
   const [trimOptionList, setTrimOptionList] = useState<any[]>([]);
   const [bodyRatingList, setBodyRatingList] = useState<any[]>([]);
+  const [trimPortSizeList, setTrimPortSizeList] = useState<TrimPortSizeListDto[]>([]);
 
   // 이름을 코드로 변환하는 함수들
   const getNameToCode = (list: any[], name: string, nameField: string, codeField: string): string => {
@@ -618,7 +640,7 @@ const NewEstimateRequestPage: React.FC = () => {
   };
 
   const getBodySizeName = (code: string, unit: string): string => {
-    const item = bodySizeList.find(item => item.bodySizeCode === code && item.sizeUnit === unit);
+    const item = bodySizeList.find(item => item.bodySizeCode === code && item.unitCode === unit);
     return item ? item.bodySize : '';
   };
 
@@ -1396,19 +1418,23 @@ const NewEstimateRequestPage: React.FC = () => {
   // 마스터 데이터 가져오기
   const fetchMasterData = async () => {
     try {
-      const [sizeRes, matRes, trimMatRes, optionRes, ratingRes] = await Promise.all([
+      const [unitsRes, sizeRes, matRes, trimMatRes, optionRes, ratingRes, portSizeRes] = await Promise.all([
+        axios.get('/api/estimate/body-size-unit-list'),
         axios.get('/api/estimate/body-size-list'),
         axios.get('/api/estimate/body-mat-list'),
         axios.get('/api/estimate/trim-mat-list'),
         axios.get('/api/estimate/trim-option-list'),
-        axios.get('/api/estimate/body-rating-list')
+        axios.get('/api/estimate/body-rating-list'),
+        axios.get('/api/estimate/trim-port-size-list')
       ]);
       
+      setBodySizeUnits(unitsRes.data);
       setBodySizeList(sizeRes.data);
       setBodyMatList(matRes.data);
       setTrimMatList(trimMatRes.data);
       setTrimOptionList(optionRes.data);
       setBodyRatingList(ratingRes.data);
+      setTrimPortSizeList(portSizeRes.data);
       
       // bodyRatingList 데이터를 반환
       return ratingRes.data;
@@ -2517,8 +2543,8 @@ const NewEstimateRequestPage: React.FC = () => {
                 <div className="specification-grid">
                   <div className="spec-section">
                     <h4>BODY</h4>
-                    <div className="spec-grid">
-                      <div className="spec-item">
+                    <div className="body-spec-grid">
+                      <div className="body-spec-item">
                         <label>Type</label>
                         <input
                           id="body-type"
@@ -2528,9 +2554,9 @@ const NewEstimateRequestPage: React.FC = () => {
                           readOnly
                         />
                       </div>
-                      <div className="spec-item">
+                      <div className="body-spec-item">
                         <label>Size</label>
-                        <div style={{ display: 'flex', gap: '10px' }}>
+                        <div className="size-selection-group">
                           <select 
                             id="body-size-unit"
                             name="bodySizeUnit"
@@ -2541,11 +2567,13 @@ const NewEstimateRequestPage: React.FC = () => {
                               handleBodyChange('size', '');
                             }}
                             disabled={isReadOnly}
-                            style={{ width: '80px' }}
                           >
                             <option value="">단위</option>
-                            <option value="inch">inch</option>
-                            <option value="A">A</option>
+                            {bodySizeUnits.map(unit => (
+                              <option key={unit.unitCode} value={unit.unitCode}>
+                                {unit.unitName}
+                              </option>
+                            ))}
                           </select>
                           <select 
                             id="body-size"
@@ -2555,17 +2583,17 @@ const NewEstimateRequestPage: React.FC = () => {
                             disabled={!currentValve.body.sizeUnit || isReadOnly}
                           >
                             <option value="">선택하세요</option>
-                            {currentValve.body.sizeUnit && bodySizeList
-                              .filter(item => item.sizeUnit === currentValve.body.sizeUnit)
+                                        {currentValve.body.sizeUnit && bodySizeList
+              .filter(item => item.unitCode === currentValve.body.sizeUnit)
                               .map(item => (
                                 <option key={item.bodySizeCode} value={item.bodySizeCode}>
-                                  {item.bodySize}
+                                  {item.bodySize} ({item.unitName})
                                 </option>
                               ))}
                           </select>
                         </div>
                       </div>
-                      <div className="spec-item">
+                      <div className="body-spec-item">
                         <label>Material Body</label>
                         <select 
                           id="body-material-body"
@@ -2579,13 +2607,13 @@ const NewEstimateRequestPage: React.FC = () => {
                             <option key={item.bodyMatCode} value={item.bodyMatCode}>
                               {item.bodyMat}
                             </option>
-                          ))}
+                              ))}
                         </select>
                       </div>
 
                       <div className="spec-item">
                         <label>Rating</label>
-                        <div style={{ display: 'flex', gap: '10px' }}>
+                        <div className="rating-selection-group">
                           <select 
                             id="body-rating-unit"
                             name="bodyRatingUnit"
@@ -2596,7 +2624,6 @@ const NewEstimateRequestPage: React.FC = () => {
                               handleBodyChange('rating', '');
                             }}
                             disabled={isReadOnly}
-                            style={{ width: '100px' }}
                           >
                             <option value="">단위</option>
                             <option value="JIS/KS">JIS/KS</option>

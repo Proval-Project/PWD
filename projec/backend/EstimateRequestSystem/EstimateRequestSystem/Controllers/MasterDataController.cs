@@ -188,6 +188,254 @@ namespace EstimateRequestSystem.Controllers
             }
         }
 
+        // BodySizeUnit 마스터 데이터 조회 (새로 추가)
+        [HttpGet("body/size-unit-list")]
+        public async Task<IActionResult> GetBodySizeUnitList()
+        {
+            try
+            {
+                var result = await _estimateService.GetBodySizeUnitListAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("body/size-unit")]
+        public async Task<IActionResult> AddBodySizeUnit([FromBody] BodySizeUnit item)
+        {
+            try
+            {
+                Console.WriteLine($"🔍 AddBodySizeUnit - 받은 데이터: UnitCode='{item?.UnitCode}', UnitName='{item?.UnitName}'");
+                
+                if (item == null)
+                {
+                    return BadRequest(new { message = "요청 데이터가 null입니다." });
+                }
+                
+                if (string.IsNullOrEmpty(item.UnitCode))
+                {
+                    return BadRequest(new { message = "UnitCode는 필수 필드입니다." });
+                }
+                
+                if (string.IsNullOrEmpty(item.UnitName))
+                {
+                    return BadRequest(new { message = "UnitName은 필수 필드입니다." });
+                }
+
+                var result = await _estimateService.AddBodySizeUnitAsync(item.UnitCode, item.UnitName);
+
+                if (result)
+                {
+                    return Ok(new { message = "Body Size Unit이 추가되었습니다." });
+                }
+                else
+                {
+                    return BadRequest(new { message = "추가에 실패했습니다. 중복된 코드이거나 유효하지 않은 데이터입니다." });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ AddBodySizeUnit 오류: {ex.Message}");
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPut("body/size-unit/{unitCode}")]
+        public async Task<IActionResult> UpdateBodySizeUnit(string unitCode, [FromBody] BodySizeUnit item)
+        {
+            try
+            {
+                if (unitCode != item.UnitCode)
+                {
+                    return BadRequest(new { message = "UnitCode가 일치하지 않습니다." });
+                }
+
+                var result = await _estimateService.UpdateBodySizeUnitAsync(unitCode, item.UnitName);
+
+                if (result)
+                {
+                    return Ok(new { message = "Body Size Unit이 수정되었습니다." });
+                }
+                else
+                {
+                    return BadRequest(new { message = "수정에 실패했습니다. 해당 Unit을 찾을 수 없습니다." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete("body/size-unit/{unitCode}")]
+        public async Task<IActionResult> DeleteBodySizeUnit(string unitCode)
+        {
+            try
+            {
+                var result = await _estimateService.DeleteBodySizeUnitAsync(unitCode);
+
+                if (result)
+                {
+                    return Ok(new { message = "Body Size Unit이 삭제되었습니다." });
+                }
+                else
+                {
+                    return BadRequest(new { message = "삭제에 실패했습니다. 해당 Unit을 찾을 수 없거나 사용 중입니다." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        // 특정 UnitCode에 해당하는 BodySize 목록 조회 (새로 추가)
+        [HttpGet("body/size-list-by-unit")]
+        public async Task<IActionResult> GetBodySizeListByUnit([FromQuery] string unitCode)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(unitCode))
+                {
+                    return BadRequest(new { message = "UnitCode is required" });
+                }
+
+                var result = await _estimateService.GetBodySizeListByUnitAsync(unitCode);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        // TrimPortSizeUnit 마스터 데이터 조회 (새로 추가)
+        [HttpGet("trim/port-size-unit-list")]
+        public async Task<IActionResult> GetTrimPortSizeUnitList()
+        {
+            try
+            {
+                var result = await _estimateService.GetTrimPortSizeUnitListAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPost("trim/port-size-unit")]
+        public async Task<IActionResult> AddTrimPortSizeUnit([FromBody] TrimPortSizeUnit item)
+        {
+            try
+            {
+                Console.WriteLine($"🔍 AddTrimPortSizeUnit - 받은 데이터: UnitCode='{item?.UnitCode}', UnitName='{item?.UnitName}'");
+                
+                if (item == null)
+                {
+                    return BadRequest(new { message = "요청 데이터가 null입니다." });
+                }
+                
+                if (string.IsNullOrEmpty(item.UnitCode))
+                {
+                    return BadRequest(new { message = "UnitCode는 필수 필드입니다." });
+                }
+                
+                if (string.IsNullOrEmpty(item.UnitName))
+                {
+                    return BadRequest(new { message = "UnitName은 필수 필드입니다." });
+                }
+
+                var result = await _estimateService.AddTrimPortSizeUnitAsync(item.UnitCode, item.UnitName);
+
+                if (result)
+                {
+                    return Ok(new { message = "Trim Port Size Unit이 추가되었습니다." });
+                }
+                else
+                {
+                    return BadRequest(new { message = "추가에 실패했습니다. 중복된 코드이거나 유효하지 않은 데이터입니다." });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ AddTrimPortSizeUnit 오류: {ex.Message}");
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPut("trim/port-size-unit/{unitCode}")]
+        public async Task<IActionResult> UpdateTrimPortSizeUnit(string unitCode, [FromBody] TrimPortSizeUnit item)
+        {
+            try
+            {
+                if (unitCode != item.UnitCode)
+                {
+                    return BadRequest(new { message = "UnitCode가 일치하지 않습니다." });
+                }
+
+                var result = await _estimateService.UpdateTrimPortSizeUnitAsync(unitCode, item.UnitName);
+
+                if (result)
+                {
+                    return Ok(new { message = "Trim Port Size Unit이 수정되었습니다." });
+                }
+                else
+                {
+                    return BadRequest(new { message = "수정에 실패했습니다. 해당 Unit을 찾을 수 없습니다." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete("trim/port-size-unit/{unitCode}")]
+        public async Task<IActionResult> DeleteTrimPortSizeUnit(string unitCode)
+        {
+            try
+            {
+                var result = await _estimateService.DeleteTrimPortSizeUnitAsync(unitCode);
+
+                if (result)
+                {
+                    return Ok(new { message = "Trim Port Size Unit이 삭제되었습니다." });
+                }
+                else
+                {
+                    return BadRequest(new { message = "삭제에 실패했습니다. 해당 Unit을 찾을 수 없거나 사용 중입니다." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        // 특정 UnitCode에 해당하는 TrimPortSize 목록 조회 (새로 추가)
+        [HttpGet("trim/port-size-list-by-unit")]
+        public async Task<IActionResult> GetTrimPortSizeListByUnit([FromQuery] string unitCode)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(unitCode))
+                {
+                    return BadRequest(new { message = "UnitCode is required" });
+                }
+
+                var result = await _estimateService.GetTrimPortSizeListByUnitAsync(unitCode);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
         [HttpGet("body/rating-units")]
         public async Task<IActionResult> GetBodyRatingUnits()
         {
@@ -536,8 +784,9 @@ namespace EstimateRequestSystem.Controllers
                     case "portsize":
                         var portSizeCode = trimData.GetProperty("portSizeCode").GetString();
                         var portSizeName = trimData.GetProperty("portSize").GetString();
-                        var unit = trimData.GetProperty("unit").GetString();
-                        result = await _estimateService.AddTrimPortSizeAsync(portSizeCode, portSizeName, unit);
+                        var unitCode = trimData.GetProperty("unitCode").GetString();
+                        Console.WriteLine($"🔍 AddTrimPortSize - 받은 데이터: portSizeCode='{portSizeCode}', portSize='{portSizeName}', unitCode='{unitCode}'");
+                        result = await _estimateService.AddTrimPortSizeAsync(portSizeCode, portSizeName, unitCode);
                         break;
                     case "form":
                         result = await _estimateService.AddTrimFormAsync(
@@ -601,9 +850,10 @@ namespace EstimateRequestSystem.Controllers
                         break;
                     case "portsize":
                         var portSizeName = trimData.GetProperty("portSize").GetString();
-                        var unit = trimData.GetProperty("unit").GetString();
+                        var unitCode = trimData.GetProperty("unitCode").GetString();
+                        Console.WriteLine($"🔍 UpdateTrimPortSize - 받은 데이터: code='{code}', portSize='{portSizeName}', unitCode='{unitCode}'");
                         // 복합키를 고려하여 업데이트 (PortSize만 변경 가능)
-                        result = await _estimateService.UpdateTrimPortSizeAsync(code, portSizeName, unit);
+                        result = await _estimateService.UpdateTrimPortSizeAsync(code, portSizeName, unitCode);
                         break;
                     case "form":
                         result = await _estimateService.UpdateTrimFormAsync(
@@ -656,11 +906,12 @@ namespace EstimateRequestSystem.Controllers
                         result = await _estimateService.DeleteTrimSeriesAsync(code);
                         break;
                     case "portsize":
-                        // 복합키를 고려하여 삭제 (unit 정보 필요)
+                        // 복합키를 고려하여 삭제 (unitCode 정보 필요)
                         if (string.IsNullOrEmpty(unit))
                         {
                             return BadRequest(new { message = "Port Size 삭제 시 unit 정보가 필요합니다." });
                         }
+                        Console.WriteLine($"🔍 DeleteTrimPortSize - 받은 데이터: code='{code}', unitCode='{unit}'");
                         result = await _estimateService.DeleteTrimPortSizeAsync(code, unit);
                         break;
                     case "form":

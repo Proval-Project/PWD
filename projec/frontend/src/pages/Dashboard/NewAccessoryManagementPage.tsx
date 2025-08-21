@@ -15,6 +15,8 @@ const NewAccessoryManagementPage: React.FC = () => {
   const [selectedAccessorySection, setSelectedAccessorySection] = useState<string>('positioner');
   const [selectedMakerCode, setSelectedMakerCode] = useState<string | null>(null);
   const [selectedUnitCode, setSelectedUnitCode] = useState<string | null>(null); // New state for selected unit in Rating section
+  const [selectedBodySizeUnitCode, setSelectedBodySizeUnitCode] = useState<string | null>(null); // New state for selected unit in Body Size section
+  const [selectedTrimPortSizeUnitCode, setSelectedTrimPortSizeUnitCode] = useState<string | null>(null); // New state for selected unit in Trim Port Size section
   const [selectedActSection, setSelectedActSection] = useState<string>('actType'); // New state for selected act section
   const [selectedActSeriesCode, setSelectedActSeriesCode] = useState<string | null>(null); // New state for selected Act Series
   const [selectedTrimSection, setSelectedTrimSection] = useState<string>('trimType'); // New state for selected trim section
@@ -34,7 +36,7 @@ const NewAccessoryManagementPage: React.FC = () => {
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
-  const [modalType, setModalType] = useState<'maker' | 'model' | 'unit' | 'rating' | 'actType' | 'actSeries' | 'actSize' | 'actHW' | 'trimType' | 'trimSeries' | 'trimPortSize' | 'trimForm' | 'trimMaterial' | 'trimOption' | 'bodyBonnet' | 'bodyValve' | 'bodyMaterial' | 'bodySize' | 'bodyConnection' | null>(null);
+  const [modalType, setModalType] = useState<'maker' | 'model' | 'unit' | 'rating' | 'actType' | 'actSeries' | 'actSize' | 'actHW' | 'trimType' | 'trimSeries' | 'trimPortSize' | 'trimForm' | 'trimMaterial' | 'trimOption' | 'bodyBonnet' | 'bodyValve' | 'bodyMaterial' | 'bodySize' | 'bodyConnection' | 'bodySizeUnit' | 'trimPortSizeUnit' | null>(null);
   const [currentItem, setCurrentItem] = useState<MasterDataItem | null>(null);
   const [formData, setFormData] = useState<Partial<MasterDataItem>>({});
 
@@ -49,7 +51,7 @@ const NewAccessoryManagementPage: React.FC = () => {
     { id: 'bodyBonnet', name: '보닛타입', endpoint: 'body/bonnet', columns: [{ key: 'code', label: 'Code*' }, { key: 'name', label: 'NAME' }] },
     { id: 'bodyValve', name: '바디시리즈', endpoint: 'body/valve', columns: [{ key: 'code', label: 'Code*' }, { key: 'name', label: 'NAME' }] },
     { id: 'bodyMaterial', name: '바디재질', endpoint: 'body/material', columns: [{ key: 'code', label: 'Code*' }, { key: 'name', label: 'NAME' }] },
-    { id: 'bodySize', name: '바디 사이즈', endpoint: 'body/size', columns: [{ key: 'code', label: 'Code*' }, { key: 'name', label: 'NAME' }, { key: 'unit', label: 'Unit' }] },
+    { id: 'bodySize', name: '바디 사이즈', endpoint: 'body/size' }, // columns removed, will be handled separately like rating
     { id: 'rating', name: '레이팅', endpoint: 'body/rating' }, // columns removed, will be handled separately
     { id: 'bodyConnection', name: '커넥션', endpoint: 'body/connection', columns: [{ key: 'code', label: 'Code*' }, { key: 'name', label: 'NAME' }] },
   ], []);
@@ -74,7 +76,7 @@ const NewAccessoryManagementPage: React.FC = () => {
   const trimSections = React.useMemo(() => [
     { id: 'trimType', name: 'Type', endpoint: 'trim-type', columns: [{ key: 'code', label: 'Code*' }, { key: 'name', label: 'NAME' }] }, // 특수경로
     { id: 'trimSeries', name: 'Series', endpoint: 'trim/series', columns: [{ key: 'code', label: 'Code*' }, { key: 'name', label: 'NAME' }] },
-    { id: 'trimPortSize', name: 'Port Size', endpoint: 'trim/port-size', columns: [{ key: 'code', label: 'Code*' }, { key: 'name', label: 'NAME' }, { key: 'unit', label: 'Unit' }] },
+    { id: 'trimPortSize', name: 'Port Size', endpoint: 'trim/port-size' }, // columns removed, will be handled separately like rating
     { id: 'trimForm', name: 'Form', endpoint: 'trim/form', columns: [{ key: 'code', label: 'Code*' }, { key: 'name', label: 'NAME' }] },
     { id: 'trimMaterial', name: 'Material', endpoint: 'trim/material', columns: [{ key: 'code', label: 'Code*' }, { key: 'name', label: 'NAME' }] },
     { id: 'trimOption', name: 'Option', endpoint: 'trim/option', columns: [{ key: 'code', label: 'Code*' }, { key: 'name', label: 'NAME' }] },
@@ -117,6 +119,38 @@ const NewAccessoryManagementPage: React.FC = () => {
                     name: item.ratingUnit,
                 }));
                 console.log("Formatted Unit Data:", formattedUnitData); // Log formatted data
+                setUnitData(formattedUnitData);
+
+            } else if (selectedBodySection === 'bodySize') {
+                // Body Size 2레벨 구조
+                if (selectedBodySizeUnitCode) {
+                    // Unit이 선택된 경우에만 Size 목록 조회
+                    const [sizeResponse] = await Promise.all([
+                        fetch(`${API_BASE_URL}/body/size-list-by-unit?unitCode=${selectedBodySizeUnitCode}`)
+                    ]);
+
+                    if (!sizeResponse.ok) throw new Error('Failed to fetch body size data');
+
+                    const sizeData = await sizeResponse.json();
+                    const formattedSizeData = sizeData.map((item: any) => ({
+                        code: item.bodySizeCode,
+                        name: item.bodySize,
+                        unit: item.unitCode
+                    }));
+                    setBodyData(formattedSizeData);
+                } else {
+                    // Unit이 선택되지 않은 경우 Size 목록은 비움
+                    setBodyData([]);
+                }
+
+                // Body Size Unit 데이터는 항상 조회
+                const unitResponse = await fetch(`${API_BASE_URL}/body/size-unit-list`);
+                if (!unitResponse.ok) throw new Error('Failed to fetch body size units data');
+                const unitApiData = await unitResponse.json();
+                const formattedUnitData = unitApiData.map((item: any) => ({
+                    code: item.unitCode,
+                    name: item.unitName,
+                }));
                 setUnitData(formattedUnitData);
 
             } else {
@@ -201,29 +235,60 @@ const NewAccessoryManagementPage: React.FC = () => {
             if (!currentTrimSection) return;
 
             try {
-                const response = await fetch(`${API_BASE_URL}/${currentTrimSection.endpoint}`);
-                if (!response.ok) throw new Error(`Failed to fetch ${currentTrimSection.name} data`);
-                const data = await response.json();
+                if (currentTrimSection.id === 'trimPortSize') {
+                    // Trim Port Size 2레벨 구조
+                    if (selectedTrimPortSizeUnitCode) {
+                        // Unit이 선택된 경우에만 Size 목록 조회
+                        const [sizeResponse] = await Promise.all([
+                            fetch(`${API_BASE_URL}/trim/port-size-list-by-unit?unitCode=${selectedTrimPortSizeUnitCode}`)
+                        ]);
 
-                const formattedData = data.map((item: any) => {
-                    // Trim 섹션별 데이터 구조에 맞게 매핑
-                    if (currentTrimSection.id === 'trimType') {
-                        return { code: item.trimTypeCode, name: item.trimType };
-                    } else if (currentTrimSection.id === 'trimSeries') {
-                        return { code: item.trimSeriesCode, name: item.trimSeries };
-                    } else if (currentTrimSection.id === 'trimPortSize') {
-                        return { code: item.portSizeCode, name: item.portSize, unit: item.portSizeUnit };
-                    } else if (currentTrimSection.id === 'trimForm') {
-                        return { code: item.trimFormCode, name: item.trimForm };
-                    } else if (currentTrimSection.id === 'trimMaterial') {
-                        return { code: item.trimMatCode, name: item.trimMat };
-                    } else if (currentTrimSection.id === 'trimOption') {
-                        return { code: item.trimOptionCode, name: item.trimOption }; // Backend returns trimOptionName as trimOption
+                        if (!sizeResponse.ok) throw new Error('Failed to fetch trim port size data');
+                        const sizeData = await sizeResponse.json();
+
+                        const formattedData = sizeData.map((item: any) => ({
+                            code: item.portSizeCode,
+                            name: item.portSize,
+                            unit: item.unitCode
+                        }));
+                        setTrimData(formattedData);
                     } else {
-                        return { code: '', name: '' };
+                        // Unit이 선택되지 않은 경우 Size 목록은 비움
+                        setTrimData([]);
                     }
-                }).filter(Boolean); // null 값 제거
-                setTrimData(formattedData);
+
+                    // Trim Port Size Unit 데이터는 항상 조회
+                    const unitResponse = await fetch(`${API_BASE_URL}/trim/port-size-unit-list`);
+                    if (!unitResponse.ok) throw new Error('Failed to fetch trim port size units data');
+                    const unitApiData = await unitResponse.json();
+                    const formattedUnitData = unitApiData.map((item: any) => ({
+                        code: item.unitCode,
+                        name: item.unitName,
+                    }));
+                    setUnitData(formattedUnitData);
+                } else {
+                    const response = await fetch(`${API_BASE_URL}/${currentTrimSection.endpoint}`);
+                    if (!response.ok) throw new Error(`Failed to fetch ${currentTrimSection.name} data`);
+                    const data = await response.json();
+
+                    const formattedData = data.map((item: any) => {
+                        // Trim 섹션별 데이터 구조에 맞게 매핑
+                        if (currentTrimSection.id === 'trimType') {
+                            return { code: item.trimTypeCode, name: item.trimType };
+                        } else if (currentTrimSection.id === 'trimSeries') {
+                            return { code: item.trimSeriesCode, name: item.trimSeries };
+                        } else if (currentTrimSection.id === 'trimForm') {
+                            return { code: item.trimFormCode, name: item.trimForm };
+                        } else if (currentTrimSection.id === 'trimMaterial') {
+                            return { code: item.trimMatCode, name: item.trimMat };
+                        } else if (currentTrimSection.id === 'trimOption') {
+                            return { code: item.trimOptionCode, name: item.trimOption }; // Backend returns trimOptionName as trimOption
+                        } else {
+                            return { code: '', name: '' };
+                        }
+                    }).filter(Boolean); // null 값 제거
+                    setTrimData(formattedData);
+                }
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'An unknown error occurred');
                 setTrimData([]);
@@ -249,7 +314,7 @@ const NewAccessoryManagementPage: React.FC = () => {
     } finally {
         setIsLoading(false);
     }
-  }, [activeTab, selectedBodySection, selectedAccessorySection, bodySections, accessorySections, unitData, selectedUnitCode, selectedActSection, selectedActSeriesCode, actuatorSections, selectedTrimSection, trimSections]);
+  }, [activeTab, selectedBodySection, selectedAccessorySection, bodySections, accessorySections, unitData, selectedUnitCode, selectedBodySizeUnitCode, selectedTrimPortSizeUnitCode, selectedActSection, selectedActSeriesCode, actuatorSections, selectedTrimSection, trimSections]);
 
   const fetchModelsForMaker = useCallback(async (makerCode: string) => {
     setIsLoading(true);
@@ -280,16 +345,32 @@ const NewAccessoryManagementPage: React.FC = () => {
     if (activeTab === 'body' && selectedBodySection !== 'rating') {
       setSelectedUnitCode(null);
     }
+    // Reset selectedBodySizeUnitCode when switching away from 'bodySize' section
+    if (activeTab === 'body' && selectedBodySection !== 'bodySize') {
+      setSelectedBodySizeUnitCode(null);
+    }
+    // Reset selectedTrimPortSizeUnitCode when switching away from 'trimPortSize' section
+    if (activeTab === 'trim' && selectedTrimSection !== 'trimPortSize') {
+      setSelectedTrimPortSizeUnitCode(null);
+    }
     fetchData();
-  }, [activeTab, selectedBodySection, selectedAccessorySection, selectedUnitCode]); // Remove fetchData from dependencies to prevent infinite loop
+  }, [activeTab, selectedBodySection, selectedAccessorySection, selectedUnitCode, selectedBodySizeUnitCode, selectedTrimPortSizeUnitCode, selectedTrimSection]); // Remove fetchData from dependencies to prevent infinite loop
 
   const handleMakerSelect = (makerCode: string) => {
       setSelectedMakerCode(makerCode);
       fetchModelsForMaker(makerCode);
   }
 
-  const handleUnitSelect = (unitCode: string) => {
-    setSelectedUnitCode(unitCode);
+    const handleUnitSelect = (unitCode: string) => {
+      setSelectedUnitCode(unitCode);
+  }
+
+  const handleBodySizeUnitSelect = (unitCode: string) => {
+      setSelectedBodySizeUnitCode(unitCode);
+  }
+
+  const handleTrimPortSizeUnitSelect = (unitCode: string) => {
+      setSelectedTrimPortSizeUnitCode(unitCode);
   };
 
   const handleActSeriesSelect = (seriesCode: string) => {
@@ -298,7 +379,7 @@ const NewAccessoryManagementPage: React.FC = () => {
 
   // --- Modal and CRUD Functions ---
 
-  const openModal = (type: 'maker' | 'model' | 'unit' | 'rating' | 'actType' | 'actSeries' | 'actSize' | 'actHW' | 'trimType' | 'trimSeries' | 'trimPortSize' | 'trimForm' | 'trimMaterial' | 'trimOption' | 'bodyBonnet' | 'bodyValve' | 'bodyMaterial' | 'bodySize' | 'bodyConnection' | null, mode: 'add' | 'edit', item: MasterDataItem | null = null) => {
+  const openModal = (type: 'maker' | 'model' | 'unit' | 'rating' | 'actType' | 'actSeries' | 'actSize' | 'actHW' | 'trimType' | 'trimSeries' | 'trimPortSize' | 'trimForm' | 'trimMaterial' | 'trimOption' | 'bodyBonnet' | 'bodyValve' | 'bodyMaterial' | 'bodySize' | 'bodyConnection' | 'bodySizeUnit' | 'trimPortSizeUnit' | null, mode: 'add' | 'edit', item: MasterDataItem | null = null) => {
     setModalType(type);
     setModalMode(mode);
     setCurrentItem(item);
@@ -318,6 +399,8 @@ const NewAccessoryManagementPage: React.FC = () => {
         initialFormData = { code: item.code, name: item.name, unit: item.unit };
       } else if (type === 'bodySize') {
         initialFormData = { code: item.code, name: item.name, unit: item.unit };
+      } else if (type === 'bodySizeUnit' || type === 'trimPortSizeUnit') {
+        initialFormData = { code: item.code, name: item.name };
       }
     } else { // Add mode or no item
       // For add mode, or if item is null (e.g., initial state)
@@ -337,6 +420,9 @@ const NewAccessoryManagementPage: React.FC = () => {
       }
     }
 
+    console.log('🔍 openModal - type:', type, 'mode:', mode, 'item:', item);
+    console.log('🔍 openModal - initialFormData:', initialFormData);
+    
     setFormData(initialFormData);
     setIsModalOpen(true);
   };
@@ -420,6 +506,22 @@ const NewAccessoryManagementPage: React.FC = () => {
             url = `${API_BASE_URL}/body/rating-units/${currentItem?.code}`;
             requestBody = { ratingUnitCode: currentItem?.code, ratingUnit: formData.name };
         }
+    } else if (modalType === 'bodySizeUnit') {
+        if (modalMode === 'add') {
+            url = `${API_BASE_URL}/body/size-unit`;
+            requestBody = { unitCode: formData.code, unitName: formData.name };
+        } else { // edit mode
+            url = `${API_BASE_URL}/body/size-unit/${currentItem?.code}`;
+            requestBody = { unitCode: currentItem?.code, unitName: formData.name };
+        }
+    } else if (modalType === 'trimPortSizeUnit') {
+        if (modalMode === 'add') {
+            url = `${API_BASE_URL}/trim/port-size-unit`;
+            requestBody = { unitCode: formData.code, unitName: formData.name };
+        } else { // edit mode
+            url = `${API_BASE_URL}/trim/port-size-unit/${currentItem?.code}`;
+            requestBody = { unitCode: currentItem?.code, unitName: formData.name };
+        }
     } else if (modalType === 'rating') {
         if (!selectedUnitCode) { setError('Rating Unit must be selected.'); return; }
         if (modalMode === 'add') {
@@ -482,13 +584,16 @@ const NewAccessoryManagementPage: React.FC = () => {
         if (modalMode === 'add') {
             // 백엔드 API: POST /trim/{section} (section="portsize")
             url = `${API_BASE_URL}/trim/portsize`;
-            // 백엔드가 기대하는 필드명: portSizeCode, portSize, unit
-            requestBody = { portSizeCode: formData.code, portSize: formData.name, unit: formData.unit };
+            // Unit이 선택된 경우 자동으로 unitCode 설정
+            const unitCode = selectedTrimPortSizeUnitCode || formData.unit;
+            // 백엔드가 기대하는 필드명: portSizeCode, portSize, unitCode
+            requestBody = { portSizeCode: formData.code, portSize: formData.name, unitCode: unitCode };
+            console.log('🔍 trimPortSize ADD - selectedUnitCode:', selectedTrimPortSizeUnitCode, 'formData.unit:', formData.unit, 'final unitCode:', unitCode);
         } else { // edit mode
             // 백엔드 API: PUT /trim/{section}/{code} (section="portsize")
             url = `${API_BASE_URL}/trim/portsize/${currentItem?.code}`;
-            // 백엔드가 기대하는 필드명: portSize, unit
-            requestBody = { portSize: formData.name, unit: formData.unit };
+            // 백엔드가 기대하는 필드명: portSize, unitCode
+            requestBody = { portSize: formData.name, unitCode: currentItem?.unit || formData.unit };
         }
     } else if (modalType === 'trimForm') {
         if (modalMode === 'add') {
@@ -546,14 +651,18 @@ const NewAccessoryManagementPage: React.FC = () => {
         if (modalMode === 'add') {
             url = `${API_BASE_URL}/body/${sectionId}`;
             if (sectionId === 'size') {
-                requestBody = { [codeKey]: formData.code, [nameKey]: formData.name, [unitKey]: formData.unit };
+                // Unit이 선택된 경우 자동으로 sizeUnit 설정
+                const sizeUnit = selectedBodySizeUnitCode || formData.unit;
+                requestBody = { [codeKey]: formData.code, [nameKey]: formData.name, [unitKey]: sizeUnit };
+                console.log('🔍 bodySize ADD - selectedUnitCode:', selectedBodySizeUnitCode, 'formData.unit:', formData.unit, 'final sizeUnit:', sizeUnit);
             } else {
                 requestBody = { [codeKey]: formData.code, [nameKey]: formData.name };
             }
         } else { // edit mode
             url = `${API_BASE_URL}/body/${sectionId}/${currentItem?.code}`;
             if (sectionId === 'size') {
-                requestBody = { [codeKey]: currentItem?.code, [nameKey]: formData.name, [unitKey]: formData.unit };
+                const sizeUnit = selectedBodySizeUnitCode || formData.unit;
+                requestBody = { [codeKey]: currentItem?.code, [nameKey]: formData.name, [unitKey]: sizeUnit };
             } else {
                 requestBody = { [codeKey]: currentItem?.code, [nameKey]: formData.name };
             }
@@ -575,6 +684,8 @@ const NewAccessoryManagementPage: React.FC = () => {
     console.log("🔧 handleSave: requestBody JSON =", JSON.stringify(requestBody));
 
     try {
+        console.log("🔧 API 호출 상세:", { url, method, requestBody });
+        console.log("🔧 requestBody JSON:", JSON.stringify(requestBody));
         const response = await fetch(url, {
             method,
             headers: { 'Content-Type': 'application/json' },
@@ -599,7 +710,7 @@ const NewAccessoryManagementPage: React.FC = () => {
             fetchData(); // Refetch all makers, or body sections
         } else if (modalType === 'model' && selectedMakerCode) {
             fetchModelsForMaker(selectedMakerCode); // Refetch models for the current maker
-        } else if (modalType === 'unit' || modalType === 'rating') {
+        } else if (modalType === 'unit' || modalType === 'rating' || modalType === 'bodySizeUnit' || modalType === 'trimPortSizeUnit') {
             fetchData(); // Refetch body data for rating section
         } else if (modalType === 'actType' || modalType === 'actSeries' || modalType === 'actSize' || modalType === 'actHW') {
             fetchData(); // Refetch act data
@@ -614,7 +725,7 @@ const NewAccessoryManagementPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async (type: 'maker' | 'model' | 'unit' | 'rating' | 'actType' | 'actSeries' | 'actSize' | 'actHW' | 'trimType' | 'trimSeries' | 'trimPortSize' | 'trimForm' | 'trimMaterial' | 'trimOption' | 'bodyBonnet' | 'bodyValve' | 'bodyMaterial' | 'bodySize' | 'bodyConnection', item: MasterDataItem) => {
+  const handleDelete = async (type: 'maker' | 'model' | 'unit' | 'rating' | 'actType' | 'actSeries' | 'actSize' | 'actHW' | 'trimType' | 'trimSeries' | 'trimPortSize' | 'trimForm' | 'trimMaterial' | 'trimOption' | 'bodyBonnet' | 'bodyValve' | 'bodyMaterial' | 'bodySize' | 'bodyConnection' | 'bodySizeUnit' | 'trimPortSizeUnit', item: MasterDataItem) => {
     console.log('🚀 handleDelete 시작:', { type, item, selectedAccessorySection, selectedMakerCode });
     
     if (!window.confirm(`Are you sure you want to delete ${item.name}?`)) return;
@@ -752,6 +863,10 @@ const NewAccessoryManagementPage: React.FC = () => {
         url = `${API_BASE_URL}/acc/${type}/${item.code}/${accTypeCode}/dummy`;
     } else if (type === 'unit') {
         url = `${API_BASE_URL}/body/rating-units/${item.code}`;
+    } else if (type === 'bodySizeUnit') {
+        url = `${API_BASE_URL}/body/size-unit/${item.code}`;
+    } else if (type === 'trimPortSizeUnit') {
+        url = `${API_BASE_URL}/trim/port-size-unit/${item.code}`;
     } else if (type === 'rating') {
         // rating은 복합키이므로 unit 파라미터 필요
         if (!selectedUnitCode) {
@@ -818,7 +933,7 @@ const NewAccessoryManagementPage: React.FC = () => {
             fetchData(); // Refetch makers
         } else if (type === 'model' && selectedMakerCode) {
             fetchModelsForMaker(selectedMakerCode); // Refetch models
-        } else if (type === 'unit' || type === 'rating') {
+        } else if (type === 'unit' || type === 'rating' || type === 'bodySizeUnit' || type === 'trimPortSizeUnit') {
             fetchData(); // Refetch body data for rating section
         } else if (type === 'actType' || type === 'actSeries' || type === 'actSize' || type === 'actHW') {
             fetchData(); // Refetch act data
@@ -893,12 +1008,8 @@ const NewAccessoryManagementPage: React.FC = () => {
                     {modalType === 'bodySize' && (
                         <>
                             <div className="form-group">
-                                <label>Unit</label>
-                                <input name="unit" value={formData.unit || ''} onChange={handleFormChange} placeholder="inch, mm 등" />
-                            </div>
-                            <div className="form-group">
                                 <label>Body Size Code</label>
-                                <input name="code" value={formData.code || ''} onChange={handleFormChange} placeholder="A, B, C 등" />
+                                <input name="code" value={formData.code || ''} onChange={handleFormChange} placeholder="A, B, C 등" disabled={modalMode === 'edit'} />
                             </div>
                             <div className="form-group">
                                 <label>Body Size Name</label>
@@ -1006,6 +1117,97 @@ const NewAccessoryManagementPage: React.FC = () => {
                                                 <td>
                                                     <button className="action-btn edit-btn" onClick={() => openModal('rating', 'edit', item)}>수정</button>
                                                     <button className="action-btn delete-btn" onClick={() => handleDelete('rating', item)}>삭제</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )
+        } else if (selectedBodySection === 'bodySize') {
+            return (
+                <div className="content-wrapper">
+                    <div className="section-selector">
+                        <h3>Body 섹션 선택</h3>
+                        <div className="section-buttons">
+                            {bodySections.map((section) => (
+                            <button
+                                key={section.id}
+                                className={`section-button ${selectedBodySection === section.id ? 'active' : ''}`}
+                                onClick={() => setSelectedBodySection(section.id)}
+                            >
+                                {section.name}
+                            </button>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="rating-grid">
+                        <div className="table-area">
+                            <div className="table-header">
+                                <h3>Unit</h3>
+                                <div className="controls">
+                                    <input type="text" placeholder="검색..." className="search-input"/>
+                                    <button className="control-btn" onClick={fetchData}>새로고침</button>
+                                    <button className="control-btn add-btn" onClick={() => openModal('bodySizeUnit', 'add')}>+ 추가</button>
+                                </div>
+                            </div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th key="code">Code</th>
+                                        <th key="name">NAME</th>
+                                        <th key="actions">작업</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {unitData.map(item => (
+                                        <tr 
+                                            key={item.code} 
+                                            onClick={() => handleBodySizeUnitSelect(item.code)} // Add onClick event
+                                            className={selectedBodySizeUnitCode === item.code ? 'selected' : ''} // Add 'selected' class
+                                        >
+                                            <td>{item.code}</td>
+                                            <td>{item.name}</td>
+                                            <td>
+                                                <button className="action-btn edit-btn" onClick={(e) => { e.stopPropagation(); openModal('bodySizeUnit', 'edit', item); }}>수정</button>
+                                                <button className="action-btn delete-btn" onClick={(e) => { e.stopPropagation(); handleDelete('bodySizeUnit', item); }}>삭제</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        {selectedBodySizeUnitCode && ( // Conditionally render Body Size table
+                            <div className="table-area">
+                                <div className="table-header">
+                                    <h3>Body Size</h3>
+                                    <div className="controls">
+                                        <input type="text" placeholder="검색..." className="search-input"/>
+                                        <button className="control-btn" onClick={fetchData}>새로고침</button>
+                                        <button className="control-btn add-btn" onClick={() => openModal('bodySize', 'add')}>+ 추가</button>
+                                    </div>
+                                </div>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                        <th key="code">Code*</th>
+                                        <th key="name">NAME</th>
+                                        <th key="unit">Unit</th>
+                                        <th key="actions">작업</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                        {bodyData.map(item => (
+                                            <tr key={item.code}>
+                                                <td>{item.code}</td>
+                                                <td>{item.name}</td>
+                                                <td>{item.unit}</td>
+                                                <td>
+                                                    <button className="action-btn edit-btn" onClick={() => openModal('bodySize', 'edit', item)}>수정</button>
+                                                    <button className="action-btn delete-btn" onClick={() => handleDelete('bodySize', item)}>삭제</button>
                                                 </td>
                                             </tr>
                                         ))}
@@ -1160,6 +1362,98 @@ const NewAccessoryManagementPage: React.FC = () => {
         const currentTrimSection = trimSections.find(s => s.id === selectedTrimSection);
         if (!currentTrimSection) return null; // Should not happen
 
+        if (selectedTrimSection === 'trimPortSize') {
+            return (
+                <div className="content-wrapper">
+                    <div className="section-selector">
+                        <h3>Trim 섹션 선택</h3>
+                        <div className="section-buttons">
+                            {trimSections.map((section) => (
+                                <button
+                                    key={section.id}
+                                    className={`section-button ${selectedTrimSection === section.id ? 'active' : ''}`}
+                                    onClick={() => setSelectedTrimSection(section.id)}
+                                >
+                                    {section.name}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="rating-grid">
+                        <div className="table-area">
+                            <div className="table-header">
+                                <h3>Unit</h3>
+                                <div className="controls">
+                                    <input type="text" placeholder="검색..." className="search-input"/>
+                                    <button className="control-btn" onClick={fetchData}>새로고침</button>
+                                    <button className="control-btn add-btn" onClick={() => openModal('trimPortSizeUnit', 'add')}>+ 추가</button>
+                                </div>
+                            </div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th key="code">Code</th>
+                                        <th key="name">NAME</th>
+                                        <th key="actions">작업</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {unitData.map(item => (
+                                        <tr 
+                                            key={item.code} 
+                                            onClick={() => handleTrimPortSizeUnitSelect(item.code)} // Add onClick event
+                                            className={selectedTrimPortSizeUnitCode === item.code ? 'selected' : ''} // Add 'selected' class
+                                        >
+                                            <td>{item.code}</td>
+                                            <td>{item.name}</td>
+                                            <td>
+                                                <button className="action-btn edit-btn" onClick={(e) => { e.stopPropagation(); openModal('trimPortSizeUnit', 'edit', item); }}>수정</button>
+                                                <button className="action-btn delete-btn" onClick={(e) => { e.stopPropagation(); handleDelete('trimPortSizeUnit', item); }}>삭제</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        {selectedTrimPortSizeUnitCode && ( // Conditionally render Trim Port Size table
+                            <div className="table-area">
+                                <div className="table-header">
+                                    <h3>Trim Port Size</h3>
+                                    <div className="controls">
+                                        <input type="text" placeholder="검색..." className="search-input"/>
+                                        <button className="control-btn" onClick={fetchData}>새로고침</button>
+                                        <button className="control-btn add-btn" onClick={() => openModal('trimPortSize', 'add')}>+ 추가</button>
+                                    </div>
+                                </div>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                        <th key="code">Code*</th>
+                                        <th key="name">NAME</th>
+                                        <th key="unit">Unit</th>
+                                        <th key="actions">작업</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                        {trimData.map(item => (
+                                            <tr key={item.code}>
+                                                <td>{item.code}</td>
+                                                <td>{item.name}</td>
+                                                <td>{item.unit}</td>
+                                                <td>
+                                                    <button className="action-btn edit-btn" onClick={() => openModal('trimPortSize', 'edit', item)}>수정</button>
+                                                    <button className="action-btn delete-btn" onClick={() => handleDelete('trimPortSize', item)}>삭제</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )
+        }
         return (
             <div className="content-wrapper">
                 <div className="section-selector">

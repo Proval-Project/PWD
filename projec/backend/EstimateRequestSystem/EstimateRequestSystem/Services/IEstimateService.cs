@@ -37,7 +37,7 @@ namespace EstimateRequestSystem.Services
         Task<int> GetNextSheetIDAsync(string tempEstimateNo);
         Task<bool> IsDuplicateFileNameAsync(string tempEstimateNo, string fileName);
         Task<List<object>> GetBodyValveListAsync();
-        Task<List<object>> GetBodySizeListAsync();
+        Task<List<BodySizeListDto>> GetBodySizeListAsync();
         Task<List<object>> GetBodyMatListAsync();
         Task<List<object>> GetTrimMatListAsync();
         Task<List<object>> GetTrimOptionListAsync();
@@ -50,7 +50,7 @@ namespace EstimateRequestSystem.Services
         Task<List<object>> GetBodyConnectionListAsync();
         Task<List<object>> GetTrimTypeListAsync();
         Task<List<object>> GetTrimSeriesListAsync();
-        Task<List<object>> GetTrimPortSizeListAsync();
+        Task<List<TrimPortSizeListDto>> GetTrimPortSizeListAsync();
         Task<List<object>> GetTrimFormListAsync();
         Task<List<object>> GetActTypeListAsync();
         Task<List<object>> GetActSeriesListAsync();
@@ -193,5 +193,19 @@ namespace EstimateRequestSystem.Services
         Task<List<EstimateAttachmentResponseDto>> GetCustomerFilesAsync(string tempEstimateNo);
         Task<EstimateAttachmentResponseDto> GetFileByManagerTypeAsync(string tempEstimateNo, string managerFileType);
         Task<bool> DeleteFileByManagerTypeAsync(string tempEstimateNo, string managerFileType);
+
+        // BodySizeUnit 관련
+        Task<IEnumerable<BodySizeUnit>> GetBodySizeUnitListAsync();
+        Task<IEnumerable<BodySizeList>> GetBodySizeListByUnitAsync(string unitCode);
+        Task<bool> AddBodySizeUnitAsync(string unitCode, string unitName);
+        Task<bool> UpdateBodySizeUnitAsync(string unitCode, string unitName);
+        Task<bool> DeleteBodySizeUnitAsync(string unitCode);
+
+        // TrimPortSizeUnit 관련
+        Task<IEnumerable<TrimPortSizeUnit>> GetTrimPortSizeUnitListAsync();
+        Task<IEnumerable<TrimPortSizeList>> GetTrimPortSizeListByUnitAsync(string unitCode);
+        Task<bool> AddTrimPortSizeUnitAsync(string unitCode, string unitName);
+        Task<bool> UpdateTrimPortSizeUnitAsync(string unitCode, string unitName);
+        Task<bool> DeleteTrimPortSizeUnitAsync(string unitCode);
     }
 } 

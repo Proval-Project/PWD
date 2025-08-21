@@ -175,6 +175,19 @@ thead {
     gap: 24px;
 }
 
+/* 2레벨(유닛/사이즈) 레이아웃을 좌우 2열로 배치 */
+.rating-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+@media (max-width: 1024px) {
+    .rating-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .placeholder-content {
     padding: 40px;
     text-align: center;

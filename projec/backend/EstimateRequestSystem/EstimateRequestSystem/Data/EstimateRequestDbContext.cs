@@ -26,6 +26,8 @@ namespace EstimateRequestSystem.Data
         public DbSet<TrimMatList> TrimMatList { get; set; }
         public DbSet<TrimOptionList> TrimOptionList { get; set; }
         public DbSet<ActHWList> ActHWList { get; set; }
+        public DbSet<BodySizeUnit> BodySizeUnit { get; set; }
+        public DbSet<TrimPortSizeUnit> TrimPortSizeUnit { get; set; }
 
         // Step 3 마스터 데이터 테이블들
         public DbSet<TrimSeriesList> TrimSeriesList { get; set; }
@@ -268,6 +270,53 @@ namespace EstimateRequestSystem.Data
                 entity.Property(e => e.HW).HasMaxLength(255).IsRequired();
             });
 
+            modelBuilder.Entity<BodySizeUnit>(entity =>
+            {
+                entity.ToTable("BodySizeUnit");
+                entity.HasKey(e => e.UnitCode);
+                entity.Property(e => e.UnitCode).HasMaxLength(1);
+                entity.Property(e => e.UnitName).HasMaxLength(50);
+            });
+
+            // TrimPortSizeUnit 설정  
+            modelBuilder.Entity<TrimPortSizeUnit>(entity =>
+            {
+                entity.ToTable("TrimPortSizeUnit");
+                entity.HasKey(e => e.UnitCode);
+                entity.Property(e => e.UnitCode).HasMaxLength(1);
+                entity.Property(e => e.UnitName).HasMaxLength(50);
+            });
+
+            // BodySizeList 관계 설정
+            modelBuilder.Entity<BodySizeList>(entity =>
+            {
+                entity.ToTable("BodySizeList");
+                entity.HasKey(e => new { e.UnitCode, e.BodySizeCode });
+                entity.Property(e => e.UnitCode).HasMaxLength(1);
+                entity.Property(e => e.BodySizeCode).HasMaxLength(1);
+                entity.Property(e => e.BodySize).HasMaxLength(255);
+        
+        entity.HasOne(e => e.BodySizeUnit)
+            .WithMany()
+            .HasForeignKey(e => e.UnitCode)
+            .OnDelete(DeleteBehavior.Restrict);
+    });
+
+// TrimPortSizeList 관계 설정
+modelBuilder.Entity<TrimPortSizeList>(entity =>
+{
+    entity.ToTable("TrimPortSizeList");
+    entity.HasKey(e => new { e.PortSizeCode, e.UnitCode });
+    entity.Property(e => e.PortSizeCode).HasMaxLength(1);
+    entity.Property(e => e.UnitCode).HasMaxLength(1);
+    entity.Property(e => e.PortSize).HasMaxLength(255);
+    
+    entity.HasOne(e => e.TrimPortSizeUnit)
+        .WithMany()
+        .HasForeignKey(e => e.UnitCode)
+        .OnDelete(DeleteBehavior.Restrict);
+});
+
             // Step 3 마스터 데이터 테이블들 설정
             // TrimSeriesList
             modelBuilder.Entity<TrimSeriesList>(entity =>
@@ -278,15 +327,6 @@ namespace EstimateRequestSystem.Data
                 entity.Property(e => e.TrimSeries).HasMaxLength(255).IsRequired();
             });
 
-            // TrimPortSizeList
-            modelBuilder.Entity<TrimPortSizeList>(entity =>
-            {
-                entity.ToTable("TrimPortSizeList");
-                entity.HasKey(e => e.PortSizeCode);
-                entity.Property(e => e.PortSizeCode).HasMaxLength(1).IsRequired();
-                entity.Property(e => e.PortSizeUnit).HasMaxLength(10).IsRequired();
-                entity.Property(e => e.PortSize).HasMaxLength(50).IsRequired();
-            });
 
             // TrimFormList
             modelBuilder.Entity<TrimFormList>(entity =>
@@ -380,14 +420,7 @@ namespace EstimateRequestSystem.Data
             });
 
             // BodySizeList - 복합키 설정
-            modelBuilder.Entity<BodySizeList>(entity =>
-            {
-                entity.ToTable("BodySizeList");
-                entity.HasKey(e => new { e.SizeUnit, e.BodySizeCode });
-                entity.Property(e => e.SizeUnit).HasMaxLength(255).IsRequired();
-                entity.Property(e => e.BodySizeCode).HasMaxLength(1).IsRequired();
-                entity.Property(e => e.BodySize).HasMaxLength(255);
-            });
+            
         }
     }
 } 

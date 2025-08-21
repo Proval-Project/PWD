@@ -159,11 +159,20 @@ CREATE TABLE BodyMatList (
   BodyMatCode CHAR(1) PRIMARY KEY NOT NULL
 );
 
+-- Body Size Unit 테이블
+CREATE TABLE BodySizeUnit (
+  UnitCode CHAR(1) NOT NULL,
+  UnitName VARCHAR(50) NOT NULL,
+  PRIMARY KEY (UnitCode),
+  UNIQUE (UnitName)
+);
+
 CREATE TABLE BodySizeList (
-  SizeUnit VARCHAR(255) NOT NULL,
+  UnitCode CHAR(1) NOT NULL,
   BodySize VARCHAR(255),
   BodySizeCode CHAR(1) NOT NULL,
-  PRIMARY KEY (SizeUnit, BodySizeCode)
+  PRIMARY KEY (UnitCode, BodySizeCode),
+  CONSTRAINT FK_BodySize_BodyUnit FOREIGN KEY (UnitCode) REFERENCES BodySizeUnit(UnitCode) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
 CREATE TABLE BodyRatingUnitList (
@@ -201,11 +210,20 @@ CREATE TABLE TrimMatList (
   TrimMatCode CHAR(1) PRIMARY KEY NOT NULL
 );
 
+-- Trim Port Size Unit 테이블
+CREATE TABLE TrimPortSizeUnit (
+  UnitCode CHAR(1) NOT NULL,
+  UnitName VARCHAR(50) NOT NULL,
+  PRIMARY KEY (UnitCode),
+  UNIQUE (UnitName)
+);
+
 CREATE TABLE TrimPortSizeList (
   PortSizeCode CHAR(1),
-  PortSizeUnit VARCHAR(255),
+  UnitCode CHAR(1) NOT NULL,
   PortSize VARCHAR(255) NOT NULL,
-  PRIMARY KEY (PortSizeCode, PortSizeUnit)
+  PRIMARY KEY (PortSizeCode, UnitCode),
+  CONSTRAINT FK_TrimPortSize_TrimUnit FOREIGN KEY (UnitCode) REFERENCES TrimPortSizeUnit(UnitCode) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
 CREATE TABLE TrimFormList (
@@ -327,7 +345,7 @@ CREATE TABLE EstimateRequest (
   Density DECIMAL(10,5),
   MolecularWeightUnit VARCHAR(255),
   MolecularWeight DECIMAL(10,5),
-  BodySizeUnit VARCHAR(255) NULL,
+  BodySizeUnit CHAR(1) NULL,
   BodySize CHAR(1) NULL,
   BodyMat CHAR(1) NULL,
   TrimMat CHAR(1) NULL,
@@ -467,7 +485,7 @@ CREATE TABLE DataSheetLv3 (
   SuggestedValveSize DECIMAL(10,5) NULL DEFAULT NULL,
   BonnetType CHAR(1) NULL DEFAULT NULL,
   BodyMat CHAR(1) NULL DEFAULT NULL,
-  BodySizeUnit VARCHAR(255) NULL DEFAULT NULL,
+  BodySizeUnit CHAR(1) NULL DEFAULT NULL,
   BodySize CHAR(1) NULL DEFAULT NULL,
   Rating CHAR(1) NULL DEFAULT NULL,
   RatingUnit CHAR(1) NULL DEFAULT NULL,
@@ -478,7 +496,7 @@ CREATE TABLE DataSheetLv3 (
   TrimMat CHAR(1) NULL DEFAULT NULL,
   TrimOption CHAR(1) NULL DEFAULT NULL,
   TrimPortSize CHAR(1) NULL DEFAULT NULL,
-  TrimPortSizeUnit VARCHAR(255) NULL DEFAULT NULL,
+  TrimPortSizeUnit CHAR(1) NULL DEFAULT NULL,
   TrimForm CHAR(1) NULL DEFAULT NULL,
   ActType CHAR(1) NULL DEFAULT NULL,
   ActSeriesCode CHAR(1) NULL DEFAULT NULL,

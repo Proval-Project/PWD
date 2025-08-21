@@ -1,6 +1,20 @@
 -- 초기 데이터 삽입
 USE PWD_Final;
 
+-- BodySizeUnit 데이터 (단위코드/명)
+INSERT INTO BodySizeUnit (UnitCode, UnitName) VALUES
+('N', 'None'),
+('A', 'A'),
+('I', 'inch'),
+('Z', 'SPECIAL');
+
+-- TrimPortSizeUnit 데이터 (단위코드/명)
+INSERT INTO TrimPortSizeUnit (UnitCode, UnitName) VALUES
+('N', 'None'),
+('A', 'A'),
+('I', 'inch'),
+('Z', 'SPECIAL');
+
 -- 1) Role 데이터
 INSERT INTO Role (RoleID, RoleName, Description) VALUES
 (1, 'Admin', '관리자'),
@@ -69,9 +83,9 @@ INSERT INTO BodyMatList (BodyMat, BodyMatCode) VALUES
 ('F316', 'K'),
 ('SPECIAL', 'Z');
 
--- 6) BodySizeList 데이터 (이미지 참조) - 단위를 별도로 표기
-INSERT INTO BodySizeList (SizeUnit, BodySize, BodySizeCode) VALUES
-('None', 'None', '0'),
+-- 6) BodySizeList 데이터 (UnitCode 사용)
+INSERT INTO BodySizeList (UnitCode, BodySize, BodySizeCode) VALUES
+('N', 'None', '0'),
 ('A', '15A', 'A'),
 ('A', '20A', 'B'),
 ('A', '25A', 'C'),
@@ -97,32 +111,32 @@ INSERT INTO BodySizeList (SizeUnit, BodySize, BodySizeCode) VALUES
 ('A', '750A', 'W'),
 ('A', '800A', 'X'),
 ('A', '900A', 'Y'),
-('inch', '1/2"', 'A'),
-('inch', '3/4"', 'B'),
-('inch', '1"', 'C'),
-('inch', '1 1/4"', 'D'),
-('inch', '1 1/2"', 'E'),
-('inch', '2"', 'F'),
-('inch', '2 1/2"', 'G'),
-('inch', '3"', 'H'),
-('inch', '4"', 'I'),
-('inch', '5"', 'J'),
-('inch', '6"', 'K'),
-('inch', '8"', 'L'),
-('inch', '10"', 'M'),
-('inch', '12"', 'N'),
-('inch', '14"', 'O'),
-('inch', '16"', 'P'),
-('inch', '18"', 'Q'),
-('inch', '20"', 'R'),
-('inch', '22"', 'S'),
-('inch', '24"', 'T'),
-('inch', '26"', 'U'),
-('inch', '28"', 'V'),
-('inch', '30"', 'W'),
-('inch', '32"', 'X'),
-('inch', '36"', 'Y'),
-('SPECIAL', 'SPECIAL', 'Z');
+('I', '1/2"', 'A'),
+('I', '3/4"', 'B'),
+('I', '1"', 'C'),
+('I', '1 1/4"', 'D'),
+('I', '1 1/2"', 'E'),
+('I', '2"', 'F'),
+('I', '2 1/2"', 'G'),
+('I', '3"', 'H'),
+('I', '4"', 'I'),
+('I', '5"', 'J'),
+('I', '6"', 'K'),
+('I', '8"', 'L'),
+('I', '10"', 'M'),
+('I', '12"', 'N'),
+('I', '14"', 'O'),
+('I', '16"', 'P'),
+('I', '18"', 'Q'),
+('I', '20"', 'R'),
+('I', '22"', 'S'),
+('I', '24"', 'T'),
+('I', '26"', 'U'),
+('I', '28"', 'V'),
+('I', '30"', 'W'),
+('I', '32"', 'X'),
+('I', '36"', 'Y'),
+('Z', 'SPECIAL', 'Z');
 
 insert into BodyRatingUnitList (RatingUnitCode, RatingUnit) values 
 ('A', 'ASME'),
@@ -238,9 +252,9 @@ INSERT INTO TrimMatList (TrimMat, TrimMatCode) VALUES
 ('SUS420J2', 'Y'),
 ('SPECIAL', 'Z');
 
--- 12) TrimPortSizeList 데이터 (이미지 참조) - 단위를 별도로 표기
-INSERT INTO TrimPortSizeList (PortSizeUnit, PortSize, PortSizeCode) VALUES
-('None', 'None', '0'),
+-- 12) TrimPortSizeList 데이터 (UnitCode 사용)
+INSERT INTO TrimPortSizeList (UnitCode, PortSize, PortSizeCode) VALUES
+('N', 'None', '0'),
 ('A', 'M1', '1'),
 ('A', 'M2', '2'),
 ('A', 'M3', '3'),
@@ -275,41 +289,41 @@ INSERT INTO TrimPortSizeList (PortSizeUnit, PortSize, PortSizeCode) VALUES
 ('A', '750A', 'W'),
 ('A', '800A', 'X'),
 ('A', '900A', 'Y'),
-('inch', 'M1', '1'),
-('inch', 'M2', '2'),
-('inch', 'M3', '3'),
-('inch', 'M4', '4'),
-('inch', 'M5', '5'),
-('inch', '4A', '6'),
-('inch', '1/8"', '7'),
-('inch', '1/4"', '8'),
-('inch', '3/8"', '9'),
-('inch', '1/2"', 'A'),
-('inch', '3/4"', 'B'),
-('inch', '1"', 'C'),
-('inch', '1 1/4"', 'D'),
-('inch', '1 1/2"', 'E'),
-('inch', '2"', 'F'),
-('inch', '2 1/2"', 'G'),
-('inch', '3"', 'H'),
-('inch', '4"', 'I'),
-('inch', '5"', 'J'),
-('inch', '6"', 'K'),
-('inch', '8"', 'L'),
-('inch', '10"', 'M'),
-('inch', '12"', 'N'),
-('inch', '14"', 'O'),
-('inch', '16"', 'P'),
-('inch', '18"', 'Q'),
-('inch', '20"', 'R'),
-('inch', '22"', 'S'),
-('inch', '24"', 'T'),
-('inch', '26"', 'U'),
-('inch', '28"', 'V'),
-('inch', '30"', 'W'),
-('inch', '32"', 'X'),
-('inch', '36"', 'Y'),
-('SPECIAL', 'SPECIAL', 'Z');
+('I', 'M1', '1'),
+('I', 'M2', '2'),
+('I', 'M3', '3'),
+('I', 'M4', '4'),
+('I', 'M5', '5'),
+('I', '4A', '6'),
+('I', '1/8"', '7'),
+('I', '1/4"', '8'),
+('I', '3/8"', '9'),
+('I', '1/2"', 'A'),
+('I', '3/4"', 'B'),
+('I', '1"', 'C'),
+('I', '1 1/4"', 'D'),
+('I', '1 1/2"', 'E'),
+('I', '2"', 'F'),
+('I', '2 1/2"', 'G'),
+('I', '3"', 'H'),
+('I', '4"', 'I'),
+('I', '5"', 'J'),
+('I', '6"', 'K'),
+('I', '8"', 'L'),
+('I', '10"', 'M'),
+('I', '12"', 'N'),
+('I', '14"', 'O'),
+('I', '16"', 'P'),
+('I', '18"', 'Q'),
+('I', '20"', 'R'),
+('I', '22"', 'S'),
+('I', '24"', 'T'),
+('I', '26"', 'U'),
+('I', '28"', 'V'),
+('I', '30"', 'W'),
+('I', '32"', 'X'),
+('I', '36"', 'Y'),
+('Z', 'SPECIAL', 'Z');
 
 -- 13) TrimFormList 데이터 (이미지 참조)
 INSERT INTO TrimFormList (TrimForm, TrimFormCode) VALUES

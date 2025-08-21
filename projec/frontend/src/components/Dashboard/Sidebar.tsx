@@ -69,7 +69,7 @@ const menuItems: MenuItem[] = [
   },
   {
     id: 'accessory-management',
-    label: '악세서리 관리',
+    label: '제품코드 관리',
     icon: '🔧',
     path: '/accessory-management',
     roles: [1, 2] // Admin, Staff

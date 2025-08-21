@@ -155,6 +155,41 @@ namespace EstimateRequestSystem.Controllers
             }
         }
 
+        // BodySizeUnit 마스터 데이터 조회 (새로 추가)
+        [HttpGet("body-size-unit-list")]
+        public async Task<IActionResult> GetBodySizeUnitList()
+        {
+            try
+            {
+                var result = await _estimateService.GetBodySizeUnitListAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        // 특정 UnitCode에 해당하는 BodySize 목록 조회 (새로 추가)
+        [HttpGet("body-size-list-by-unit")]
+        public async Task<IActionResult> GetBodySizeListByUnit([FromQuery] string unitCode)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(unitCode))
+                {
+                    return BadRequest(new { message = "UnitCode is required" });
+                }
+
+                var result = await _estimateService.GetBodySizeListByUnitAsync(unitCode);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
         [HttpGet("body-mat-list")]
         public async Task<IActionResult> GetBodyMatList()
         {
@@ -279,6 +314,41 @@ namespace EstimateRequestSystem.Controllers
             catch (Exception ex)
             {
                 return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // TrimPortSizeUnit 마스터 데이터 조회 (새로 추가)
+        [HttpGet("trim-port-size-unit-list")]
+        public async Task<IActionResult> GetTrimPortSizeUnitList()
+        {
+            try
+            {
+                var result = await _estimateService.GetTrimPortSizeUnitListAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        // 특정 UnitCode에 해당하는 TrimPortSize 목록 조회 (새로 추가)
+        [HttpGet("trim-port-size-list-by-unit")]
+        public async Task<IActionResult> GetTrimPortSizeListByUnit([FromQuery] string unitCode)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(unitCode))
+                {
+                    return BadRequest(new { message = "UnitCode is required" });
+                }
+
+                var result = await _estimateService.GetTrimPortSizeListByUnitAsync(unitCode);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 

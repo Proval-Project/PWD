@@ -11,6 +11,52 @@ namespace EstimateRequestSystem.Services
         private readonly EstimateRequestDbContext _context;
         private readonly IWebHostEnvironment _environment;
 
+        private static bool IsAllDigits(string? value)
+        {
+            if (string.IsNullOrEmpty(value)) return false;
+            for (int i = 0; i < value.Length; i++)
+            {
+                if (!char.IsDigit(value[i])) return false;
+            }
+            return true;
+        }
+
+        private static IOrderedEnumerable<T> OrderByCodePreferred<T>(IEnumerable<T> source, Func<T, string?> codeSelector)
+        {
+            return source
+                .OrderBy(item =>
+                {
+                    var code = codeSelector(item) ?? string.Empty;
+                    return IsAllDigits(code) ? 0 : 1; // 숫자 우선
+                })
+                .ThenBy(item =>
+                {
+                    var code = codeSelector(item) ?? string.Empty;
+                    return int.TryParse(code, out var n) ? n : int.MaxValue; // 숫자는 값으로 정렬
+                })
+                .ThenBy(item => (codeSelector(item) ?? string.Empty), StringComparer.OrdinalIgnoreCase); // 그 외 알파벳
+        }
+
+        private static string GetPropString(object item, string propertyName)
+        {
+            var prop = item.GetType().GetProperty(propertyName);
+            var value = prop?.GetValue(item)?.ToString() ?? string.Empty;
+            return value;
+        }
+
+        private static List<object> OrderByCodePreferredObject(IEnumerable<object> source, string codePropertyName)
+        {
+            return source
+                .OrderBy(item => IsAllDigits(GetPropString(item, codePropertyName)) ? 0 : 1)
+                .ThenBy(item =>
+                {
+                    var code = GetPropString(item, codePropertyName);
+                    return int.TryParse(code, out var n) ? n : int.MaxValue;
+                })
+                .ThenBy(item => GetPropString(item, codePropertyName), StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
         public EstimateService(EstimateRequestDbContext context, IWebHostEnvironment environment)
         {
             _context = context;
@@ -1293,15 +1339,22 @@ namespace EstimateRequestSystem.Services
             var valveList = await _context.BodyValveList
                 .Select(v => new { v.ValveSeries, v.ValveSeriesCode })
                 .ToListAsync();
-            return valveList.Cast<object>().ToList();
+            return OrderByCodePreferredObject(valveList.Cast<object>(), "ValveSeriesCode");
         }
 
-        public async Task<List<object>> GetBodySizeListAsync()
+        public async Task<List<BodySizeListDto>> GetBodySizeListAsync()
         {
             var sizeList = await _context.BodySizeList
-                .Select(s => new { s.SizeUnit, s.BodySize, s.BodySizeCode })
+                .Include(b => b.BodySizeUnit)
+                .Select(s => new BodySizeListDto
+                {
+                    UnitCode = s.UnitCode,
+                    BodySizeCode = s.BodySizeCode,
+                    BodySize = s.BodySize,
+                    UnitName = s.BodySizeUnit != null ? s.BodySizeUnit.UnitName : string.Empty
+                })
                 .ToListAsync();
-            return sizeList.Cast<object>().ToList();
+            return sizeList;
         }
 
         public async Task<List<object>> GetBodyMatListAsync()
@@ -1309,7 +1362,7 @@ namespace EstimateRequestSystem.Services
             var matList = await _context.BodyMatList
                 .Select(m => new { m.BodyMat, m.BodyMatCode })
                 .ToListAsync();
-            return matList.Cast<object>().ToList();
+            return OrderByCodePreferredObject(matList.Cast<object>(), "BodyMatCode");
         }
 
         public async Task<List<object>> GetTrimMatListAsync()
@@ -1350,17 +1403,193 @@ namespace EstimateRequestSystem.Services
                 })
                 .ToListAsync();
 
-            return list.Cast<object>().ToList();
+            return OrderByCodePreferredObject(list.Cast<object>(), "ratingCode");
         }
 
         public async Task<List<string>> GetBodySizeUnitsAsync()
         {
             var units = await _context.BodySizeList
-                .Select(s => s.SizeUnit)
+                .Select(s => s.UnitCode)
                 .Distinct()
                 .OrderBy(u => u)
                 .ToListAsync();
-            return units;
+            return OrderByCodePreferred(units, u => u).ToList();
+        }
+
+        // BodySizeUnit 마스터 데이터 조회 (새로 추가)
+        public async Task<IEnumerable<BodySizeUnit>> GetBodySizeUnitListAsync()
+        {
+            var units = await _context.BodySizeUnit.ToListAsync();
+            return OrderByCodePreferred(units, u => u.UnitCode);
+        }
+
+        // 특정 UnitCode에 해당하는 BodySize 목록 조회 (새로 추가)
+        public async Task<IEnumerable<BodySizeList>> GetBodySizeListByUnitAsync(string unitCode)
+        {
+            var list = await _context.BodySizeList
+                .Where(b => b.UnitCode == unitCode)
+                .ToListAsync();
+            return OrderByCodePreferred(list, b => b.BodySizeCode);
+        }
+
+        // TrimPortSizeUnit 마스터 데이터 조회 (새로 추가)
+        public async Task<IEnumerable<TrimPortSizeUnit>> GetTrimPortSizeUnitListAsync()
+        {
+            var trimUnits = await _context.TrimPortSizeUnit.ToListAsync();
+            return OrderByCodePreferred(trimUnits, u => u.UnitCode);
+        }
+
+        // 특정 UnitCode에 해당하는 TrimPortSize 목록 조회 (새로 추가)
+        public async Task<IEnumerable<TrimPortSizeList>> GetTrimPortSizeListByUnitAsync(string unitCode)
+        {
+            var trimList = await _context.TrimPortSizeList
+                .Where(t => t.UnitCode == unitCode)
+                .ToListAsync();
+            return OrderByCodePreferred(trimList, t => t.PortSizeCode);
+        }
+
+        // BodySizeUnit CRUD 메서드들
+        public async Task<bool> AddBodySizeUnitAsync(string unitCode, string unitName)
+        {
+            try
+            {
+                if (await _context.BodySizeUnit.AnyAsync(u => u.UnitCode == unitCode))
+                {
+                    return false; // 중복된 코드
+                }
+
+                var newUnit = new BodySizeUnit
+                {
+                    UnitCode = unitCode,
+                    UnitName = unitName
+                };
+
+                _context.BodySizeUnit.Add(newUnit);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateBodySizeUnitAsync(string unitCode, string unitName)
+        {
+            try
+            {
+                var unit = await _context.BodySizeUnit.FindAsync(unitCode);
+                if (unit == null)
+                {
+                    return false; // 찾을 수 없음
+                }
+
+                unit.UnitName = unitName;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteBodySizeUnitAsync(string unitCode)
+        {
+            try
+            {
+                var unit = await _context.BodySizeUnit.FindAsync(unitCode);
+                if (unit == null)
+                {
+                    return false; // 찾을 수 없음
+                }
+
+                // 사용 중인지 확인
+                if (await _context.BodySizeList.AnyAsync(b => b.UnitCode == unitCode))
+                {
+                    return false; // 사용 중
+                }
+
+                _context.BodySizeUnit.Remove(unit);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // TrimPortSizeUnit CRUD 메서드들
+        public async Task<bool> AddTrimPortSizeUnitAsync(string unitCode, string unitName)
+        {
+            try
+            {
+                if (await _context.TrimPortSizeUnit.AnyAsync(u => u.UnitCode == unitCode))
+                {
+                    return false; // 중복된 코드
+                }
+
+                var newUnit = new TrimPortSizeUnit
+                {
+                    UnitCode = unitCode,
+                    UnitName = unitName
+                };
+
+                _context.TrimPortSizeUnit.Add(newUnit);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateTrimPortSizeUnitAsync(string unitCode, string unitName)
+        {
+            try
+            {
+                var unit = await _context.TrimPortSizeUnit.FindAsync(unitCode);
+                if (unit == null)
+                {
+                    return false; // 찾을 수 없음
+                }
+
+                unit.UnitName = unitName;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteTrimPortSizeUnitAsync(string unitCode)
+        {
+            try
+            {
+                var unit = await _context.TrimPortSizeUnit.FindAsync(unitCode);
+                if (unit == null)
+                {
+                    return false; // 찾을 수 없음
+                }
+
+                // 사용 중인지 확인
+                if (await _context.TrimPortSizeList.AnyAsync(t => t.UnitCode == unitCode))
+                {
+                    return false; // 사용 중
+                }
+
+                _context.TrimPortSizeUnit.Remove(unit);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public async Task<List<object>> GetBodyRatingUnitsAsync()
@@ -1918,29 +2147,33 @@ namespace EstimateRequestSystem.Services
         {
             var trimTypeList = await _context.TrimTypeList
                 .Select(t => new { trimTypeCode = t.TrimTypeCode, trimType = t.TrimType })
-                .OrderBy(t => t.trimTypeCode)
                 .ToListAsync();
-            return trimTypeList.Cast<object>().ToList();
+            return OrderByCodePreferredObject(trimTypeList.Cast<object>(), "trimTypeCode");
         }
 
         public async Task<List<object>> GetTrimSeriesListAsync()
         {
             var trimSeriesList = await _context.TrimSeriesList
                 .Select(t => new { trimSeriesCode = t.TrimSeriesCode, trimSeries = t.TrimSeries })
-                .OrderBy(t => t.trimSeriesCode)
                 .ToListAsync();
-            return trimSeriesList.Cast<object>().ToList();
+            return OrderByCodePreferredObject(trimSeriesList.Cast<object>(), "trimSeriesCode");
         }
 
-        public async Task<List<object>> GetTrimPortSizeListAsync()
+        public async Task<List<TrimPortSizeListDto>> GetTrimPortSizeListAsync()
         {
             try
             {
                 var portSizeList = await _context.TrimPortSizeList
-                    .Select(p => new { portSizeCode = p.PortSizeCode, portSize = p.PortSize, portSizeUnit = p.PortSizeUnit })
-                    .OrderBy(p => p.portSizeCode)
+                    .Include(t => t.TrimPortSizeUnit)
+                    .Select(p => new TrimPortSizeListDto
+                    {
+                        PortSizeCode = p.PortSizeCode,
+                        UnitCode = p.UnitCode,
+                        PortSize = p.PortSize,
+                        UnitName = p.TrimPortSizeUnit != null ? p.TrimPortSizeUnit.UnitName : string.Empty
+                    })
                     .ToListAsync();
-                return portSizeList.Cast<object>().ToList();
+                return OrderByCodePreferred(portSizeList, p => p.PortSizeCode).ToList();
             }
             catch (Exception ex)
             {
@@ -1953,27 +2186,24 @@ namespace EstimateRequestSystem.Services
         {
             var formList = await _context.TrimFormList
                 .Select(f => new { trimFormCode = f.TrimFormCode, trimForm = f.TrimForm })
-                .OrderBy(f => f.trimFormCode)
                 .ToListAsync();
-            return formList.Cast<object>().ToList();
+            return OrderByCodePreferredObject(formList.Cast<object>(), "trimFormCode");
         }
 
         public async Task<List<object>> GetActTypeListAsync()
         {
             var actTypeList = await _context.ActTypeList
                 .Select(a => new { actTypeCode = a.ActTypeCode, actType = a.ActType })
-                .OrderBy(a => a.actTypeCode)
                 .ToListAsync();
-            return actTypeList.Cast<object>().ToList();
+            return OrderByCodePreferredObject(actTypeList.Cast<object>(), "actTypeCode");
         }
 
         public async Task<List<object>> GetActSeriesListAsync()
         {
             var actSeriesList = await _context.ActSeriesList
                 .Select(a => new { actSeriesCode = a.ActSeriesCode, actSeries = a.ActSeries })
-                .OrderBy(a => a.actSeriesCode)
                 .ToListAsync();
-            return actSeriesList.Cast<object>().ToList();
+            return OrderByCodePreferredObject(actSeriesList.Cast<object>(), "actSeriesCode");
         }
 
         public async Task<List<object>> GetActSizeListAsync(string? actSeriesCode = null)
@@ -1983,10 +2213,11 @@ namespace EstimateRequestSystem.Services
             {
                 query = query.Where(a => a.ActSeriesCode == actSeriesCode);
             }
-            return await query
+            var list = await query
                 .Select(a => new { actSizeCode = a.ActSizeCode, actSize = a.ActSize, actSeriesCode = a.ActSeriesCode })
                 .Cast<object>()
                 .ToListAsync();
+            return OrderByCodePreferredObject(list, "actSizeCode");
         }
 
         public async Task<List<object>> GetActHWListAsync()
@@ -1995,9 +2226,8 @@ namespace EstimateRequestSystem.Services
             {
                 var hwList = await _context.ActHWList
                     .Select(h => new { hwCode = h.HWCode, hw = h.HW })
-                    .OrderBy(h => h.hwCode)
                     .ToListAsync();
-                return hwList.Cast<object>().ToList();
+                return OrderByCodePreferredObject(hwList.Cast<object>(), "hwCode");
             }
             catch (Exception ex)
             {
@@ -2057,7 +2287,7 @@ namespace EstimateRequestSystem.Services
                     break;
             }
 
-            return resultList.Cast<object>().ToList();
+            return OrderByCodePreferredObject(resultList.Cast<object>(), "AccMakerCode");
         }
 
         public async Task<List<object>> GetAccModelListAsync(string? accTypeCode = null, string? accMakerCode = null)
@@ -2174,7 +2404,7 @@ namespace EstimateRequestSystem.Services
                     break;
             }
 
-            return resultList.Cast<object>().ToList();
+            return OrderByCodePreferredObject(resultList.Cast<object>(), "AccModelCode");
         }
 
         // 마스터 데이터 CRUD 메서드들
@@ -2463,7 +2693,7 @@ namespace EstimateRequestSystem.Services
             try
             {
                 var existing = await _context.BodySizeList
-                    .FirstOrDefaultAsync(b => b.SizeUnit == sizeUnit && b.BodySizeCode == bodySizeCode);
+                    .FirstOrDefaultAsync(b => b.UnitCode == sizeUnit && b.BodySizeCode == bodySizeCode);
                 if (existing != null)
                 {
                     return false;
@@ -2471,7 +2701,7 @@ namespace EstimateRequestSystem.Services
 
                 var newSize = new BodySizeList
                 {
-                    SizeUnit = sizeUnit,
+                    UnitCode = sizeUnit,
                     BodySizeCode = bodySizeCode,
                     BodySize = bodySize
                 };
@@ -2491,7 +2721,7 @@ namespace EstimateRequestSystem.Services
             try
             {
                 var existing = await _context.BodySizeList
-                    .FirstOrDefaultAsync(b => b.SizeUnit == sizeUnit && b.BodySizeCode == bodySizeCode);
+                    .FirstOrDefaultAsync(b => b.UnitCode == sizeUnit && b.BodySizeCode == bodySizeCode);
                 if (existing == null)
                 {
                     return false;
@@ -2512,7 +2742,7 @@ namespace EstimateRequestSystem.Services
             try
             {
                 var existing = await _context.BodySizeList
-                    .FirstOrDefaultAsync(b => b.SizeUnit == sizeUnit && b.BodySizeCode == bodySizeCode);
+                    .FirstOrDefaultAsync(b => b.UnitCode == sizeUnit && b.BodySizeCode == bodySizeCode);
                 if (existing == null)
                 {
                     return false;
@@ -3002,7 +3232,7 @@ namespace EstimateRequestSystem.Services
             {
                 // 복합키(PortSizeCode + PortSizeUnit)로 중복 확인
                 var existing = await _context.TrimPortSizeList
-                    .FirstOrDefaultAsync(t => t.PortSizeCode == portSizeCode && t.PortSizeUnit == unit);
+                    .FirstOrDefaultAsync(t => t.PortSizeCode == portSizeCode && t.UnitCode == unit);
                 if (existing != null)
                 {
                     return false;
@@ -3012,7 +3242,7 @@ namespace EstimateRequestSystem.Services
                 {
                     PortSizeCode = portSizeCode,
                     PortSize = portSize,
-                    PortSizeUnit = unit
+                    UnitCode = unit
                 };
 
                 _context.TrimPortSizeList.Add(newTrimPortSize);
@@ -3031,7 +3261,7 @@ namespace EstimateRequestSystem.Services
             {
                 // 복합키(PortSizeCode + PortSizeUnit)로 기존 항목 찾기
                 var existing = await _context.TrimPortSizeList
-                    .FirstOrDefaultAsync(t => t.PortSizeCode == portSizeCode && t.PortSizeUnit == unit);
+                    .FirstOrDefaultAsync(t => t.PortSizeCode == portSizeCode && t.UnitCode == unit);
                 if (existing == null)
                 {
                     return false;
@@ -3054,7 +3284,7 @@ namespace EstimateRequestSystem.Services
             {
                 // 복합키(PortSizeCode + PortSizeUnit)로 기존 항목 찾기
                 var existing = await _context.TrimPortSizeList
-                    .FirstOrDefaultAsync(t => t.PortSizeCode == portSizeCode && t.PortSizeUnit == unit);
+                    .FirstOrDefaultAsync(t => t.PortSizeCode == portSizeCode && t.UnitCode == unit);
                 if (existing == null)
                 {
                     return false;
@@ -4054,7 +4284,7 @@ private string? ConvertEmptyToNull(string? value)
             if (string.IsNullOrEmpty(sizeUnit) || string.IsNullOrEmpty(bodySizeCode)) return null;
 
             // BodySizeList에서 sizeUnit과 bodySizeCode로 찾아서 유효성 검사
-            var exists = await _context.BodySizeList.AnyAsync(bs => bs.SizeUnit == sizeUnit && bs.BodySizeCode == bodySizeCode);
+            var exists = await _context.BodySizeList.AnyAsync(bs => bs.UnitCode == sizeUnit && bs.BodySizeCode == bodySizeCode);
 
             return exists ? bodySizeCode : null;
         }
@@ -4188,7 +4418,7 @@ private string? ConvertEmptyToNull(string? value)
         {
             Console.WriteLine($"[GetTrimPortSizeNameAsync] 찾는 코드: '{portSizeCode}'");
             var portSize = await _context.TrimPortSizeList
-                .FirstOrDefaultAsync(ps => ps.PortSizeCode == portSizeCode && ps.PortSizeUnit == portSizeUnit);
+                .FirstOrDefaultAsync(ps => ps.PortSizeCode == portSizeCode && ps.UnitCode == portSizeUnit);
             Console.WriteLine($"[GetTrimPortSizeNameAsync] 찾은 이름: '{portSize?.PortSize}'");
             return portSize?.PortSize ?? "";
         }

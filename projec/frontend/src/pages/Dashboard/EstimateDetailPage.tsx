@@ -4,6 +4,21 @@ import { getEstimateDetail, assignEstimate } from '../../api/estimateRequest';
 import './DashboardPages.css';
 import './EstimateDetailPage.css';
 
+// 단위/사이즈 마스터 데이터 타입
+interface BodySizeListDto {
+  unitCode: string;
+  bodySizeCode: string;
+  bodySize: string;
+  unitName: string;  // 단위명 (inch, mm 등)
+}
+
+interface TrimPortSizeListDto {
+  portSizeCode: string;
+  unitCode: string;
+  portSize: string;
+  unitName: string;  // 단위명 (inch, mm 등)
+}
+
 // 크로스플랫폼 경로 처리를 위한 유틸리티 함수
 const isManagerFile = (filePath: string): boolean => {
   if (!filePath) return false;
@@ -171,7 +186,7 @@ const EstimateDetailPage: React.FC = () => {
   
   // 마스터 데이터
   const [bodyValveList, setBodyValveList] = useState<BodyValveData[]>([]);
-  const [bodySizeList, setBodySizeList] = useState<any[]>([]);
+  const [bodySizeList, setBodySizeList] = useState<BodySizeListDto[]>([]);
   const [bodyMatList, setBodyMatList] = useState<any[]>([]);
   const [trimMatList, setTrimMatList] = useState<any[]>([]);
   const [trimOptionList, setTrimOptionList] = useState<any[]>([]);
@@ -182,7 +197,7 @@ const EstimateDetailPage: React.FC = () => {
   const [bodyConnectionList, setBodyConnectionList] = useState<any[]>([]);
   const [trimTypeList, setTrimTypeList] = useState<any[]>([]);
   const [trimSeriesList, setTrimSeriesList] = useState<any[]>([]);
-  const [trimPortSizeList, setTrimPortSizeList] = useState<any[]>([]);
+  const [trimPortSizeList, setTrimPortSizeList] = useState<TrimPortSizeListDto[]>([]);
   const [trimFormList, setTrimFormList] = useState<any[]>([]);
   const [actTypeList, setActTypeList] = useState<any[]>([]);
   const [actSeriesList, setActSeriesList] = useState<any[]>([]);
@@ -403,9 +418,14 @@ const EstimateDetailPage: React.FC = () => {
   // BodyValveList 가져오기
   const fetchBodyValveList = async () => {
     try {
-      const response = await fetch('http://localhost:5135/api/estimate/body-valve-list-detail');
+      const response = await fetch('http://localhost:5135/api/estimate/body-valve-list');
+      if (!response.ok) {
+        console.error('body-valve-list 요청 실패:', response.status, response.statusText);
+        setBodyValveList([]);
+        return;
+      }
       const data = await response.json();
-      setBodyValveList(data);
+      setBodyValveList(data ?? []);
     } catch (error) {
       console.error('BodyValveList 가져오기 실패:', error);
     }
@@ -2058,27 +2078,25 @@ const handleSaveSpecification = useCallback(async () => {
     }
   }, [bodyValveList.length, bodyRatingList.length, tempEstimateNo]); // loadExistingData 의존성 제거
 
-  // bodyValveList가 로드된 후 타입 정보 업데이트
+  // bodyValveList가 로드된 후 타입 이름을 코드→시리즈명으로 동기화
   useEffect(() => {
-    if (bodyValveList.length > 0 && types.length > 0) {
-      const updatedTypes = types.map(type => {
-        const valveInfo = bodyValveList.find(v => v.valveSeriesCode === type.code);
-        return {
-          ...type,
-          name: valveInfo ? valveInfo.valveSeries : type.name
-        };
+    if (bodyValveList.length > 0) {
+      setTypes(prevTypes => {
+        let changed = false;
+        const next = prevTypes.map(type => {
+          const key = (type as any).code ?? (type as any).id;
+          const valveInfo = bodyValveList.find((v: any) => v.valveSeriesCode === key);
+          const newName = valveInfo ? valveInfo.valveSeries : type.name;
+          if (newName !== type.name) {
+            changed = true;
+            return { ...type, name: newName } as any;
+          }
+          return type;
+        });
+        return changed ? next : prevTypes;
       });
-      
-      // 실제로 변경된 경우에만 업데이트
-      const hasChanges = updatedTypes.some((updatedType, index) => 
-        updatedType.name !== types[index].name
-      );
-      
-      if (hasChanges) {
-        setTypes(updatedTypes);
-      }
     }
-  }, [bodyValveList]); // types 의존성 제거 - 무한 루프 방지
+  }, [bodyValveList]);
 
   // selectedValve가 변경될 때마다 기존 사양 데이터 로드
   useEffect(() => {
@@ -2345,7 +2363,7 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                   className={`type-item-detail ${selectedType === type.id ? 'selected' : ''}`}
                   onClick={() => handleTypeSelection(type)}
                 >
-                  <span className="type-name-detail">{type.name}</span>
+                  <span className="type-name-detail">{(bodyValveList.find((v: any) => v.valveSeriesCode === type.id)?.valveSeries) || type.name}</span>
                   <span className="type-count">({type.count})</span>
                 </div>
               ))}
@@ -2360,10 +2378,7 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
             {selectedType ? (
               <div className="valve-list-detail">
               {valves
-                .filter((valve) => {
-                  const t = types.find(tt => tt.id === selectedType);
-                  return t && valve.body.type === t.name;
-                })
+                .filter((valve) => valve.typeId === selectedType)
                 .map((valve) => {
                   const originalIndex = valves.findIndex(v => (v.sheetID ?? v.id) === (valve.sheetID ?? valve.id));
                   return (
@@ -2425,7 +2440,7 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                         <option value="">Unit 선택</option>
                         {bodySizeList && bodySizeList.length > 0 && 
                           bodySizeList
-                            .map(item => item.sizeUnit)
+                            .map(item => item.unitCode)
                             .filter((unit, index, arr) => arr.indexOf(unit) === index)
                             .map((unit: string) => (
                               <option key={unit} value={unit}>
@@ -2444,11 +2459,11 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                         <option value="">값 선택</option>
                         {bodySelections.sizeBodyUnit && bodySizeList && bodySizeList.length > 0 && 
                           bodySizeList
-                            .filter(item => item.sizeUnit === bodySelections.sizeBodyUnit)
+                            .filter(item => item.unitCode === bodySelections.sizeBodyUnit)
                             .map((item: any) => (
-                              <option key={item.bodySizeCode} value={item.bodySizeCode}>
-                                {item.bodySize}
-                              </option>
+                                                              <option key={item.bodySizeCode} value={item.bodySizeCode}>
+                                  {item.bodySize} ({item.unitName})
+                                </option>
                             ))
                         }
                       </select>
@@ -2568,7 +2583,7 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                         <option value="">Unit 선택</option>
                         {trimPortSizeList && trimPortSizeList.length > 0 && 
                           trimPortSizeList
-                            .map(item => item.portSizeUnit)
+                            .map(item => item.unitCode)
                             .filter((unit, index, arr) => arr.indexOf(unit) === index)
                             .map((unit: string) => (
                               <option key={unit} value={unit}>
@@ -2587,11 +2602,11 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                         <option value="">값 선택</option>
                         {trimSelections.sizePortUnit && trimPortSizeList && trimPortSizeList.length > 0 && 
                           trimPortSizeList
-                            .filter(item => item.portSizeUnit === trimSelections.sizePortUnit)
+                            .filter(item => item.unitCode === trimSelections.sizePortUnit)
                             .map((item: any) => (
-                              <option key={item.portSizeCode} value={item.portSizeCode}>
-                                {item.portSize}
-                              </option>
+                                                              <option key={item.portSizeCode} value={item.portSizeCode}>
+                                  {item.portSize} ({item.unitName})
+                                </option>
                             ))
                         }
                       </select>
