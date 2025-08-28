@@ -524,6 +524,7 @@ namespace EstimateRequestSystem.Services
                     ActType = er.ActType,
                     IsHW = er.IsHW,
                     IsPositioner = er.IsPositioner,
+                    PositionerType = er.PositionerType,
                     ExplosionProof = er.ExplosionProof,
                     TransmitterType = er.TransmitterType,
                     IsSolenoid = er.IsSolenoid,
