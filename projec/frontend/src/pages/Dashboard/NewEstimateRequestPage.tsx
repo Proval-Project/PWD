@@ -251,6 +251,7 @@ const NewEstimateRequestPage: React.FC = () => {
   const [isReadOnly, setIsReadOnly] = useState<boolean>(false); // READONLY 모드 상태
   const [backendStatusText, setBackendStatusText] = useState<string>(''); // 백엔드 상태 텍스트
   const [backendStatus, setBackendStatus] = useState<number | null>(null);   // 백엔드 상태 코드 (1~5)
+  const [staffComment, setStaffComment] = useState('');
 
   // 요약 카드 표시용 파생 값들
   const totalQty = useMemo(() => valves.reduce((sum, v) => sum + (Number(v.qty) || 0), 0), [valves]);
@@ -268,6 +269,13 @@ const NewEstimateRequestPage: React.FC = () => {
   // 현재 사용자 정보 가져오기
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+
+  const [actSizeList, setActSizeList] = useState<any[]>([]);
+  const [actHWList, setActHWList] = useState<any[]>([]);
+  const [bodyRatingList, setBodyRatingList] = useState<any[]>([]);
+
+  const nameToCodeCache = useRef(new Map());
+  const codeToNameCache = useRef(new Map());
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -297,7 +305,12 @@ const NewEstimateRequestPage: React.FC = () => {
 
   useEffect(() => {
     fetchBodyValveList(); // 컴포넌트 마운트 시 밸브 목록 로드
+    fetchBodyRatingList();
   }, []); // 빈 배열: 한 번만 실행
+
+  // 매니저 또는 작성자인지 확인
+  const isManager = currentUser?.roleId === 2;
+  const isWriter = currentUser?.roleId === 3;
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -320,9 +333,19 @@ const NewEstimateRequestPage: React.FC = () => {
     }
   };
 
-  // 기존 데이터 불러오기 useEffect (의존성 추가)
+  // BodyRatingList 가져오기
+  const fetchBodyRatingList = async () => {
+    try {
+      const response = await axios.get('/api/estimate/body-rating-list');
+      setBodyRatingList(response.data);
+    } catch (error) {
+      console.error('Error fetching body rating list:', error);
+    }
+  };
+
+  // 기존 데이터 불러오기 useEffect (의존성 수정)
   useEffect(() => {
-    if (bodyValveList.length > 0) { // bodyValveList가 로드된 후에만 실행
+    if (bodyRatingList.length > 0) { // bodyValveList -> bodyRatingList
       const userStr = localStorage.getItem('user');
       if (userStr) {
         setCurrentUser(JSON.parse(userStr));
@@ -335,11 +358,11 @@ const NewEstimateRequestPage: React.FC = () => {
 
       const loadParam = searchParams.get('load');
       if (loadParam && !isDataLoaded.current) {
-        loadExistingData(loadParam, bodyValveList); // loadExistingData에 bodyValveList 전달
+        loadExistingData(loadParam); // 두 번째 인자 제거
         isDataLoaded.current = true;
       }
     }
-  }, [searchParams, bodyValveList]); // 의존성 배열에 bodyValveList 추가
+  }, [searchParams, bodyRatingList]); // 의존성 배열을 bodyRatingList로 변경
 
   // Type 드래그앤드롭 핸들러
   const handleTypeDragEnd = useCallback((event: DragEndEvent) => {
@@ -594,7 +617,7 @@ const NewEstimateRequestPage: React.FC = () => {
   const [bodyMatList, setBodyMatList] = useState<any[]>([]);
   const [trimMatList, setTrimMatList] = useState<any[]>([]);
   const [trimOptionList, setTrimOptionList] = useState<any[]>([]);
-  const [bodyRatingList, setBodyRatingList] = useState<any[]>([]);
+
   const [trimPortSizeList, setTrimPortSizeList] = useState<TrimPortSizeListDto[]>([]);
 
   // 이름을 코드로 변환하는 함수들
@@ -626,7 +649,7 @@ const NewEstimateRequestPage: React.FC = () => {
   const getBodyRatingCode = (name: string): string => {
     // 이름을 코드로 변환
     const item = bodyRatingList.find(item => item.ratingName === name);
-    return item ? item.ratingCode : name;
+    return item ? item.ratingCode : ''; // 매칭 실패 시 이름 대신 빈 문자열 반환
   };
 
   const getBodyRatingName = (code: string): string => {
@@ -635,10 +658,17 @@ const NewEstimateRequestPage: React.FC = () => {
   };
 
   const getBodyRatingUnit = (code: string): string => {
-    const item = bodyRatingList.find(item => item.ratingCode === code);
+    // ratingCode가 아닌 ratingUnitCode로 찾아야 합니다.
+    const item = bodyRatingList.find(item => item.ratingUnitCode === code);
+    // ratingUnitCode가 아닌 ratingUnit(이름)을 반환해야 합니다.
     return item ? item.ratingUnit : '';
   };
 
+  const getBodyRatingUnitCode = (ratingCode: string): string => {
+    const item = bodyRatingList.find(item => item.ratingCode === ratingCode);
+    return item ? item.ratingUnitCode : '';
+  };
+  
   const getBodySizeName = (code: string, unit: string): string => {
     const item = bodySizeList.find(item => item.bodySizeCode === code && item.unitCode === unit);
     return item ? item.bodySize : '';
@@ -1020,10 +1050,9 @@ const NewEstimateRequestPage: React.FC = () => {
   };
 
   // 기존 데이터 불러오기 함수
-  const loadExistingData = async (loadTempEstimateNo: string, bodyRatingData?: any[]) => {
+  const loadExistingData = async (loadTempEstimateNo: string) => {
     try {
-      // bodyRatingData가 전달되었는지 확인
-      const ratingList = bodyRatingData || bodyRatingList;
+      const ratingList = bodyRatingList; // state 직접 사용
       
       // loadExistingData 내부에서 사용할 로컬 함수들 정의
       const getBodyRatingNameLocal = (code: string): string => {
@@ -1032,7 +1061,7 @@ const NewEstimateRequestPage: React.FC = () => {
       };
       
       const getBodyRatingUnitLocal = (code: string): string => {
-        const item = ratingList.find(item => item.ratingCode === code);
+        const item = ratingList.find(item => item.ratingUnitCode === code);
         return item ? item.ratingUnit : '';
       };
       
@@ -1147,7 +1176,7 @@ const NewEstimateRequestPage: React.FC = () => {
                   materialTrim: tagNo.trimMat || '',
                   option: tagNo.trimOption || '',
                   rating: getBodyRatingNameLocal(tagNo.bodyRating || '') || tagNo.bodyRating || '',
-                  ratingUnit: getBodyRatingUnitLocal(tagNo.bodyRating || '') || ''
+                  ratingUnit: getBodyRatingUnitLocal(tagNo.bodyRatingUnit || '') || ''
                 },
                 actuator: {
                   type: tagNo.actType || 'None',
@@ -1156,7 +1185,7 @@ const NewEstimateRequestPage: React.FC = () => {
                 accessory: {
                   positioner: { exists: tagNo.isPositioner || false, type: tagNo.positionerType || '', maker: '', model: '' },
                   explosionProof: tagNo.explosionProof || '',
-                  transmitter: { exists: tagNo.isTransmitter || false, type: '' },
+                  transmitter: { exists: tagNo.transmitterType ? true : false, type: tagNo.transmitterType || '' },
                   solenoidValve: { exists: tagNo.isSolenoid || false, type: '', maker: '', model: '' },
                   limitSwitch: { exists: tagNo.isLimSwitch || false, type: '', maker: '', model: '' },
                   airSet: { exists: tagNo.isAirSet || false, type: '', maker: '', model: '' },
@@ -1269,9 +1298,9 @@ const NewEstimateRequestPage: React.FC = () => {
                     return ratingName || ratingCode || '';
                   })(),
                   ratingUnit: (() => {
-                    const ratingCode = req.bodyRating || '';
-                    const ratingUnit = getBodyRatingUnitLocal(ratingCode);
-                    console.log('RatingUnit 설정 - Code:', ratingCode, 'Unit:', ratingUnit);
+                    const ratingUnitCode = req.bodyRatingUnit || '';
+                    const ratingUnit = getBodyRatingUnitLocal(ratingUnitCode);
+                    console.log('RatingUnit 설정 - Code:', ratingUnitCode, 'Unit:', ratingUnit);
                     return ratingUnit || '';
                   })()
                 },
@@ -1383,7 +1412,7 @@ const NewEstimateRequestPage: React.FC = () => {
       if (loadParam && !isDataLoaded.current) {
         // 기존 데이터 불러오기 (bodyRatingData 전달)
         isDataLoaded.current = true; // 로딩 상태 설정
-        await loadExistingData(loadParam, bodyRatingData);
+        await loadExistingData(loadParam);
       } else if (!loadParam && !isDataLoaded.current) {
         // 새로운 견적 생성
         isDataLoaded.current = true;
@@ -1454,6 +1483,120 @@ const NewEstimateRequestPage: React.FC = () => {
     }
   };
 
+  const createSavePayload = useCallback(() => {
+    // 전역 SheetNo 계산
+    let globalSheetNo = 1;
+    const sortedValves = valves.sort((a, b) => {
+      const typeOrderA = types.find(t => t.id === a.typeId)?.order || 0;
+      const typeOrderB = types.find(t => t.id === b.typeId)?.order || 0;
+      
+      if (typeOrderA !== typeOrderB) {
+        return typeOrderA - typeOrderB;
+      }
+      return a.order - b.order;
+    });
+
+    const allTagNos = sortedValves.map(valve => {
+      const tagNoData: any = {
+        SheetID: valve.sheetID > 0 ? valve.sheetID : undefined,
+        SheetNo: globalSheetNo++,
+        Tagno: valve.tagNo,
+        valveSeriesCode: valve.body.typeCode,
+        Qty: valve.qty,
+        Medium: valve.fluid.medium,
+        Fluid: valve.fluid.fluid,
+        IsQM: valve.isQM,
+        QMUnit: valve.fluid.qm.unit,
+        QMMax: parseFloat(valve.fluid.qm.max.toString()) || 0,
+        QMNor: parseFloat(valve.fluid.qm.normal.toString()) || 0,
+        QMMin: parseFloat(valve.fluid.qm.min.toString()) || 0,
+        QNUnit: valve.fluid.qn.unit,
+        QNMax: parseFloat(valve.fluid.qn.max.toString()) || 0,
+        QNNor: parseFloat(valve.fluid.qn.normal.toString()) || 0,
+        QNMin: parseFloat(valve.fluid.qn.min.toString()) || 0,
+        IsP2: valve.isP2,
+        IsDensity: valve.isDensity,
+        PressureUnit: valve.fluid.pressureUnit,
+        InletPressureMaxQ: parseFloat(valve.fluid.p1.max.toString()) || 0,
+        InletPressureNorQ: parseFloat(valve.fluid.p1.normal.toString()) || 0,
+        InletPressureMinQ: parseFloat(valve.fluid.p1.min.toString()) || 0,
+        OutletPressureMaxQ: parseFloat(valve.fluid.p2.max.toString()) || 0,
+        OutletPressureNorQ: parseFloat(valve.fluid.p2.normal.toString()) || 0,
+        OutletPressureMinQ: parseFloat(valve.fluid.p2.min.toString()) || 0,
+        DifferentialPressureMaxQ: parseFloat(valve.fluid.dp.max.toString()) || 0,
+        DifferentialPressureNorQ: parseFloat(valve.fluid.dp.normal.toString()) || 0,
+        DifferentialPressureMinQ: parseFloat(valve.fluid.dp.min.toString()) || 0,
+        TemperatureUnit: valve.fluid.temperatureUnit,
+        InletTemperatureQ: parseFloat(valve.fluid.t1.max.toString()) || 0,
+        InletTemperatureNorQ: parseFloat(valve.fluid.t1.normal.toString()) || 0,
+        InletTemperatureMinQ: parseFloat(valve.fluid.t1.min.toString()) || 0,
+        DensityUnit: 'kg/m³',
+        Density: parseFloat(valve.fluid.density) || 0,
+        MolecularWeightUnit: 'g/mol',
+        MolecularWeight: parseFloat(valve.fluid.molecular) || 0,
+        BodySizeUnit: valve.body.sizeUnit || null,
+        BodySize: getBodySizeCode(valve.body.size, valve.body.sizeUnit),
+        BodyMat: getBodyMatCode(valve.body.materialBody),
+        TrimMat: getTrimMatCode(valve.body.materialTrim),
+        TrimOption: getTrimOptionCode(valve.body.option),
+        BodyRating: getBodyRatingCode(valve.body.rating),
+        BodyRatingUnit: getBodyRatingUnitCode(getBodyRatingCode(valve.body.rating)),
+        ActType: valve.actuator.type,
+        IsHW: valve.actuator.hw === 'Yes',
+      };
+
+      // IsPositioner 로직 수정: Type에 값이 있을 때만 true
+      if (valve.accessory.positioner.type) {
+        tagNoData.IsPositioner = true;
+        tagNoData.PositionerType = valve.accessory.positioner.type;
+      } else {
+        tagNoData.IsPositioner = false;
+        tagNoData.PositionerType = null;
+      }
+
+      tagNoData.ExplosionProof = valve.accessory.explosionProof || null;
+      tagNoData.TransmitterType = valve.accessory.transmitter.type || null;
+      
+      tagNoData.IsSolenoid = valve.accessory.solenoidValve.exists;
+      tagNoData.IsLimSwitch = valve.accessory.limitSwitch.exists;
+      tagNoData.IsAirSet = valve.accessory.airSet.exists;
+      tagNoData.IsVolumeBooster = valve.accessory.volumeBooster.exists;
+      tagNoData.IsAirOperated = valve.accessory.airOperatedValve.exists;
+      tagNoData.IsLockUp = valve.accessory.lockupValve.exists;
+      tagNoData.IsSnapActingRelay = valve.accessory.snapActingRelay.exists;
+
+      return tagNoData;
+    });
+
+    const typeSelections = types.map(type => {
+      const typeValves = allTagNos
+        .filter(valve => valve.valveSeriesCode === type.code)
+        .map(valve => {
+          // valveSeriesCode는 백엔드 전송 시 필요 없으므로 제거
+          const { valveSeriesCode, ...rest } = valve;
+          return {
+            ValveName: valve.tagno,
+            ValveSeriesCode: valve.valveSeriesCode,
+            TagNos: [rest]
+          };
+        });
+      
+      return {
+        Type: type.name,
+        Valves: typeValves
+      };
+    });
+
+    return {
+      TypeSelections: typeSelections,
+      Project: projectName,
+      CustomerRequirement: customerRequirement,
+      CustomerID: selectedCustomer?.userID || currentUser?.userId || 'admin',
+      WriterID: currentUser?.userId || 'admin',
+      Attachments: []
+    };
+  }, [types, valves, projectName, customerRequirement, selectedCustomer, currentUser, bodySizeList, bodyMatList, trimMatList, trimOptionList, bodyRatingList]);
+
   // 임시저장 기능
   const handleSaveDraft = async () => {
     // TempEstimateNo가 없으면 먼저 생성
@@ -1482,116 +1625,20 @@ const NewEstimateRequestPage: React.FC = () => {
     }
     
     try {
-      // 전역 SheetNo 계산
-      let globalSheetNo = 1;
-      const sortedValves = valves.sort((a, b) => {
-        const typeOrderA = types.find(t => t.id === a.typeId)?.order || 0;
-        const typeOrderB = types.find(t => t.id === b.typeId)?.order || 0;
-        
-        if (typeOrderA !== typeOrderB) {
-          return typeOrderA - typeOrderB;
-        }
-        return a.order - b.order;
-      });
-      
-      console.log('💾 저장 시 상태 확인:');
-      console.log('📁 fileAttachments 전체:', fileAttachments);
-      console.log('🔍 fileAttachments 상세:', fileAttachments.map(att => ({
-        name: att.name,
-        isPending: att.isPending,
-        attachmentId: att.attachmentId,
-        filePath: att.filePath
-      })));
-      console.log('📎 attachments:', attachments);
-      console.log('🔑 tempEstimateNo:', currentTempEstimateNo);
-      
-      const saveData = {
-        TypeSelections: types.map((type, typeIndex) => ({
-          Type: type.name,
-          Valves: sortedValves
-            .filter(valve => valve.body.type === type.name)
-            .map((valve, index) => ({
-              ValveName: valve.tagNo,
-              ValveSeriesCode: valve.body.typeCode,
-              TagNos: [{
-                SheetID: valve.sheetID > 0 ? valve.sheetID : undefined, // 기존 SheetID 보존
-                SheetNo: globalSheetNo++, // 전역 순서 할당
-                Tagno: valve.tagNo,
-                Qty: valve.qty,
-                Medium: valve.fluid.medium,
-                Fluid: valve.fluid.fluid,
-                IsQM: valve.isQM, 
-                QMUnit: valve.fluid.qm.unit,
-                QMMax: valve.fluid.qm.max,
-                QMNor: valve.fluid.qm.normal,
-                QMMin: valve.fluid.qm.min,
-                QNUnit: valve.fluid.qn.unit,
-                QNMax: valve.fluid.qn.max,
-                QNNor: valve.fluid.qn.normal,
-                QNMin: valve.fluid.qn.min,
-                IsP2: valve.isP2,
-                IsDensity: valve.isDensity,
-                PressureUnit: valve.fluid.pressureUnit,
-                InletPressureMaxQ: valve.fluid.p1.max,
-                InletPressureNorQ: valve.fluid.p1.normal,
-                InletPressureMinQ: valve.fluid.p1.min,
-                OutletPressureMaxQ: valve.fluid.p2.max,
-                OutletPressureNorQ: valve.fluid.p2.normal,
-                OutletPressureMinQ: valve.fluid.p2.min,
-                DifferentialPressureMaxQ: valve.fluid.dp.max,
-                DifferentialPressureNorQ: valve.fluid.dp.normal,
-                DifferentialPressureMinQ: valve.fluid.dp.min,
-                TemperatureUnit: valve.fluid.temperatureUnit,
-                InletTemperatureQ: valve.fluid.t1.max,
-                InletTemperatureNorQ: valve.fluid.t1.normal,
-                InletTemperatureMinQ: valve.fluid.t1.min,
-                DensityUnit: 'kg/m³',
-                Density: parseFloat(valve.fluid.density) || 0,
-                MolecularWeightUnit: 'g/mol',
-                MolecularWeight: parseFloat(valve.fluid.molecular) || 0,
-                BodySizeUnit: valve.body.sizeUnit || null,
-                BodySize: getBodySizeCode(valve.body.size, valve.body.sizeUnit),
-                BodyMat: getBodyMatCode(valve.body.materialBody),
-                TrimMat: getTrimMatCode(valve.body.materialTrim),
-                TrimOption: getTrimOptionCode(valve.body.option),
-                BodyRating: getBodyRatingCode(valve.body.rating),
-                ActType: valve.actuator.type,
-                IsHW: valve.actuator.hw === 'Yes',
-                IsPositioner: valve.accessory.positioner.exists,
-                PositionerType: valve.accessory.positioner.type || null,
-                ExplosionProof: valve.accessory.explosionProof || null,
-                TransmitterType: valve.accessory.transmitter.type || null,
-                IsSolenoid: valve.accessory.solenoidValve.exists,
-                IsLimSwitch: valve.accessory.limitSwitch.exists,
-                IsAirSet: valve.accessory.airSet.exists,
-                IsVolumeBooster: valve.accessory.volumeBooster.exists,
-                IsAirOperated: valve.accessory.airOperatedValve.exists,
-                IsLockUp: valve.accessory.lockupValve.exists,
-                IsSnapActingRelay: valve.accessory.snapActingRelay.exists
-              }]
-            }))
-        })),
-        Project: projectName,
-        CustomerRequirement: customerRequirement,
-        CustomerID: selectedCustomer?.userID || currentUser?.userId || 'admin',
-        WriterID: currentUser?.userId || 'admin',
-        // 첨부는 업로드 API만 사용하고 여기서는 전송하지 않음(중복 방지)
-        Attachments: []
-      };
+      const submitData = createSavePayload();
+      console.log('Submit Data - CustomerRequirement:', submitData.CustomerRequirement);
+      console.log('Submit Data 전체:', JSON.stringify(submitData, null, 2));
 
-      console.log('전송할 데이터:', JSON.stringify(saveData, null, 2));
-      console.log('CustomerRequirement 값:', customerRequirement);
+      await axios.post(`http://localhost:5135/api/estimate/sheets/${currentTempEstimateNo}`, submitData);
       
-      // 첨부파일은 이미 업로드되어 있으므로 추가 업로드 불필요
-      console.log('첨부파일은 이미 업로드되어 있음, 추가 업로드 생략');
+      // 성공 시 임시저장 플래그 제거
+      localStorage.removeItem(`saved_${currentTempEstimateNo}`);
       
-      await axios.post(`http://localhost:5135/api/estimate/sheets/${currentTempEstimateNo}/save-draft`, saveData);
-      // 임시저장 성공 시 localStorage에 플래그 설정
-      localStorage.setItem(`saved_${currentTempEstimateNo}`, 'true');
-      alert('임시저장이 완료되었습니다.');
+      alert('견적요청이 완료되었습니다.');
+      navigate('/dashboard/estimate-requests');
     } catch (error) {
-      console.error('임시저장 실패:', error);
-      alert('임시저장에 실패했습니다.');
+      console.error('견적요청 실패:', error);
+      alert('견적요청에 실패했습니다.');
     }
   };
 
@@ -1623,140 +1670,24 @@ const NewEstimateRequestPage: React.FC = () => {
     }
     
     try {
-      // 전역 SheetNo 계산
-      let globalSheetNo = 1;
-      const sortedValves = valves.sort((a, b) => {
-        const typeOrderA = types.find(t => t.id === a.typeId)?.order || 0;
-        const typeOrderB = types.find(t => t.id === b.typeId)?.order || 0;
-        
-        if (typeOrderA !== typeOrderB) {
-          return typeOrderA - typeOrderB;
-        }
-        return a.order - b.order;
-      });
+      const submitData = createSavePayload();
       
-      const submitData = {
-        TypeSelections: types.map((type, typeIndex) => ({
-          Type: type.name,
-          Valves: sortedValves
-            .filter(valve => valve.body.type === type.name)
-            .map((valve, index) => ({
-              ValveName: valve.tagNo,
-              ValveSeriesCode: valve.body.typeCode,
-              TagNos: [{
-                SheetID: valve.sheetID > 0 ? valve.sheetID : undefined, // 기존 SheetID 보존
-                SheetNo: globalSheetNo++, // 전역 순서 할당
-                Tagno: valve.tagNo,
-                Qty: valve.qty,
-                Medium: valve.fluid.medium,
-                Fluid: valve.fluid.fluid,
-                IsQM: valve.isQM, 
-                QMUnit: valve.fluid.qm.unit,
-                QMMax: valve.fluid.qm.max,
-                QMNor: valve.fluid.qm.normal,
-                QMMin: valve.fluid.qm.min,
-                QNUnit: valve.fluid.qn.unit,
-                QNMax: valve.fluid.qn.max,
-                QNNor: valve.fluid.qn.normal,
-                QNMin: valve.fluid.qn.min,
-                IsP2: valve.isP2,
-                IsDensity: valve.isDensity,
-                PressureUnit: valve.fluid.pressureUnit,
-                InletPressureMaxQ: valve.fluid.p1.max,
-                InletPressureNorQ: valve.fluid.p1.normal,
-                InletPressureMinQ: valve.fluid.p1.min,
-                OutletPressureMaxQ: valve.fluid.p2.max,
-                OutletPressureNorQ: valve.fluid.p2.normal,
-                OutletPressureMinQ: valve.fluid.p2.min,
-                DifferentialPressureMaxQ: valve.fluid.dp.max,
-                DifferentialPressureNorQ: valve.fluid.dp.normal,
-                DifferentialPressureMinQ: valve.fluid.dp.min,
-                TemperatureUnit: valve.fluid.temperatureUnit,
-                InletTemperatureQ: valve.fluid.t1.max,
-                InletTemperatureNorQ: valve.fluid.t1.normal,
-                InletTemperatureMinQ: valve.fluid.t1.min,
-                DensityUnit: 'kg/m³',
-                Density: parseFloat(valve.fluid.density) || 0,
-                MolecularWeightUnit: 'g/mol',
-                MolecularWeight: parseFloat(valve.fluid.molecular) || 0,
-                BodySizeUnit: valve.body.sizeUnit || null,
-                BodySize: getBodySizeCode(valve.body.size, valve.body.sizeUnit),
-                BodyMat: getBodyMatCode(valve.body.materialBody),
-                TrimMat: getTrimMatCode(valve.body.materialTrim),
-                TrimOption: getTrimOptionCode(valve.body.option),
-                BodyRating: getBodyRatingCode(valve.body.rating),
-                ActType: valve.actuator.type,
-                IsHW: valve.actuator.hw === 'Yes',
-                IsPositioner: valve.accessory.positioner.exists,
-                PositionerType: valve.accessory.positioner.type || null,
-                ExplosionProof: valve.accessory.explosionProof || null,
-                TransmitterType: valve.accessory.transmitter.type || null,
-                IsSolenoid: valve.accessory.solenoidValve.exists,
-                IsLimSwitch: valve.accessory.limitSwitch.exists,
-                IsAirSet: valve.accessory.airSet.exists,
-                IsVolumeBooster: valve.accessory.volumeBooster.exists,
-                IsAirOperated: valve.accessory.airOperatedValve.exists,
-                IsLockUp: valve.accessory.lockupValve.exists,
-                IsSnapActingRelay: valve.accessory.snapActingRelay.exists
-              }]
-            }))
-        })),
-        Project: projectName,
-        CustomerRequirement: customerRequirement,
-        StaffComment: '',
-        CustomerID: selectedCustomer?.userID || currentUser?.userId || 'admin',
-        WriterID: currentUser?.userId || 'admin',
-        Attachments: []
+      // StaffComment 추가
+      const finalSubmitData = {
+        ...submitData,
+        StaffComment: staffComment, // createSavePayload 밖에서 staffComment 사용
       };
-
-      console.log('Submit Data - CustomerRequirement:', customerRequirement);
-      console.log('Submit Data 전체:', JSON.stringify(submitData, null, 2));
-
-      // pendingFiles에 있는 새로 선택된 파일들만 업로드 (기존 파일은 제외)
-      if (pendingFiles.length > 0) {
-        console.log('pendingFiles에서 새 파일 업로드 시작...', pendingFiles.length, '개 파일');
-        console.log('🔍 pendingFiles 내용:', pendingFiles.map(f => f.name));
-        console.log('🔍 pendingFiles 상세 정보:', pendingFiles);
-        
-        for (const file of pendingFiles) {
-          try {
-            console.log('새 파일 업로드 중:', file.name);
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('tempEstimateNo', currentTempEstimateNo);
-            formData.append('fileType', 'customer');
-            
-            const response = await axios.post(
-              `http://localhost:5135/api/estimate/sheets/${currentTempEstimateNo}/attachments?uploadUserID=${currentUser?.userId || 'admin'}&fileType=customer`,
-              formData
-            );
-            
-            if (response.status === 200) {
-              console.log('✅ 새 파일 업로드 성공:', file.name);
-              // 업로드 성공 시 fileAttachments 상태 업데이트
-              setFileAttachments(prev => prev.map(att => 
-                att.name === file.name && att.isPending
-                  ? { ...att, isPending: false, attachmentId: response.data.attachmentID }
-                  : att
-              ));
-            }
-          } catch (error) {
-            console.error('❌ 새 파일 업로드 실패:', file.name, error);
-          }
-        }
-        
-        // pendingFiles 초기화
-        setPendingFiles([]);
-        console.log('✅ pendingFiles 초기화됨 (새 파일 업로드 완료)');
-      } else {
-        console.log('📋 pendingFiles가 비어있음 - 업로드할 새 파일 없음');
-      }
       
-      await axios.post(`http://localhost:5135/api/estimate/sheets/${currentTempEstimateNo}/submit`, submitData);
-      // 견적요청 성공 시 localStorage에 플래그 설정
-      localStorage.setItem(`saved_${currentTempEstimateNo}`, 'true');
+      console.log('Submit Data - CustomerRequirement:', finalSubmitData.CustomerRequirement);
+      console.log('Submit Data 전체:', JSON.stringify(finalSubmitData, null, 2));
+
+      await axios.post(`http://localhost:5135/api/estimate/sheets/${currentTempEstimateNo}/submit`, finalSubmitData);
+      
+      // 성공 시 임시저장 플래그 제거
+      localStorage.removeItem(`saved_${currentTempEstimateNo}`);
+      
       alert('견적요청이 완료되었습니다.');
-      navigate('/estimate-request'); // 견적요청 목록으로 이동
+      navigate('/dashboard/estimate-requests');
     } catch (error) {
       console.error('견적요청 실패:', error);
       alert('견적요청에 실패했습니다.');
@@ -1810,6 +1741,14 @@ const NewEstimateRequestPage: React.FC = () => {
             }
           }
         };
+
+        // Positioner 특별 처리
+        if (path === 'accessory.positioner.type') {
+          const newType = value;
+          const newExists = newType !== '';
+          newValve.accessory.positioner.exists = newExists;
+        }
+
       } else {
         newValve = {
           ...updatedValve,
@@ -2790,8 +2729,8 @@ const NewEstimateRequestPage: React.FC = () => {
                         <select 
                           id="accessory-solenoid-valve"
                           name="accessorySolenoidValve"
-                          value={currentValve.accessory.solenoidValve ? 'Yes' : 'No'}
-                          onChange={(e) => handleAccessoryChange('solenoidValve', e.target.value === 'Yes')}
+                          value={currentValve.accessory.solenoidValve.exists ? 'Yes' : 'No'}
+                          onChange={(e) => handleAccessoryChange('solenoidValve.exists', e.target.value === 'Yes')}
                           disabled={isReadOnly}
                         >
                           <option value="No">No</option>
@@ -2805,8 +2744,8 @@ const NewEstimateRequestPage: React.FC = () => {
                         <select 
                           id="accessory-limit-switch"
                           name="accessoryLimitSwitch"
-                          value={currentValve.accessory.limitSwitch ? 'Yes' : 'No'}
-                          onChange={(e) => handleAccessoryChange('limitSwitch', e.target.value === 'Yes')}
+                          value={currentValve.accessory.limitSwitch.exists ? 'Yes' : 'No'}
+                          onChange={(e) => handleAccessoryChange('limitSwitch.exists', e.target.value === 'Yes')}
                           disabled={isReadOnly}
                         >
                           <option value="No">No</option>
@@ -2820,8 +2759,8 @@ const NewEstimateRequestPage: React.FC = () => {
                         <select 
                           id="accessory-air-set"
                           name="accessoryAirSet"
-                          value={currentValve.accessory.airSet ? 'Yes' : 'No'}
-                          onChange={(e) => handleAccessoryChange('airSet', e.target.value === 'Yes')}
+                          value={currentValve.accessory.airSet.exists ? 'Yes' : 'No'}
+                          onChange={(e) => handleAccessoryChange('airSet.exists', e.target.value === 'Yes')}
                           disabled={isReadOnly}
                         >
                           <option value="No">No</option>
@@ -2835,8 +2774,8 @@ const NewEstimateRequestPage: React.FC = () => {
                         <select 
                           id="accessory-volume-booster"
                           name="accessoryVolumeBooster"
-                          value={currentValve.accessory.volumeBooster ? 'Yes' : 'No'}
-                          onChange={(e) => handleAccessoryChange('volumeBooster', e.target.value === 'Yes')}
+                          value={currentValve.accessory.volumeBooster.exists ? 'Yes' : 'No'}
+                          onChange={(e) => handleAccessoryChange('volumeBooster.exists', e.target.value === 'Yes')}
                           disabled={isReadOnly}
                         >
                           <option value="No">No</option>
@@ -2850,8 +2789,8 @@ const NewEstimateRequestPage: React.FC = () => {
                         <select 
                           id="accessory-air-operated-valve"
                           name="accessoryAirOperatedValve"
-                          value={currentValve.accessory.airOperatedValve ? 'Yes' : 'No'}
-                          onChange={(e) => handleAccessoryChange('airOperatedValve', e.target.value === 'Yes')}
+                          value={currentValve.accessory.airOperatedValve.exists ? 'Yes' : 'No'}
+                          onChange={(e) => handleAccessoryChange('airOperatedValve.exists', e.target.value === 'Yes')}
                           disabled={isReadOnly}
                         >
                           <option value="No">No</option>
@@ -2865,8 +2804,8 @@ const NewEstimateRequestPage: React.FC = () => {
                         <select 
                           id="accessory-lockup-valve"
                           name="accessoryLockupValve"
-                          value={currentValve.accessory.lockupValve ? 'Yes' : 'No'}
-                          onChange={(e) => handleAccessoryChange('lockupValve', e.target.value === 'Yes')}
+                          value={currentValve.accessory.lockupValve.exists ? 'Yes' : 'No'}
+                          onChange={(e) => handleAccessoryChange('lockupValve.exists', e.target.value === 'Yes')}
                           disabled={isReadOnly}
                         >
                           <option value="No">No</option>
@@ -2880,8 +2819,8 @@ const NewEstimateRequestPage: React.FC = () => {
                         <select 
                           id="accessory-snap-acting-relay"
                           name="accessorySnapActingRelay"
-                          value={currentValve.accessory.snapActingRelay ? 'Yes' : 'No'}
-                          onChange={(e) => handleAccessoryChange('snapActingRelay', e.target.value === 'Yes')}
+                          value={currentValve.accessory.snapActingRelay.exists ? 'Yes' : 'No'}
+                          onChange={(e) => handleAccessoryChange('snapActingRelay.exists', e.target.value === 'Yes')}
                           disabled={isReadOnly}
                         >
                           <option value="No">No</option>

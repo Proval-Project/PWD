@@ -31,12 +31,26 @@ namespace EstimateRequestSystem.Controllers
             }
         }
 
+        // GET: api/estimate/sheets/{tempEstimateNo}
         [HttpGet("sheets/{tempEstimateNo}")]
-        public async Task<ActionResult<EstimateSheetResponseDto>> GetEstimateSheet(string tempEstimateNo)
+        public async Task<IActionResult> GetEstimateSheet(string tempEstimateNo)
         {
             var estimateSheet = await _estimateService.GetEstimateSheetAsync(tempEstimateNo);
             if (estimateSheet == null)
+            {
                 return NotFound();
+            }
+
+            // 디버깅을 위한 JSON 출력
+            var json = System.Text.Json.JsonSerializer.Serialize(estimateSheet, new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = true,
+                // 순환 참조를 처리하기 위한 설정 (필요 시)
+                // ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve
+            });
+            Console.WriteLine("---- ESTIMATE SHEET RESPONSE DATA ----");
+            Console.WriteLine(json);
+            Console.WriteLine("------------------------------------");
 
             return Ok(estimateSheet);
         }
@@ -95,11 +109,20 @@ namespace EstimateRequestSystem.Controllers
 
         // 견적요청 기능
         [HttpPost("sheets/{tempEstimateNo}/submit")]
-        public async Task<ActionResult> SubmitEstimate(string tempEstimateNo, [FromBody] SubmitEstimateDto dto)
+        public async Task<ActionResult> SubmitEstimate(string tempEstimateNo, [FromBody] SubmitEstimateDto estimateDto)
         {
             try
             {
-                var success = await _estimateService.SubmitEstimateAsync(tempEstimateNo, dto);
+                // 디버깅을 위한 수신 데이터 JSON 출력
+                var json = System.Text.Json.JsonSerializer.Serialize(estimateDto, new System.Text.Json.JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                });
+                Console.WriteLine("---- SUBMIT ESTIMATE REQUEST DATA ----");
+                Console.WriteLine(json);
+                Console.WriteLine("--------------------------------------");
+
+                var success = await _estimateService.SubmitEstimateAsync(tempEstimateNo, estimateDto);
                 if (!success)
                     return NotFound();
 

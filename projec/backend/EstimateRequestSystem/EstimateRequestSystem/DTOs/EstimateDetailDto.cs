@@ -102,6 +102,7 @@ namespace EstimateRequestSystem.DTOs
         public string? TrimMat { get; set; }
         public string? TrimOption { get; set; }
         public string? BodyRating { get; set; }
+        public string? BodyRatingUnit { get; set; }
         
         // Actuator
         public string? ActType { get; set; }

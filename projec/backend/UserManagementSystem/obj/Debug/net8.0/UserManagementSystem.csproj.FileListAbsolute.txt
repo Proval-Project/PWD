@@ -418,3 +418,4 @@ C:/Users/Administrator/Desktop/final_test/projec/backend/UserManagementSystem/ob
 /Users/simjimin/Downloads/final_develop/projec/backend/UserManagementSystem/obj/Debug/net8.0/UserManagementSystem.pdb
 /Users/simjimin/Downloads/final_develop/projec/backend/UserManagementSystem/obj/Debug/net8.0/UserManagementSystem.genruntimeconfig.cache
 /Users/simjimin/Downloads/final_develop/projec/backend/UserManagementSystem/obj/Debug/net8.0/ref/UserManagementSystem.dll
+/Users/simjimin/Downloads/final_develop/projec/backend/UserManagementSystem/obj/Debug/net8.0/UserManagementSystem.sourcelink.json

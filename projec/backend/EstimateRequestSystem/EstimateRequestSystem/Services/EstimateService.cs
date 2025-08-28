@@ -520,6 +520,7 @@ namespace EstimateRequestSystem.Services
                     TrimMat = er.TrimMat,
                     TrimOption = er.TrimOption,
                     BodyRating = er.BodyRating,
+                    BodyRatingUnit = er.BodyRatingUnit,
                     ActType = er.ActType,
                     IsHW = er.IsHW,
                     IsPositioner = er.IsPositioner,
@@ -740,7 +741,6 @@ namespace EstimateRequestSystem.Services
                 IsSnapActingRelay = estimateRequest.IsSnapActingRelay
             };
         }
-
         public async Task<EstimateRequestResponseDto?> GetEstimateRequestAsync(string tempEstimateNo, int sheetID)
         {
             var estimateRequest = await _context.EstimateRequest
@@ -794,6 +794,7 @@ namespace EstimateRequestSystem.Services
                 TrimMat = estimateRequest.TrimMat,
                 TrimOption = estimateRequest.TrimOption,
                 BodyRating = estimateRequest.BodyRating,
+                BodyRatingUnit = estimateRequest.BodyRatingUnit,
                 ActType = estimateRequest.ActType,
                 IsHW = estimateRequest.IsHW,
                 IsPositioner = estimateRequest.IsPositioner,
@@ -1382,7 +1383,6 @@ namespace EstimateRequestSystem.Services
         .ToListAsync();
     return optionList.Cast<object>().ToList();
 }
-
         public async Task<List<object>> GetBodyRatingListAsync(string? ratingUnitCode = null)
         {
             var query = _context.BodyRatingList.AsQueryable();
@@ -2075,6 +2075,7 @@ namespace EstimateRequestSystem.Services
                             TrimMat = er.TrimMat,
                             TrimOption = er.TrimOption,
                             BodyRating = er.BodyRating,
+                            BodyRatingUnit = er.BodyRatingUnit,
                             ActType = er.ActType,
                             IsHW = er.IsHW,
                             IsPositioner = er.IsPositioner,
@@ -2181,7 +2182,6 @@ namespace EstimateRequestSystem.Services
                 throw new Exception($"GetTrimPortSizeListAsync 실행 중 오류 발생: {ex.Message}", ex);
             }
         }
-
         public async Task<List<object>> GetTrimFormListAsync()
         {
             var formList = await _context.TrimFormList
@@ -2966,7 +2966,6 @@ namespace EstimateRequestSystem.Services
                 return false;
             }
         }
-
         public async Task<bool> DeleteBodyConnectionAsync(string connectionCode)
         {
             try
@@ -3760,7 +3759,6 @@ namespace EstimateRequestSystem.Services
                 return false;
             }
         }
-
         // acc 종류별로 Maker 테이블이 다르므로, accTypeCode를 받아서 switch문으로 처리 (에러 수정)
         public async Task<bool> DeleteAccMakerAsync(string accTypeCode, string makerCode)
         {
@@ -4077,8 +4075,6 @@ private string? ConvertEmptyToNull(string? value)
 {
     return string.IsNullOrWhiteSpace(value) ? null : value;
 }
-
-
         public async Task<bool> SaveSpecificationAsync(string tempEstimateNo, int sheetID, SaveSpecificationRequestDto specification)
         {
             try
@@ -4598,7 +4594,6 @@ private string? ConvertEmptyToNull(string? value)
                 return new SpecificationResponseDto(); // null 대신 빈 DTO 반환
             }
         }
-
         // 악세사리 검색 메서드 (새로 추가)
         public async Task<List<object>> SearchAccessoriesAsync(string? accTypeCode = null, string? searchKeyword = null)
         {
@@ -5380,7 +5375,6 @@ private string? ConvertEmptyToNull(string? value)
                 return new { error = ex.Message };
             }
         }
-
         // 악세사리 모델 사용 여부 확인 (새로 추가)
         public async Task<object> CheckAccModelUsageAsync(string accTypeCode, string makerCode, string modelCode)
         {
@@ -5963,7 +5957,6 @@ else
     
     _context.EstimateAttachment.Add(excelAttachment);
 }
-
 await _context.SaveChangesAsync();
                 
                 return $"{outputFileName}";

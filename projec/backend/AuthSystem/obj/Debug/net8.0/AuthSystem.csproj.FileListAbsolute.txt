@@ -578,3 +578,4 @@ C:/Users/Administrator/Desktop/final_test/projec/backend/AuthSystem/obj/Debug/ne
 /Users/simjimin/Downloads/final_develop/projec/backend/AuthSystem/obj/Debug/net8.0/AuthSystem.pdb
 /Users/simjimin/Downloads/final_develop/projec/backend/AuthSystem/obj/Debug/net8.0/AuthSystem.genruntimeconfig.cache
 /Users/simjimin/Downloads/final_develop/projec/backend/AuthSystem/obj/Debug/net8.0/ref/AuthSystem.dll
+/Users/simjimin/Downloads/final_develop/projec/backend/AuthSystem/obj/Debug/net8.0/AuthSystem.sourcelink.json
