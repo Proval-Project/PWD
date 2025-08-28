@@ -668,7 +668,7 @@ const NewEstimateRequestPage: React.FC = () => {
     const item = bodyRatingList.find(item => item.ratingCode === ratingCode);
     return item ? item.ratingUnitCode : '';
   };
-  
+
   const getBodySizeName = (code: string, unit: string): string => {
     const item = bodySizeList.find(item => item.bodySizeCode === code && item.unitCode === unit);
     return item ? item.bodySize : '';
@@ -1484,39 +1484,39 @@ const NewEstimateRequestPage: React.FC = () => {
   };
 
   const createSavePayload = useCallback(() => {
-    // 전역 SheetNo 계산
-    let globalSheetNo = 1;
-    const sortedValves = valves.sort((a, b) => {
-      const typeOrderA = types.find(t => t.id === a.typeId)?.order || 0;
-      const typeOrderB = types.find(t => t.id === b.typeId)?.order || 0;
+      // 전역 SheetNo 계산
+      let globalSheetNo = 1;
+      const sortedValves = valves.sort((a, b) => {
+        const typeOrderA = types.find(t => t.id === a.typeId)?.order || 0;
+        const typeOrderB = types.find(t => t.id === b.typeId)?.order || 0;
+        
+        if (typeOrderA !== typeOrderB) {
+          return typeOrderA - typeOrderB;
+        }
+        return a.order - b.order;
+      });
       
-      if (typeOrderA !== typeOrderB) {
-        return typeOrderA - typeOrderB;
-      }
-      return a.order - b.order;
-    });
-
     const allTagNos = sortedValves.map(valve => {
       const tagNoData: any = {
         SheetID: valve.sheetID > 0 ? valve.sheetID : undefined,
         SheetNo: globalSheetNo++,
-        Tagno: valve.tagNo,
+                Tagno: valve.tagNo,
         valveSeriesCode: valve.body.typeCode,
-        Qty: valve.qty,
-        Medium: valve.fluid.medium,
-        Fluid: valve.fluid.fluid,
-        IsQM: valve.isQM,
-        QMUnit: valve.fluid.qm.unit,
+                Qty: valve.qty,
+                Medium: valve.fluid.medium,
+                Fluid: valve.fluid.fluid,
+                IsQM: valve.isQM, 
+                QMUnit: valve.fluid.qm.unit,
         QMMax: parseFloat(valve.fluid.qm.max.toString()) || 0,
         QMNor: parseFloat(valve.fluid.qm.normal.toString()) || 0,
         QMMin: parseFloat(valve.fluid.qm.min.toString()) || 0,
-        QNUnit: valve.fluid.qn.unit,
+                QNUnit: valve.fluid.qn.unit,
         QNMax: parseFloat(valve.fluid.qn.max.toString()) || 0,
         QNNor: parseFloat(valve.fluid.qn.normal.toString()) || 0,
         QNMin: parseFloat(valve.fluid.qn.min.toString()) || 0,
-        IsP2: valve.isP2,
-        IsDensity: valve.isDensity,
-        PressureUnit: valve.fluid.pressureUnit,
+                IsP2: valve.isP2,
+                IsDensity: valve.isDensity,
+                PressureUnit: valve.fluid.pressureUnit,
         InletPressureMaxQ: parseFloat(valve.fluid.p1.max.toString()) || 0,
         InletPressureNorQ: parseFloat(valve.fluid.p1.normal.toString()) || 0,
         InletPressureMinQ: parseFloat(valve.fluid.p1.min.toString()) || 0,
@@ -1526,23 +1526,23 @@ const NewEstimateRequestPage: React.FC = () => {
         DifferentialPressureMaxQ: parseFloat(valve.fluid.dp.max.toString()) || 0,
         DifferentialPressureNorQ: parseFloat(valve.fluid.dp.normal.toString()) || 0,
         DifferentialPressureMinQ: parseFloat(valve.fluid.dp.min.toString()) || 0,
-        TemperatureUnit: valve.fluid.temperatureUnit,
+                TemperatureUnit: valve.fluid.temperatureUnit,
         InletTemperatureQ: parseFloat(valve.fluid.t1.max.toString()) || 0,
         InletTemperatureNorQ: parseFloat(valve.fluid.t1.normal.toString()) || 0,
         InletTemperatureMinQ: parseFloat(valve.fluid.t1.min.toString()) || 0,
-        DensityUnit: 'kg/m³',
-        Density: parseFloat(valve.fluid.density) || 0,
-        MolecularWeightUnit: 'g/mol',
-        MolecularWeight: parseFloat(valve.fluid.molecular) || 0,
-        BodySizeUnit: valve.body.sizeUnit || null,
-        BodySize: getBodySizeCode(valve.body.size, valve.body.sizeUnit),
-        BodyMat: getBodyMatCode(valve.body.materialBody),
-        TrimMat: getTrimMatCode(valve.body.materialTrim),
-        TrimOption: getTrimOptionCode(valve.body.option),
-        BodyRating: getBodyRatingCode(valve.body.rating),
+                DensityUnit: 'kg/m³',
+                Density: parseFloat(valve.fluid.density) || 0,
+                MolecularWeightUnit: 'g/mol',
+                MolecularWeight: parseFloat(valve.fluid.molecular) || 0,
+                BodySizeUnit: valve.body.sizeUnit || null,
+                BodySize: getBodySizeCode(valve.body.size, valve.body.sizeUnit),
+                BodyMat: getBodyMatCode(valve.body.materialBody),
+                TrimMat: getTrimMatCode(valve.body.materialTrim),
+                TrimOption: getTrimOptionCode(valve.body.option),
+                BodyRating: getBodyRatingCode(valve.body.rating),
         BodyRatingUnit: getBodyRatingUnitCode(getBodyRatingCode(valve.body.rating)),
-        ActType: valve.actuator.type,
-        IsHW: valve.actuator.hw === 'Yes',
+                ActType: valve.actuator.type,
+                IsHW: valve.actuator.hw === 'Yes',
       };
 
       // IsPositioner 로직 수정: Type에 값이 있을 때만 true
@@ -1574,13 +1574,13 @@ const NewEstimateRequestPage: React.FC = () => {
         .map(valve => {
           // valveSeriesCode는 백엔드 전송 시 필요 없으므로 제거
           const { valveSeriesCode, ...rest } = valve;
-          return {
+            return {
             ValveName: valve.tagno,
             ValveSeriesCode: valve.valveSeriesCode,
             TagNos: [rest]
-          };
-        });
-      
+            };
+          });
+          
       return {
         Type: type.name,
         Valves: typeValves
@@ -1600,7 +1600,7 @@ const NewEstimateRequestPage: React.FC = () => {
   // 임시저장 기능
   const handleSaveDraft = async () => {
     // TempEstimateNo가 없으면 먼저 생성
-    let currentTempEstimateNo = tempEstimateNo; 
+    let currentTempEstimateNo = tempEstimateNo;
     if (!currentTempEstimateNo) {
       try {
         const response = await axios.post('http://localhost:5135/api/estimate/generate-temp-no', null, { params: { currentUserId: currentUser?.userId || 'admin' } });
@@ -2522,7 +2522,7 @@ const NewEstimateRequestPage: React.FC = () => {
                             disabled={!currentValve.body.sizeUnit || isReadOnly}
                           >
                             <option value="">선택하세요</option>
-                                        {currentValve.body.sizeUnit && bodySizeList
+                            {currentValve.body.sizeUnit && bodySizeList
               .filter(item => item.unitCode === currentValve.body.sizeUnit)
                               .map(item => (
                                 <option key={item.bodySizeCode} value={item.bodySizeCode}>
@@ -2546,7 +2546,7 @@ const NewEstimateRequestPage: React.FC = () => {
                             <option key={item.bodyMatCode} value={item.bodyMatCode}>
                               {item.bodyMat}
                             </option>
-                              ))}
+                          ))}
                         </select>
                       </div>
 

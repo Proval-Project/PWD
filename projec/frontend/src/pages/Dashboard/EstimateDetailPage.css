@@ -1976,3 +1976,47 @@
   flex-direction: column !important;
   flex-wrap: nowrap !important;
 }
+
+.detail-header-status-and-buttons .quote-actions .button-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-header-status-and-buttons .quote-actions button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+  min-width: 120px;
+  text-align: center;
+}
+
+.detail-header-status-and-buttons .quote-actions .start-btn,
+.detail-header-status-and-buttons .quote-actions .confirm-order-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.detail-header-status-and-buttons .quote-actions .complete-btn {
+  background-color: #007bff;
+  color: white;
+}
+
+.detail-header-status-and-buttons .quote-actions .cancel-btn-red,
+.detail-header-status-and-buttons .quote-actions .cancel-order-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.detail-header-status-and-buttons .quote-actions .cancel-order-btn {
+    padding: 20px 40px;
+    font-size: 16px;
+}
+
+/* Add some hover effects for better UX */
+.detail-header-status-and-buttons .quote-actions button:hover {
+  opacity: 0.9;
+}

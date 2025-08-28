@@ -2960,6 +2960,58 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
     }
   }, [selectedValve?.sheetID, tempEstimateNo, types, accModelList]); // types와 accModelList 추가
 
+  // 시작 취소 핸들러
+  const handleCancelStart = async () => {
+    if (!tempEstimateNo) return;
+    if (window.confirm('견적 시작을 취소하시겠습니까? 담당자 배정이 해제되고 "견적요청" 상태로 돌아갑니다.')) {
+      try {
+        const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/cancel-start`, {
+          method: 'POST',
+        });
+
+        if (response.ok) {
+          alert('견적 시작이 취소되었습니다.');
+          setCurrentStatus('견적요청');
+          loadExistingData(); // 데이터 새로고침
+        } else {
+          const errorText = await response.text();
+          alert(`시작 취소에 실패했습니다: ${errorText}`);
+        }
+      } catch (error) {
+        console.error('시작 취소 중 오류 발생:', error);
+        alert('시작 취소 처리 중 오류가 발생했습니다.');
+      }
+    }
+  };
+
+  // 주문 취소 핸들러
+  const handleCancelOrder = async () => {
+    if (!tempEstimateNo) return;
+    if (window.confirm('정말로 주문을 취소하시겠습니까? "견적완료" 상태로 돌아갑니다.')) {
+      try {
+        const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/order/cancel`, {
+          method: 'POST',
+        });
+
+        if (response.ok) {
+          alert('주문이 취소되었습니다.');
+          setCurrentStatus('견적완료');
+          loadExistingData(); // 데이터 새로고침
+        } else {
+          const errorText = await response.text();
+          alert(`주문 취소에 실패했습니다: ${errorText}`);
+        }
+      } catch (error) {
+        console.error('주문 취소 중 오류 발생:', error);
+        alert('주문 취소 처리 중 오류가 발생했습니다.');
+      }
+    }
+  };
+
+  if (isLoadingFiles) {
+    return <div className="loading">로딩 중...</div>;
+  }
+
   return (
     <div className="estimate-detail-page dashboard-page">
       {/* 헤더 */}
@@ -3012,25 +3064,35 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
         {/* 견적 시작/마감 버튼 컬럼 */}
         <div className="quote-actions">
           {(() => {
-            const isInProgress = currentStatus === '견적처리중';
-            const isCompleted = currentStatus === '견적완료';
-            if (!isInProgress && !isCompleted) {
-              return (<>
-                <button className="start-btn" onClick={handleStartQuote}>견적시작</button>
-                <button className="end-btn" onClick={handleEndQuote}>견적마감</button>
-              </>);
+            // 명확한 상태 기반 분기 처리
+            if (currentStatus === '견적요청') {
+              return (
+                <button className="btn btn-success" onClick={handleStartQuote}>견적시작</button>
+              );
             }
-            if (isInProgress && !isCompleted) {
-              return (<>
-                <button className="complete-btn" onClick={handleCompleteQuote}>견적완료</button>
-                <button className="end-btn" onClick={handleEndQuote}>견적마감</button>
-              </>);
+            if (currentStatus === '견적처리중') {
+              return (
+                <div className="button-column">
+                  <button className="btn btn-primary" onClick={handleCompleteQuote}>견적완료</button>
+                  <button className="btn btn-danger" onClick={handleCancelStart}>시작취소</button>
+                </div>
+              );
             }
-            return (<>
-              <button className="start-btn done" onClick={handleCancelComplete}>완료취소</button>
-              <button className="end-btn done-order" onClick={handleConfirmOrder}>주문확정</button>
-              <button className="end-btn" onClick={handleEndQuote}>견적마감</button>
-            </>);
+            if (currentStatus === '견적완료') {
+              return (
+                <div className="button-column">
+                  <button className="btn btn-success" onClick={handleConfirmOrder}>주문확정</button>
+                  <button className="btn btn-danger" onClick={handleCancelComplete}>완료취소</button>
+                </div>
+              );
+            }
+            if (currentStatus === '주문') {
+              return (
+                <button className="btn btn-danger" onClick={handleCancelOrder}>주문취소</button>
+              );
+            }
+            // 그 외의 경우 (로딩 중 등)는 버튼을 표시하지 않음
+            return null;
           })()}
         </div>
       </div>

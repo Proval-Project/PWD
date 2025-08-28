@@ -1856,6 +1856,25 @@ namespace EstimateRequestSystem.Services
             return true;
         }
 
+        public async Task<bool> CancelOrderAsync(string tempEstimateNo)
+        {
+            var sheet = await _context.EstimateSheetLv1.FirstOrDefaultAsync(x => x.TempEstimateNo == tempEstimateNo);
+            if (sheet == null) return false;
+            sheet.Status = (int)EstimateStatus.Completed; // 견적완료
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> CancelStartAsync(string tempEstimateNo)
+        {
+            var sheet = await _context.EstimateSheetLv1.FirstOrDefaultAsync(x => x.TempEstimateNo == tempEstimateNo);
+            if (sheet == null) return false;
+            sheet.Status = (int)EstimateStatus.Requested; // 견적요청
+            sheet.ManagerID = null;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         // 임시저장 목록 조회
         public async Task<EstimateInquiryResponseDto> GetDraftEstimatesAsync(EstimateInquiryRequestDto request, string currentUserId, string? customerId = null)
         {

@@ -1,3 +1,17 @@
+/* NewEstimateRequest.css */
+
+/* 유체 조건 테이블의 숫자 입력 필드에서 스피너(업/다운 화살표) 숨기기 및 스타일 조정 */
+.new-estimate-request-page .fluid-conditions-table input[type="number"] {
+  font-size: 14px !important; /* 글자 크기 키우기 */
+  -moz-appearance: textfield; /* Firefox */
+}
+
+.new-estimate-request-page .fluid-conditions-table input[type="number"]::-webkit-inner-spin-button,
+.new-estimate-request-page .fluid-conditions-table input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none; /* Chrome, Safari, Edge */
+  margin: 0;
+}
+
 /* 상단 컴팩트 파일명 미리보기 */
 .compact-file-list {
   margin: 4px 0 0 0;
@@ -626,9 +640,10 @@ div.type-item.selected {
   font-weight: 600;
   font-size: 8px !important;
 }
-.spec-grid {
+
+.spec-content .spec-grid {
   display: grid !important;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  grid-template-columns: 2fr 1fr 1fr !important;
   grid-auto-flow: row !important;
   gap: 0px !important;
   align-items: start !important;
@@ -769,7 +784,7 @@ div.type-item.selected {
 }
 
 .acc-section {
-  grid-column: 1 / -1;
+
   background-color: white;
   padding: 20px;
   border-radius: 8px;
@@ -1524,7 +1539,7 @@ div.type-item.selected {
 }
 
 /* 카드 내부 그리드 간격 축소 */
-.specification-grid .spec-grid { gap: 6px !important; }
+.new-estimate-request-page .spec-grid { gap: 6px !important; }
 
 /* Fluid/ACC 등 섹션 내부 행 간격 축소 */
 .specification-grid .fluid-section { padding: 6px !important; }

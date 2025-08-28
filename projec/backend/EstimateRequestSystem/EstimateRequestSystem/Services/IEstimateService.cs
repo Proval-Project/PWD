@@ -78,6 +78,8 @@ namespace EstimateRequestSystem.Services
         Task<string?> CompleteEstimateAsync(string tempEstimateNo);
         Task<bool> CancelCompletionAsync(string tempEstimateNo);
         Task<bool> ConfirmOrderAsync(string tempEstimateNo);
+        Task<bool> CancelOrderAsync(string tempEstimateNo);
+        Task<bool> CancelStartAsync(string tempEstimateNo);
 
         // 파일 생성 메서드들
         Task<string> GenerateCVListAsync(string tempEstimateNo);

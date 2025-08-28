@@ -835,6 +835,38 @@ namespace EstimateRequestSystem.Controllers
             }
         }
 
+        // 주문 취소 → 완료 상태로 되돌리기
+        [HttpPost("sheets/{tempEstimateNo}/order/cancel")]
+        public async Task<IActionResult> CancelOrder(string tempEstimateNo)
+        {
+            try
+            {
+                var ok = await _estimateService.CancelOrderAsync(tempEstimateNo);
+                if (!ok) return NotFound(new { message = "견적을 찾을 수 없습니다." });
+                return Ok(new { statusText = "견적완료" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        // 시작 취소 -> 견적요청 상태로 되돌리기
+        [HttpPost("sheets/{tempEstimateNo}/cancel-start")]
+        public async Task<IActionResult> CancelStart(string tempEstimateNo)
+        {
+            try
+            {
+                var ok = await _estimateService.CancelStartAsync(tempEstimateNo);
+                if (!ok) return NotFound(new { message = "견적을 찾을 수 없습니다." });
+                return Ok(new { statusText = "견적요청" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
                     // 사양 저장
             [HttpPost("sheets/{tempEstimateNo}/requests/{sheetID}/specification")]
             public async Task<ActionResult> SaveSpecification(string tempEstimateNo, int sheetID, [FromBody] SaveSpecificationRequestDto specification) // DTO 변경
