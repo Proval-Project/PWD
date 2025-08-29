@@ -2736,11 +2736,11 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                         <option value="">Unit 선택</option>
                         {trimPortSizeList && trimPortSizeList.length > 0 && 
                           trimPortSizeList
-                            .map(item => item.unitCode)
-                            .filter((unit, index, arr) => arr.indexOf(unit) === index)
-                            .map((unit: string) => (
-                              <option key={unit} value={unit}>
-                                {unit}
+                            .map(item => ({ unitCode: item.unitCode, unitName: item.unitName }))
+                            .filter((item, index, arr) => arr.findIndex(x => x.unitCode === item.unitCode) === index)
+                            .map((item: any) => (
+                              <option key={item.unitCode} value={item.unitCode}>
+                                {item.unitName}
                               </option>
                             ))
                         }
