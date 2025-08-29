@@ -59,6 +59,12 @@ const EstimateInquiryPage: React.FC = () => {
         params.customerID = user.userId;
         console.log('고객 권한으로 조회 - CustomerID(UserID):', user.userId);
       }
+      
+      // 모든 사용자가 자신이 작성한 견적만 조회하도록 writerID 필터 추가
+      if (user && user.userId) {
+        params.writerID = user.userId;
+        console.log('작성자 필터 추가 - WriterID(UserID):', user.userId);
+      }
 
       console.log('API 요청 파라미터:', params); // 디버깅용
       const response = await getEstimateInquiry(params);

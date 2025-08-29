@@ -1247,7 +1247,7 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
         return m ? `${m[1]}.${m[2]}.${m[3]}` : '-';
       };
 
-      setSummaryEstimateNo(curNo ?? '-');
+      setSummaryEstimateNo(curNo ?? (tempNo || '-'));
       setSummaryCompanyName(customerName);
       setSummaryRequesterName(customerUserName); // 요청자 = User.Name
       setSummaryRequestDate(parseFromTemp(tempNo));

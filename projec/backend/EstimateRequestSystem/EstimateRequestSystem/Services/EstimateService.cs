@@ -1807,6 +1807,12 @@ namespace EstimateRequestSystem.Services
                 processedData = processedData.Where(x => x.CustomerID == request.CustomerID);
             }
 
+            // 작성자 ID 필터 (자신이 작성한 견적만 조회)
+            if (!string.IsNullOrEmpty(request.WriterID))
+            {
+                processedData = processedData.Where(x => x.WriterID == request.WriterID);
+            }
+
             // 전체 개수 계산
             var totalCount = processedData.Count();
 
