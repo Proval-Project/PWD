@@ -38,6 +38,7 @@ export interface EstimateInquiryItem {
   writerID: string; // 작성자 ID (수정 권한 확인용)
   managerID?: string; // 담당자 ID
   managerName?: string; // 담당자 이름
+  customerRequirement?: string; // 고객 요구사항
 }
 
 // 견적 요청 조회 API

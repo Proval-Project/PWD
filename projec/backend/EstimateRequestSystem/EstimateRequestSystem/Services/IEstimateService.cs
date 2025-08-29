@@ -7,6 +7,7 @@ namespace EstimateRequestSystem.Services
     {
         // EstimateSheet operations
         Task<string> CreateEstimateSheetAsync(CreateEstimateSheetDto dto, string currentUserId);
+        Task<string> CreateEstimateSheetFromExistingAsync(CreateEstimateSheetDto dto, string currentUserId, string existingEstimateNo);
         Task<EstimateSheetResponseDto?> GetEstimateSheetAsync(string tempEstimateNo);
         Task<List<EstimateSheetListResponseDto>> GetEstimateSheetsByStatusAsync(int status);
         Task<List<EstimateSheetListResponseDto>> GetEstimateSheetsByUserAsync(string userID);
@@ -33,6 +34,7 @@ namespace EstimateRequestSystem.Services
         Task<byte[]> DownloadAttachmentAsync(int attachmentID);
 
         // Utility methods
+        Task<string> GenerateTempEstimateNoOnlyAsync();
         Task<string> GenerateTempEstimateNoAsync();
         Task<int> GetNextSheetIDAsync(string tempEstimateNo);
         Task<bool> IsDuplicateFileNameAsync(string tempEstimateNo, string fileName);

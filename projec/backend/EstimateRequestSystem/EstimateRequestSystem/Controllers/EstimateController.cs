@@ -31,6 +31,30 @@ namespace EstimateRequestSystem.Controllers
             }
         }
 
+        // 기존 견적에서 새로운 견적 생성 (재문의용)
+        [HttpPost("sheets/reinquiry")]
+        public async Task<ActionResult<string>> CreateEstimateSheetFromExisting(CreateEstimateSheetDto dto, [FromQuery] string currentUserId, [FromQuery] string existingEstimateNo)
+        {
+            try
+            {
+                Console.WriteLine($"🔍 CreateEstimateSheetFromExisting 호출됨");
+                Console.WriteLine($"🔍 dto: {System.Text.Json.JsonSerializer.Serialize(dto)}");
+                Console.WriteLine($"🔍 currentUserId: {currentUserId}");
+                Console.WriteLine($"🔍 existingEstimateNo: {existingEstimateNo}");
+                
+                var tempEstimateNo = await _estimateService.CreateEstimateSheetFromExistingAsync(dto, currentUserId, existingEstimateNo);
+                Console.WriteLine($"🔍 새로운 견적 번호 생성됨: {tempEstimateNo}");
+                
+                return CreatedAtAction(nameof(GetEstimateSheet), new { tempEstimateNo }, tempEstimateNo);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ CreateEstimateSheetFromExisting 오류: {ex.Message}");
+                Console.WriteLine($"❌ 스택 트레이스: {ex.StackTrace}");
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         // GET: api/estimate/sheets/{tempEstimateNo}
         [HttpGet("sheets/{tempEstimateNo}")]
         public async Task<IActionResult> GetEstimateSheet(string tempEstimateNo)

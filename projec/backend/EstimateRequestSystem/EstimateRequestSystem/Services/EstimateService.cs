@@ -84,6 +84,73 @@ namespace EstimateRequestSystem.Services
             return tempEstimateNo;
         }
 
+        // 기존 견적에서 새로운 견적 생성 (재문의용)
+        public async Task<string> CreateEstimateSheetFromExistingAsync(CreateEstimateSheetDto dto, string currentUserId, string existingEstimateNo)
+        {
+            Console.WriteLine($"🔍 CreateEstimateSheetFromExistingAsync 시작");
+            Console.WriteLine($"🔍 dto.Project: {dto.Project}");
+            Console.WriteLine($"🔍 dto.CustomerRequirement: {dto.CustomerRequirement}");
+            Console.WriteLine($"🔍 currentUserId: {currentUserId}");
+            Console.WriteLine($"🔍 existingEstimateNo: {existingEstimateNo}");
+            
+            // 기존 견적 정보 조회 (먼저 조회)
+            var existingEstimate = await _context.EstimateSheetLv1
+                .FirstOrDefaultAsync(es => es.TempEstimateNo == existingEstimateNo || es.CurEstimateNo == existingEstimateNo);
+            
+            Console.WriteLine($"🔍 기존 견적 조회 결과: {(existingEstimate != null ? "찾음" : "찾지 못함")}");
+            if (existingEstimate != null)
+            {
+                Console.WriteLine($"🔍 기존 견적 TempEstimateNo: {existingEstimate.TempEstimateNo}");
+                Console.WriteLine($"🔍 기존 견적 CurEstimateNo: {existingEstimate.CurEstimateNo}");
+            }
+            
+            // prevEstimateNo 설정: CurEstimateNo가 있으면 CurEstimateNo, 없으면 TempEstimateNo
+            string prevEstimateNo = string.Empty;
+            if (existingEstimate != null)
+            {
+                if (!string.IsNullOrEmpty(existingEstimate.CurEstimateNo))
+                {
+                    prevEstimateNo = existingEstimate.CurEstimateNo;
+                    Console.WriteLine($"🔍 prevEstimateNo 설정: CurEstimateNo 사용 - {prevEstimateNo}");
+                }
+                else
+                {
+                    prevEstimateNo = existingEstimate.TempEstimateNo;
+                    Console.WriteLine($"🔍 prevEstimateNo 설정: TempEstimateNo 사용 - {prevEstimateNo}");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"⚠️ 기존 견적을 찾을 수 없음: {existingEstimateNo}");
+            }
+            
+            // Change Tracker 초기화 (기존 견적 조회 후)
+            _context.ChangeTracker.Clear();
+            
+            // 새로운 견적 번호만 생성 (데이터베이스에 레코드 생성하지 않음)
+            var tempEstimateNo = await GenerateTempEstimateNoOnlyAsync();
+            Console.WriteLine($"🔍 새로운 TempEstimateNo 생성됨: {tempEstimateNo}");
+            
+            var estimateSheet = new EstimateSheetLv1
+            {
+                TempEstimateNo = tempEstimateNo,
+                CustomerID = currentUserId,
+                WriterID = currentUserId,
+                Status = 1, // 임시저장
+                Project = dto.Project,
+                CustomerRequirement = dto.CustomerRequirement,
+                PrevEstimateNo = prevEstimateNo // 기존 견적 번호 설정
+            };
+
+            Console.WriteLine($"🔍 새로운 EstimateSheet 생성: {System.Text.Json.JsonSerializer.Serialize(estimateSheet)}");
+            
+            _context.EstimateSheetLv1.Add(estimateSheet);
+            await _context.SaveChangesAsync();
+            
+            Console.WriteLine($"🔍 데이터베이스 저장 완료");
+            return tempEstimateNo;
+        }
+
         // 임시저장 기능
         public async Task<bool> SaveDraftAsync(string tempEstimateNo, SaveDraftDto dto)
         {
@@ -261,8 +328,8 @@ namespace EstimateRequestSystem.Services
             // EstimateSheet 업데이트
             estimateSheet.Project = dto.Project;
             estimateSheet.CustomerRequirement = dto.CustomerRequirement;
-            estimateSheet.CustomerID = dto.CustomerID ?? "customer1"; // 기본값 설정
-            estimateSheet.WriterID = dto.WriterID ?? "customer1"; // 기본값 설정
+            estimateSheet.CustomerID = dto.CustomerID;
+            estimateSheet.WriterID = dto.WriterID;
             estimateSheet.Status = (int)EstimateStatus.Draft; // 임시저장
 
             await _context.SaveChangesAsync();
@@ -1187,6 +1254,37 @@ namespace EstimateRequestSystem.Services
         }
 
         // Utility methods
+        
+        // 견적 번호만 생성 (데이터베이스에 레코드 생성하지 않음)
+        public async Task<string> GenerateTempEstimateNoOnlyAsync()
+        {
+            var today = DateTime.Now;
+            var datePrefix = today.ToString("yyyyMMdd");
+            
+            // 오늘 날짜로 생성된 TempEstimateNo 중 가장 큰 번호 찾기
+            var existingNumbers = await _context.EstimateSheetLv1
+                .Where(es => es.TempEstimateNo.StartsWith($"TEMP{datePrefix}-"))
+                .Select(es => es.TempEstimateNo)
+                .ToListAsync();
+
+            int maxNumber = 0;
+            foreach (var number in existingNumbers)
+            {
+                var parts = number.Split('-');
+                if (parts.Length == 2 && int.TryParse(parts[1], out int num))
+                {
+                    maxNumber = Math.Max(maxNumber, num);
+                }
+            }
+
+            var nextNumber = maxNumber + 1;
+            var tempEstimateNo = $"TEMP{datePrefix}-{nextNumber:D3}";
+
+            Console.WriteLine($"새로운 TempEstimateNo 생성 (번호만): {tempEstimateNo}");
+            
+            return tempEstimateNo;
+        }
+        
         public async Task<string> GenerateTempEstimateNoAsync()
         {
             var today = DateTime.Now;
