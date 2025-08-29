@@ -139,6 +139,7 @@ function App() {
           <Route path="accessory-management" element={<NewAccessoryManagementPage />} />
           <Route path="estimate-requests" element={<EstimateInquiryPage />} />
           <Route path="existing-estimate-reinquiry" element={<ExistingEstimateReInquiryPage />} />
+          <Route path="estimate-detail/:tempEstimateNo" element={<EstimateDetailPage />} />
         </Route>
 
         {/* 권한별 메인 페이지 라우트들 */}
