@@ -3689,6 +3689,11 @@ namespace EstimateRequestSystem.Services
                             return false;
                             _context.AirsetMakerList.Add(new AirsetMakerList { AccMakerCode = makerCode, AccMakerName = maker });
                         break;
+                    case "Volume":
+                        if (await _context.VolumeMakerList.AnyAsync(m => m.AccMakerCode == makerCode))
+                            return false;
+                        _context.VolumeMakerList.Add(new VolumeMakerList { AccMakerCode = makerCode, AccMakerName = maker });
+                        break;
                     case "Airoperate":
                         if (await _context.AiroperateMakerList.AnyAsync(m => m.AccMakerCode == makerCode))
                             return false;
@@ -3748,6 +3753,13 @@ namespace EstimateRequestSystem.Services
                     case "Airset":
                         {
                             var existing = await _context.AirsetMakerList.FirstOrDefaultAsync(m => m.AccMakerCode == makerCode);
+                            if (existing == null) return false;
+                            existing.AccMakerName = maker;
+                        }
+                        break;
+                    case "Volume":
+                        {
+                            var existing = await _context.VolumeMakerList.FirstOrDefaultAsync(m => m.AccMakerCode == makerCode);
                             if (existing == null) return false;
                             existing.AccMakerName = maker;
                         }

@@ -171,13 +171,30 @@ const NewAccessoryManagementPage: React.FC = () => {
         } else if (activeTab === 'accessory') {
             const accTypeCode = accessorySections.find(s => s.id === selectedAccessorySection)?.apiId;
             
-            if (!accTypeCode) return;
+            console.log('🔍 Volume B 디버그 - activeTab:', activeTab);
+            console.log('🔍 Volume B 디버그 - selectedAccessorySection:', selectedAccessorySection);
+            console.log('🔍 Volume B 디버그 - accTypeCode:', accTypeCode);
+            
+            if (!accTypeCode) {
+                console.log('❌ Volume B 디버그 - accTypeCode가 없음');
+                return;
+            }
 
             // Fetch Makers only
+            console.log('🔍 Volume B 디버그 - Maker API 호출 시작:', `${API_BASE_URL}/acc/maker?accTypeCode=${accTypeCode}`);
             const makerResponse = await fetch(`${API_BASE_URL}/acc/maker?accTypeCode=${accTypeCode}`);
-            if (!makerResponse.ok) throw new Error(`Failed to fetch ${accTypeCode} maker data`);
+            console.log('🔍 Volume B 디버그 - Maker API 응답 상태:', makerResponse.status, makerResponse.ok);
+            
+            if (!makerResponse.ok) {
+                console.log('❌ Volume B 디버그 - Maker API 실패:', makerResponse.statusText);
+                throw new Error(`Failed to fetch ${accTypeCode} maker data`);
+            }
+            
             const makers = await makerResponse.json();
+            console.log('🔍 Volume B 디버그 - Maker API 응답 데이터:', makers);
+            
             const formattedMakers = makers.map((item: any) => ({ code: item.accMakerCode, name: item.accMakerName }));
+            console.log('🔍 Volume B 디버그 - 포맷된 Maker 데이터:', formattedMakers);
             setMakerData(formattedMakers);
             
             // Clear models when accessory section changes
@@ -321,18 +338,37 @@ const NewAccessoryManagementPage: React.FC = () => {
     setError(null);
     try {
         const accTypeCode = accessorySections.find(s => s.id === selectedAccessorySection)?.apiId;
-        if (!accTypeCode) return;
+        console.log('🔍 Volume B 디버그 - fetchModelsForMaker 시작');
+        console.log('🔍 Volume B 디버그 - makerCode:', makerCode);
+        console.log('🔍 Volume B 디버그 - accTypeCode:', accTypeCode);
         
+        if (!accTypeCode) {
+            console.log('❌ Volume B 디버그 - fetchModelsForMaker에서 accTypeCode가 없음');
+            return;
+        }
+        
+        console.log('🔍 Volume B 디버그 - Model API 호출 시작:', `${API_BASE_URL}/acc/model?accTypeCode=${accTypeCode}&accMakerCode=${String(makerCode)}`);
         const modelResponse = await fetch(`${API_BASE_URL}/acc/model?accTypeCode=${accTypeCode}&accMakerCode=${String(makerCode)}`);
-        if (!modelResponse.ok) throw new Error(`Failed to fetch models for maker ${makerCode}`);
+        console.log('🔍 Volume B 디버그 - Model API 응답 상태:', modelResponse.status, modelResponse.ok);
+        
+        if (!modelResponse.ok) {
+            console.log('❌ Volume B 디버그 - Model API 실패:', modelResponse.statusText);
+            throw new Error(`Failed to fetch models for maker ${makerCode}`);
+        }
+        
         const models = await modelResponse.json();
-        setModelData(models.map((item: any) => ({ 
+        console.log('🔍 Volume B 디버그 - Model API 응답 데이터:', models);
+        
+        const formattedModels = models.map((item: any) => ({ 
             code: item.accModelCode, 
             name: item.accModelName, 
             spec: item.accSize || 'N/A'
-        })));
+        }));
+        console.log('🔍 Volume B 디버그 - 포맷된 Model 데이터:', formattedModels);
+        setModelData(formattedModels);
 
     } catch (err) {
+        console.log('❌ Volume B 디버그 - fetchModelsForMaker 오류:', err);
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
         setModelData([]);
     } finally {
@@ -357,6 +393,8 @@ const NewAccessoryManagementPage: React.FC = () => {
   }, [activeTab, selectedBodySection, selectedAccessorySection, selectedUnitCode, selectedBodySizeUnitCode, selectedTrimPortSizeUnitCode, selectedTrimSection]); // Remove fetchData from dependencies to prevent infinite loop
 
   const handleMakerSelect = (makerCode: string) => {
+      console.log('🔍 Volume B 디버그 - handleMakerSelect 호출됨');
+      console.log('🔍 Volume B 디버그 - 선택된 makerCode:', makerCode);
       setSelectedMakerCode(makerCode);
       fetchModelsForMaker(makerCode);
   }
