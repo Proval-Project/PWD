@@ -707,6 +707,24 @@ namespace EstimateRequestSystem.Controllers
             }
         }
 
+        // 견적관리 목록 조회 (임시저장 제외)
+        [HttpGet("management")]
+        public async Task<ActionResult<EstimateInquiryResponseDto>> GetEstimateManagement(
+            [FromQuery] EstimateInquiryRequestDto request,
+            [FromQuery] string currentUserId,
+            [FromQuery] string? customerId = null)
+        {
+            try
+            {
+                var result = await _estimateService.GetEstimateManagementAsync(request, currentUserId, customerId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         // 견적 상태 업데이트
         [HttpPut("sheets/{tempEstimateNo}/status")]
         public async Task<ActionResult> UpdateEstimateStatus(string tempEstimateNo, [FromBody] UpdateStatusRequest request)

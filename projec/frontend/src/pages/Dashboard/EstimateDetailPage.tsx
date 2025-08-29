@@ -469,11 +469,59 @@ const EstimateDetailPage: React.FC = () => {
                   useEffect(() => {
                     const sid = selectedValve?.sheetID as number | undefined;
                     if (!sid) return;
-                    setBodySelections(bodySelectionsBySheet[sid] ?? INITIAL_BODY);
-                    setTrimSelections(trimSelectionsBySheet[sid] ?? INITIAL_TRIM);
-                    setActSelections(actSelectionsBySheet[sid] ?? INITIAL_ACT);
-                    setAccSelections(accSelectionsBySheet[sid] ?? INITIAL_ACC);
+                    
+                    // 저장된 데이터가 있으면 해당 데이터 사용, 없으면 현재 상태 유지
+                    const savedBodySelections = bodySelectionsBySheet[sid];
+                    const savedTrimSelections = trimSelectionsBySheet[sid];
+                    const savedActSelections = actSelectionsBySheet[sid];
+                    const savedAccSelections = accSelectionsBySheet[sid];
+                    
+                    if (savedBodySelections) {
+                      setBodySelections(savedBodySelections);
+                    }
+                    if (savedTrimSelections) {
+                      setTrimSelections(savedTrimSelections);
+                    }
+                    if (savedActSelections) {
+                      setActSelections(savedActSelections);
+                    }
+                    if (savedAccSelections) {
+                      setAccSelections(savedAccSelections);
+                    }
                   }, [selectedValve?.sheetID, bodySelectionsBySheet, trimSelectionsBySheet, actSelectionsBySheet, accSelectionsBySheet]);
+
+                  // selectedValve 변경 시 해당 TAG의 데이터 로드 (한 번만)
+                  useEffect(() => {
+                    const sid = selectedValve?.sheetID as number | undefined;
+                    if (!sid) return;
+                    
+                    // 해당 TAG의 저장된 데이터가 있으면 로드, 없으면 현재 상태 유지
+                    const savedBodySelections = bodySelectionsBySheet[sid];
+                    const savedTrimSelections = trimSelectionsBySheet[sid];
+                    const savedActSelections = actSelectionsBySheet[sid];
+                    const savedAccSelections = accSelectionsBySheet[sid];
+                    
+                    // 저장된 데이터가 있으면 해당 데이터 사용, 없으면 현재 상태 유지
+                    if (savedBodySelections) {
+                      setBodySelections(prev => ({ ...prev, ...savedBodySelections }));
+                    }
+                    if (savedTrimSelections) {
+                      setTrimSelections(prev => ({ ...prev, ...savedTrimSelections }));
+                    }
+                    if (savedActSelections) {
+                      setActSelections(prev => ({ ...prev, ...savedActSelections }));
+                    }
+                    if (savedAccSelections) {
+                      setAccSelections(prev => ({ ...prev, ...savedAccSelections }));
+                    }
+                    
+                    // 액트 시리즈가 있으면 사이즈 목록 가져오기
+                    if (savedActSelections?.series) {
+                      fetchActSizeList(savedActSelections.series);
+                    } else {
+                      setActSizeList([]);
+                    }
+                  }, [selectedValve?.sheetID]); // 의존성 배열 단순화
 
                   // 상태 및 프로젝트 정보
   const [projectName, setProjectName] = useState<string>('');
@@ -722,7 +770,9 @@ const EstimateDetailPage: React.FC = () => {
                     // Body 섹션 이벤트 핸들러들
                   const handleBodyChange = (field: string, value: string) => {
                     setBodySelections(prev => {
-                      const newSelections = { ...prev, [field]: value } as any;
+                      // 기존 값들을 모두 유지하면서 특정 필드만 업데이트
+                      const newSelections = { ...prev, [field]: value };
+                      
                       // 기존 동기화 로직 유지...
                       if (field === 'bonnetType') {
                         const selectedItem = bodyBonnetList.find(item => item.bonnetCode === value);
@@ -736,11 +786,23 @@ const EstimateDetailPage: React.FC = () => {
                         const selectedItem = bodyConnectionList.find(item => item.connectionCode === value);
                         if (selectedItem) newSelections.connectionCode = selectedItem.connectionCode;
                       }
-                      if (field === 'sizeBodyUnit') { newSelections.sizeBody = ''; newSelections.sizeBodyCode = ''; }
-                      if (field === 'ratingUnit') { newSelections.rating = ''; newSelections.ratingCode = ''; }
+                      if (field === 'sizeBodyUnit') { 
+                        newSelections.sizeBody = ''; 
+                        newSelections.sizeBodyCode = ''; 
+                      }
+                      if (field === 'ratingUnit') { 
+                        newSelections.rating = ''; 
+                        newSelections.ratingCode = ''; 
+                      }
+                      
                       // 맵에 반영
                       const sid = selectedValve?.sheetID;
-                      if (sid) setBodySelectionsBySheet((prevMap: any) => ({ ...prevMap, [sid]: newSelections }));
+                      if (sid) {
+                        setBodySelectionsBySheet((prevMap: any) => ({
+                          ...prevMap,
+                          [sid]: newSelections
+                        }));
+                      }
                       return newSelections;
                     });
                   };
@@ -748,9 +810,35 @@ const EstimateDetailPage: React.FC = () => {
                     // Trim 섹션 이벤트 핸들러들
                   const handleTrimChange = (field: string, value: string) => {
                     setTrimSelections(prev => {
-                      const newSelections = { ...prev, [field]: value } as any;
+                      // 기존 값들을 모두 유지하면서 특정 필드만 업데이트
+                      const newSelections = { ...prev, [field]: value };
+                      
+                      // 기존 동기화 로직 유지...
+                      if (field === 'trimType') {
+                        const selectedItem = trimTypeList.find(item => item.trimTypeCode === value);
+                        if (selectedItem) newSelections.trimTypeCode = selectedItem.trimTypeCode;
+                      }
+                      if (field === 'materialTrim') {
+                        const selectedItem = trimMatList.find(item => item.trimMatCode === value);
+                        if (selectedItem) newSelections.materialTrimCode = selectedItem.trimMatCode;
+                      }
+                      if (field === 'sizePortUnit') { 
+                        newSelections.sizePort = ''; 
+                        newSelections.sizePortCode = ''; 
+                      }
+                      if (field === 'sizePortUnitCode') { 
+                        newSelections.sizePort = ''; 
+                        newSelections.sizePortCode = ''; 
+                      }
+                      
+                      // 맵에 반영
                       const sid = selectedValve?.sheetID;
-                      if (sid) setTrimSelectionsBySheet((prevMap: any) => ({ ...prevMap, [sid]: newSelections }));
+                      if (sid) {
+                        setTrimSelectionsBySheet((prevMap: any) => ({
+                          ...prevMap,
+                          [sid]: newSelections
+                        }));
+                      }
                       return newSelections;
                     });
                   };
@@ -758,9 +846,28 @@ const EstimateDetailPage: React.FC = () => {
                     // ACT 섹션 이벤트 핸들러들
                   const handleActChange = (field: string, value: string) => {
                     setActSelections(prev => {
-                      const newSelections = { ...prev, [field]: value } as any;
+                      // 기존 값들을 모두 유지하면서 특정 필드만 업데이트
+                      const newSelections = { ...prev, [field]: value };
+                      
+                      // 시리즈가 변경되면 사이즈만 초기화 (다른 값들은 유지)
+                      if (field === 'series') {
+                        newSelections.size = '';
+                        // 액트 사이즈 목록 새로 가져오기
+                        if (value) {
+                          fetchActSizeList(value);
+                        } else {
+                          setActSizeList([]);
+                        }
+                      }
+                      
+                      // 맵에 반영 - 기존 데이터 유지하면서 업데이트
                       const sid = selectedValve?.sheetID;
-                      if (sid) setActSelectionsBySheet((prevMap: any) => ({ ...prevMap, [sid]: newSelections }));
+                      if (sid) {
+                        setActSelectionsBySheet((prevMap: any) => ({
+                          ...prevMap,
+                          [sid]: newSelections
+                        }));
+                      }
                       return newSelections;
                     });
                   };
@@ -1114,7 +1221,7 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
   };
 
   // 품번 생성 함수 - 섹션별로 구분
-  const generatePartNumber = useMemo(() => {
+  const generatePartNumber = useCallback(() => {
     try {
       // BODY 섹션 (6자리) - 코드 사용
       const bodySection = [
@@ -1138,10 +1245,10 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
       
       // ACT 섹션 (4자리) - 코드 사용
       const actSection = [
-        actSelections.actionTypeCode || '0',
-        actSelections.seriesCode || '0',
-        actSelections.sizeCode || '0',
-        actSelections.hwCode || '0'
+        actSelections.actionType || '0',
+        actSelections.series || '0',
+        actSelections.size || '0',
+        actSelections.hw || '0'
       ].join('');
       
       // ACC 섹션 (11자리)
@@ -3204,15 +3311,20 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
 
   // 악세사리 변경 핸들러
   const handleAccessoryChange = (accTypeKey: string, accessory: any) => {
-    setAccSelections(prev => ({
-      ...prev,
-      [accTypeKey]: accessory
-    }));
-    const sid = selectedValve?.sheetID;
-    if (sid) setAccSelectionsBySheet((prevMap: any) => ({
-      ...prevMap,
-      [sid]: { ...(prevMap?.[sid] ?? accSelections), [accTypeKey]: accessory }
-    }));
+    setAccSelections(prev => {
+      // 기존 악세사리 값들을 모두 유지하면서 특정 타입만 업데이트
+      const newSelections = { ...prev, [accTypeKey]: accessory };
+      
+      // 맵에 반영
+      const sid = selectedValve?.sheetID;
+      if (sid) {
+        setAccSelectionsBySheet((prevMap: any) => ({
+          ...prevMap,
+          [sid]: newSelections
+        }));
+      }
+      return newSelections;
+    });
   };
 
   // 액추에이터 변경 핸들러
@@ -3363,7 +3475,7 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
         <div className="part-number-section">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">생성된 품번</h3>
           <div className="part-number-single-line">
-            {generatePartNumber.split('').map((char, index) => (
+            {generatePartNumber().split('').map((char: string, index: number) => (
               <div 
                 key={index}
                 className={`char-box ${char === '0' ? 'empty-char' : 'filled-char'}`}

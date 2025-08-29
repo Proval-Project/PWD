@@ -420,3 +420,19 @@ export const assignEstimate = async (tempEstimateNo: string, managerId: string) 
   });
   return response.json();
 };
+
+// 견적요청 조회 API
+export const getEstimateInquiry = async (params: any, currentUserId: string, customerId?: string): Promise<any> => {
+  const response = await axios.get(`${ESTIMATE_API_BASE_URL}/estimate/inquiry`, { 
+    params: { ...params, currentUserId, customerId } 
+  });
+  return response.data;
+};
+
+// 견적관리 페이지용 API - 임시저장 제외한 상태 조회
+export const getEstimateManagement = async (params: any, currentUserId: string, customerId?: string): Promise<any> => {
+  const response = await axios.get(`${ESTIMATE_API_BASE_URL}/estimate/management`, { 
+    params: { ...params, currentUserId, customerId } 
+  });
+  return response.data;
+};

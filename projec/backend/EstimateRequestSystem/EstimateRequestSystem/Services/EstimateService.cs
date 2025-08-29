@@ -2051,11 +2051,9 @@ namespace EstimateRequestSystem.Services
                 RequestDate = ParseDateFromTempEstimateNo(x.TempEstimateNo)
             }).AsQueryable();
 
-            // 상태 필터
-            if (request.Status.HasValue)
-            {
-                processedData = processedData.Where(x => x.Status == request.Status.Value);
-            }
+            // 상태 필터 - 임시저장 페이지에서는 임시저장 상태만 조회
+            // request.Status 값과 관계없이 항상 임시저장(status = 1)만 조회
+            processedData = processedData.Where(x => x.Status == 1); // 1 = 임시저장
 
             // 검색어 필터
             if (!string.IsNullOrEmpty(request.SearchKeyword))
@@ -2123,6 +2121,155 @@ namespace EstimateRequestSystem.Services
                 PageSize = request.PageSize
             };
         }
+
+        // 견적관리 목록 조회 (임시저장 제외)
+        public async Task<EstimateInquiryResponseDto> GetEstimateManagementAsync(EstimateInquiryRequestDto request, string currentUserId, string? customerId = null)
+        {
+            // 현재 사용자의 역할 확인
+            var currentUser = await _context.User.FirstOrDefaultAsync(u => u.UserID == currentUserId);
+            if (currentUser == null)
+            {
+                return new EstimateInquiryResponseDto
+                {
+                    Items = new List<EstimateInquiryItemDto>(),
+                    TotalCount = 0,
+                    TotalPages = 0,
+                    CurrentPage = request.Page,
+                    PageSize = request.PageSize
+                };
+            }
+
+            // RoleID 3(고객)은 견적관리 페이지 접근 불가
+            if (currentUser.RoleID == 3)
+            {
+                return new EstimateInquiryResponseDto
+                {
+                    Items = new List<EstimateInquiryItemDto>(),
+                    TotalCount = 0,
+                    TotalPages = 0,
+                    CurrentPage = request.Page,
+                    PageSize = request.PageSize
+                };
+            }
+
+            // 기본 데이터를 가져온 후 메모리에서 처리
+            var baseQuery = from sheet in _context.EstimateSheetLv1
+                           join customer in _context.User on sheet.CustomerID equals customer.UserID into customerGroup
+                           from c in customerGroup.DefaultIfEmpty()
+                           join writer in _context.User on sheet.WriterID equals writer.UserID into writerGroup
+                           from w in writerGroup.DefaultIfEmpty()
+                           join manager in _context.User on sheet.ManagerID equals manager.UserID into managerGroup
+                           from m in managerGroup.DefaultIfEmpty()
+                           where (customerId == null || sheet.CustomerID == customerId)  // 고객 ID 필터 추가
+                               && sheet.Status != 1  // 임시저장(status = 1) 제외
+                           select new
+                   {
+                       sheet.TempEstimateNo,
+                       sheet.CurEstimateNo,
+                       sheet.CustomerID,
+                       sheet.WriterID,
+                       sheet.ManagerID,
+                       sheet.Status,
+                       sheet.Project,
+                       CustomerName = c != null ? c.CompanyName : sheet.CustomerID,
+                       WriterName = w != null ? w.Name : null,
+                       ManagerName = m != null ? m.Name : null,
+                       EstimateRequestCount = _context.EstimateRequest
+                           .Where(er => er.TempEstimateNo == sheet.TempEstimateNo)
+                           .Sum(er => er.Qty)
+                   };
+
+    var baseData = await baseQuery.ToListAsync();
+
+    // 메모리에서 날짜 파싱 및 필터링
+    var processedData = baseData.Select(x => new
+    {
+        x.TempEstimateNo,
+        x.CurEstimateNo,
+        x.CustomerID,
+        x.WriterID,
+        x.ManagerID,
+        x.Status,
+        x.Project,
+        x.CustomerName,
+        x.WriterName,
+        x.ManagerName,
+        x.EstimateRequestCount,
+        RequestDate = ParseDateFromTempEstimateNo(x.TempEstimateNo)
+    }).AsQueryable();
+
+    // 상태 필터 - 견적관리에서는 임시저장 제외한 상태만 조회
+    if (request.Status.HasValue)
+    {
+        processedData = processedData.Where(x => x.Status == request.Status.Value);
+    }
+
+    // 검색어 필터
+    if (!string.IsNullOrEmpty(request.SearchKeyword))
+    {
+        processedData = processedData.Where(x => 
+            x.TempEstimateNo.Contains(request.SearchKeyword) ||
+            (x.CurEstimateNo != null && x.CurEstimateNo.Contains(request.SearchKeyword)) ||
+            x.CustomerName.Contains(request.SearchKeyword) ||
+            (x.Project != null && x.Project.Contains(request.SearchKeyword)));
+    }
+
+    // 기간 필터
+    if (request.StartDate.HasValue)
+    {
+        processedData = processedData.Where(x => x.RequestDate >= request.StartDate.Value);
+    }
+    if (request.EndDate.HasValue)
+    {
+        var endDate = request.EndDate.Value.AddDays(1);
+        processedData = processedData.Where(x => x.RequestDate < endDate);
+    }
+
+    // 전체 개수 계산
+    var totalCount = processedData.Count();
+
+    // 정렬
+    if (request.IsDescending)
+    {
+        processedData = processedData.OrderByDescending(x => x.RequestDate);
+    }
+    else
+    {
+        processedData = processedData.OrderBy(x => x.RequestDate);
+    }
+
+    // 페이징
+    var items = processedData
+        .Skip((request.Page - 1) * request.PageSize)
+        .Take(request.PageSize)
+        .Select(x => new EstimateInquiryItemDto
+        {
+            EstimateNo = x.CurEstimateNo ?? x.TempEstimateNo,
+            CompanyName = x.CustomerName,
+            ContactPerson = x.WriterName ?? x.WriterID,
+            RequestDate = x.RequestDate,
+            Quantity = x.EstimateRequestCount,
+            StatusText = EstimateStatusExtensions.ToKoreanText(x.Status),
+            Status = x.Status,
+            Project = x.Project ?? "",
+            TempEstimateNo = x.TempEstimateNo,
+            WriterID = x.WriterID,
+            ManagerID = x.ManagerID,
+            ManagerName = x.ManagerName,
+        })
+        .ToList();
+
+    var totalPages = (int)Math.Ceiling((double)totalCount / request.PageSize);
+
+    return new EstimateInquiryResponseDto
+    {
+        Items = items,
+        TotalCount = totalCount,
+        TotalPages = totalPages,
+        CurrentPage = request.Page,
+        PageSize = request.PageSize
+    };
+}
 
         // 견적 상세 조회
         public async Task<EstimateDetailResponseDto?> GetEstimateDetailAsync(string tempEstimateNo, string currentUserId)

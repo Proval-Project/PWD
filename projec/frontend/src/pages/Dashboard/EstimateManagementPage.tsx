@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getDraftEstimates, assignEstimate } from '../../api/estimateRequest';
+import { getEstimateManagement, assignEstimate } from '../../api/estimateRequest';
 import './EstimateManagementPage.css';
 
 // 백엔드 DTO와 일치하는 인터페이스
@@ -67,7 +67,7 @@ const EstimateManagementPage: React.FC = () => {
       // 선택된 고객 ID 가져오기 (있으면)
       const customerId = selectedCustomer?.userId;
       
-      const response = await getDraftEstimates(params, currentUserId, customerId);
+      const response = await getEstimateManagement(params, currentUserId, customerId);
       
       // 백엔드 응답 구조에 맞게 수정 (대소문자 구분)
       setItems(response.Items || response.items || []);

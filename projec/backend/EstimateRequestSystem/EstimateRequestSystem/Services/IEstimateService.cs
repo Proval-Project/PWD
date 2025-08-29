@@ -73,6 +73,9 @@ namespace EstimateRequestSystem.Services
         // 임시저장 목록 조회
         Task<EstimateInquiryResponseDto> GetDraftEstimatesAsync(EstimateInquiryRequestDto request, string currentUserId, string? customerId = null);
 
+        // 견적관리 목록 조회 (임시저장 제외)
+        Task<EstimateInquiryResponseDto> GetEstimateManagementAsync(EstimateInquiryRequestDto request, string currentUserId, string? customerId = null);
+
         // 견적 상세 조회
         Task<EstimateDetailResponseDto?> GetEstimateDetailAsync(string tempEstimateNo, string currentUserId);
 
