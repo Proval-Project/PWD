@@ -6,10 +6,10 @@ import './EstimateDetailPage.css';
 
 // 단위/사이즈 마스터 데이터 타입
 interface BodySizeListDto {
-  unitCode: string;
+  sizeUnitCode: string;  // RatingUnitCode와 동일한 패턴
   bodySizeCode: string;
   bodySize: string;
-  unitName: string;  // 단위명 (inch, mm 등)
+  sizeUnit: string;      // RatingUnit과 동일한 패턴
 }
 
 interface TrimPortSizeListDto {
@@ -2440,13 +2440,22 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                         <option value="">Unit 선택</option>
                         {bodySizeList && bodySizeList.length > 0 && 
                           bodySizeList
-                            .map(item => item.unitCode)
+                            .map(item => item.sizeUnitCode)
                             .filter((unit, index, arr) => arr.indexOf(unit) === index)
-                            .map((unit: string) => (
-                              <option key={unit} value={unit}>
-                                {unit}
-                              </option>
-                            ))
+                            .map((unit: string) => {
+                              // Unit 코드를 사용자 친화적인 이름으로 변환
+                              let displayName = unit;
+                              if (unit === 'A') displayName = 'DN';
+                              if (unit === 'I') displayName = 'inch';
+                              if (unit === 'N') displayName = 'None';
+                              if (unit === 'Z') displayName = 'SPECIAL';
+                              
+                              return (
+                                <option key={unit} value={unit}>
+                                  {displayName}
+                                </option>
+                              );
+                            })
                         }
                       </select>
                       <select value={bodySelections.sizeBodyCode} onChange={(e) => {
@@ -2459,11 +2468,11 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                         <option value="">값 선택</option>
                         {bodySelections.sizeBodyUnit && bodySizeList && bodySizeList.length > 0 && 
                           bodySizeList
-                            .filter(item => item.unitCode === bodySelections.sizeBodyUnit)
+                            .filter(item => item.sizeUnitCode === bodySelections.sizeBodyUnit)
                             .map((item: any) => (
-                                                              <option key={item.bodySizeCode} value={item.bodySizeCode}>
-                                  {item.bodySize} ({item.unitName})
-                                </option>
+                              <option key={item.bodySizeCode} value={item.bodySizeCode}>
+                                {item.bodySize} ({item.sizeUnit})
+                              </option>
                             ))
                         }
                       </select>

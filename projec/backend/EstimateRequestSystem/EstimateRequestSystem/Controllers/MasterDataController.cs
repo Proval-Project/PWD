@@ -188,20 +188,7 @@ namespace EstimateRequestSystem.Controllers
             }
         }
 
-        // BodySizeUnit 마스터 데이터 조회 (새로 추가)
-        [HttpGet("body/size-unit-list")]
-        public async Task<IActionResult> GetBodySizeUnitList()
-        {
-            try
-            {
-                var result = await _estimateService.GetBodySizeUnitListAsync();
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-        }
+
 
         [HttpPost("body/size-unit")]
         public async Task<IActionResult> AddBodySizeUnit([FromBody] BodySizeUnit item)

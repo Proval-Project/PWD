@@ -1345,19 +1345,27 @@ namespace EstimateRequestSystem.Services
             return OrderByCodePreferredObject(valveList.Cast<object>(), "ValveSeriesCode");
         }
 
-        public async Task<List<BodySizeListDto>> GetBodySizeListAsync()
+        public async Task<List<BodySizeListDto>> GetBodySizeListAsync(string? sizeUnitCode = null)
         {
-            var sizeList = await _context.BodySizeList
-                .Include(b => b.BodySizeUnit)
+            var query = _context.BodySizeList.AsQueryable();
+
+            if (!string.IsNullOrEmpty(sizeUnitCode))
+            {
+                query = query.Where(s => s.UnitCode == sizeUnitCode);
+            }
+
+            var list = await query
+                .Include(s => s.BodySizeUnit) // Include the navigation property
                 .Select(s => new BodySizeListDto
                 {
-                    UnitCode = s.UnitCode,
+                    SizeUnitCode = s.UnitCode,  // RatingUnitCode와 동일한 패턴
                     BodySizeCode = s.BodySizeCode,
                     BodySize = s.BodySize,
-                    UnitName = s.BodySizeUnit != null ? s.BodySizeUnit.UnitName : string.Empty
+                    SizeUnit = s.BodySizeUnit != null ? s.BodySizeUnit.UnitName : string.Empty  // RatingUnit과 동일한 패턴
                 })
                 .ToListAsync();
-            return sizeList;
+
+            return list;
         }
 
         public async Task<List<object>> GetBodyMatListAsync()
@@ -1418,12 +1426,7 @@ namespace EstimateRequestSystem.Services
             return OrderByCodePreferred(units, u => u).ToList();
         }
 
-        // BodySizeUnit 마스터 데이터 조회 (새로 추가)
-        public async Task<IEnumerable<BodySizeUnit>> GetBodySizeUnitListAsync()
-        {
-            var units = await _context.BodySizeUnit.ToListAsync();
-            return OrderByCodePreferred(units, u => u.UnitCode);
-        }
+
 
         // 특정 UnitCode에 해당하는 BodySize 목록 조회 (새로 추가)
         public async Task<IEnumerable<BodySizeList>> GetBodySizeListByUnitAsync(string unitCode)

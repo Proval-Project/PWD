@@ -37,7 +37,7 @@ namespace EstimateRequestSystem.Services
         Task<int> GetNextSheetIDAsync(string tempEstimateNo);
         Task<bool> IsDuplicateFileNameAsync(string tempEstimateNo, string fileName);
         Task<List<object>> GetBodyValveListAsync();
-        Task<List<BodySizeListDto>> GetBodySizeListAsync();
+        Task<List<BodySizeListDto>> GetBodySizeListAsync(string? sizeUnitCode = null);
         Task<List<object>> GetBodyMatListAsync();
         Task<List<object>> GetTrimMatListAsync();
         Task<List<object>> GetTrimOptionListAsync();
@@ -197,7 +197,7 @@ namespace EstimateRequestSystem.Services
         Task<bool> DeleteFileByManagerTypeAsync(string tempEstimateNo, string managerFileType);
 
         // BodySizeUnit 관련
-        Task<IEnumerable<BodySizeUnit>> GetBodySizeUnitListAsync();
+
         Task<IEnumerable<BodySizeList>> GetBodySizeListByUnitAsync(string unitCode);
         Task<bool> AddBodySizeUnitAsync(string unitCode, string unitName);
         Task<bool> UpdateBodySizeUnitAsync(string unitCode, string unitName);

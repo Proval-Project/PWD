@@ -760,7 +760,8 @@ div.type-item.selected {
 }
 
 /* Rating Unit과 Rating 선택 부분의 간격 조정 */
-.spec-item .rating-selection-group {
+.spec-item .rating-selection-group,
+.spec-item .size-selection-group {
   display: flex !important;
   gap: 20px !important;
   align-items: center;
@@ -768,14 +769,16 @@ div.type-item.selected {
   height: 28px !important;
 }
 
-.spec-item .rating-selection-group select:first-child {
+.spec-item .rating-selection-group select:first-child,
+.spec-item .size-selection-group select:first-child {
   width: 110px !important;
   flex-shrink: 0;
   height: 28px !important;
   min-height: 28px !important;
 }
 
-.spec-item .rating-selection-group select:last-child {
+.spec-item .rating-selection-group select:last-child,
+.spec-item .size-selection-group select:last-child {
   flex: 1;
   min-width: 140px !important;
   max-width: calc(100% - 130px) !important;

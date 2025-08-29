@@ -87,10 +87,10 @@ interface BodySizeUnit {
 }
 
 interface BodySizeListDto {
-  unitCode: string;
+  sizeUnitCode: string;  // RatingUnitCode와 동일한 패턴
   bodySizeCode: string;
   bodySize: string;
-  unitName: string;  // 단위명 (inch, mm 등)
+  sizeUnit: string;      // RatingUnit과 동일한 패턴
 }
 
 interface TrimPortSizeListDto {
@@ -247,7 +247,7 @@ const NewEstimateRequestPage: React.FC = () => {
   const [currentValve, setCurrentValve] = useState<ValveData | null>(null);
   const [attachments, setAttachments] = useState<any[]>([]);
   const [customerRequirement, setCustomerRequirement] = useState('');
-  const [otherRequests, setOtherRequests] = useState('');
+  const [otherRequests, setOtherRequests] = useState<any[]>([]);
   const [isReadOnly, setIsReadOnly] = useState<boolean>(false); // READONLY 모드 상태
   const [backendStatusText, setBackendStatusText] = useState<string>(''); // 백엔드 상태 텍스트
   const [backendStatus, setBackendStatus] = useState<number | null>(null);   // 백엔드 상태 코드 (1~5)
@@ -266,7 +266,7 @@ const NewEstimateRequestPage: React.FC = () => {
   // 🔑 관리 첨부파일 상태 추가
   const [managerAttachments, setManagerAttachments] = useState<any[]>([]);
 
-  const [bodyValveList, setBodyValveList] = useState<BodyValveData[]>([]);
+  const [bodyValveList, setBodyValveList] = useState<any[]>([]);
   const [showValveDropdown, setShowValveDropdown] = useState(false);
   const specSectionRef = useRef<HTMLDivElement>(null);
   const tagNoRef = useRef<HTMLInputElement>(null);
@@ -275,6 +275,9 @@ const NewEstimateRequestPage: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
 
+  const [bodyMatList, setBodyMatList] = useState<any[]>([]);
+  const [trimMatList, setTrimMatList] = useState<any[]>([]);
+  const [trimOptionList, setTrimOptionList] = useState<any[]>([]);
   const [actSizeList, setActSizeList] = useState<any[]>([]);
   const [actHWList, setActHWList] = useState<any[]>([]);
   const [bodyRatingList, setBodyRatingList] = useState<any[]>([]);
@@ -319,6 +322,8 @@ const NewEstimateRequestPage: React.FC = () => {
     }
     return bodyRatingList.filter(item => item.ratingUnitCode === currentValve.body.ratingUnit);
   }, [currentValve, bodyRatingList]);
+
+
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -655,11 +660,54 @@ const NewEstimateRequestPage: React.FC = () => {
   const densityOptions = ['Density', 'Molecular'];
 
   // DB에서 가져올 마스터 데이터 상태
-  const [bodySizeUnits, setBodySizeUnits] = useState<BodySizeUnit[]>([]);
   const [bodySizeList, setBodySizeList] = useState<BodySizeListDto[]>([]);
-  const [bodyMatList, setBodyMatList] = useState<any[]>([]);
-  const [trimMatList, setTrimMatList] = useState<any[]>([]);
-  const [trimOptionList, setTrimOptionList] = useState<any[]>([]);
+ 
+
+
+
+  // Size 값으로부터 Unit을 유추하는 함수
+  const getSizeUnitFromSize = (size: string): string => {
+    if (!size) return '';
+    
+    // inch 단위 (1/2", 1", 2" 등)
+    if (size.includes('"') || size.includes('″')) {
+      return 'I';
+    }
+    
+    // DN 단위 (15A, 20A, 25A 등) - 하지만 현재는 F, G, H 등으로 저장됨
+    if (size === 'F') return 'A';  // F는 20A에 해당
+    if (size === 'G') return 'A';  // G는 25A에 해당
+    if (size === 'H') return 'A';  // H는 32A에 해당
+    if (size === 'I') return 'A';  // I는 40A에 해당
+    if (size === 'J') return 'A';  // J는 50A에 해당
+    if (size === 'K') return 'A';  // K는 65A에 해당
+    if (size === 'L') return 'A';  // L는 80A에 해당
+    if (size === 'M') return 'A';  // M는 100A에 해당
+    if (size === 'N') return 'A';  // N는 125A에 해당
+    if (size === 'O') return 'A';  // O는 150A에 해당
+    if (size === 'P') return 'A';  // P는 200A에 해당
+    if (size === 'Q') return 'A';  // Q는 250A에 해당
+    if (size === 'R') return 'A';  // R는 300A에 해당
+    if (size === 'S') return 'A';  // S는 350A에 해당
+    if (size === 'T') return 'A';  // T는 400A에 해당
+    if (size === 'U') return 'A';  // U는 450A에 해당
+    if (size === 'V') return 'A';  // V는 500A에 해당
+    if (size === 'W') return 'A';  // W는 550A에 해당
+    if (size === 'X') return 'A';  // X는 600A에 해당
+    if (size === 'Y') return 'A';  // Y는 900A에 해당
+    
+    // None
+    if (size === 'None') {
+      return 'N';
+    }
+    
+    // SPECIAL
+    if (size === 'SPECIAL') {
+      return 'Z';
+    }
+    
+    return '';
+  };
 
   // 이름을 코드로 변환하는 함수들
   const getNameToCode = (list: any[], name: string, nameField: string, codeField: string): string => {
@@ -714,7 +762,7 @@ const NewEstimateRequestPage: React.FC = () => {
   };
 
   const getBodySizeName = (code: string, unitCode: string): string => {
-    const item = bodySizeList.find(item => item.bodySizeCode === code && item.unitCode === unitCode);
+    const item = bodySizeList.find(item => item.bodySizeCode === code && item.sizeUnitCode === unitCode);
     return item ? item.bodySize : '';
   };
   
@@ -1286,6 +1334,17 @@ const NewEstimateRequestPage: React.FC = () => {
             
             // 각 request를 Valve 데이터로 변환
             requests.forEach((req: any, tagIndex: number) => {
+              // 백엔드 응답 구조 디버깅
+              console.log('🔍 백엔드 응답 구조 확인:');
+              console.log('req.bodySizeUnit:', req.bodySizeUnit);
+              console.log('req.bodySize:', req.bodySize);
+              console.log('req 전체 구조:', req);
+              
+              // Size 데이터 복원 확인
+              console.log('🔍 Size 데이터 복원:');
+              console.log('복원된 sizeUnit:', req.bodySizeUnit || getSizeUnitFromSize(req.bodySize) || '');
+              console.log('복원된 size:', req.bodySize || '');
+              
               // loadExistingData 함수 내부에서
               const valveData: ValveData = {
                 id: `valve-${reqIndex}-${tagIndex}`,
@@ -1336,8 +1395,8 @@ const NewEstimateRequestPage: React.FC = () => {
                 body: {
                   type: valveSeriesName,
                   typeCode: valveType,
-                  size: req.bodySize || '',
-                  sizeUnit: req.bodySizeUnit || '',
+                  size: req.bodySize || '',  // 기존 저장된 Size 값 복원
+                  sizeUnit: req.bodySizeUnit || getSizeUnitFromSize(req.bodySize) || '',  // 기존 저장된 Size Unit 복원 또는 Size 값으로부터 유추
                   materialBody: req.bodyMat || '',
                   materialTrim: req.trimMat || '',
                   option: req.trimOption || '',
@@ -1384,14 +1443,16 @@ const NewEstimateRequestPage: React.FC = () => {
         
         
         // 디버깅을 위한 상세 로그
-        loadedValves.forEach((valve, index) => {
-          console.log(`Valve ${index} 상세 정보:`, {
-            tagNo: valve.tagNo,
-            actuator: valve.actuator,
-            body: valve.body,
-            isHW: valve.isHW
-          });
-        });
+                    loadedValves.forEach((valve, index) => {
+              console.log(`Valve ${index} 상세 정보:`, {
+                tagNo: valve.tagNo,
+                actuator: valve.actuator,
+                body: valve.body,
+                isHW: valve.isHW
+              });
+            });
+            
+
       }
       
       // 첨부파일 데이터 복원
@@ -1476,8 +1537,8 @@ const NewEstimateRequestPage: React.FC = () => {
   // 마스터 데이터 가져오기
   const fetchMasterData = async () => {
     try {
-      const [unitsRes, sizeRes, matRes, trimMatRes, optionRes, ratingRes, portSizeRes] = await Promise.all([
-        axios.get('/api/estimate/body-size-unit-list'),
+      // Rating 방식과 동일하게, size-unit-list API 호출을 제거합니다.
+      const [sizeRes, matRes, trimMatRes, optionRes, ratingRes, portSizeRes] = await Promise.all([
         axios.get('/api/estimate/body-size-list'),
         axios.get('/api/estimate/body-mat-list'),
         axios.get('/api/estimate/trim-mat-list'),
@@ -1485,10 +1546,8 @@ const NewEstimateRequestPage: React.FC = () => {
         axios.get('/api/estimate/body-rating-list'),
         axios.get('/api/estimate/trim-port-size-list')
       ]);
-
-      console.log('>>> 백엔드에서 실제로 받은 Size Unit 데이터:', unitsRes.data);
       
-      setBodySizeUnits(unitsRes.data);
+      console.log('🔍 Size API 응답:', sizeRes.data);
       setBodySizeList(sizeRes.data);
       setBodyMatList(matRes.data);
       setTrimMatList(trimMatRes.data);
@@ -2528,7 +2587,7 @@ const NewEstimateRequestPage: React.FC = () => {
                           readOnly
                         />
                       </div>
-                      <div className="body-spec-item">
+                      <div className="spec-item">
                         <label>Size</label>
                         <div className="size-selection-group">
                           <select 
@@ -2543,11 +2602,22 @@ const NewEstimateRequestPage: React.FC = () => {
                             disabled={isReadOnly}
                           >
                             <option value="">단위</option>
-                            {bodySizeUnits.map(unit => (
-                              <option key={unit.unitCode} value={unit.unitCode}>
-                                {unit.unitName}
-                              </option>
-                            ))}
+                            {bodySizeUnits && bodySizeUnits.length > 0 ? bodySizeUnits.map(unit => {
+                              // Unit 코드를 사용자 친화적인 이름으로 변환
+                              let displayName = unit.name;
+                              if (unit.code === 'A') displayName = 'DN';
+                              if (unit.code === 'I') displayName = 'inch';
+                              if (unit.code === 'N') displayName = 'None';
+                              if (unit.code === 'Z') displayName = 'SPECIAL';
+                              
+                              return (
+                                <option key={unit.code} value={unit.code}>
+                                  {displayName}
+                                </option>
+                              );
+                            }) : (
+                              <option value="" disabled>로딩 중...</option>
+                            )}
                           </select>
                           <select 
                             id="body-size"
@@ -2557,13 +2627,13 @@ const NewEstimateRequestPage: React.FC = () => {
                             disabled={!currentValve.body.sizeUnit || isReadOnly}
                           >
                             <option value="">선택하세요</option>
-                            {currentValve.body.sizeUnit && bodySizeList
-                              .filter(item => item.unitCode === currentValve.body.sizeUnit)
-                              .map(item => (
-                                <option key={`${item.unitCode}-${item.bodySizeCode}`} value={item.bodySizeCode}>
-                                  {item.bodySize}
-                                </option>
-                              ))}
+                            {filteredSizeList && filteredSizeList.length > 0 ? filteredSizeList.map(item => (
+                              <option key={`${item.sizeUnitCode}-${item.bodySizeCode}`} value={item.bodySizeCode}>
+                                {item.bodySize}
+                              </option>
+                            )) : (
+                              <option value="" disabled>Size Unit을 먼저 선택하세요</option>
+                            )}
                           </select>
                         </div>
                       </div>
@@ -2966,6 +3036,89 @@ const NewEstimateRequestPage: React.FC = () => {
   const handleRemoveFile = useCallback((index: number) => {
     setAttachments(prev => prev.filter((_, i) => i !== index));
   }, []);
+
+  // Rating과 동일한 방식으로, bodySizeList가 변경될 때마다 고유한 Size Unit 목록을 생성합니다.
+  const bodySizeUnits = useMemo(() => {
+    console.log('🔍 bodySizeUnits 생성 시작 - bodySizeList 길이:', bodySizeList?.length);
+    console.log('🔍 bodySizeList 첫 번째 항목:', bodySizeList?.[0]);
+    
+    if (!bodySizeList || bodySizeList.length === 0) {
+      console.log('❌ bodySizeList가 비어있음');
+      return [];
+    }
+    
+    const unitMap = new Map<string, string>();
+    bodySizeList.forEach((item, index) => {
+      if (index < 3) { // 처음 3개만 로그 출력
+        console.log(`🔍 item[${index}]:`, item);
+      }
+      
+      // item.sizeUnitCode와 item.sizeUnit이 존재하는지 확인
+      if (item.sizeUnitCode && item.sizeUnit && !unitMap.has(item.sizeUnitCode)) {
+        unitMap.set(item.sizeUnitCode, item.sizeUnit);
+        console.log(`✅ Unit 추가: ${item.sizeUnitCode} -> ${item.sizeUnit}`);
+      } else {
+        console.log(`❌ Unit 추가 실패: sizeUnitCode=${item.sizeUnitCode}, sizeUnit=${item.sizeUnit}`);
+      }
+    });
+    
+    // Rating과 동일한 { code, name } 형태로 반환합니다.
+    const units = Array.from(unitMap, ([code, name]) => ({ code, name }));
+    console.log('🔍 생성된 bodySizeUnits:', units);
+    console.log('🔍 bodySizeUnits 길이:', units.length);
+    
+    const sortedUnits = units.sort((a, b) => customSort(a.name, b.name));
+    console.log('🔍 정렬된 bodySizeUnits:', sortedUnits);
+    
+    return sortedUnits;
+  }, [bodySizeList]);
+
+  // Rating과 동일한 방식으로, 선택된 Size Unit에 해당하는 Size 목록을 필터링합니다.
+  const filteredSizeList = useMemo(() => {
+    if (!currentValve || !currentValve.body.sizeUnit) { // sizeUnit은 이제 코드입니다.
+      return [];
+    }
+    return bodySizeList.filter(item => item.sizeUnitCode === currentValve.body.sizeUnit);
+  }, [currentValve, bodySizeList]);
+
+  // Size 섹션 디버깅을 위한 useEffect
+  useEffect(() => {
+    if (currentValve) {
+      console.log('🔍 Size 섹션 상태 확인:', {
+        hasCurrentValve: !!currentValve,
+        bodySizeUnits: bodySizeUnits,
+        filteredSizeList: filteredSizeList,
+        currentSizeUnit: currentValve?.body?.sizeUnit,
+        currentSize: currentValve?.body?.size
+      });
+    }
+  }, [currentValve, bodySizeUnits, filteredSizeList]);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      setCurrentUser(JSON.parse(userStr));
+    }
+    
+    // 선택된 고객 정보 가져오기
+    const customerStr = localStorage.getItem('selectedCustomer');
+    if (customerStr) {
+      setSelectedCustomer(JSON.parse(customerStr));
+    }
+
+    // readonly 쿼리 파라미터 확인
+    const readonlyParam = searchParams.get('readonly');
+    console.log('NewEstimateRequestPage - readonlyParam:', readonlyParam);
+    console.log('NewEstimateRequestPage - searchParams:', Object.fromEntries(searchParams.entries()));
+    
+    if (readonlyParam === 'true') {
+      setIsReadOnly(true);
+      console.log('NewEstimateRequestPage - isReadOnly set to true');
+    } else {
+      setIsReadOnly(false);
+      console.log('NewEstimateRequestPage - isReadOnly set to false');
+    }
+  }, [searchParams]);
 
   return (
     <div className="new-estimate-request-page dashboard-page">
