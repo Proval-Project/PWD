@@ -247,7 +247,8 @@ namespace EstimateRequestSystem.Services
                                 BodyMat = await GetBodyMatCodeAsync(tagNo.BodyMat),
                                 TrimMat = await GetTrimMatCodeAsync(tagNo.TrimMat),
                                 TrimOption = await GetTrimOptionCodeAsync(tagNo.TrimOption),
-                                Rating = await GetBodyRatingCodeAsync(tagNo.BodyRating)
+                                Rating = await GetBodyRatingCodeAsync(tagNo.BodyRating),
+                                RatingUnit = string.IsNullOrEmpty(tagNo.BodyRatingUnit) ? null : tagNo.BodyRatingUnit
                             };
                             _context.DataSheetLv3.Add(dataSheetLv3);
                         }
@@ -431,6 +432,7 @@ namespace EstimateRequestSystem.Services
                                 TrimMat = await GetTrimMatCodeAsync(tagNo.TrimMat),
                                 TrimOption = await GetTrimOptionCodeAsync(tagNo.TrimOption),
                                 Rating = await GetBodyRatingCodeAsync(tagNo.BodyRating),
+                                RatingUnit = string.IsNullOrEmpty(tagNo.BodyRatingUnit) ? null : tagNo.BodyRatingUnit,
                                 ValveType = valveSelection.ValveSeriesCode
                             };
                             _context.DataSheetLv3.Add(dataSheetLv3);
