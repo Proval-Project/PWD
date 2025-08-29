@@ -2177,6 +2177,7 @@ namespace EstimateRequestSystem.Services
                         .Select(er => new TagNoDetailDto
                         {
                             SheetID = er.SheetID,
+                            SheetNo = er.SheetNo,  // SheetNo 매핑 추가
                             TagNo = er.Tagno ?? "",
                             Qty = er.Qty,
                             Medium = er.Medium,

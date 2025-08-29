@@ -323,6 +323,7 @@ export interface EstimateRequestDetailDto {
 
 export interface TagNoDetailDto {
   sheetID: number;
+  sheetNo: number;  // SheetNo 필드 추가
   tagNo: string;
   qty: number;
   medium?: string;

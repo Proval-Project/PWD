@@ -53,6 +53,7 @@ namespace EstimateRequestSystem.DTOs
     public class TagNoDetailDto
     {
         public int SheetID { get; set; }
+        public int SheetNo { get; set; }  // SheetNo 필드 추가
         public string TagNo { get; set; } = string.Empty;
         public int Qty { get; set; }
         public string? Medium { get; set; }

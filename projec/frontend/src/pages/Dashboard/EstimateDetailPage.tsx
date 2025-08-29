@@ -1178,6 +1178,16 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
       
       // EstimateRequest 데이터를 기반으로 types와 valves 설정
       if (data.estimateRequests && data.estimateRequests.length > 0) {
+        // 디버깅: 실제 데이터 구조 확인
+        console.log('🔍 EstimateDetailPage - API 응답 데이터 구조:');
+        console.log('data.estimateRequests:', data.estimateRequests);
+        console.log('첫 번째 estimateRequest:', data.estimateRequests[0]);
+        if (data.estimateRequests[0]?.tagNos) {
+          console.log('첫 번째 tagNos:', data.estimateRequests[0].tagNos);
+          console.log('첫 번째 tagNo의 필드들:', Object.keys(data.estimateRequests[0].tagNos[0] || {}));
+          console.log('첫 번째 tagNo의 sheetNo:', data.estimateRequests[0].tagNos[0]?.sheetNo);
+          console.log('첫 번째 tagNo의 sheetID:', data.estimateRequests[0].tagNos[0]?.sheetID);
+        }
         // Type 정보 설정
         const typeMap = new Map<string, { count: number; order: number }>();
         
@@ -1192,6 +1202,7 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
           }
         });
         
+        // typesData를 SheetNo 기준으로 정렬
         const typesData = Array.from(typeMap.entries()).map(([code, info]) => {
           // bodyValveList가 로드되지 않은 경우를 대비하여 기본값 설정
           const valveInfo = bodyValveList.find(v => v.valveSeriesCode === code);
@@ -1204,7 +1215,20 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
           };
         });
         
-        setTypes(typesData);
+        // 밸브 타입을 SheetNo 순서대로 정렬
+        const sortedTypesData = typesData.sort((a, b) => {
+          // 각 밸브 타입의 첫 번째 TagNo의 SheetNo를 기준으로 정렬
+          const aFirstTag = data.estimateRequests.find(req => req.valveType === a.code)?.tagNos?.[0];
+          const bFirstTag = data.estimateRequests.find(req => req.valveType === b.code)?.tagNos?.[0];
+          
+          // sheetNo 또는 sheetID 사용 (타입 안전성 확보)
+          const aSheetNo = (aFirstTag as any)?.sheetNo || (aFirstTag as any)?.sheetID || 999;
+          const bSheetNo = (bFirstTag as any)?.sheetNo || (bFirstTag as any)?.sheetID || 999;
+          
+          return aSheetNo - bSheetNo;
+        });
+        
+        setTypes(sortedTypesData);
         
         // Valve 정보 설정 - TagNoDetailDto를 기반으로 변환
         const valvesData: ValveData[] = [];
