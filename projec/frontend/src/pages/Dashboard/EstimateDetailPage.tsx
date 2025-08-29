@@ -68,7 +68,7 @@ const isCustomerFile = (filePath: string): boolean => {
   return customerFilePatterns.some(pattern => normalizedPath.includes(pattern));
 };
 
-// ResultFiles/customer 파일인지 확인 (상단 "고객 제출 문서 업로드" 전용)
+// ResultFiles/customer 파인지 확인 (상단 "고객 제출 문서 업로드" 전용)
 const isResultCustomerFile = (filePath: string): boolean => {
   if (!filePath) return false;
   const normalizedPath = filePath.replace(/\\/g, '/').toLowerCase();
@@ -395,7 +395,7 @@ const EstimateDetailPage: React.FC = () => {
                     option: '' // Trim Option 필드 추가
                   });
                 
-                  // ACT 섹션 선택 상태 관리
+                                    // ACT 섹션 선택 상태 관리
                   const [actSelections, setActSelections] = useState({
                     actionType: '',
                     actionTypeCode: '', // Code 값 추가
@@ -407,7 +407,75 @@ const EstimateDetailPage: React.FC = () => {
                     hwCode: '' // Code 값 추가
                   });
 
-  // 상태 및 프로젝트 정보
+                  // 태그별 상태 초기값과 맵 상태
+                  const INITIAL_BODY = {
+                    bonnetType: '',
+                    bonnetTypeCode: '',
+                    materialBody: '',
+                    materialBodyCode: '',
+                    sizeBodyUnit: '',
+                    sizeBody: '',
+                    sizeBodyUnitCode: '',
+                    sizeBodyCode: '',
+                    ratingUnit: '',
+                    rating: '',
+                    ratingUnitCode: '',
+                    ratingCode: '',
+                    connection: '',
+                    connectionCode: ''
+                  };
+                  const INITIAL_TRIM = {
+                    trimType: '',
+                    trimTypeCode: '',
+                    trimSeries: '',
+                    trimSeriesCode: '',
+                    materialTrim: '',
+                    materialTrimCode: '',
+                    sizePortUnit: '',
+                    sizePort: '',
+                    sizePortUnitCode: '',
+                    sizePortCode: '',
+                    form: '',
+                    formCode: '',
+                    option: ''
+                  };
+                  const INITIAL_ACT = {
+                    actionType: '',
+                    actionTypeCode: '',
+                    series: '',
+                    seriesCode: '',
+                    size: '',
+                    sizeCode: '',
+                    hw: '',
+                    hwCode: ''
+                  };
+                  const INITIAL_ACC = {
+                    positioner: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
+                    solenoid: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
+                    limiter: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
+                    airSupply: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
+                    volumeBooster: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
+                    airOperator: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
+                    lockUp: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
+                    snapActingRelay: { typeCode: '', makerCode: '', modelCode: '', specification: '' },
+                  };
+
+                  const [bodySelectionsBySheet, setBodySelectionsBySheet] = useState<{[key:number]: typeof INITIAL_BODY}>({});
+                  const [trimSelectionsBySheet, setTrimSelectionsBySheet] = useState<{[key:number]: typeof INITIAL_TRIM}>({});
+                  const [actSelectionsBySheet, setActSelectionsBySheet] = useState<{[key:number]: typeof INITIAL_ACT}>({});
+                  const [accSelectionsBySheet, setAccSelectionsBySheet] = useState<{[key:number]: typeof INITIAL_ACC}>({});
+
+                  // 태그 전환 시 해당 태그의 상태를 싱글 상태로 동기화
+                  useEffect(() => {
+                    const sid = selectedValve?.sheetID as number | undefined;
+                    if (!sid) return;
+                    setBodySelections(bodySelectionsBySheet[sid] ?? INITIAL_BODY);
+                    setTrimSelections(trimSelectionsBySheet[sid] ?? INITIAL_TRIM);
+                    setActSelections(actSelectionsBySheet[sid] ?? INITIAL_ACT);
+                    setAccSelections(accSelectionsBySheet[sid] ?? INITIAL_ACC);
+                  }, [selectedValve?.sheetID, bodySelectionsBySheet, trimSelectionsBySheet, actSelectionsBySheet, accSelectionsBySheet]);
+
+                  // 상태 및 프로젝트 정보
   const [projectName, setProjectName] = useState<string>('');
 
   // BodyValveList 가져오기
@@ -654,42 +722,25 @@ const EstimateDetailPage: React.FC = () => {
                     // Body 섹션 이벤트 핸들러들
                   const handleBodyChange = (field: string, value: string) => {
                     setBodySelections(prev => {
-                      const newSelections = { ...prev, [field]: value };
-                      
-                      // Bonnet Type 변경 시 코드 값도 함께 업데이트
+                      const newSelections = { ...prev, [field]: value } as any;
+                      // 기존 동기화 로직 유지...
                       if (field === 'bonnetType') {
                         const selectedItem = bodyBonnetList.find(item => item.bonnetCode === value);
-                        if (selectedItem) {
-                          newSelections.bonnetTypeCode = selectedItem.bonnetCode;
-                        }
+                        if (selectedItem) newSelections.bonnetTypeCode = selectedItem.bonnetCode;
                       }
-                      
-                      // Material Body 변경 시 코드 값도 함께 업데이트
                       if (field === 'materialBody') {
                         const selectedItem = bodyMatList.find(item => item.bodyMatCode === value);
-                        if (selectedItem) {
-                          newSelections.materialBodyCode = selectedItem.bodyMatCode;
-                        }
+                        if (selectedItem) newSelections.materialBodyCode = selectedItem.bodyMatCode;
                       }
-                      
-                      // Connection 변경 시 코드 값도 함께 업데이트
                       if (field === 'connection') {
                         const selectedItem = bodyConnectionList.find(item => item.connectionCode === value);
-                        if (selectedItem) {
-                          newSelections.connectionCode = selectedItem.connectionCode;
-                        }
+                        if (selectedItem) newSelections.connectionCode = selectedItem.connectionCode;
                       }
-                      
-                      // Unit이 변경되면 해당하는 값 초기화
-                      if (field === 'sizeBodyUnit') {
-                        newSelections.sizeBody = '';
-                        newSelections.sizeBodyCode = '';
-                      }
-                      if (field === 'ratingUnit') {
-                        newSelections.rating = '';
-                        newSelections.ratingCode = '';
-                      }
-                      
+                      if (field === 'sizeBodyUnit') { newSelections.sizeBody = ''; newSelections.sizeBodyCode = ''; }
+                      if (field === 'ratingUnit') { newSelections.rating = ''; newSelections.ratingCode = ''; }
+                      // 맵에 반영
+                      const sid = selectedValve?.sheetID;
+                      if (sid) setBodySelectionsBySheet((prevMap: any) => ({ ...prevMap, [sid]: newSelections }));
                       return newSelections;
                     });
                   };
@@ -697,99 +748,19 @@ const EstimateDetailPage: React.FC = () => {
                     // Trim 섹션 이벤트 핸들러들
                   const handleTrimChange = (field: string, value: string) => {
                     setTrimSelections(prev => {
-                      const newSelections = { ...prev, [field]: value };
-                      
-                      // Trim Type 변경 시 코드 값도 함께 업데이트
-                      if (field === 'trimType') {
-                        const selectedItem = trimTypeList.find(item => item.trimTypeCode === value);
-                        if (selectedItem) {
-                          newSelections.trimTypeCode = selectedItem.trimTypeCode;
-                        }
-                      }
-                      
-                      // Trim Series 변경 시 코드 값도 함께 업데이트
-                      if (field === 'trimSeries') {
-                        const selectedItem = trimSeriesList.find(item => item.trimSeriesCode === value);
-                        if (selectedItem) {
-                          newSelections.trimSeriesCode = selectedItem.trimSeriesCode;
-                        }
-                      }
-                      
-                      // Material Trim 변경 시 코드 값도 함께 업데이트
-                      if (field === 'materialTrim') {
-                        const selectedItem = trimMatList.find(item => item.trimMatCode === value);
-                        if (selectedItem) {
-                          newSelections.materialTrimCode = selectedItem.trimMatCode;
-                        }
-                      }
-                      
-                      // Form 변경 시 코드 값도 함께 업데이트
-                      if (field === 'form') {
-                        const selectedItem = trimFormList.find(item => item.trimFormCode === value);
-                        if (selectedItem) {
-                          newSelections.formCode = selectedItem.trimFormCode;
-                        }
-                      }
-                      
-                      // Unit이 변경되면 해당하는 값 초기화
-                      if (field === 'sizePortUnit') {
-                        newSelections.sizePort = '';
-                        newSelections.sizePortCode = '';
-                      }
-                      
+                      const newSelections = { ...prev, [field]: value } as any;
+                      const sid = selectedValve?.sheetID;
+                      if (sid) setTrimSelectionsBySheet((prevMap: any) => ({ ...prevMap, [sid]: newSelections }));
                       return newSelections;
                     });
                   };
 
                     // ACT 섹션 이벤트 핸들러들
                   const handleActChange = (field: string, value: string) => {
-                    //console.log('ACT Change:', field, value);
                     setActSelections(prev => {
-                      const newSelections = { ...prev, [field]: value };
-                      
-                      // Action Type 변경 시 코드 값도 함께 업데이트
-                      if (field === 'actionType') {
-                        const selectedItem = actTypeList.find(item => item.actTypeCode === value);
-                        if (selectedItem) {
-                          newSelections.actionTypeCode = selectedItem.actTypeCode;
-                        }
-                      }
-                      
-                      // Series 변경 시 코드 값도 함께 업데이트
-                      if (field === 'series') {
-                        const selectedItem = actSeriesList.find(item => item.actSeriesCode === value);
-                        if (selectedItem) {
-                          newSelections.seriesCode = selectedItem.actSeriesCode;
-                        }
-                        
-                        newSelections.size = '';
-                        //console.log('Series 변경됨:', value);
-                        // Series가 선택되면 해당하는 Size 목록 가져오기
-                        if (value) {
-                          //console.log('fetchActSizeList 호출:', value);
-                          fetchActSizeList(value);
-                        } else {
-                          //console.log('actSizeList 초기화');
-                          setActSizeList([]);
-                        }
-                      }
-                      
-                      // Size 변경 시 코드 값도 함께 업데이트
-                      if (field === 'size') {
-                        const selectedItem = actSizeList.find(item => item.actSizeCode === value);
-                        if (selectedItem) {
-                          newSelections.sizeCode = selectedItem.actSizeCode;
-                        }
-                      }
-                      
-                      // H.W 변경 시 코드 값도 함께 업데이트
-                      if (field === 'hw') {
-                        const selectedItem = actHWList.find(item => item.hwCode === value);
-                        if (selectedItem) {
-                          newSelections.hwCode = selectedItem.hwCode;
-                        }
-                      }
-                      
+                      const newSelections = { ...prev, [field]: value } as any;
+                      const sid = selectedValve?.sheetID;
+                      if (sid) setActSelectionsBySheet((prevMap: any) => ({ ...prevMap, [sid]: newSelections }));
                       return newSelections;
                     });
                   };
@@ -1652,6 +1623,36 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
     if (!tempEstimateNo) return;
     setDocGenerating(prev => ({ ...prev, [type]: true }));
     try {
+      // 단품 견적서 버튼 클릭 시: 단품 + 다수량 견적서를 모두 생성
+      if (type === 'singlequote') {
+        console.log('🔍 견적서 생성 시작 - 단품 + 다수량');
+        
+        // 1) 단품견적서 생성
+        console.log('📄 단품견적서 생성 중...');
+        const singleQuoteResp = await fetch(`http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/generate-single-quote`, { method: 'POST' });
+        if (!singleQuoteResp.ok) {
+          const er = await singleQuoteResp.json().catch(()=>({}));
+          throw new Error(`단품견적서 생성 실패: ${er.message || '알 수 없는 오류'}`);
+        }
+        console.log('✅ 단품견적서 생성 완료');
+        
+        // 2) 다수량견적서 생성
+        console.log('📄 다수량견적서 생성 중...');
+        const multiQuoteResp = await fetch(`http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/generate-multi-quote`, { method: 'POST' });
+        if (!multiQuoteResp.ok) {
+          const er = await multiQuoteResp.json().catch(()=>({}));
+          throw new Error(`다수량견적서 생성 실패: ${er.message || '알 수 없는 오류'}`);
+        }
+        console.log('✅ 다수량견적서 생성 완료');
+        
+        // 생성된 두 파일 다운로드
+        console.log('📥 생성된 견적서 파일 다운로드 중...');
+        await downloadQuoteFiles();
+        alert('견적서가 성공적으로 생성되었습니다!\n- 단품견적서\n- 다수량견적서');
+        return;
+      }
+      
+      // 기존 로직 (단일 타입 생성: cvlist, vllist, datasheet 등)
       const resp = await fetch(`http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/${endpoint}`, { method: 'POST' });
       if (!resp.ok) {
         const er = await resp.json().catch(()=>({}));
@@ -1679,6 +1680,30 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
       alert(e.message || '생성 중 오류');
     } finally {
       setDocGenerating(prev => ({ ...prev, [type]: false }));
+    }
+  };
+  
+  // 생성된 견적서 파일(단품/다수량) 다운로드
+  const downloadQuoteFiles = async () => {
+    try {
+      const list = await fetchManagerFiles();
+      
+      const singleQuote = list.filter(f => f.managerFileType === 'singlequote')
+        .sort((a,b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime())[0];
+      if (singleQuote) {
+        await downloadFile(singleQuote.filePath, singleQuote.fileName);
+      }
+      
+      const multiQuote = list.filter(f => f.managerFileType === 'multiquote')
+        .sort((a,b) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime())[0];
+      if (multiQuote) {
+        await downloadFile(multiQuote.filePath, multiQuote.fileName);
+      }
+      
+      console.log('✅ 견적서 파일 다운로드 완료');
+    } catch (error) {
+      console.error('견적서 파일 다운로드 중 오류:', error);
+      alert('일부 견적서 파일 다운로드에 실패했습니다.');
     }
   };
   
@@ -3182,6 +3207,11 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
     setAccSelections(prev => ({
       ...prev,
       [accTypeKey]: accessory
+    }));
+    const sid = selectedValve?.sheetID;
+    if (sid) setAccSelectionsBySheet((prevMap: any) => ({
+      ...prevMap,
+      [sid]: { ...(prevMap?.[sid] ?? accSelections), [accTypeKey]: accessory }
     }));
   };
 
