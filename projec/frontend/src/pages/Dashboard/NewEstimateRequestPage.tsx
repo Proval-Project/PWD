@@ -252,6 +252,11 @@ const NewEstimateRequestPage: React.FC = () => {
   const [backendStatusText, setBackendStatusText] = useState<string>(''); // 백엔드 상태 텍스트
   const [backendStatus, setBackendStatus] = useState<number | null>(null);   // 백엔드 상태 코드 (1~5)
   const [staffComment, setStaffComment] = useState('');
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // 현재 선택된 Type과 Valve의 ID를 저장하는 상태
+  const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null);
+  const [selectedValveId, setSelectedValveId] = useState<string | null>(null);
 
   // 요약 카드 표시용 파생 값들
   const totalQty = useMemo(() => valves.reduce((sum, v) => sum + (Number(v.qty) || 0), 0), [valves]);
@@ -276,6 +281,44 @@ const NewEstimateRequestPage: React.FC = () => {
 
   const nameToCodeCache = useRef(new Map());
   const codeToNameCache = useRef(new Map());
+
+  const [trimPortSizeList, setTrimPortSizeList] = useState<TrimPortSizeListDto[]>([]);
+
+  // EstimateDetailPage와 동일한 정렬 및 Unit 목록 생성 로직 추가
+  const customSort = (a: string, b: string) => {
+    const isNumberA = !isNaN(parseFloat(a));
+    const isNumberB = !isNaN(parseFloat(b));
+
+    if (isNumberA && !isNumberB) return -1;
+    if (!isNumberA && isNumberB) return 1;
+
+    if (a.toUpperCase() === 'SPECIAL' && b.toUpperCase() !== 'SPECIAL') return 1;
+    if (a.toUpperCase() !== 'SPECIAL' && b.toUpperCase() === 'SPECIAL') return -1;
+
+    return a.localeCompare(b, undefined, { numeric: true });
+  };
+
+  const uniqueRatingUnits = useMemo(() => {
+    if (!bodyRatingList || bodyRatingList.length === 0) {
+      return [];
+    }
+    const unitMap = new Map<string, string>();
+    bodyRatingList.forEach(item => {
+      if (item.ratingUnitCode && !unitMap.has(item.ratingUnitCode)) {
+        unitMap.set(item.ratingUnitCode, item.ratingUnit);
+      }
+    });
+    // { code, name } 형태의 객체 배열로 변환
+    const units = Array.from(unitMap, ([code, name]) => ({ code, name }));
+    return units.sort((a, b) => customSort(a.name, b.name));
+  }, [bodyRatingList]);
+
+  const filteredRatingList = useMemo(() => {
+    if (!currentValve || !currentValve.body.ratingUnit) { // ratingUnit은 이제 코드입니다.
+      return [];
+    }
+    return bodyRatingList.filter(item => item.ratingUnitCode === currentValve.body.ratingUnit);
+  }, [currentValve, bodyRatingList]);
 
   useEffect(() => {
     const userStr = localStorage.getItem('user');
@@ -618,8 +661,6 @@ const NewEstimateRequestPage: React.FC = () => {
   const [trimMatList, setTrimMatList] = useState<any[]>([]);
   const [trimOptionList, setTrimOptionList] = useState<any[]>([]);
 
-  const [trimPortSizeList, setTrimPortSizeList] = useState<TrimPortSizeListDto[]>([]);
-
   // 이름을 코드로 변환하는 함수들
   const getNameToCode = (list: any[], name: string, nameField: string, codeField: string): string => {
     const item = list.find(item => item[nameField] === name);
@@ -647,14 +688,17 @@ const NewEstimateRequestPage: React.FC = () => {
   };
 
   const getBodyRatingCode = (name: string): string => {
-    // 이름을 코드로 변환
     const item = bodyRatingList.find(item => item.ratingName === name);
-    return item ? item.ratingCode : ''; // 매칭 실패 시 이름 대신 빈 문자열 반환
+    return item ? item.ratingCode : '';
   };
 
   const getBodyRatingName = (code: string): string => {
     const item = bodyRatingList.find(item => item.ratingCode === code);
     return item ? item.ratingName : '';
+  };
+  const getBodyRatingUnitNameByCode = (unitCode: string): string => {
+    const item = bodyRatingList.find(item => item.ratingUnitCode === unitCode);
+    return item ? item.ratingUnit : ''; // unitCode가 아닌 unit(이름)을 반환
   };
 
   const getBodyRatingUnit = (code: string): string => {
@@ -669,13 +713,19 @@ const NewEstimateRequestPage: React.FC = () => {
     return item ? item.ratingUnitCode : '';
   };
 
-  const getBodySizeName = (code: string, unit: string): string => {
-    const item = bodySizeList.find(item => item.bodySizeCode === code && item.unitCode === unit);
+  const getBodySizeName = (code: string, unitCode: string): string => {
+    const item = bodySizeList.find(item => item.bodySizeCode === code && item.unitCode === unitCode);
     return item ? item.bodySize : '';
   };
-
-
   
+  
+  
+  const getBodyRatingUnitByCode = (unitCode: string): string => {
+    // bodyRatingList에서 unitCode에 해당하는 unit 이름을 찾습니다.
+    const item = bodyRatingList.find(item => item.ratingUnitCode === unitCode);
+    return item ? item.ratingUnit : ''; 
+  };
+
   // 첨부파일 관련 상태
   const [fileAttachments, setFileAttachments] = useState<any[]>([]);
   const [uploadingFiles, setUploadingFiles] = useState<boolean>(false);
@@ -1168,15 +1218,15 @@ const NewEstimateRequestPage: React.FC = () => {
                   temperatureUnit: tagNo.temperatureUnit || '℃'
                 },
                 body: {
-                  type: valveSeriesName, // 실제 이름 사용
-                  typeCode: req.valveType || '', // ValveSeriesCode
-                  size: getBodySizeName(tagNo.bodySize || '', tagNo.bodySizeUnit || (tagNo.bodySize === 'A' ? 'A' : 'inch')) || tagNo.bodySize || '',
-                  sizeUnit: tagNo.bodySizeUnit || (tagNo.bodySize === 'A' ? 'A' : 'inch'),
-                  materialBody: tagNo.bodyMat || '',
-                  materialTrim: tagNo.trimMat || '',
-                  option: tagNo.trimOption || '',
-                  rating: getBodyRatingNameLocal(tagNo.bodyRating || '') || tagNo.bodyRating || '',
-                  ratingUnit: getBodyRatingUnitLocal(tagNo.bodyRatingUnit || '') || ''
+                  type: valveSeriesName,
+                  typeCode: req.valveType || '',
+                  size: tagNo.bodySize,
+                  sizeUnit: tagNo.bodySizeUnit,
+                  materialBody: tagNo.bodyMat,
+                  materialTrim: tagNo.trimMat,
+                  option: tagNo.trimOption,
+                  rating: tagNo.bodyRating,
+                  ratingUnit: tagNo.bodyRatingUnit
                 },
                 actuator: {
                   type: tagNo.actType || 'None',
@@ -1286,23 +1336,13 @@ const NewEstimateRequestPage: React.FC = () => {
                 body: {
                   type: valveSeriesName,
                   typeCode: valveType,
-                  size: getBodySizeName(req.bodySize || '', req.bodySizeUnit || (req.bodySize === 'A' ? 'A' : 'inch')) || req.bodySize || '',
-                  sizeUnit: req.bodySizeUnit || (req.bodySize === 'A' ? 'A' : 'inch'),
+                  size: req.bodySize || '',
+                  sizeUnit: req.bodySizeUnit || '',
                   materialBody: req.bodyMat || '',
                   materialTrim: req.trimMat || '',
                   option: req.trimOption || '',
-                  rating: (() => {
-                    const ratingCode = req.bodyRating || '';
-                    const ratingName = getBodyRatingNameLocal(ratingCode);
-                    console.log('Rating 설정 - Code:', ratingCode, 'Name:', ratingName);
-                    return ratingName || ratingCode || '';
-                  })(),
-                  ratingUnit: (() => {
-                    const ratingUnitCode = req.bodyRatingUnit || '';
-                    const ratingUnit = getBodyRatingUnitLocal(ratingUnitCode);
-                    console.log('RatingUnit 설정 - Code:', ratingUnitCode, 'Unit:', ratingUnit);
-                    return ratingUnit || '';
-                  })()
+                  rating: req.bodyRating || '',
+                  ratingUnit: req.bodyRatingUnit || ''
                 },
                 actuator: {
                   type: req.actType || 'None',
@@ -1334,7 +1374,10 @@ const NewEstimateRequestPage: React.FC = () => {
         // loadExistingData 함수 내부에서
         // 상태 업데이트
         setTypes(loadedTypes);
+
+        console.log('setValves를 호출하기 직전입니다. loadedValves 데이터:', loadedValves);
         setValves(loadedValves);
+        console.log('setValves가 호출되었습니다.');
         
         console.log('복원된 Types:', loadedTypes);
         console.log('복원된 Valves:', loadedValves);
@@ -1404,45 +1447,31 @@ const NewEstimateRequestPage: React.FC = () => {
   // 페이지 진입 시 데이터 가져오기
   useEffect(() => {
     const initializeData = async () => {
-      await fetchBodyValveList();
-      const bodyRatingData = await fetchMasterData();
-      
-      // URL 파라미터에서 load 값 확인 (한 번만 실행)
-      const loadParam = searchParams.get('load');
-      if (loadParam && !isDataLoaded.current) {
-        // 기존 데이터 불러오기 (bodyRatingData 전달)
-        isDataLoaded.current = true; // 로딩 상태 설정
-        await loadExistingData(loadParam);
-      } else if (!loadParam && !isDataLoaded.current) {
-        // 새로운 견적 생성
-        isDataLoaded.current = true;
-        // generateTempEstimateNo(); // 필요 시 주석 해제
-      }
-      
-      // 🔑 tempEstimateNo가 변경될 때마다 관리 첨부파일 로드
-      if (tempEstimateNo) {
-        console.log('🔄 tempEstimateNo 변경됨, 관리 첨부파일 로드 시작:', tempEstimateNo);
-        loadManagerAttachments();
-      }
+      // 마스터 데이터들을 먼저 모두 가져옵니다.
+      await Promise.all([
+        fetchMasterData(),
+        fetchBodyValveList()
+      ]);
+      // isInitialized 상태를 true로 설정하여 마스터 데이터 로딩이 완료되었음을 표시합니다.
+      setIsInitialized(true);
     };
     
     initializeData();
-    
-    // 페이지를 벗어날 때 정리하는 이벤트 리스너
-    const handleBeforeUnload = () => {
-      // TempEstimateNo가 생성되었지만 임시저장되지 않은 경우 정리
-      if (tempEstimateNo && !localStorage.getItem(`saved_${tempEstimateNo}`)) {
-        // 동기적으로 정리 (페이지가 닫히기 전에)
-        navigator.sendBeacon(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}`);
-      }
-    };
-    
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [searchParams, tempEstimateNo]); // searchParams와 tempEstimateNo 의존성 추가
+  }, []); // 이 useEffect는 컴포넌트 마운트 시 한 번만 실행됩니다.
+
+  // 마스터 데이터 로딩이 완료된 후, 견적 데이터를 불러오는 useEffect
+  useEffect(() => {
+    // isInitialized가 false이면 (마스터 데이터 로딩 전이면) 아무것도 하지 않습니다.
+    if (!isInitialized) {
+      return;
+    }
+
+    const loadParam = searchParams.get('load');
+    if (loadParam && !isDataLoaded.current) {
+      loadExistingData(loadParam);
+      isDataLoaded.current = true;
+    }
+  }, [isInitialized, searchParams]); // isInitialized가 true로 바뀌면 이 useEffect가 실행됩니다.
 
   // 마스터 데이터 가져오기
   const fetchMasterData = async () => {
@@ -1456,6 +1485,8 @@ const NewEstimateRequestPage: React.FC = () => {
         axios.get('/api/estimate/body-rating-list'),
         axios.get('/api/estimate/trim-port-size-list')
       ]);
+
+      console.log('>>> 백엔드에서 실제로 받은 Size Unit 데이터:', unitsRes.data);
       
       setBodySizeUnits(unitsRes.data);
       setBodySizeList(sizeRes.data);
@@ -1483,6 +1514,8 @@ const NewEstimateRequestPage: React.FC = () => {
     }
   };
 
+  // [After] 아래 함수 전체를 복사해서 기존 함수와 교체해주세요.
+
   const createSavePayload = useCallback(() => {
       // 전역 SheetNo 계산
       let globalSheetNo = 1;
@@ -1501,7 +1534,7 @@ const NewEstimateRequestPage: React.FC = () => {
         SheetID: valve.sheetID > 0 ? valve.sheetID : undefined,
         SheetNo: globalSheetNo++,
                 Tagno: valve.tagNo,
-        valveSeriesCode: valve.body.typeCode,
+        ValveSeriesCode: valve.body.typeCode, // [수정] valveSeriesCode -> ValveSeriesCode (백엔드 모델 이름과 일치)
                 Qty: valve.qty,
                 Medium: valve.fluid.medium,
                 Fluid: valve.fluid.fluid,
@@ -1539,8 +1572,10 @@ const NewEstimateRequestPage: React.FC = () => {
                 BodyMat: getBodyMatCode(valve.body.materialBody),
                 TrimMat: getTrimMatCode(valve.body.materialTrim),
                 TrimOption: getTrimOptionCode(valve.body.option),
-                BodyRating: getBodyRatingCode(valve.body.rating),
-        BodyRatingUnit: getBodyRatingUnitCode(getBodyRatingCode(valve.body.rating)),
+        // [수정] bodyRating -> BodyRating (b를 대문자 B로)
+        BodyRating: valve.body.rating,
+        // [수정] bodyRatingUnit -> BodyRatingUnit (b, u를 대문자 B, U로)
+        BodyRatingUnit: valve.body.ratingUnit,
                 ActType: valve.actuator.type,
                 IsHW: valve.actuator.hw === 'Yes',
       };
@@ -1570,13 +1605,13 @@ const NewEstimateRequestPage: React.FC = () => {
 
     const typeSelections = types.map(type => {
       const typeValves = allTagNos
-        .filter(valve => valve.valveSeriesCode === type.code)
+        .filter(valve => valve.ValveSeriesCode === type.code) // [수정] valveSeriesCode -> ValveSeriesCode
         .map(valve => {
-          // valveSeriesCode는 백엔드 전송 시 필요 없으므로 제거
-          const { valveSeriesCode, ...rest } = valve;
+          // ValveSeriesCode는 백엔드 전송 시 필요 없으므로 제거
+          const { ValveSeriesCode, ...rest } = valve; // [수정] valveSeriesCode -> ValveSeriesCode
             return {
-            ValveName: valve.tagno,
-            ValveSeriesCode: valve.valveSeriesCode,
+            ValveName: valve.Tagno, // [수정] tagno -> Tagno
+            ValveSeriesCode: valve.ValveSeriesCode, // [수정] valveSeriesCode -> ValveSeriesCode
             TagNos: [rest]
             };
           });
@@ -2523,10 +2558,10 @@ const NewEstimateRequestPage: React.FC = () => {
                           >
                             <option value="">선택하세요</option>
                             {currentValve.body.sizeUnit && bodySizeList
-              .filter(item => item.unitCode === currentValve.body.sizeUnit)
+                              .filter(item => item.unitCode === currentValve.body.sizeUnit)
                               .map(item => (
-                                <option key={item.bodySizeCode} value={item.bodySizeCode}>
-                                  {item.bodySize} ({item.unitName})
+                                <option key={`${item.unitCode}-${item.bodySizeCode}`} value={item.bodySizeCode}>
+                                  {item.bodySize}
                                 </option>
                               ))}
                           </select>
@@ -2559,15 +2594,16 @@ const NewEstimateRequestPage: React.FC = () => {
                             value={currentValve.body.ratingUnit}
                             onChange={(e) => {
                               handleBodyChange('ratingUnit', e.target.value);
-                              // 단위가 변경되면 rating 초기화
                               handleBodyChange('rating', '');
                             }}
                             disabled={isReadOnly}
                           >
                             <option value="">단위</option>
-                            <option value="JIS/KS">JIS/KS</option>
-                            <option value="ASME">ASME</option>
-                            <option value="PN">PN</option>
+                            {uniqueRatingUnits.map(unit => (
+                              <option key={unit.code} value={unit.code}>
+                                {unit.name}
+                              </option>
+                            ))}
                           </select>
                           <select 
                             id="body-rating"
@@ -2576,14 +2612,12 @@ const NewEstimateRequestPage: React.FC = () => {
                             onChange={(e) => handleBodyChange('rating', e.target.value)}
                             disabled={!currentValve.body.ratingUnit || isReadOnly}
                           >
-                            <option value="">선택하세요</option>
-                            {currentValve.body.ratingUnit && bodyRatingList
-                              .filter(item => item.ratingUnit === currentValve.body.ratingUnit)
-                              .map(item => (
-                                <option key={item.ratingCode} value={item.ratingName}>
-                                  {item.ratingName}
-                                </option>
-                              ))}
+                            <option value="">등급</option>
+                            {filteredRatingList.map(item => (
+                              <option key={item.id} value={item.ratingCode}>
+                                {item.ratingName}
+                              </option>
+                            ))}
                           </select>
                         </div>
                       </div>

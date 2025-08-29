@@ -373,6 +373,7 @@ namespace EstimateRequestSystem.Services
                                 TrimMat = string.IsNullOrEmpty(tagNo.TrimMat) ? null : tagNo.TrimMat,
                                 TrimOption = string.IsNullOrEmpty(tagNo.TrimOption) ? null : tagNo.TrimOption,
                                 BodyRating = await GetBodyRatingCodeAsync(tagNo.BodyRating),
+                                BodyRatingUnit = await GetBodyRatingUnitCodeAsync(tagNo.BodyRatingUnit),
                                 ActType = await GetActTypeCodeAsync(tagNo.ActType),
                                 IsHW = tagNo.IsHW,
                                 IsPositioner = tagNo.IsPositioner,
@@ -5096,6 +5097,20 @@ private string? ConvertEmptyToNull(string? value)
             if (string.IsNullOrEmpty(ratingName)) return null;
             var rating = await _context.BodyRatingList.FirstOrDefaultAsync(r => r.RatingName == ratingName);
             return rating?.RatingCode ?? ratingName;
+        }
+        
+
+        private async Task<string?> GetBodyRatingUnitCodeAsync(string? unitCode)
+        {
+            if (string.IsNullOrEmpty(unitCode))
+            {
+                return null;
+            }
+
+            var bodyRatingUnit = await _context.BodyRatingList
+                                               .FirstOrDefaultAsync(b => b.RatingUnitCode == unitCode);
+
+            return bodyRatingUnit?.RatingUnitCode;
         }
 
 
