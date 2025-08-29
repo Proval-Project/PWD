@@ -180,6 +180,7 @@ const EstimateDetailPage: React.FC = () => {
   // 마스터 데이터
   const [bodyValveList, setBodyValveList] = useState<BodyValveData[]>([]);
   const [bodySizeList, setBodySizeList] = useState<BodySizeListDto[]>([]);
+  const [bodySizeUnits, setBodySizeUnits] = useState<any[]>([]); // BodySizeUnit 데이터 추가
   const [bodyMatList, setBodyMatList] = useState<any[]>([]);
   const [trimMatList, setTrimMatList] = useState<any[]>([]);
   const [trimOptionList, setTrimOptionList] = useState<any[]>([]);
@@ -2714,24 +2715,12 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                         handleBodyChange('sizeBodyUnitCode', e.target.value);
                       }} disabled={isReadOnly}>
                         <option value="">Unit 선택</option>
-                        {bodySizeList && bodySizeList.length > 0 && 
-                          bodySizeList
-                            .map(item => item.sizeUnitCode)
-                            .filter((unit, index, arr) => arr.indexOf(unit) === index)
-                            .map((unit: string) => {
-                              // Unit 코드를 사용자 친화적인 이름으로 변환
-                              let displayName = unit;
-                              if (unit === 'A') displayName = 'DN';
-                              if (unit === 'I') displayName = 'inch';
-                              if (unit === 'N') displayName = 'None';
-                              if (unit === 'Z') displayName = 'SPECIAL';
-                              
-                              return (
-                                <option key={unit} value={unit}>
-                                  {displayName}
-                                </option>
-                              );
-                            })
+                        {bodySizeUnits && bodySizeUnits.length > 0 && 
+                          bodySizeUnits.map((unit: any) => (
+                            <option key={unit.unitCode} value={unit.unitCode}>
+                              {unit.unitName}
+                            </option>
+                          ))
                         }
                       </select>
                       <select value={bodySelections.sizeBodyCode} onChange={(e) => {
@@ -3328,6 +3317,29 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
   };
 
   // 액추에이터 변경 핸들러
+
+  // bodySizeList가 로드된 후 bodySizeUnits 설정
+  useEffect(() => {
+    if (bodySizeList && bodySizeList.length > 0) {
+      // bodySizeList에서 고유한 단위 코드와 이름을 추출
+      const units = bodySizeList
+        .map(item => ({ unitCode: item.sizeUnitCode, unitName: item.sizeUnit }))
+        .filter((item, index, arr) => arr.findIndex(x => x.unitCode === item.unitCode) === index)
+        .sort((a, b) => {
+          // 정렬 순서: None -> A -> I -> SPECIAL
+          if (a.unitCode === 'N') return -1;
+          if (b.unitCode === 'N') return 1;
+          if (a.unitCode === 'A') return -1;
+          if (b.unitCode === 'A') return 1;
+          if (a.unitCode === 'I') return -1;
+          if (b.unitCode === 'I') return 1;
+          return 0;
+        });
+      
+      setBodySizeUnits(units);
+      console.log('🔍 bodySizeUnits 설정 완료:', units);
+    }
+  }, [bodySizeList]);
 
   if (isLoadingFiles) {
     return <div className="loading">로딩 중...</div>;
