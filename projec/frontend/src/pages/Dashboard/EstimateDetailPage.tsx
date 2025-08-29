@@ -77,19 +77,12 @@ const isResultCustomerFile = (filePath: string): boolean => {
 
 interface AccessorySelectorProps {
   accTypeKey: string;
-  accSelections: { [key: string]: { typeCode: string; makerCode: string; modelCode: string; specification: string; }; };
-  setAccSelections: React.Dispatch<React.SetStateAction<{
-    positioner: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
-    solenoid: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
-    limiter: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
-    airSupply: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
-    volumeBooster: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
-    airOperator: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
-    lockUp: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
-    snapActingRelay: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
-  }>>;
+  typeCode: string;
+  currentAcc: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
   accMakerList: any[];
   accModelList: any[];
+  onAccessoryChange: (accessory: any) => void;
+  isReadOnly: boolean;
 }
 
 interface ValveData {
@@ -205,6 +198,8 @@ const EstimateDetailPage: React.FC = () => {
   const [actHWList, setActHWList] = useState<any[]>([]);
   const [accMakerList, setAccMakerList] = useState<any[]>([]);
   const [accModelList, setAccModelList] = useState<any[]>([]);
+  const [accMakerListByType, setAccMakerListByType] = useState<{ [key: string]: any[] }>({});
+  const [accModelListByType, setAccModelListByType] = useState<{ [key: string]: any[] }>({});
   
   // 기타 데이터
   const [customerRequirement, setCustomerRequirement] = useState(''); // 고객 요청사항
@@ -814,36 +809,130 @@ const EstimateDetailPage: React.FC = () => {
         const accSearchData = await accSearchRes.json();
         console.log('악세사리 검색 데이터 로딩 성공:', accSearchData.length, '개');
         
-        // 메이커와 모델 데이터 분리
+        // 백엔드 응답 데이터 구조 확인
+        if (accSearchData.length > 0) {
+          console.log('🔍 백엔드 응답 데이터 첫 번째 항목 구조:', accSearchData[0]);
+          console.log('🔍 백엔드 응답 데이터 첫 번째 항목의 모든 키:', Object.keys(accSearchData[0]));
+        }
+        
+        // 메이커와 모델 데이터 분리 - 악세사리 타입별로 구분
         const allAccMakerData: any[] = [];
         const allAccModelData: any[] = [];
         
-        accSearchData.forEach((item: any) => {
-          // 메이커 데이터 (중복 제거)
-          const existingMaker = allAccMakerData.find(maker => 
-            maker.accMakerCode === item.accMakerCode && maker.accTypeCode === item.accTypeCode
-          );
-          if (!existingMaker) {
-            allAccMakerData.push({
-              accMakerCode: item.accMakerCode,
-              accMakerName: item.accMakerName,
-              accTypeCode: item.accTypeCode
-            });
+        // 악세사리 타입별로 데이터 그룹화
+        const groupedByType = accSearchData.reduce((acc: any, item: any) => {
+          if (!acc[item.accTypeCode]) {
+            acc[item.accTypeCode] = [];
           }
+          acc[item.accTypeCode].push(item);
+          return acc;
+        }, {});
+        
+        // 각 타입별로 메이커와 모델 데이터 처리
+        Object.entries(groupedByType).forEach(([typeCode, items]: [string, any]) => {
+          const typeItems = items as any[];
+          
+          // 메이커 데이터 (타입별로 중복 제거)
+          typeItems.forEach((item: any) => {
+            const existingMaker = allAccMakerData.find(maker => 
+              maker.accMakerCode === item.accMakerCode && maker.accTypeCode === typeCode
+            );
+            if (!existingMaker) {
+              allAccMakerData.push({
+                accMakerCode: item.accMakerCode,
+                accMakerName: item.accMakerName,
+                accTypeCode: typeCode
+              });
+            }
+          });
           
           // 모델 데이터
-          allAccModelData.push({
-            accMakerCode: item.accMakerCode,
-            accModelCode: item.accModelCode,
-            accModelName: item.accModelName,
-            accSize: item.accSize,
-            accTypeCode: item.accTypeCode
+          typeItems.forEach((item: any) => {
+            console.log(`🔍 ${typeCode} 타입 모델 데이터:`, {
+              accMakerCode: item.accMakerCode,
+              accModelCode: item.accModelCode,
+              accModelName: item.accModelName,
+              accSize: item.accSize,
+              accTypeCode: typeCode
+            });
+            
+            allAccModelData.push({
+              accMakerCode: item.accMakerCode,
+              accModelCode: item.accModelCode,
+              accModelName: item.accModelName,
+              accSize: item.accSize,
+              accTypeCode: typeCode  // item.accTypeCode 대신 그룹화된 typeCode 사용
+            });
           });
         });
         
+        console.log('🔍 악세사리 타입별 데이터 그룹화 결과:', groupedByType);
+        console.log('🔍 분리된 메이커 데이터:', allAccMakerData);
+        console.log('🔍 분리된 모델 데이터:', allAccModelData);
+        
+        // 각 타입별 데이터 개수 확인
+        Object.entries(groupedByType).forEach(([typeCode, items]: [string, any]) => {
+          console.log(`🔍 ${typeCode} 타입: ${items.length}개`);
+          const uniqueMakers = new Set(items.map((item: any) => item.accMakerCode));
+          console.log(`  - 고유 메이커 수: ${uniqueMakers.size}`);
+          console.log(`  - 메이커 코드들:`, Array.from(uniqueMakers));
+          
+          // 타입별 메이커 목록 확인
+          const typeMakers = allAccMakerData.filter(maker => maker.accTypeCode === typeCode);
+          console.log(`  - 타입별 메이커 목록:`, typeMakers);
+        });
+        
+        // 악세사리 데이터 설정
         setAccMakerList(allAccMakerData);
         setAccModelList(allAccModelData);
         console.log('악세사리 데이터 설정 완료 - 메이커:', allAccMakerData.length, '개, 모델:', allAccModelData.length, '개');
+        
+        // accMakerList 구조 상세 확인
+        console.log('🔍 accMakerList 상세 구조:');
+        allAccMakerData.forEach((maker, index) => {
+          console.log(`  [${index}] ${maker.accTypeCode} - ${maker.accMakerCode}: ${maker.accMakerName}`);
+        });
+        
+        // 타입별 메이커 개수 확인
+        const makerCountByType = allAccMakerData.reduce((acc: any, maker) => {
+          if (!acc[maker.accTypeCode]) acc[maker.accTypeCode] = 0;
+          acc[maker.accTypeCode]++;
+          return acc;
+        }, {});
+        console.log('🔍 타입별 메이커 개수:', makerCountByType);
+        
+        // 타입별로 메이커와 모델 데이터 분리
+        const makerDataByType: { [key: string]: any[] } = {};
+        const modelDataByType: { [key: string]: any[] } = {};
+        
+        allAccMakerData.forEach(maker => {
+          if (!makerDataByType[maker.accTypeCode]) {
+            makerDataByType[maker.accTypeCode] = [];
+          }
+          makerDataByType[maker.accTypeCode].push(maker);
+        });
+        
+        allAccModelData.forEach(model => {
+          if (!modelDataByType[model.accTypeCode]) {
+            modelDataByType[model.accTypeCode] = [];
+          }
+          modelDataByType[model.accTypeCode].push(model);
+        });
+        
+        console.log('🔍 타입별 분리된 데이터:', {
+          makerDataByType: Object.keys(makerDataByType).reduce((acc, key) => {
+            acc[key] = makerDataByType[key].length;
+            return acc;
+          }, {} as any),
+          modelDataByType: Object.keys(modelDataByType).reduce((acc, key) => {
+            acc[key] = modelDataByType[key].length;
+            return acc;
+          }, {} as any)
+        });
+        
+        // 타입별 데이터를 상태에 저장
+        setAccMakerListByType(makerDataByType);
+        setAccModelListByType(modelDataByType);
         
         // 악세사리 데이터 로드 완료 후 accSelections 초기화
         const initialAccSelections = {
@@ -1913,10 +2002,12 @@ const handleSaveSpecification = useCallback(async () => {
 
   const AccessorySelector: React.FC<AccessorySelectorProps> = ({
     accTypeKey,
-    accSelections,
-    setAccSelections,
+    typeCode,
+    currentAcc,
     accMakerList,
     accModelList,
+    onAccessoryChange,
+    isReadOnly,
   }) => {
     const [makerSearchTerm, setMakerSearchTerm] = useState('');
     const [modelSearchTerm, setModelSearchTerm] = useState('');
@@ -1925,14 +2016,32 @@ const handleSaveSpecification = useCallback(async () => {
     const [isSelected, setIsSelected] = useState(false); // 선택 여부 상태 추가
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const currentAcc = accSelections[accTypeKey];
-    const typeCode = currentAcc?.typeCode;
+    // 컴포넌트 마운트 시 디버깅 로그
+    useEffect(() => {
+      console.log(`🔍 AccessorySelector ${accTypeKey} 마운트:`, {
+        accTypeKey,
+        typeCode,
+        currentAcc,
+        accMakerListLength: accMakerList.length,
+        accModelListLength: accModelList.length
+      });
+      
+      // accMakerList와 accModelList의 내용 확인
+      console.log(`🔍 ${accTypeKey} - accMakerList 내용:`, accMakerList);
+      console.log(`🔍 ${accTypeKey} - accModelList 내용 (타입별 필터링):`, 
+        accModelList.filter(item => item.accTypeCode === typeCode)
+      );
+    }, [accTypeKey, typeCode, currentAcc, accMakerList.length, accModelList.length, accMakerList, accModelList]);
 
     // 컴포넌트 마운트 시 또는 accSelections 변경 시 입력 필드 초기화 및 선택 상태 설정
     useEffect(() => {
       if (currentAcc?.modelCode) {
-        const selectedMakerName = accMakerList.find(maker => maker.accMakerCode === currentAcc?.makerCode)?.accMakerName || '';
-        const selectedModelName = accModelList.find(model => model.accModelCode === currentAcc?.modelCode)?.accModelName || '';
+        const selectedMakerName = accMakerList.find(maker => 
+          maker.accMakerCode === currentAcc?.makerCode && maker.accTypeCode === typeCode
+        )?.accMakerName || '';
+        const selectedModelName = accModelList.find(model => 
+          model.accModelCode === currentAcc?.modelCode && model.accTypeCode === typeCode
+        )?.accModelName || '';
         setMakerSearchTerm(selectedMakerName);
         setModelSearchTerm(selectedModelName);
         setSpecSearchTerm(currentAcc.specification || '');
@@ -1943,7 +2052,7 @@ const handleSaveSpecification = useCallback(async () => {
         setSpecSearchTerm('');
         setIsSelected(false); // 모델이 없으면 isSelected를 false로
       }
-    }, [currentAcc, accMakerList, accModelList]);
+    }, [currentAcc, accMakerList, accModelList, typeCode]);
 
 
 
@@ -1955,19 +2064,28 @@ const handleSaveSpecification = useCallback(async () => {
         specSearchTerm
       ].filter(term => term);
 
+      console.log('🔍 AccessorySelector 디버깅:');
+      console.log('  - accTypeKey:', accTypeKey);
+      console.log('  - typeCode:', typeCode);
+      console.log('  - accModelList 길이:', accModelList.length);
+      console.log('  - accMakerList 길이:', accMakerList.length);
+
       if (allSearchTerms.length === 0) {
         // 검색어가 없으면 해당 타입 코드와 일치하는 전체 모델 반환
-        return accModelList.filter(item => item.accTypeCode === typeCode);
+        const filtered = accModelList.filter(item => item.accTypeCode === typeCode);
+        console.log('  - 필터링된 모델 수 (검색어 없음):', filtered.length);
+        console.log('  - 필터링된 모델들:', filtered);
+        return filtered;
       }
 
       const lowerCaseSearchWords = allSearchTerms.map(term => term.toLowerCase().split(' ').filter(word => word)).flat();
 
-      return accModelList.filter(item => {
+      const filtered = accModelList.filter(item => {
         if (!typeCode || item.accTypeCode !== typeCode) {
           return false;
         }
 
-        const makerName = (accMakerList.find(maker => maker.accMakerCode === item.accMakerCode)?.accMakerName || '').toLowerCase();
+        const makerName = (accMakerList.find(maker => maker.accMakerCode === item.accMakerCode && maker.accTypeCode === item.accTypeCode)?.accMakerName || '').toLowerCase();
         const modelName = (item.accModelName || '').toLowerCase();
         const specification = (item.accSize || '').toLowerCase();
 
@@ -1976,21 +2094,25 @@ const handleSaveSpecification = useCallback(async () => {
           makerName.includes(word) || modelName.includes(word) || specification.includes(word)
         );
       });
+
+      console.log('  - 필터링된 모델 수 (검색어 있음):', filtered.length);
+      console.log('  - 필터링된 모델들:', filtered);
+      return filtered;
     }, [makerSearchTerm, modelSearchTerm, specSearchTerm, accModelList, accMakerList, typeCode]);
 
     // 악세사리 선택 핸들러
     const handleSelectAccessory = (selectedModel: any) => {
-      setAccSelections(prev => ({
-        ...prev,
-        [accTypeKey]: {
-          typeCode: selectedModel.accTypeCode,
-          makerCode: selectedModel.accMakerCode,
-          modelCode: selectedModel.accModelCode,
-          specification: selectedModel.accSize || '',
-        },
-      }));
+      onAccessoryChange({
+        ...selectedModel,
+        typeCode: selectedModel.accTypeCode,
+        makerCode: selectedModel.accMakerCode,
+        modelCode: selectedModel.accModelCode,
+        specification: selectedModel.accSize || '',
+      });
       // 선택 시 세 입력 필드를 선택된 값으로 채우기
-      const selectedMakerName = accMakerList.find(maker => maker.accMakerCode === selectedModel.accMakerCode)?.accMakerName || '';
+      const selectedMakerName = accMakerList.find(maker => 
+        maker.accMakerCode === selectedModel.accMakerCode && maker.accTypeCode === selectedModel.accTypeCode
+      )?.accMakerName || '';
       setMakerSearchTerm(selectedMakerName);
       setModelSearchTerm(selectedModel.accModelName || '');
       setSpecSearchTerm(selectedModel.accSize || '');
@@ -2000,15 +2122,13 @@ const handleSaveSpecification = useCallback(async () => {
 
     // 선택 해제 핸들러
     const handleReset = () => {
-      setAccSelections(prev => ({
-        ...prev,
-        [accTypeKey]: {
-          typeCode: typeCode || '', // 기존 typeCode 유지
-          makerCode: '',
-          modelCode: '',
-          specification: '',
-        },
-      }));
+      onAccessoryChange({
+        ...currentAcc,
+        typeCode: typeCode || '', // 기존 typeCode 유지
+        makerCode: '',
+        modelCode: '',
+        specification: '',
+      });
       setMakerSearchTerm('');
       setModelSearchTerm('');
       setSpecSearchTerm('');
@@ -2301,7 +2421,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
   const resp = await fetch(`http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/requests/order`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(sheetIDs),
+    body: JSON.stringify(sheetIDs)
   });
   if (resp.ok) {
     alert('순서가 저장되었습니다.');
@@ -2758,96 +2878,112 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                   <tr>
                             <td>Positioner</td>
                             <td className="acc-options-group-detail" colSpan={3}>
-                              <AccessorySelector 
-                                accTypeKey="positioner" 
-                                accSelections={accSelections} 
-                                setAccSelections={setAccSelections} 
-                                accMakerList={accMakerList} 
-                                accModelList={accModelList} 
+                              <AccessorySelector
+                                accTypeKey="positioner"
+                                typeCode="Positioner"
+                                currentAcc={accSelections.positioner}
+                                accMakerList={accMakerListByType.Positioner || []}
+                                accModelList={accModelListByType.Positioner || []}
+                                onAccessoryChange={(accessory) => handleAccessoryChange('positioner', accessory)}
+                                isReadOnly={isReadOnly}
                               />
                             </td>
                           </tr>
                           <tr>
                             <td>Solenoid Valve</td>
                             <td className="acc-options-group-detail" colSpan={3}>
-                              <AccessorySelector 
-                                accTypeKey="solenoid" 
-                                accSelections={accSelections} 
-                                setAccSelections={setAccSelections} 
-                                accMakerList={accMakerList} 
-                                accModelList={accModelList} 
+                              <AccessorySelector
+                                accTypeKey="solenoid"
+                                typeCode="Solenoid"
+                                currentAcc={accSelections.solenoid}
+                                accMakerList={accMakerListByType.Solenoid || []}
+                                accModelList={accModelListByType.Solenoid || []}
+                                onAccessoryChange={(accessory) => handleAccessoryChange('solenoid', accessory)}
+                                isReadOnly={isReadOnly}
                               />
                             </td>
                           </tr>
                     <tr>
                     <td>Limit Switch</td>
                             <td className="acc-options-group-detail" colSpan={3}>
-                              <AccessorySelector 
-                                accTypeKey="limiter" 
-                                accSelections={accSelections} 
-                                setAccSelections={setAccSelections} 
-                                accMakerList={accMakerList} 
-                                accModelList={accModelList} 
+                              <AccessorySelector
+                                accTypeKey="limiter"
+                                typeCode="Limit"
+                                currentAcc={accSelections.limiter}
+                                accMakerList={accMakerListByType.Limit || []}
+                                accModelList={accModelListByType.Limit || []}
+                                onAccessoryChange={(accessory) => handleAccessoryChange('limiter', accessory)}
+                                isReadOnly={isReadOnly}
                               />
                             </td>
                           </tr>
                           <tr>
                             <td>Air Set</td>
                             <td className="acc-options-group-detail" colSpan={3}>
-                              <AccessorySelector 
-                                accTypeKey="airSupply" 
-                                accSelections={accSelections} 
-                                setAccSelections={setAccSelections} 
-                                accMakerList={accMakerList} 
-                                accModelList={accModelList} 
+                              <AccessorySelector
+                                accTypeKey="airSupply"
+                                typeCode="Airset"
+                                currentAcc={accSelections.airSupply}
+                                accMakerList={accMakerListByType.Airset || []}
+                                accModelList={accModelListByType.Airset || []}
+                                onAccessoryChange={(accessory) => handleAccessoryChange('airSupply', accessory)}
+                                isReadOnly={isReadOnly}
                               />
                             </td>
                           </tr>
                           <tr>
                             <td>Volume Booster</td>
                             <td className="acc-options-group-detail" colSpan={3}>
-                              <AccessorySelector 
-                                accTypeKey="volumeBooster" 
-                                accSelections={accSelections} 
-                                setAccSelections={setAccSelections} 
-                                accMakerList={accMakerList} 
-                                accModelList={accModelList} 
+                              <AccessorySelector
+                                accTypeKey="volumeBooster"
+                                typeCode="Volume"
+                                currentAcc={accSelections.volumeBooster}
+                                accMakerList={accMakerListByType.Volume || []}
+                                accModelList={accModelListByType.Volume || []}
+                                onAccessoryChange={(accessory) => handleAccessoryChange('volumeBooster', accessory)}
+                                isReadOnly={isReadOnly}
                               />
                             </td>
                           </tr>
                           <tr>
                             <td>Air Operated Valve</td>
                             <td className="acc-options-group-detail" colSpan={3}>
-                              <AccessorySelector 
-                                accTypeKey="airOperator" 
-                                accSelections={accSelections} 
-                                setAccSelections={setAccSelections} 
-                                accMakerList={accMakerList} 
-                                accModelList={accModelList} 
+                              <AccessorySelector
+                                accTypeKey="airOperator"
+                                typeCode="Airoperate"
+                                currentAcc={accSelections.airOperator}
+                                accMakerList={accMakerListByType.Airoperate || []}
+                                accModelList={accModelListByType.Airoperate || []}
+                                onAccessoryChange={(accessory) => handleAccessoryChange('airOperator', accessory)}
+                                isReadOnly={isReadOnly}
                               />
                             </td>
                           </tr>
                           <tr>
                             <td>Lock-Up Valve</td>
                             <td className="acc-options-group-detail" colSpan={3}>
-                              <AccessorySelector 
-                                accTypeKey="lockUp" 
-                                accSelections={accSelections} 
-                                setAccSelections={setAccSelections} 
-                                accMakerList={accMakerList} 
-                                accModelList={accModelList} 
+                              <AccessorySelector
+                                accTypeKey="lockUp"
+                                typeCode="Lockup"
+                                currentAcc={accSelections.lockUp}
+                                accMakerList={accMakerListByType.Lockup || []}
+                                accModelList={accModelListByType.Lockup || []}
+                                onAccessoryChange={(accessory) => handleAccessoryChange('lockUp', accessory)}
+                                isReadOnly={isReadOnly}
                               />
                             </td>
                           </tr>
                           <tr>
                             <td>Snap Acting Relay</td>
                             <td className="acc-options-group-detail" colSpan={3}>
-                              <AccessorySelector 
-                                accTypeKey="snapActingRelay" 
-                                accSelections={accSelections} 
-                                setAccSelections={setAccSelections} 
-                                accMakerList={accMakerList} 
-                                accModelList={accModelList} 
+                              <AccessorySelector
+                                accTypeKey="snapActingRelay"
+                                typeCode="Snapacting"
+                                currentAcc={accSelections.snapActingRelay}
+                                accMakerList={accMakerListByType.Snapacting || []}
+                                accModelList={accModelListByType.Snapacting || []}
+                                onAccessoryChange={(accessory) => handleAccessoryChange('snapActingRelay', accessory)}
+                                isReadOnly={isReadOnly}
                               />
                             </td>
                           </tr>
@@ -3040,6 +3176,16 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
       }
     }
   };
+
+  // 악세사리 변경 핸들러
+  const handleAccessoryChange = (accTypeKey: string, accessory: any) => {
+    setAccSelections(prev => ({
+      ...prev,
+      [accTypeKey]: accessory
+    }));
+  };
+
+  // 액추에이터 변경 핸들러
 
   if (isLoadingFiles) {
     return <div className="loading">로딩 중...</div>;

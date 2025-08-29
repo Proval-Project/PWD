@@ -5585,14 +5585,15 @@ private string? ConvertEmptyToNull(string? value)
             {
                 Console.WriteLine($"🔍 CV 리스트 생성 시작 - tempEstimateNo: {tempEstimateNo}");
                 
-                // 1. 데이터베이스에서 데이터 조회
+                // 1. 데이터베이스에서 데이터 조회 (SheetNo 순서로 정렬)
                 Console.WriteLine("📊 데이터베이스 쿼리 시작...");
-                var query = @"SELECT d.*, e.Project, er.Tagno, al.AccSize as AiroperateAccSize
+                var query = @"SELECT d.*, e.Project, er.Tagno, er.SheetNo, al.AccSize as AiroperateAccSize
                              FROM DataSheetLv3 d 
                              JOIN EstimateSheetLv1 e ON d.TempEstimateNo = e.TempEstimateNo 
                              JOIN EstimateRequest er ON d.TempEstimateNo = er.TempEstimateNo AND d.SheetID = er.SheetID
                              LEFT JOIN AiroperateList al ON d.AirOpCode = al.AccModelCode 
-                             WHERE d.TempEstimateNo = @tempEstimateNo;";
+                             WHERE d.TempEstimateNo = @tempEstimateNo
+                             ORDER BY er.SheetNo;";
                 
                 Console.WriteLine("🔌 데이터베이스 연결 시도...");
                 using var connection = new MySql.Data.MySqlClient.MySqlConnection(_context.Database.GetConnectionString());
@@ -5935,7 +5936,7 @@ private string? ConvertEmptyToNull(string? value)
                 using var modeCmd = new MySqlCommand("SET sql_mode = (SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));", conn);
                 await modeCmd.ExecuteNonQueryAsync();
                 
-                string query = @"SELECT d.*, e.Project, er.Tagno, er.Qty, er.UnitPrice,
+                string query = @"SELECT d.*, e.Project, er.Tagno, er.Qty, er.UnitPrice, er.SheetNo,
                                        bvl.ValveSeries as ValveTypeName,
                                        bsl.BodySize as BodySizeName,
                                        tpsl.PortSize as TrimPortSizeName,
@@ -5973,7 +5974,7 @@ private string? ConvertEmptyToNull(string? value)
                                 LEFT JOIN TrimTypeList ttl ON d.TrimType = ttl.TrimTypeCode
                                 LEFT JOIN AiroperateList al ON d.AirOpCode = al.AccModelCode
                                 WHERE d.TempEstimateNo = @tempEstimateNo
-                                GROUP BY d.TempEstimateNo, d.SheetID;";
+                                ORDER BY er.SheetNo;";
 
                 using var cmd = new MySqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@tempEstimateNo", tempEstimateNo);
@@ -6483,7 +6484,7 @@ await _context.SaveChangesAsync();
                 using var modeCmd = new MySqlCommand("SET sql_mode = (SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));", conn);
                 await modeCmd.ExecuteNonQueryAsync();
                 
-                string query = @"SELECT d.*, e.Project, e.ManagerID, er.Tagno, er.Qty, er.UnitPrice,
+                string query = @"SELECT d.*, e.Project, e.ManagerID, er.Tagno, er.Qty, er.UnitPrice, er.SheetNo,
                                        bvl.ValveSeries as ValveTypeName,
                                        bml.BodyMat as BodyMatName,
                                        tml.TrimMat as TrimMatName,
@@ -6498,7 +6499,7 @@ await _context.SaveChangesAsync();
                                 LEFT JOIN BodyRatingList brl ON d.Rating = brl.RatingCode
                                 LEFT JOIN User u ON e.ManagerID = u.UserID
                                 WHERE d.TempEstimateNo = @tempEstimateNo
-                                GROUP BY d.TempEstimateNo, d.SheetID;";
+                                ORDER BY er.SheetNo;";
 
                 using var cmd = new MySqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@tempEstimateNo", tempEstimateNo);
