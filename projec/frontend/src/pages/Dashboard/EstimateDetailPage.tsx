@@ -418,7 +418,7 @@ const EstimateDetailPage: React.FC = () => {
   // BodyValveList 가져오기
   const fetchBodyValveList = async () => {
     try {
-      const response = await fetch('http://localhost:5135/api/estimate/body-valve-list');
+      const response = await fetch('http://192.168.0.14:5135/api/estimate/body-valve-list');
       if (!response.ok) {
         console.error('body-valve-list 요청 실패:', response.status, response.statusText);
         setBodyValveList([]);
@@ -435,7 +435,7 @@ const EstimateDetailPage: React.FC = () => {
   const fetchActSizeList = async (actSeriesCode: string) => {
     try {
       console.log('fetchActSizeList 시작:', actSeriesCode);
-      const response = await fetch(`http://localhost:5135/api/masterdata/act/size?actSeriesCode=${actSeriesCode}`);
+      const response = await fetch(`http://192.168.0.14:5135/api/masterdata/act/size?actSeriesCode=${actSeriesCode}`);
       const data = await response.json();
       console.log('ACT Size API 응답:', data);
       setActSizeList(data || []);
@@ -452,7 +452,7 @@ const EstimateDetailPage: React.FC = () => {
     try {
       setIsLoadingFiles(true);
       console.log('🔄 fetchManagerFiles 시작 - tempEstimateNo:', tempEstimateNo);
-      const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/attachments`);
+      const response = await fetch(`http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/attachments`);
       console.log('📡 API 응답 상태:', response.status, response.ok);
       
       if (response.ok) {
@@ -496,7 +496,7 @@ const EstimateDetailPage: React.FC = () => {
     try {
       setIsLoadingFiles(true);
       console.log('🔄 fetchCustomerFiles 시작 - tempEstimateNo:', tempEstimateNo);
-      const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/attachments`);
+      const response = await fetch(`http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/attachments`);
       console.log('📡 API 응답 상태:', response.status, response.ok);
       
       if (response.ok) {
@@ -522,7 +522,7 @@ const EstimateDetailPage: React.FC = () => {
     }
     
     try {
-      const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/files/${managerFileType}`, {
+      const response = await fetch(`http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/files/${managerFileType}`, {
         method: 'DELETE'
       });
       
@@ -544,7 +544,7 @@ const EstimateDetailPage: React.FC = () => {
     if (!tempEstimateNo) return;
     if (!window.confirm('정말로 이 파일을 삭제하시겠습니까?')) return;
     try {
-      const response = await fetch(`http://localhost:5135/api/estimate/attachments/${attachmentID}`, {
+      const response = await fetch(`http://192.168.0.14:5135/api/estimate/attachments/${attachmentID}`, {
         method: 'DELETE'
       });
       if (response.ok) {
@@ -562,7 +562,7 @@ const EstimateDetailPage: React.FC = () => {
   const downloadFile = async (filePath: string, fileName: string) => {
     try {
       // 🔑 파일 다운로드 API 수정 - 새로 추가된 API 사용
-      const response = await fetch(`http://localhost:5135/api/estimate/attachments/download?filePath=${encodeURIComponent(filePath)}`);
+      const response = await fetch(`http://192.168.0.14:5135/api/estimate/attachments/download?filePath=${encodeURIComponent(filePath)}`);
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -808,7 +808,7 @@ const EstimateDetailPage: React.FC = () => {
     try {
       console.log(`악세사리 데이터 로딩 시도 ${retryCount + 1}/${maxRetries + 1}...`);
       
-      const accSearchRes = await fetch('http://localhost:5135/api/masterdata/acc/search');
+      const accSearchRes = await fetch('http://192.168.0.14:5135/api/masterdata/acc/search');
       
       if (accSearchRes.ok) {
         const accSearchData = await accSearchRes.json();
@@ -874,11 +874,11 @@ const EstimateDetailPage: React.FC = () => {
     try {
       // Step 1, 2 마스터 데이터 (EstimateController)
       const [sizeRes, matRes, trimMatRes, optionRes, ratingRes] = await Promise.all([
-        fetch('http://localhost:5135/api/estimate/body-size-list'),
-        fetch('http://localhost:5135/api/estimate/body-mat-list'),
-        fetch('http://localhost:5135/api/estimate/trim-mat-list'),
-        fetch('http://localhost:5135/api/estimate/trim-option-list'),
-        fetch('http://localhost:5135/api/estimate/body-rating-list')
+        fetch('http://192.168.0.14:5135/api/estimate/body-size-list'),
+        fetch('http://192.168.0.14:5135/api/estimate/body-mat-list'),
+        fetch('http://192.168.0.14:5135/api/estimate/trim-mat-list'),
+        fetch('http://192.168.0.14:5135/api/estimate/trim-option-list'),
+        fetch('http://192.168.0.14:5135/api/estimate/body-rating-list')
       ]);
       
       const [sizeData, matData, trimMatData, optionData, ratingData] = await Promise.all([
@@ -899,15 +899,15 @@ const EstimateDetailPage: React.FC = () => {
       // Step 3 마스터 데이터 (MasterDataController)
       const [bodyBonnetRes, bodyConnectionRes, trimTypeRes, trimSeriesRes, trimPortSizeRes, trimFormRes, 
             actTypeRes, actSeriesRes, actHWRes] = await Promise.all([
-        fetch('http://localhost:5135/api/masterdata/body/bonnet'),
-        fetch('http://localhost:5135/api/masterdata/body/connection'),
-        fetch('http://localhost:5135/api/masterdata/trim-type'),
-        fetch('http://localhost:5135/api/masterdata/trim/series'),
-        fetch('http://localhost:5135/api/masterdata/trim/port-size'),
-        fetch('http://localhost:5135/api/masterdata/trim/form'),
-        fetch('http://localhost:5135/api/masterdata/act/type'),
-        fetch('http://localhost:5135/api/masterdata/act/series'),
-        fetch('http://localhost:5135/api/masterdata/act/hw')
+        fetch('http://192.168.0.14:5135/api/masterdata/body/bonnet'),
+        fetch('http://192.168.0.14:5135/api/masterdata/body/connection'),
+        fetch('http://192.168.0.14:5135/api/masterdata/trim-type'),
+        fetch('http://192.168.0.14:5135/api/masterdata/trim/series'),
+        fetch('http://192.168.0.14:5135/api/masterdata/trim/port-size'),
+        fetch('http://192.168.0.14:5135/api/masterdata/trim/form'),
+        fetch('http://192.168.0.14:5135/api/masterdata/act/type'),
+        fetch('http://192.168.0.14:5135/api/masterdata/act/series'),
+        fetch('http://192.168.0.14:5135/api/masterdata/act/hw')
       ]);
 
       // 드래그 앤 드롭 핸들러 (추가)
@@ -1433,7 +1433,7 @@ setValves(valvesData);
       formData.append('file', file);
 
       // 🔑 쿼리 파라미터로 전송하도록 수정
-      const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/attachments?uploadUserID=admin&fileType=manager&managerFileType=${fileType}`, {
+      const response = await fetch(`http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/attachments?uploadUserID=admin&fileType=manager&managerFileType=${fileType}`, {
         method: 'POST',
         body: formData
       });
@@ -1501,7 +1501,7 @@ setValves(valvesData);
         formData.append('file', file);
 
         // manager 업로드 + managerFileType=customer 로 업로드 → ResultFiles/customer에 저장되도록 백엔드 규약 사용
-        const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/attachments?uploadUserID=admin&fileType=manager&managerFileType=customer`, {
+        const response = await fetch(`http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/attachments?uploadUserID=admin&fileType=manager&managerFileType=customer`, {
           method: 'POST',
           body: formData,
         });
@@ -1539,7 +1539,7 @@ setValves(valvesData);
     if (!tempEstimateNo) return;
     setDocGenerating(prev => ({ ...prev, [type]: true }));
     try {
-      const resp = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/${endpoint}`, { method: 'POST' });
+      const resp = await fetch(`http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/${endpoint}`, { method: 'POST' });
       if (!resp.ok) {
         const er = await resp.json().catch(()=>({}));
         throw new Error(er.message || '생성 실패');
@@ -1620,7 +1620,7 @@ setValves(valvesData);
   const handleCompleteQuote = async () => {
     if (!tempEstimateNo) return;
     try {
-      const resp = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/complete`, { method: 'POST' });
+      const resp = await fetch(`http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/complete`, { method: 'POST' });
       if (!resp.ok) {
         const er = await resp.json().catch(()=>({message:'처리 실패'}));
         alert(er.message || '처리 실패');
@@ -1643,7 +1643,7 @@ setValves(valvesData);
   const handleCancelComplete = async () => {
     if (!tempEstimateNo) return;
     try {
-      const resp = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/complete/cancel`, { method: 'POST' });
+      const resp = await fetch(`http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/complete/cancel`, { method: 'POST' });
       if (!resp.ok) throw new Error('완료취소 실패');
       setCurrentStatus('견적처리중');
     } catch (e) {
@@ -1655,7 +1655,7 @@ setValves(valvesData);
   const handleConfirmOrder = async () => {
     if (!tempEstimateNo) return;
     try {
-      const resp = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/order/confirm`, { method: 'POST' });
+      const resp = await fetch(`http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/order/confirm`, { method: 'POST' });
       if (!resp.ok) throw new Error('주문확정 실패');
       setCurrentStatus('주문');
     } catch (e) {
@@ -1670,23 +1670,23 @@ setValves(valvesData);
       
       switch (managerFileType) {
         case 'cvlist':
-          apiEndpoint = `http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/generate-cv`;
+          apiEndpoint = `http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/generate-cv`;
           fileTypeName = 'CV 리스트';
           break;
         case 'vllist':
-          apiEndpoint = `http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/generate-vl`;
+          apiEndpoint = `http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/generate-vl`;
           fileTypeName = 'VL 리스트';
           break;
         case 'datasheet':
-          apiEndpoint = `http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/generate-datasheet`;
+          apiEndpoint = `http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/generate-datasheet`;
           fileTypeName = 'DataSheet';
           break;
         case 'singlequote':
-          apiEndpoint = `http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/generate-single-quote`;
+          apiEndpoint = `http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/generate-single-quote`;
           fileTypeName = '단품견적서';
           break;
         case 'multiquote':
-          apiEndpoint = `http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/generate-multi-quote`;
+          apiEndpoint = `http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/generate-multi-quote`;
           fileTypeName = '다수량견적서';
           break;
         default:
@@ -1824,7 +1824,7 @@ useEffect(() => {
 
 const handleSaveValveOrder = async () => {
   const sheetIDs = valves.map(v => v.sheetID);           // 현재 화면 순서대로
-  const resp = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/requests/order`, {
+  const resp = await fetch(`http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/requests/order`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(sheetIDs)
@@ -1842,7 +1842,7 @@ const handleSaveValveOrder = async () => {
 const saveValveOrder = async () => {
   if (!tempEstimateNo) return;
   const sheetIDs = valves.map(v => v.sheetID); // 전체 목록의 현재 순서
-  await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/requests/order`, {
+  await fetch(`http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/requests/order`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(sheetIDs),
@@ -1872,7 +1872,7 @@ const handleSaveSpecification = useCallback(async () => {
     }));
 
     // 2) 일괄 사양 저장
-    const resp = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/specification/bulk`, {
+    const resp = await fetch(`http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/specification/bulk`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ items })
@@ -2128,7 +2128,7 @@ const handleSaveSpecification = useCallback(async () => {
         console.error("tempEstimateNo가 없습니다.");
         return;
       }
-      const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/specification/${sheetID}`);
+      const response = await fetch(`http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/specification/${sheetID}`);
       if (response.ok) {
         const specificationData = await response.json();
         console.log('--- 실제 Accessories 데이터 구조 ---', specificationData.accessories);
@@ -2274,7 +2274,7 @@ console.log('첫 번째 메이커:', accMakerList[0]);
   };
   const saveOrder = async () => {
   const sheetIDs = valves.map(v => v.sheetID);
-  const resp = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/requests/order`, {
+  const resp = await fetch(`http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/requests/order`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(sheetIDs),
@@ -2974,7 +2974,7 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
     if (!tempEstimateNo) return;
     if (window.confirm('견적 시작을 취소하시겠습니까? 담당자 배정이 해제되고 "견적요청" 상태로 돌아갑니다.')) {
       try {
-        const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/cancel-start`, {
+        const response = await fetch(`http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/cancel-start`, {
           method: 'POST',
         });
 
@@ -2998,7 +2998,7 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
     if (!tempEstimateNo) return;
     if (window.confirm('정말로 주문을 취소하시겠습니까? "견적완료" 상태로 돌아갑니다.')) {
       try {
-        const response = await fetch(`http://localhost:5135/api/estimate/sheets/${tempEstimateNo}/order/cancel`, {
+        const response = await fetch(`http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/order/cancel`, {
           method: 'POST',
         });
 

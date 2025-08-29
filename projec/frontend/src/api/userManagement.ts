@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { getApiUrl } from '../config/api';
 
-const USER_MANAGEMENT_API_BASE_URL = 'http://localhost:5237/api';
+const USER_MANAGEMENT_API_BASE_URL = getApiUrl('USER_MANAGEMENT_API');
 
 // 데이터 타입 정의
 export interface UserResponseDto {

@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { getApiUrl } from '../config/api';
 
-const API_BASE_URL = 'http://localhost:5135/api';
+const API_BASE_URL = getApiUrl('ESTIMATE_REQUEST_API');
 
 // 견적 요청 조회 요청 인터페이스
 export interface EstimateInquiryRequest {

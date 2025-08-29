@@ -12,7 +12,7 @@ namespace  ConvalServiceApi.Models
         public DatabaseHelper()
         {
             // 로컬 MySQL 연결 문자열 (비밀번호 없음)
-            connectionString = "Server=localhost;Database=pwd_final;Uid=root;";
+            connectionString = "Server=192.168.0.14;Database=pwd_final;Uid=root;";
         }
 
         public bool TestConnection()

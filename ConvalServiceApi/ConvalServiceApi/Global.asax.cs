@@ -24,7 +24,7 @@ namespace ConvalServiceApi
         {
             if (HttpContext.Current.Request.HttpMethod == "OPTIONS")
             {
-                HttpContext.Current.Response.AddHeader("Access-Control-Allow-Origin", "http://localhost:5001");
+                HttpContext.Current.Response.AddHeader("Access-Control-Allow-Origin", "*");
                 HttpContext.Current.Response.AddHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
                 HttpContext.Current.Response.AddHeader("Access-Control-Allow-Headers", "Content-Type, Accept");
                 HttpContext.Current.Response.StatusCode = 200;
@@ -33,7 +33,7 @@ namespace ConvalServiceApi
             }
             else
             {
-                HttpContext.Current.Response.AddHeader("Access-Control-Allow-Origin", "http://localhost:5001");
+                HttpContext.Current.Response.AddHeader("Access-Control-Allow-Origin", "*");
             }
         }
     }

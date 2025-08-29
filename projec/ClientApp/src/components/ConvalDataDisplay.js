@@ -1348,7 +1348,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
     
     try {
       // api.js의 downloadPdf 함수와 동일한 방식으로 처리
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://localhost:7001/api'}/conval/download/pdf/${data.TempEstimateNo}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://0.0.0.0:7001/api'}/conval/download/pdf/${data.TempEstimateNo}`);
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -1369,7 +1369,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
     
     try {
       // api.js의 downloadCcv 함수와 동일한 방식으로 처리
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://localhost:7001/api'}/conval/download/ccv/${data.TempEstimateNo}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://0.0.0.0:7001/api'}/conval/download/ccv/${data.TempEstimateNo}`);
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);

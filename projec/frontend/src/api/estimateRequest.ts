@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { getApiUrl } from '../config/api';
 
-const ESTIMATE_API_BASE_URL = 'http://localhost:5135/api';
+const ESTIMATE_API_BASE_URL = getApiUrl('ESTIMATE_REQUEST_API');
 
 // DTO 인터페이스들
 export interface CreateEstimateSheetDto {

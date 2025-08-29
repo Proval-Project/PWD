@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("EstimateRequestSystem")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4094ccd55538f0de791780c39e24dc184f6d5119")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6b6fe3fb5b79fe4c30bdbf2a843d693f0e877e1f")]
 [assembly: System.Reflection.AssemblyProductAttribute("EstimateRequestSystem")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EstimateRequestSystem")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

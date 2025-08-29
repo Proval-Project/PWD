@@ -24,8 +24,8 @@ cleanup() {
 trap cleanup INT TERM
 
 # 포트: Auth 5236 / User 5237 / Estimate 5135
-start_service "AuthSystem" "$BASE/AuthSystem" "http://localhost:5236"
-start_service "UserManagementSystem" "$BASE/UserManagementSystem" "http://localhost:5237"
-start_service "EstimateRequestSystem" "$BASE/EstimateRequestSystem/EstimateRequestSystem" "http://localhost:5135"
+start_service "AuthSystem" "$BASE/AuthSystem" "http://0.0.0.0:5236"
+start_service "UserManagementSystem" "$BASE/UserManagementSystem" "http://0.0.0.0:5237"
+start_service "EstimateRequestSystem" "$BASE/EstimateRequestSystem/EstimateRequestSystem" "http://0.0.0.0:5135"
 
 wait

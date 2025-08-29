@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { getApiUrl } from '../config/api';
 
-const AUTH_API_BASE_URL = 'http://localhost:5236/api';
+const AUTH_API_BASE_URL = getApiUrl('AUTH_API');
 
 // 로그인
 export const login = async (userID: string, password: string) => {
