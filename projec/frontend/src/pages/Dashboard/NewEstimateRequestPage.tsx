@@ -1189,8 +1189,12 @@ const NewEstimateRequestPage: React.FC = () => {
       }
       setCustomerRequirement(existingData.customerRequirement || '');
       
-      // EstimateRequest 데이터가 있으면 복원
-      if (existingData.estimateRequests && existingData.estimateRequests.length > 0) {
+              // EstimateRequest 데이터가 있으면 복원
+        console.log('🔍 loadExistingData - existingData 확인:', existingData);
+        console.log('🔍 estimateRequests 존재 여부:', !!existingData.estimateRequests);
+        console.log('🔍 estimateRequests 길이:', existingData.estimateRequests?.length);
+        
+        if (existingData.estimateRequests && existingData.estimateRequests.length > 0) {
         
         // EstimateRequest 데이터를 types와 valves로 변환
         const loadedTypes: TypeData[] = [];
@@ -1199,32 +1203,61 @@ const NewEstimateRequestPage: React.FC = () => {
         // 백엔드 응답 구조 확인 (새로운 구조 vs 이전 구조)
         const isNewStructure = existingData.estimateRequests.length > 0 && existingData.estimateRequests[0].tagNos;
         
+        // 디버깅 로그 추가
+        console.log('🔍 구조 확인:');
+        console.log('estimateRequests[0]:', existingData.estimateRequests[0]);
+        console.log('estimateRequests[0].tagNos:', existingData.estimateRequests[0]?.tagNos);
+        console.log('isNewStructure:', isNewStructure);
+        
         if (isNewStructure) {
           // 새로운 구조: { valveType, tagNos[] }
-          existingData.estimateRequests.forEach((req: any, reqIndex: number) => {
-            // ValveSeriesCode로 실제 이름 조회
-            const valveSeriesName = getValveSeriesName(req.valveType || '');
-            
-            // Type 데이터 생성
+          // 밸브 타입별로 SheetNo 순서 계산 (수정된 버전)
+          const valveTypeOrder = new Map<string, number>();
+          
+          existingData.estimateRequests.forEach((req: any) => {
+            if (req.tagNos && req.tagNos.length > 0) {
+              // 각 밸브 타입의 모든 TagNo의 SheetNo를 확인하여 가장 작은 값 사용
+              const sheetNos = req.tagNos.map((tagNo: any) => tagNo.sheetNo).filter(Boolean);
+              if (sheetNos.length > 0) {
+                const minSheetNo = Math.min(...sheetNos);
+                valveTypeOrder.set(req.valveType, minSheetNo);
+              }
+            }
+          });
+          
+          // 밸브 타입을 SheetNo 순서대로 정렬
+          const sortedValveTypes = Array.from(valveTypeOrder.entries())
+            .sort(([, a], [, b]) => a - b);
+          
+          // 디버깅 로그 추가
+          console.log('🔍 밸브 타입 정렬 정보:');
+          console.log('valveTypeOrder:', valveTypeOrder);
+          console.log('sortedValveTypes:', sortedValveTypes);
+          
+          // 정렬된 순서대로 Type 데이터 생성
+          sortedValveTypes.forEach(([valveType, sheetNo], index) => {
+            const valveSeriesName = getValveSeriesName(valveType);
             const typeData: TypeData = {
-              id: `type-${reqIndex}`,
-              name: valveSeriesName, // 실제 이름 사용
-              code: req.valveType || '', // ValveSeriesCode
-              count: req.tagNos ? req.tagNos.length : 0,
-              order: reqIndex,
-              typeId: `type-${reqIndex}` // 추가
+              id: `type-${index}`,
+              name: valveSeriesName,
+              code: valveType,
+              count: existingData.estimateRequests.filter((req: any) => req.valveType === valveType).length,
+              order: sheetNo,  // SheetNo 기준 순서
+              typeId: `type-${index}`
             };
             loadedTypes.push(typeData);
-            
-            // TagNo 데이터를 Valve 데이터로 변환
+          });
+          
+          // TagNo 데이터를 Valve 데이터로 변환
+          existingData.estimateRequests.forEach((req: any) => {
             if (req.tagNos && req.tagNos.length > 0) {
               req.tagNos.forEach((tagNo: any, tagIndex: number) => {
-              const valveData: ValveData = {
-                id: `valve-${reqIndex}-${tagIndex}`,
-                tagNo: tagNo.tagNo || '',
-                qty: tagNo.qty || 1,
-                order: tagIndex + 1, // 1부터 시작
-                sheetID: tagNo.sheetID || 0,
+                const valveData: ValveData = {
+                  id: `valve-${req.valveType}-${tagIndex}`,
+                  tagNo: tagNo.tagNo || '',
+                  qty: tagNo.qty || 1,
+                  order: tagNo.sheetNo || tagIndex + 1, // SheetNo 사용, 없으면 tagIndex + 1
+                  sheetID: tagNo.sheetID || 0,
                 fluid: {
                   medium: tagNo.medium || '',
                   fluid: tagNo.fluid || '',
@@ -1266,7 +1299,7 @@ const NewEstimateRequestPage: React.FC = () => {
                   temperatureUnit: tagNo.temperatureUnit || '℃'
                 },
                 body: {
-                  type: valveSeriesName,
+                  type: getValveSeriesName(req.valveType || ''),
                   typeCode: req.valveType || '',
                   size: tagNo.bodySize,
                   sizeUnit: tagNo.bodySizeUnit,
@@ -1297,7 +1330,7 @@ const NewEstimateRequestPage: React.FC = () => {
                 isN1: false,
                 isDensity: tagNo.isDensity ?? false,
                 isHW: tagNo.isHW || false,
-                typeId: typeData.id
+                typeId: `type-${req.valveType}`
               };
                 loadedValves.push(valveData);
               });
@@ -1317,18 +1350,40 @@ const NewEstimateRequestPage: React.FC = () => {
           
           console.log('그룹핑된 ValveType:', groupedByValveType);
           
-          Object.entries(groupedByValveType).forEach(([valveType, requests]: [string, any], reqIndex: number) => {
-            // ValveSeriesCode로 실제 이름 조회
+          // 밸브 타입별로 SheetNo 순서 계산 (이전 구조용)
+          const valveTypeOrder = new Map<string, number>();
+          
+          Object.entries(groupedByValveType).forEach(([valveType, requests]: [string, any]) => {
+            // 각 밸브 타입의 모든 request의 SheetNo를 확인하여 가장 작은 값 사용
+            const sheetNos = requests.map((req: any) => req.sheetNo).filter(Boolean);
+            if (sheetNos.length > 0) {
+              const minSheetNo = Math.min(...sheetNos);
+              valveTypeOrder.set(valveType, minSheetNo);
+            }
+          });
+          
+          // 밸브 타입을 SheetNo 순서대로 정렬
+          const sortedValveTypes = Array.from(valveTypeOrder.entries())
+            .sort(([, a], [, b]) => a - b);
+          
+          // 디버깅 로그 추가
+          console.log('🔍 이전 구조 - 밸브 타입 정렬 정보:');
+          console.log('valveTypeOrder:', valveTypeOrder);
+          console.log('sortedValveTypes:', sortedValveTypes);
+          
+          // 정렬된 순서대로 Type 데이터 생성
+          sortedValveTypes.forEach(([valveType, sheetNo], index) => {
             const valveSeriesName = getValveSeriesName(valveType);
+            const requests = groupedByValveType[valveType];
             
             // Type 데이터 생성
             const typeData: TypeData = {
-              id: `type-${reqIndex}`,
+              id: `type-${index}`,
               name: valveSeriesName,
               code: valveType,
               count: requests.length,
-              order: reqIndex,
-              typeId: `type-${reqIndex}` // 추가
+              order: sheetNo,  // SheetNo 기준 순서
+              typeId: `type-${index}` // 추가
             };
             loadedTypes.push(typeData);
             
@@ -1347,10 +1402,10 @@ const NewEstimateRequestPage: React.FC = () => {
               
               // loadExistingData 함수 내부에서
               const valveData: ValveData = {
-                id: `valve-${reqIndex}-${tagIndex}`,
+                id: `valve-${valveType}-${tagIndex}`,
                 tagNo: req.tagno || '',
                 qty: req.qty || 1,
-                order: tagIndex + 1, // 1부터 시작
+                order: req.sheetNo || tagIndex + 1, // SheetNo 사용, 없으면 tagIndex + 1
                 sheetID: req.sheetID || 0,
                 fluid: {
                   medium: req.medium || '',
@@ -1431,6 +1486,9 @@ const NewEstimateRequestPage: React.FC = () => {
           });
         }
         // loadExistingData 함수 내부에서
+        // loadedValves를 SheetNo 순서대로 정렬
+        loadedValves.sort((a, b) => a.order - b.order);
+        
         // 상태 업데이트
         setTypes(loadedTypes);
 
@@ -1528,7 +1586,17 @@ const NewEstimateRequestPage: React.FC = () => {
     }
 
     const loadParam = searchParams.get('load');
-    if (loadParam && !isDataLoaded.current) {
+    console.log('🔍 useEffect - loadParam 확인:', loadParam);
+    console.log('🔍 useEffect - isDataLoaded.current:', isDataLoaded.current);
+    
+    if (loadParam) {
+      console.log('🔍 loadExistingData 호출 시작:', loadParam);
+      console.log('🔍 isDataLoaded.current 상태:', isDataLoaded.current);
+      
+      // isDataLoaded를 강제로 false로 설정하여 항상 로드되도록 함
+      isDataLoaded.current = false;
+      console.log('🔍 isDataLoaded.current를 false로 강제 설정');
+      
       loadExistingData(loadParam);
       isDataLoaded.current = true;
     }

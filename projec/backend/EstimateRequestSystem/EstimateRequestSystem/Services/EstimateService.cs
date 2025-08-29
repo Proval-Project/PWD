@@ -200,99 +200,108 @@ namespace EstimateRequestSystem.Services
                 await _context.SaveChangesAsync();
             }
 
-            // 3. 새 데이터 추가
+            // 3. 새 데이터 추가 - SheetNo 순서대로 정렬하여 저장
             if (dto.TypeSelections != null && dto.TypeSelections.Any())
             {
-                foreach (var typeSelection in dto.TypeSelections)
+                // 모든 TagNo를 SheetNo 순서대로 정렬
+                var allTagNos = dto.TypeSelections
+                    .SelectMany(ts => ts.Valves.SelectMany(v => v.TagNos))
+                    .OrderBy(tn => tn.SheetNo)  // SheetNo 순서대로 정렬
+                    .ToList();
+                
+                Console.WriteLine($"🔍 SaveDraft - 정렬된 TagNos - SheetNo 순서: {string.Join(", ", allTagNos.Select(tn => $"{tn.Tagno}({tn.SheetNo})"))}");
+                
+                foreach (var tagNo in allTagNos)
                 {
-                    foreach (var valveSelection in typeSelection.Valves)
+                    // valveSelection 정보를 찾기
+                    var valveSelection = dto.TypeSelections
+                        .SelectMany(ts => ts.Valves)
+                        .FirstOrDefault(v => v.TagNos.Any(tn => tn.SheetID == tagNo.SheetID));
+                    
+                    var estimateRequest = new EstimateRequest
                     {
-                        foreach (var tagNo in valveSelection.TagNos)
-                        {
-                            var estimateRequest = new EstimateRequest
-                            {
-                                TempEstimateNo = tempEstimateNo,
-                                SheetID = tagNo.SheetID.Value,
-                                SheetNo = tagNo.SheetNo,
-                                ValveType = valveSelection.ValveSeriesCode,
-                                Tagno = tagNo.Tagno,
-                                Qty = tagNo.Qty,
-                                Medium = tagNo.Medium,
-                                Fluid = tagNo.Fluid,
-                                IsQM = tagNo.IsQM,
-                                QMUnit = tagNo.QMUnit,
-                                QMMax = tagNo.QMMax,
-                                QMNor = tagNo.QMNor,
-                                QMMin = tagNo.QMMin,
-                                QNUnit = tagNo.QNUnit,
-                                QNMax = tagNo.QNMax,
-                                QNNor = tagNo.QNNor,
-                                QNMin = tagNo.QNMin,
-                                IsP2 = tagNo.IsP2,
-                                IsDensity = tagNo.IsDensity,
-                                PressureUnit = tagNo.PressureUnit,
-                                InletPressureMaxQ = tagNo.InletPressureMaxQ,
-                                InletPressureNorQ = tagNo.InletPressureNorQ,
-                                InletPressureMinQ = tagNo.InletPressureMinQ,
-                                OutletPressureMaxQ = tagNo.OutletPressureMaxQ,
-                                OutletPressureNorQ = tagNo.OutletPressureNorQ,
-                                OutletPressureMinQ = tagNo.OutletPressureMinQ,
-                                DifferentialPressureMaxQ = tagNo.DifferentialPressureMaxQ,
-                                DifferentialPressureNorQ = tagNo.DifferentialPressureNorQ,
-                                DifferentialPressureMinQ = tagNo.DifferentialPressureMinQ,
-                                TemperatureUnit = tagNo.TemperatureUnit,
-                                InletTemperatureQ = tagNo.InletTemperatureQ,
-                                InletTemperatureNorQ = tagNo.InletTemperatureNorQ,
-                                InletTemperatureMinQ = tagNo.InletTemperatureMinQ,
-                                DensityUnit = tagNo.DensityUnit,
-                                Density = tagNo.Density,
-                                MolecularWeightUnit = tagNo.MolecularWeightUnit,
-                                MolecularWeight = tagNo.MolecularWeight,
-                                BodySizeUnit = string.IsNullOrEmpty(tagNo.BodySizeUnit) ? null : tagNo.BodySizeUnit,
-                                BodySize = string.IsNullOrEmpty(tagNo.BodySize) ? null : tagNo.BodySize,
-                                BodyMat = string.IsNullOrEmpty(tagNo.BodyMat) ? null : tagNo.BodyMat,
-                                TrimMat = string.IsNullOrEmpty(tagNo.TrimMat) ? null : tagNo.TrimMat,
-                                TrimOption = string.IsNullOrEmpty(tagNo.TrimOption) ? null : tagNo.TrimOption,
-                                BodyRating = await GetBodyRatingCodeAsync(tagNo.BodyRating),
-                                ActType = await GetActTypeCodeAsync(tagNo.ActType),
-                                IsHW = tagNo.IsHW,
-                                IsPositioner = tagNo.IsPositioner,
-                                PositionerType = tagNo.PositionerType,
-                                ExplosionProof = tagNo.ExplosionProof,
-                                TransmitterType = tagNo.TransmitterType,
-                                IsSolenoid = tagNo.IsSolenoid,
-                                IsLimSwitch = tagNo.IsLimSwitch,
-                                IsAirSet = tagNo.IsAirSet,
-                                IsVolumeBooster = tagNo.IsVolumeBooster,
-                                IsAirOperated = tagNo.IsAirOperated,
-                                IsLockUp = tagNo.IsLockUp,
-                                IsSnapActingRelay = tagNo.IsSnapActingRelay
-                            };
+                        TempEstimateNo = tempEstimateNo,
+                        SheetID = tagNo.SheetID.Value,
+                        SheetNo = tagNo.SheetNo,
+                        ValveType = valveSelection?.ValveSeriesCode,
+                        Tagno = tagNo.Tagno,
+                        Qty = tagNo.Qty,
+                        Medium = tagNo.Medium,
+                        Fluid = tagNo.Fluid,
+                        IsQM = tagNo.IsQM,
+                        QMUnit = tagNo.QMUnit,
+                        QMMax = tagNo.QMMax,
+                        QMNor = tagNo.QMNor,
+                        QMMin = tagNo.QMMin,
+                        QNUnit = tagNo.QNUnit,
+                        QNMax = tagNo.QNMax,
+                        QNNor = tagNo.QNNor,
+                        QNMin = tagNo.QNMin,
+                        IsP2 = tagNo.IsP2,
+                        IsDensity = tagNo.IsDensity,
+                        PressureUnit = tagNo.PressureUnit,
+                        InletPressureMaxQ = tagNo.InletPressureMaxQ,
+                        InletPressureNorQ = tagNo.InletPressureNorQ,
+                        InletPressureMinQ = tagNo.InletPressureMinQ,
+                        OutletPressureMaxQ = tagNo.OutletPressureMaxQ,
+                        OutletPressureNorQ = tagNo.OutletPressureNorQ,
+                        OutletPressureMinQ = tagNo.OutletPressureMinQ,
+                        DifferentialPressureMaxQ = tagNo.DifferentialPressureMaxQ,
+                        DifferentialPressureNorQ = tagNo.DifferentialPressureNorQ,
+                        DifferentialPressureMinQ = tagNo.DifferentialPressureMinQ,
+                        TemperatureUnit = tagNo.TemperatureUnit,
+                        InletTemperatureQ = tagNo.InletTemperatureQ,
+                        InletTemperatureNorQ = tagNo.InletTemperatureNorQ,
+                        InletTemperatureMinQ = tagNo.InletTemperatureMinQ,
+                        DensityUnit = tagNo.DensityUnit,
+                        Density = tagNo.Density,
+                        MolecularWeightUnit = tagNo.MolecularWeightUnit,
+                        MolecularWeight = tagNo.MolecularWeight,
+                        BodySizeUnit = string.IsNullOrEmpty(tagNo.BodySizeUnit) ? null : tagNo.BodySizeUnit,
+                        BodySize = string.IsNullOrEmpty(tagNo.BodySize) ? null : tagNo.BodySize,
+                        BodyMat = string.IsNullOrEmpty(tagNo.BodyMat) ? null : tagNo.BodyMat,
+                        TrimMat = string.IsNullOrEmpty(tagNo.TrimMat) ? null : tagNo.TrimMat,
+                        TrimOption = string.IsNullOrEmpty(tagNo.TrimOption) ? null : tagNo.TrimOption,
+                        BodyRating = await GetBodyRatingCodeAsync(tagNo.BodyRating),
+                        ActType = await GetActTypeCodeAsync(tagNo.ActType),
+                        IsHW = tagNo.IsHW,
+                        IsPositioner = tagNo.IsPositioner,
+                        PositionerType = tagNo.PositionerType,
+                        ExplosionProof = tagNo.ExplosionProof,
+                        TransmitterType = tagNo.TransmitterType,
+                        IsSolenoid = tagNo.IsSolenoid,
+                        IsLimSwitch = tagNo.IsLimSwitch,
+                        IsAirSet = tagNo.IsAirSet,
+                        IsVolumeBooster = tagNo.IsVolumeBooster,
+                        IsAirOperated = tagNo.IsAirOperated,
+                        IsLockUp = tagNo.IsLockUp,
+                        IsSnapActingRelay = tagNo.IsSnapActingRelay
+                    };
 
-                            _context.EstimateRequest.Add(estimateRequest);
+                    _context.EstimateRequest.Add(estimateRequest);
 
-                            // DataSheetLv3에도 동일한 데이터 저장
-                            var dataSheetLv3 = new DataSheetLv3
-                            {
-                                TempEstimateNo = tempEstimateNo,
-                                SheetID = tagNo.SheetID.Value,
-                                Medium = tagNo.Medium,
-                                Fluid = tagNo.Fluid,
-                                IsQM = tagNo.IsQM,
-                                IsP2 = tagNo.IsP2,
-                                IsDensity = tagNo.IsDensity,
-                                QMUnit = tagNo.QMUnit,
-                                QMMax = tagNo.QMMax,
-                                QMNor = tagNo.QMNor,
-                                QMMin = tagNo.QMMin,
-                                QNUnit = tagNo.QNUnit,
-                                QNMax = tagNo.QNMax,
-                                QNNor = tagNo.QNNor,
-                                QNMin = tagNo.QNMin,
-                                PressureUnit = tagNo.PressureUnit,
-                                InletPressureMaxQ = tagNo.InletPressureMaxQ,
-                                InletPressureNorQ = tagNo.InletPressureNorQ,
-                                InletPressureMinQ = tagNo.InletPressureMinQ,
+                    // DataSheetLv3에도 동일한 데이터 저장
+                    var dataSheetLv3 = new DataSheetLv3
+                    {
+                        TempEstimateNo = tempEstimateNo,
+                        SheetID = tagNo.SheetID.Value,
+                        Medium = tagNo.Medium,
+                        Fluid = tagNo.Fluid,
+                        IsQM = tagNo.IsQM,
+                        IsP2 = tagNo.IsP2,
+                        IsDensity = tagNo.IsDensity,
+                        QMUnit = tagNo.QMUnit,
+                        QMMax = tagNo.QMMax,
+                        QMNor = tagNo.QMNor,
+                        QMMin = tagNo.QMMin,
+                        QNUnit = tagNo.QNUnit,
+                        QNMax = tagNo.QNMax,
+                        QNNor = tagNo.QNNor,
+                        QNMin = tagNo.QNMin,
+                        PressureUnit = tagNo.PressureUnit,
+                        InletPressureMaxQ = tagNo.InletPressureMaxQ,
+                        InletPressureNorQ = tagNo.InletPressureNorQ,
+                        InletPressureMinQ = tagNo.InletPressureMinQ,
                                 OutletPressureMaxQ = tagNo.OutletPressureMaxQ,
                                 OutletPressureNorQ = tagNo.OutletPressureNorQ,
                                 OutletPressureMinQ = tagNo.OutletPressureMinQ,
@@ -318,9 +327,9 @@ namespace EstimateRequestSystem.Services
                                 RatingUnit = string.IsNullOrEmpty(tagNo.BodyRatingUnit) ? null : tagNo.BodyRatingUnit
                             };
                             _context.DataSheetLv3.Add(dataSheetLv3);
-                        }
-                    }
-                }
+    }
+
+
             }
 
            
@@ -390,18 +399,27 @@ namespace EstimateRequestSystem.Services
             // 3. 새 데이터 추가
             if (dto.TypeSelections != null && dto.TypeSelections.Any())
             {
-                 foreach (var typeSelection in dto.TypeSelections)
+                // 모든 TagNo를 SheetNo 순서대로 정렬
+    var allTagNos = dto.TypeSelections
+        .SelectMany(ts => ts.Valves.SelectMany(v => v.TagNos))
+        .OrderBy(tn => tn.SheetNo)  // SheetNo 순서대로 정렬
+        .ToList();
+    
+    Console.WriteLine($"�� SubmitEstimate - 정렬된 TagNos - SheetNo 순서: {string.Join(", ", allTagNos.Select(tn => $"{tn.Tagno}({tn.SheetNo})"))}");
+    
+                    foreach (var tagNo in allTagNos)
                 {
-                    foreach (var valveSelection in typeSelection.Valves)
-                    {
-                        foreach (var tagNo in valveSelection.TagNos)
-                        {
-                            var estimateRequest = new EstimateRequest
-                            {
-                                TempEstimateNo = tempEstimateNo,
-                                SheetID = tagNo.SheetID.Value,
-                                SheetNo = tagNo.SheetNo,
-                                ValveType = valveSelection.ValveSeriesCode,
+                    // valveSelection 정보를 찾기
+                    var valveSelection = dto.TypeSelections
+                        .SelectMany(ts => ts.Valves)
+                        .FirstOrDefault(v => v.TagNos.Any(tn => tn.SheetID == tagNo.SheetID));
+                    
+                    var estimateRequest = new EstimateRequest
+                                        {
+                                            TempEstimateNo = tempEstimateNo,
+                                            SheetID = tagNo.SheetID.Value,
+                                            SheetNo = tagNo.SheetNo,
+                                            ValveType = valveSelection?.ValveSeriesCode,
                                 Tagno = tagNo.Tagno,
                                 Qty = tagNo.Qty,
                                 Medium = tagNo.Medium,
@@ -500,12 +518,11 @@ namespace EstimateRequestSystem.Services
                                 TrimOption = await GetTrimOptionCodeAsync(tagNo.TrimOption),
                                 Rating = await GetBodyRatingCodeAsync(tagNo.BodyRating),
                                 RatingUnit = string.IsNullOrEmpty(tagNo.BodyRatingUnit) ? null : tagNo.BodyRatingUnit,
-                                ValveType = valveSelection.ValveSeriesCode
+                                ValveType = valveSelection?.ValveSeriesCode
                             };
                             _context.DataSheetLv3.Add(dataSheetLv3);
-                        }
-                    }
-                }
+    }
+                 
             }
 
             

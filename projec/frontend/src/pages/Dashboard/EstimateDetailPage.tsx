@@ -1275,10 +1275,10 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
           });
         });
         // sheetNo 기준으로 오름차순 정렬
+        valvesData.sort((a, b) => a.order - b.order);
 
-
-// 정렬된 결과로 상태 반영
-setValves(valvesData);
+        // 정렬된 결과로 상태 반영
+        setValves(valvesData);
         
 
         
