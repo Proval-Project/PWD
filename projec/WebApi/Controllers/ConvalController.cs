@@ -90,7 +90,7 @@ namespace ConvalWebApi.Controllers
         public ConvalController()
         {
             // 로컬 MySQL 연결 문자열 - 실제 데이터베이스 정보로 수정 필요
-            connectionString = "Server=192.168.0.14;Database=pwd_final;Uid=root;";
+            connectionString = "Server=192.168.0.59;Database=pwd_final;Uid=root;";
         }
 
         // EstimateRequest에서 고객 데이터 조회
@@ -833,7 +833,7 @@ namespace ConvalWebApi.Controllers
                             er.*,
                             bvl.ValveSeries AS ValveTypeName,
                             bsl.BodySize AS BodySizeName,
-                             bsl.SizeUnit AS BodySizeUnit,
+                             bsl.UnitCode AS BodySizeUnit,
                              bml.BodyMat AS BodyMatName,
                              tml.TrimMat AS TrimMatName,
                              tol.TrimOptionName AS TrimOptionName,
@@ -841,7 +841,7 @@ namespace ConvalWebApi.Controllers
                              atl.ActType AS ActTypeName
                         FROM EstimateRequest er
                         LEFT JOIN BodyValveList bvl ON er.ValveType = bvl.ValveSeriesCode
-                        LEFT JOIN BodySizeList bsl ON er.BodySizeUnit = bsl.SizeUnit AND er.BodySize = bsl.BodySizeCode
+                        LEFT JOIN BodySizeList bsl ON er.BodySizeUnit = bsl.UnitCode AND er.BodySize = bsl.BodySizeCode
                         LEFT JOIN BodyMatList bml ON er.BodyMat = bml.BodyMatCode
                         LEFT JOIN TrimMatList tml ON er.TrimMat = tml.TrimMatCode
                         LEFT JOIN TrimOptionList tol ON er.TrimOption = tol.TrimOptionCode

@@ -16,7 +16,7 @@ namespace ConvalServiceApi.Controllers
     {
         // 싱글턴 또는 static으로 큐 프로세서 관리
         private static readonly ConvalQueueProcessor queueProcessor = new ConvalQueueProcessor();
-        private readonly string connectionString = "Server=192.168.0.14;Database=pwd_final;Uid=root;";
+        private readonly string connectionString = "Server=192.168.0.59;Database=pwd_final;Uid=root;";
 
         [HttpPost]
         [Route("retry")]

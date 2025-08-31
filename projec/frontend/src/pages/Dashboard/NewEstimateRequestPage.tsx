@@ -1056,7 +1056,7 @@ const NewEstimateRequestPage: React.FC = () => {
     if (!tempEstimateNo) return;
     try {
       console.log('🔄 loadManagerAttachments 시작 - tempEstimateNo:', tempEstimateNo);
-      const response = await fetch(`http://192.168.0.14:5135/api/estimate/sheets/${tempEstimateNo}/attachments`);
+      const response = await fetch(`http://192.168.0.59:5135/api/estimate/sheets/${tempEstimateNo}/attachments`);
       console.log('📡 API 응답 상태:', response.status, response.ok);
       
       if (response.ok) {
@@ -1105,7 +1105,7 @@ const NewEstimateRequestPage: React.FC = () => {
         alert('PDF 파일만 다운로드할 수 있습니다.');
         return;
       }
-      const response = await fetch(`http://192.168.0.14:5135/api/estimate/attachments/${file.attachmentID}/download`);
+      const response = await fetch(`http://192.168.0.59:5135/api/estimate/attachments/${file.attachmentID}/download`);
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -1164,7 +1164,7 @@ const NewEstimateRequestPage: React.FC = () => {
       };
       
       // 기존 견적 데이터 조회
-      const response = await axios.get(`http://192.168.0.14:5135/api/estimate/sheets/${loadTempEstimateNo}`);
+      const response = await axios.get(`http://192.168.0.59:5135/api/estimate/sheets/${loadTempEstimateNo}`);
       const existingData = response.data;
       
       // 기본 정보 설정
@@ -1634,7 +1634,7 @@ const NewEstimateRequestPage: React.FC = () => {
   // TempEstimateNo 생성
   const generateTempEstimateNo = async () => {
     try {
-      const response = await axios.post('http://192.168.0.14:5135/api/estimate/generate-temp-no', null, { params: { currentUserId: currentUser?.userId || 'admin' } });
+      const response = await axios.post('http://192.168.0.59:5135/api/estimate/generate-temp-no', null, { params: { currentUserId: currentUser?.userId || 'admin' } });
       setTempEstimateNo(response.data.tempEstimateNo);
     } catch (error) {
       console.error('TempEstimateNo 생성 실패:', error);
@@ -1765,7 +1765,7 @@ const NewEstimateRequestPage: React.FC = () => {
     let currentTempEstimateNo = tempEstimateNo;
     if (!currentTempEstimateNo) {
       try {
-        const response = await axios.post('http://192.168.0.14:5135/api/estimate/generate-temp-no', null, { params: { currentUserId: currentUser?.userId || 'admin' } });
+        const response = await axios.post('http://192.168.0.59:5135/api/estimate/generate-temp-no', null, { params: { currentUserId: currentUser?.userId || 'admin' } });
         currentTempEstimateNo = response.data.tempEstimateNo;
         setTempEstimateNo(currentTempEstimateNo);
       } catch (error) {
@@ -1791,7 +1791,7 @@ const NewEstimateRequestPage: React.FC = () => {
       console.log('Submit Data - CustomerRequirement:', submitData.CustomerRequirement);
       console.log('Submit Data 전체:', JSON.stringify(submitData, null, 2));
 
-      await axios.post(`http://192.168.0.14:5135/api/estimate/sheets/${currentTempEstimateNo}/save-draft`, submitData);
+      await axios.post(`http://192.168.0.59:5135/api/estimate/sheets/${currentTempEstimateNo}/save-draft`, submitData);
       
       // 성공 시 임시저장 플래그 제거
       localStorage.removeItem(`saved_${currentTempEstimateNo}`);
@@ -1810,7 +1810,7 @@ const NewEstimateRequestPage: React.FC = () => {
     let currentTempEstimateNo = tempEstimateNo;
     if (!currentTempEstimateNo) {
       try {
-        const response = await axios.post('http://192.168.0.14:5135/api/estimate/generate-temp-no', {});
+        const response = await axios.post('http://192.168.0.59:5135/api/estimate/generate-temp-no', {});
         currentTempEstimateNo = response.data.tempEstimateNo;
         setTempEstimateNo(currentTempEstimateNo);
       } catch (error) {
@@ -1843,7 +1843,7 @@ const NewEstimateRequestPage: React.FC = () => {
       console.log('Submit Data - CustomerRequirement:', finalSubmitData.CustomerRequirement);
       console.log('Submit Data 전체:', JSON.stringify(finalSubmitData, null, 2));
 
-      await axios.post(`http://192.168.0.14:5135/api/estimate/sheets/${currentTempEstimateNo}/submit`, finalSubmitData);
+      await axios.post(`http://192.168.0.59:5135/api/estimate/sheets/${currentTempEstimateNo}/submit`, finalSubmitData);
       
       // 성공 시 임시저장 플래그 제거
       localStorage.removeItem(`saved_${currentTempEstimateNo}`);
