@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './NewAccessoryManagementPage.css';
+import { buildApiUrl } from '../../config/api';
 
 interface MasterDataItem {
   code: string;
@@ -7,7 +8,7 @@ interface MasterDataItem {
   [key: string]: any;
 }
 
-const API_BASE_URL = 'http://192.168.0.59:5135/api/masterdata';
+const API_BASE_URL = buildApiUrl('/masterdata');
 
 const NewAccessoryManagementPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'body' | 'trim' | 'act' | 'accessory'>('body');

@@ -503,3 +503,4 @@ C:/Users/Administrator/Desktop/final_test/projec/WebApi/obj/Debug/net8.0/ref/Con
 /Users/simjimin/Downloads/final_develop/projec/WebApi/obj/Debug/net8.0/ConvalWebApi.pdb
 /Users/simjimin/Downloads/final_develop/projec/WebApi/obj/Debug/net8.0/ConvalWebApi.genruntimeconfig.cache
 /Users/simjimin/Downloads/final_develop/projec/WebApi/obj/Debug/net8.0/ref/ConvalWebApi.dll
+/Users/simjimin/Downloads/final_develop/projec/WebApi/bin/Debug/net8.0/appsettings.json

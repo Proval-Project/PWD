@@ -151,7 +151,7 @@ function App() {
                            <button 
                 className="btn btn-outline-secondary"
                 onClick={() => {
-                  const url = `http://192.168.0.59:3000/dashboard/estimate-detail/${estimateNo}`;
+                  const url = `http://192.168.0.14:3000/dashboard/estimate-detail/${estimateNo}`;
                   window.open(url, '_self');
                 }}
               >

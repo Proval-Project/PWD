@@ -4,6 +4,7 @@ using System.Data;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 using System.Linq; // Added for FirstOrDefault
 
@@ -89,8 +90,13 @@ namespace ConvalWebApi.Controllers
 
         public ConvalController()
         {
-            // 로컬 MySQL 연결 문자열 - 실제 데이터베이스 정보로 수정 필요
-            connectionString = "Server=192.168.0.59;Database=pwd_final;Uid=root;";
+            // 설정 파일에서 연결 문자열 읽기
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .Build();
+            
+            connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
         // EstimateRequest에서 고객 데이터 조회

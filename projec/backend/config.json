@@ -1,0 +1,47 @@
+{
+  "ServerConfig": {
+    "IP": "192.168.0.14",
+    "Ports": {
+      "Frontend": 3000,
+      "ClientApp": 5001,
+      "AuthSystem": 5236,
+      "UserManagementSystem": 5237,
+      "EstimateRequestSystem": 5135,
+      "WebApi": 7001,
+      "ConvalServiceApi": 44340
+    },
+    "Database": {
+      "Server": "192.168.0.14",
+      "Name": "pwd_final",
+      "User": "root",
+      "CharSet": "utf8mb4"
+    }
+  },
+      "Services": {
+      "Frontend": {
+        "Port": 3000
+      },
+      "ClientApp": {
+        "Port": 5001
+      },
+      "AuthSystem": {
+        "Port": 5236,
+        "Database": "pwd_final"
+      },
+      "UserManagementSystem": {
+        "Port": 5237,
+        "Database": "pwd_final"
+      },
+      "EstimateRequestSystem": {
+        "Port": 5135,
+        "Database": "pwd_final"
+      },
+      "WebApi": {
+        "Port": 7001,
+        "Database": "pwd_final"
+      },
+      "ConvalServiceApi": {
+        "Port": 44340
+      }
+    }
+}

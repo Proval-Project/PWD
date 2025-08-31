@@ -1,9 +1,8 @@
 import axios from 'axios';
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://192.168.0.59:7001/api';
+import { buildApiUrl, buildConvalApiUrl } from '../config/api';
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: buildApiUrl(''),
   timeout: 30000,
 });
 
@@ -49,7 +48,7 @@ export const recalculateConval = async (estimateNo, sheetId, convalData) => {
 
 // CONVAL 재호출
 export const retryConval = async (params) => {
-  const url = 'http://192.168.0.59:44340/api/conval/retry';
+  const url = buildConvalApiUrl('/conval/retry');
   try {
     console.log('[API] retryConval request', { url, params });
     console.log('[API] retryConval request body (JSON):', JSON.stringify(params, null, 2));

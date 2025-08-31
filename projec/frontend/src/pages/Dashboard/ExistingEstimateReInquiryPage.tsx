@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getEstimateInquiry, EstimateInquiryRequest, EstimateInquiryItem, statusOptions } from '../../api/estimateInquiry';
+import { buildApiUrl } from '../../config/api';
 import './DashboardPages.css';
 import './EstimateInquiry.css';
 
@@ -162,7 +163,7 @@ const ExistingEstimateReInquiryPage: React.FC = () => {
       console.log('현재 사용자:', user);
 
       // 새로운 견적 생성 API 호출
-      const apiUrl = `http://192.168.0.59:5135/api/estimate/sheets/reinquiry?currentUserId=${user.userId}&existingEstimateNo=${item.tempEstimateNo}`;
+              const apiUrl = buildApiUrl(`/estimate/sheets/reinquiry?currentUserId=${user.userId}&existingEstimateNo=${item.tempEstimateNo}`);
       console.log('🔍 API 호출 URL:', apiUrl);
       
       const response = await fetch(apiUrl, {
