@@ -4,6 +4,16 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Large files and archives
+*.zip
+*.tar.gz
+*.rar
+*.7z
+*.iso
+*.dmg
+*.pkg
+project_archive.zip
+
 # Production builds
 build/
 dist/
