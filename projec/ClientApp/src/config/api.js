@@ -1,5 +1,5 @@
-// ClientApp 중앙화된 API 설정
-const SERVER_IP = '192.168.0.14';
+// ClientApp 중앙?�된 API ?�정
+const SERVER_IP = '192.168.0.59';
 const PORTS = {
   CLIENT_APP: 5001,
   WEB_API: 7001,
@@ -16,7 +16,7 @@ const API_CONFIG = {
   CONVAL_API: `http://${SERVER_IP}:${PORTS.CONVAL_SERVICE}/api`
 };
 
-// 유틸리티 함수들
+// ?�틸리티 ?�수??
 export const buildApiUrl = (endpoint) => {
   return `${API_CONFIG.WEB_API}${endpoint}`;
 };

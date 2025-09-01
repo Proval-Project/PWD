@@ -1,3 +1,3 @@
 ﻿<Project>
-  <Import Project="../buildMultiTargeting/EstimateRequestSystem.props" />
+  <Import Project="..\buildMultiTargeting\EstimateRequestSystem.props" />
 </Project>

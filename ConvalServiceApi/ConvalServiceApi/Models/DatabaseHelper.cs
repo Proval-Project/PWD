@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using MySql.Data.MySqlClient;
-using System.Configuration;
 
 namespace  ConvalServiceApi.Models
 {
@@ -12,9 +11,8 @@ namespace  ConvalServiceApi.Models
 
         public DatabaseHelper()
         {
-            // 설정 파일에서 연결 문자열 읽기
-            connectionString = ConfigurationManager.ConnectionStrings["DefaultConnection"]?.ConnectionString 
-                ?? "Server=192.168.0.14;Database=pwd_final;Uid=root;"; // 기본값
+            // 로컬 MySQL 연결 문자열 (비밀번호 없음)
+            connectionString = "Server=192.168.0.59;Database=pwd_final;Uid=root;";
         }
 
         public bool TestConnection()

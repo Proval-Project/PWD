@@ -8,7 +8,6 @@ using System.Web.Http; // Web API 컨트롤러라면 필요
 using ConvalServiceApi.Models;
 using System.Linq; // Added for FirstOrDefault
 using System.Diagnostics;
-using System.Configuration;
 
 namespace ConvalServiceApi.Controllers
 {
@@ -17,14 +16,7 @@ namespace ConvalServiceApi.Controllers
     {
         // 싱글턴 또는 static으로 큐 프로세서 관리
         private static readonly ConvalQueueProcessor queueProcessor = new ConvalQueueProcessor();
-        private readonly string connectionString;
-
-        public ConvalRetryController()
-        {
-            // 설정 파일에서 연결 문자열 읽기
-            connectionString = ConfigurationManager.ConnectionStrings["DefaultConnection"]?.ConnectionString 
-                ?? "Server=192.168.0.14;Database=pwd_final;Uid=root;"; // 기본값
-        }
+        private readonly string connectionString = "Server=192.168.0.59;Database=pwd_final;Uid=root;";
 
         [HttpPost]
         [Route("retry")]

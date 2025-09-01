@@ -1,6 +1,6 @@
 {
   "ServerConfig": {
-    "IP": "192.168.0.14",
+    "IP": "192.168.0.59",
     "Ports": {
       "Frontend": 3000,
       "ClientApp": 5001,
@@ -11,7 +11,7 @@
       "ConvalServiceApi": 44340
     },
     "Database": {
-      "Server": "192.168.0.14",
+      "Server": "192.168.0.59",
       "Name": "pwd_final",
       "User": "root",
       "CharSet": "utf8mb4"

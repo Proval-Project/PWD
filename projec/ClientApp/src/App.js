@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Nav, Tab } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
@@ -104,7 +104,7 @@ function App() {
       // ConvalDataDisplay에서 전달받은 업데이트된 데이터 사용
       const convalDataToSend = updatedConvalData || convalData;
       console.log('[UI] calling retryConval', {
-        url: 'https://0.0.0.0:44340/api/conval/retry',
+        url: 'http://192.168.0.59:44340/api/conval/retry',
         body: { SomeParam: estimateNo, SheetId: sheetId, ConvalData: convalDataToSend }
       });
       const result = await retryConval({ SomeParam: estimateNo, SheetId: sheetId, ConvalData: convalDataToSend });
@@ -151,7 +151,7 @@ function App() {
                            <button 
                 className="btn btn-outline-secondary"
                 onClick={() => {
-                  const url = `http://192.168.0.14:3000/dashboard/estimate-detail/${estimateNo}`;
+                  const url = `http://192.168.0.59:3000/dashboard/estimate-detail/${estimateNo}`;
                   window.open(url, '_self');
                 }}
               >

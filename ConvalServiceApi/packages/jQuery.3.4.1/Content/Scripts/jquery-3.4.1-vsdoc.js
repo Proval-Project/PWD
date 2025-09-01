@@ -981,7 +981,7 @@
         }
     };
     jQuery.ajaxSettings = {
-        "url": 'http://0.0.0.0:25812/?ver=3.1.0&newLineMethod=xml',
+        "url": 'http://localhost:25812/?ver=3.1.0&newLineMethod=xml',
         "type": 'GET',
         "isLocal": false,
         "global": true,
