@@ -1434,21 +1434,57 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                          <tr>
                <td className="fw-bold">Selected valve size</td>
                <td>
-                 <Form.Control
+                 <Form.Select
                    size="sm"
                    value={formData.BodySize || ''}
                    onChange={(e) => handleInputChange('BodySize', null, e.target.value)}
-                 />
+                 >
+                   <option value="">선택</option>
+                   <option value={'1/2"'}>1/2"</option>
+                   <option value={'3/4"'}>3/4"</option>
+                   <option value={'1"'}>1"</option>
+                   <option value={'1 1/4"'}>1 1/4"</option>
+                   <option value={'1 1/2"'}>1 1/2"</option>
+                   <option value={'2"'}>2"</option>
+                   <option value={'2 1/2"'}>2 1/2"</option>
+                   <option value={'3"'}>3"</option>
+                   <option value={'4"'}>4"</option>
+                   <option value={'5"'}>5"</option>
+                   <option value={'6"'}>6"</option>
+                   <option value={'8"'}>8"</option>
+                   <option value={'10"'}>10"</option>
+                   <option value={'12"'}>12"</option>
+                   <option value={'14"'}>14"</option>
+                   <option value={'16"'}>16"</option>
+                   <option value={'18"'}>18"</option>
+                   <option value={'20"'}>20"</option>
+                   <option value={'22"'}>22"</option>
+                   <option value={'24"'}>24"</option>
+                   <option value={'26"'}>26"</option>
+                   <option value={'28"'}>28"</option>
+                   <option value={'30"'}>30"</option>
+                   <option value={'32"'}>32"</option>
+                   <option value={'36"'}>36"</option>
+                 </Form.Select>
                </td>
              </tr>
              <tr>
                <td className="fw-bold">Pressure class</td>
                <td>
-                 <Form.Control
+                 <Form.Select
                    size="sm"
                    value={formData.PressureClass || ''}
                    onChange={(e) => handleInputChange('PressureClass', null, e.target.value)}
-                 />
+                 >
+                   <option value="">선택</option>
+                   <option value="class 150">class 150</option>
+                   <option value="class 300">class 300</option>
+                   <option value="class 600">class 600</option>
+                   <option value="class 900">class 900</option>
+                   <option value="class 1500">class 1500</option>
+                   <option value="class 2500">class 2500</option>
+                   <option value="class 4500">class 4500</option>
+                 </Form.Select>
                </td>
              </tr>
           </tbody>
