@@ -5740,13 +5740,32 @@ private string? ConvertEmptyToNull(string? value)
                 
                 // 1. 데이터베이스에서 데이터 조회 (SheetNo 순서로 정렬)
                 Console.WriteLine("📊 데이터베이스 쿼리 시작...");
-                var query = @"SELECT d.*, e.Project, er.Tagno, er.SheetNo, al.AccSize as AiroperateAccSize
-                             FROM DataSheetLv3 d 
-                             JOIN EstimateSheetLv1 e ON d.TempEstimateNo = e.TempEstimateNo 
-                             JOIN EstimateRequest er ON d.TempEstimateNo = er.TempEstimateNo AND d.SheetID = er.SheetID
-                             LEFT JOIN AiroperateList al ON d.AirOpCode = al.AccModelCode 
-                             WHERE d.TempEstimateNo = @tempEstimateNo
-                             ORDER BY er.SheetNo;";
+                var query = @"SELECT 
+        er.ValveType AS GroupValveType,
+    d.*, e.Project, er.Tagno, er.SheetNo,
+    al.AccSize AS AiroperateAccSize,
+    bvl.ValveSeries AS ValveTypeName,
+    bsl.BodySize    AS BodySizeName,
+    tpsl.PortSize   AS TrimPortSizeName
+FROM DataSheetLv3 d
+JOIN EstimateSheetLv1 e
+  ON d.TempEstimateNo = e.TempEstimateNo
+JOIN EstimateRequest er
+  ON d.TempEstimateNo = er.TempEstimateNo
+ AND d.SheetID       = er.SheetID
+LEFT JOIN AiroperateList al
+  ON d.AirOpCode      = al.AccModelCode
+ AND d.AirOpMakerCode = al.AccMakerCode
+LEFT JOIN BodyValveList bvl
+  ON d.ValveType = bvl.ValveSeriesCode
+LEFT JOIN BodySizeList bsl
+  ON d.BodySizeUnit = bsl.UnitCode
+ AND d.BodySize     = bsl.BodySizeCode
+LEFT JOIN TrimPortSizeList tpsl
+  ON d.TrimPortSizeUnit = tpsl.UnitCode
+ AND d.TrimPortSize     = tpsl.PortSizeCode
+WHERE d.TempEstimateNo = @tempEstimateNo
+ORDER BY er.SheetNo;";
                 
                 Console.WriteLine("🔌 데이터베이스 연결 시도...");
                 using var connection = new MySql.Data.MySqlClient.MySqlConnection(_context.Database.GetConnectionString());
@@ -5766,7 +5785,7 @@ private string? ConvertEmptyToNull(string? value)
                 
                 while (await reader.ReadAsync())
                 {
-                    var valveType = reader["ValveType"]?.ToString() ?? "Unknown";
+                    var valveType = reader["GroupValveType"]?.ToString() ?? "Unknown";
                     if (!valveTypeGroups.ContainsKey(valveType))
                     {
                         valveTypeGroups[valveType] = new List<Dictionary<string, object>>();
@@ -6114,19 +6133,20 @@ private string? ConvertEmptyToNull(string? value)
                                 JOIN EstimateSheetLv1 e ON d.TempEstimateNo = e.TempEstimateNo 
                                 LEFT JOIN EstimateRequest er ON d.TempEstimateNo = er.TempEstimateNo AND d.SheetID = er.SheetID
                                 LEFT JOIN BodyValveList bvl ON d.ValveType = bvl.ValveSeriesCode
-                                LEFT JOIN BodySizeList bsl ON d.BodySize = bsl.BodySizeCode
-                                LEFT JOIN TrimPortSizeList tpsl ON d.TrimPortSize = tpsl.PortSizeCode
+                                LEFT JOIN BodySizeList bsl ON d.BodySizeUnit = bsl.UnitCode AND d.BodySize = bsl.BodySizeCode
+                                LEFT JOIN TrimPortSizeList tpsl ON d.TrimPortSizeUnit = tpsl.UnitCode AND d.TrimPortSize = tpsl.PortSizeCode
                                 LEFT JOIN BodyMatList bml ON d.BodyMat = bml.BodyMatCode
                                 LEFT JOIN TrimMatList tml ON d.TrimMat = tml.TrimMatCode
-                                LEFT JOIN BodyRatingList brl ON d.Rating = brl.RatingCode
+                                LEFT JOIN BodyRatingList brl ON d.RatingUnit = brl.RatingUnitCode AND d.Rating = brl.RatingCode
                                 LEFT JOIN ActTypeList atl ON d.ActType = atl.ActTypeCode
-                                LEFT JOIN ActSizeList asl ON d.ActSize = asl.ActSizeCode
+                                LEFT JOIN ActSizeList asl ON d.ActSeriesCode = asl.ActSeriesCode AND d.ActSize = asl.ActSizeCode
                                 LEFT JOIN ActHWList ahl ON d.HW = ahl.HWCode
                                 LEFT JOIN BodyBonnetList bbl ON d.BonnetType = bbl.BonnetCode
                                 LEFT JOIN TrimSeriesList tsl ON d.TrimSeries = tsl.TrimSeriesCode
                                 LEFT JOIN TrimTypeList ttl ON d.TrimType = ttl.TrimTypeCode
-                                LEFT JOIN AiroperateList al ON d.AirOpCode = al.AccModelCode
+                                LEFT JOIN AiroperateList al ON d.AirOpMakerCode = al.AccMakerCode AND d.AirOpCode = al.AccModelCode
                                 WHERE d.TempEstimateNo = @tempEstimateNo
+                                GROUP BY d.TempEstimateNo, d.SheetID
                                 ORDER BY er.SheetNo;";
 
                 using var cmd = new MySqlCommand(query, conn);
@@ -6375,7 +6395,8 @@ await _context.SaveChangesAsync();
                                 LEFT JOIN SnapactingList sal ON d.SnapActCode = sal.AccModelCode
                                 LEFT JOIN AiroperateList al_acc ON d.AirOpCode = al_acc.AccModelCode
                                 WHERE d.TempEstimateNo = @tempEstimateNo
-                                GROUP BY d.TempEstimateNo, d.SheetID;";
+                                GROUP BY d.TempEstimateNo, d.SheetID
+                                ORDER BY er.SheetNo;";
 
                 using var cmd = new MySqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@tempEstimateNo", tempEstimateNo);
