@@ -5733,1173 +5733,942 @@ private string? ConvertEmptyToNull(string? value)
 
         // CV 리스트 생성 메서드
         public async Task<string> GenerateCVListAsync(string tempEstimateNo)
+{
+    try
+    {
+        Console.WriteLine($"🔍 CV 리스트 생성 시작 - tempEstimateNo: {tempEstimateNo}");
+        
+        // 1. 데이터베이스에서 데이터 조회 (2번 코드의 TrimFormName 쿼리 반영)
+        Console.WriteLine("📊 데이터베이스 쿼리 시작...");
+        var query = @"SELECT 
+                        er.ValveType AS GroupValveType,
+                        d.*, e.Project, er.Tagno, er.SheetNo,
+                        al.AccSize AS AiroperateAccSize,
+                        bvl.ValveSeries AS ValveTypeName,
+                        bsl.BodySize    AS BodySizeName,
+                        tpsl.PortSize   AS TrimPortSizeName,
+                        tfl.TrimForm    AS TrimFormName
+                    FROM DataSheetLv3 d
+                    JOIN EstimateSheetLv1 e
+                      ON d.TempEstimateNo = e.TempEstimateNo
+                    JOIN EstimateRequest er
+                      ON d.TempEstimateNo = er.TempEstimateNo
+                     AND d.SheetID       = er.SheetID
+                    LEFT JOIN AiroperateList al
+                      ON d.AirOpMakerCode = al.AccMakerCode
+                     AND d.AirOpCode      = al.AccModelCode
+                    LEFT JOIN BodyValveList bvl
+                      ON d.ValveType = bvl.ValveSeriesCode
+                    LEFT JOIN BodySizeList bsl
+                      ON d.BodySizeUnit = bsl.UnitCode
+                     AND d.BodySize     = bsl.BodySizeCode
+                    LEFT JOIN TrimPortSizeList tpsl
+                      ON d.TrimPortSizeUnit = tpsl.UnitCode
+                     AND d.TrimPortSize     = tpsl.PortSizeCode
+                    LEFT JOIN TrimFormList tfl 
+                      ON d.TrimForm = tfl.TrimFormCode
+                    WHERE d.TempEstimateNo = @tempEstimateNo
+                    ORDER BY er.SheetNo;";
+        
+        Console.WriteLine("🔌 데이터베이스 연결 시도...");
+        using var connection = new MySql.Data.MySqlClient.MySqlConnection(_context.Database.GetConnectionString());
+        await connection.OpenAsync();
+        Console.WriteLine("✅ 데이터베이스 연결 성공");
+        
+        Console.WriteLine("📝 SQL 명령 실행...");
+        using var command = new MySql.Data.MySqlClient.MySqlCommand(query, connection);
+        command.Parameters.AddWithValue("@tempEstimateNo", tempEstimateNo);
+        
+        Console.WriteLine("🔍 데이터 읽기 시작...");
+        using var reader = await command.ExecuteReaderAsync();
+        
+        // 데이터를 ValveType별로 그룹화
+        Console.WriteLine("📝 데이터 읽기 및 그룹화 시작...");
+        var valveTypeGroups = new Dictionary<string, List<Dictionary<string, object>>>();
+        
+        while (await reader.ReadAsync())
         {
-            try
+            var valveType = reader["GroupValveType"]?.ToString() ?? "Unknown";
+            if (!valveTypeGroups.ContainsKey(valveType))
             {
-                Console.WriteLine($"🔍 CV 리스트 생성 시작 - tempEstimateNo: {tempEstimateNo}");
-                
-                // 1. 데이터베이스에서 데이터 조회 (SheetNo 순서로 정렬)
-                Console.WriteLine("📊 데이터베이스 쿼리 시작...");
-                var query = @"SELECT 
-        er.ValveType AS GroupValveType,
-    d.*, e.Project, er.Tagno, er.SheetNo,
-    al.AccSize AS AiroperateAccSize,
-    bvl.ValveSeries AS ValveTypeName,
-    bsl.BodySize    AS BodySizeName,
-    tpsl.PortSize   AS TrimPortSizeName
-FROM DataSheetLv3 d
-JOIN EstimateSheetLv1 e
-  ON d.TempEstimateNo = e.TempEstimateNo
-JOIN EstimateRequest er
-  ON d.TempEstimateNo = er.TempEstimateNo
- AND d.SheetID       = er.SheetID
-LEFT JOIN AiroperateList al
-  ON d.AirOpCode      = al.AccModelCode
- AND d.AirOpMakerCode = al.AccMakerCode
-LEFT JOIN BodyValveList bvl
-  ON d.ValveType = bvl.ValveSeriesCode
-LEFT JOIN BodySizeList bsl
-  ON d.BodySizeUnit = bsl.UnitCode
- AND d.BodySize     = bsl.BodySizeCode
-LEFT JOIN TrimPortSizeList tpsl
-  ON d.TrimPortSizeUnit = tpsl.UnitCode
- AND d.TrimPortSize     = tpsl.PortSizeCode
-WHERE d.TempEstimateNo = @tempEstimateNo
-ORDER BY er.SheetNo;";
-                
-                Console.WriteLine("🔌 데이터베이스 연결 시도...");
-                using var connection = new MySql.Data.MySqlClient.MySqlConnection(_context.Database.GetConnectionString());
-                await connection.OpenAsync();
-                Console.WriteLine("✅ 데이터베이스 연결 성공");
-                
-                Console.WriteLine("📝 SQL 명령 실행...");
-                using var command = new MySql.Data.MySqlClient.MySqlCommand(query, connection);
-                command.Parameters.AddWithValue("@tempEstimateNo", tempEstimateNo);
-                
-                Console.WriteLine("🔍 데이터 읽기 시작...");
-                using var reader = await command.ExecuteReaderAsync();
-                
-                // 1. 모든 데이터를 읽어서 ValveType별로 그룹화
-                Console.WriteLine("📝 데이터 읽기 및 그룹화 시작...");
-                var valveTypeGroups = new Dictionary<string, List<Dictionary<string, object>>>();
-                
-                while (await reader.ReadAsync())
-                {
-                    var valveType = reader["GroupValveType"]?.ToString() ?? "Unknown";
-                    if (!valveTypeGroups.ContainsKey(valveType))
-                    {
-                        valveTypeGroups[valveType] = new List<Dictionary<string, object>>();
-                    }
-                    
-                    // 현재 행의 모든 데이터를 저장
-                    var rowData = new Dictionary<string, object>();
-                    for (int i = 0; i < reader.FieldCount; i++)
-                    {
-                        rowData[reader.GetName(i)] = reader[i];
-                    }
-                    valveTypeGroups[valveType].Add(rowData);
-                    
-                    Console.WriteLine($"📊 ValveType: {valveType}, SheetID: {reader["SheetID"]} 데이터 추가됨");
-                }
-                
-                Console.WriteLine($"✅ 총 {valveTypeGroups.Count}개 ValveType 그룹 생성됨");
-                
-                if (valveTypeGroups.Count == 0)
-                {
-                    throw new Exception("데이터를 찾을 수 없습니다.");
-                }
-                
-                // 2. CV 템플릿 파일 복사
-                Console.WriteLine("📁 템플릿 파일 경로 확인...");
-                var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CV.xlsx");
-                Console.WriteLine($"📁 템플릿 경로: {templatePath}");
-                
-                if (!File.Exists(templatePath))
-                {
-                    throw new Exception($"템플릿 파일을 찾을 수 없습니다: {templatePath}");
-                }
-                Console.WriteLine("✅ 템플릿 파일 존재 확인");
-                
-                var outputFileName = $"{tempEstimateNo}_CV_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
-                var outputPath = Path.Combine(Directory.GetCurrentDirectory(), "files", tempEstimateNo, "ResultFiles", "cvlist", outputFileName);
-                Console.WriteLine($"📁 출력 경로: {outputPath}");
-                
-                // 3. 출력 폴더 생성
-                Console.WriteLine("📁 출력 폴더 생성 시작...");
-                var outputDir = Path.GetDirectoryName(outputPath);
-                Console.WriteLine($"📁 출력 디렉토리: {outputDir}");
-                
-                if (!string.IsNullOrEmpty(outputDir))
-                {
-                    Console.WriteLine("📁 디렉토리 생성 시도...");
-                    Directory.CreateDirectory(outputDir);
-                    Console.WriteLine("✅ 디렉토리 생성 완료");
-                }
-                
-                Console.WriteLine("📄 템플릿 파일 복사 시작...");
-                File.Copy(templatePath, outputPath, true);
-                Console.WriteLine("✅ 템플릿 파일 복사 완료");
-                
-                // 4. Excel 파일 업데이트
-                Console.WriteLine("📊 Excel 파일 업데이트 시작...");
-                Console.WriteLine("📖 Excel 워크북 열기...");
-                using var workbook = new ClosedXML.Excel.XLWorkbook(outputPath);
-                Console.WriteLine("✅ Excel 워크북 열기 완료");
-                
-                // 5. 각 ValveType별로 시트 생성 및 데이터 입력
-                foreach (var valveTypeGroup in valveTypeGroups)
-                {
-                    string valveType = valveTypeGroup.Key;
-                    var dataRows = valveTypeGroup.Value;
-                    
-                    Console.WriteLine($"📋 ValveType '{valveType}' 시트 처리 시작...");
-                    
-                    // 기존 CV 시트를 복사하여 새로운 시트 생성
-                    var originalWorksheet = workbook.Worksheet("CV");
-                    var newWorksheet = originalWorksheet.CopyTo($"CV_{valveType}");
-                    Console.WriteLine($"✅ 시트 'CV_{valveType}' 생성 완료");
-                    
-
-                    
-                        int rowCount = 0;     // 각 SheetID별로 데이터 입력 (파일예시와 동일: sheetID + 15)
-                        for (int currentIndex = 0; currentIndex < dataRows.Count; currentIndex++)
-                        {
-                            var rowData = dataRows[currentIndex];
-                            int sheetID = Convert.ToInt32(rowData["SheetID"]);
-                            
-                            int row_cv = rowCount + 14; // 파일예시와 동일: sheetID + 15
-                            rowCount++;
-                            Console.WriteLine($"📊 SheetID: {sheetID}, CV 행: {row_cv} (인덱스: {currentIndex})");
-                        
-                        // 파일예시와 동일한 배열 정의
-                        int[] cv_skip_excel_cell = { 4, 9, 10, 11, 24, 26, 28, 29, 30, 31 }; // 셀 빈칸
-                        string[] target_value = {
-                            "Tagno",   // 견적번호 (파일예시와 동일)
-                            "ValveType",   // 밸브타입
-                            "BodySize",   // 바디사이즈
-                            "TrimPortSize",   // 포트사이즈
-                            "Medium",   // 매체
-                            "Fluid",   // 유체
-                            "InletPressureMaxQ",   // P1 최대
-                            "InletPressureNorQ",   // P1 정상
-                            "InletPressureMinQ",   // P1 최소
-                            "OutletPressureMaxQ",   // P2 최대
-                            "OutletPressureNorQ",   // P2 정상
-                            "OutletPressureMinQ",   // P2 최소
-                            "DifferentialPressureMaxQ",   // 차압 최대
-                            "DifferentialPressureNorQ",   // 차압 정상
-                            "DifferentialPressureMinQ",   // 차압 최소
-                            "InletTemperatureQ",   // 온도 최대
-                            "InletTemperatureNorQ",   // 온도 정상
-                            "InletTemperatureMinQ",   // 온도 최소
-                            "Density",   // 밀도
-                            "MolecularWeight",   // 분자량
-                            "CalculatedCvMaxQ",   // Cv 최대
-                            "CalculatedCvNorQ",   // Cv 정상
-                            "CalculatedCvMinQ",   // Cv 최소
-                            "SS100Max",   // S/S100 최대
-                            "SS100Nor",   // S/S100 정상
-                            "SS100Min",   // S/S100 최소
-                            "LpAeMax",   // LpAe 최대
-                            "LpAeNor",   // LpAe 정상
-                            "LpAeMin",   // LpAe 최소
-                            "NorFlowCoeff",   // 정상유량계수
-                            "BasicCharacter",   // 기본특성
-                        };
-                        
-                        Console.WriteLine("📝 기본 데이터 입력 시작...");
-                        int cv_target_index = 0;
-                        
-                        // 파일예시와 동일한 for 루프로 데이터 입력
-                        for (int i = 2; i < 43; i++) // B열(2번째)부터 시작해서 42번째 열까지
-                        {
-                            if (cv_skip_excel_cell.Contains(i)) { continue; }
-                            
-                            Console.WriteLine($"📊 {target_value[cv_target_index]} 입력 (열 {i})...");
-                            // TagNo가 없으면 빈 문자열로 처리
-                            var cellValue = rowData.ContainsKey(target_value[cv_target_index]) 
-                                ? rowData[target_value[cv_target_index]]?.ToString() ?? "" 
-                                : "";
-                            newWorksheet.Cell(row_cv, i).Value = cellValue;
-                            cv_target_index++;
-                        }
-                        
-                        Console.WriteLine("✅ 기본 데이터 입력 완료");
-                        
-                        // QM/QN 관련 데이터 (IsQM에 따라) - 파일예시 방식
-                        Console.WriteLine("📊 QM/QN 데이터 입력 시작...");
-                        bool isQM = Convert.ToBoolean(rowData["IsQM"]);
-                        Console.WriteLine($"📊 IsQM: {isQM}");
-                        
-                        // 파일예시와 동일한 방식으로 QM/QN 데이터 입력
-                        for (int i = 28; i < 32; i++)
-                        {
-                            string value;
-                            
-                            if (isQM)
-                            {
-                                // IsQM이 true면 QM 관련 값 사용
-                                switch (i)
-                                {
-                                    case 28: // QM 단위
-                                        value = rowData["QMUnit"]?.ToString() ?? "";
-                                        break;
-                                    case 29: // QM 최대
-                                        value = rowData["QMMax"]?.ToString() ?? "";
-                                        break;
-                                    case 30: // QM 정상
-                                        value = rowData["QMNor"]?.ToString() ?? "";
-                                        break;
-                                    case 31: // QM 최소
-                                        value = rowData["QMMin"]?.ToString() ?? "";
-                                        break;
-                                    default:
-                                        value = "";
-                                        break;
-                                }
-                            }
-                            else
-                            {
-                                // IsQM이 false면 QN 관련 값 사용
-                                switch (i)
-                                {
-                                    case 28: // QN 단위
-                                        value = rowData["QNUnit"]?.ToString() ?? "";
-                                        break;
-                                    case 29: // QN 최대
-                                        value = rowData["QNMax"]?.ToString() ?? "";
-                                        break;
-                                    case 30: // QN 정상
-                                        value = rowData["QNNor"]?.ToString() ?? "";
-                                        break;
-                                    case 31: // QN 최소
-                                        value = rowData["QNMin"]?.ToString() ?? "";
-                                        break;
-                                    default:
-                                        value = "";
-                                        break;
-                                }
-                            }
-                            
-                            Console.WriteLine($"📊 QM/QN 데이터 입력 (열 {i}): {value}");
-                            newWorksheet.Cell(row_cv, i).Value = value;
-                        }
-                        
-                        Console.WriteLine("✅ QM/QN 데이터 입력 완료");
-                        
-                        // 특정 위치 데이터 (파일예시와 동일)
-                        Console.WriteLine("📊 특정 위치 데이터 입력 시작...");
-                        newWorksheet.Cell(4, 1).Value = "Project : " + (rowData["Project"]?.ToString() ?? "");  // Project : 값 형태
-                        newWorksheet.Cell(12, 4).Value = rowData["AiroperateAccSize"]?.ToString();  // 표준값
-                        newWorksheet.Cell(12, 5).Value = rowData["AiroperateAccSize"]?.ToString();  // 표준값
-                        newWorksheet.Cell(12, 6).Value = rowData["AiroperateAccSize"]?.ToString();  // 표준값
-                        newWorksheet.Cell(10, 12).Value = rowData["PressureUnit"]?.ToString();  // 압력단위
-                        newWorksheet.Cell(10, 15).Value = rowData["PressureUnit"]?.ToString();  // 압력단위
-                        newWorksheet.Cell(10, 18).Value = rowData["PressureUnit"]?.ToString();  // 압력단위
-                        newWorksheet.Cell(10, 21).Value = rowData["TemperatureUnit"]?.ToString();  // 온도단위
-                        newWorksheet.Cell(11, 25).Value = rowData["DensityUnit"]?.ToString();  // 밀도단위
-                        newWorksheet.Cell(11, 27).Value = rowData["MolecularWeightUnit"]?.ToString();  // 분자량단위
-                        newWorksheet.Cell(4, 43).Value = DateTime.Now.ToString("yyyy년 MM월 dd일");  // 현재 날짜
-                        Console.WriteLine("✅ 특정 위치 데이터 입력 완료");
-                        
-                        Console.WriteLine($"✅ SheetID {sheetID} 데이터 입력 완료");
-                    }
-                    
-                    Console.WriteLine($"✅ ValveType '{valveType}' 시트 처리 완료");
-                }
-                
-                // 5-1. 모든 시트 생성 완료 후 기본 CV 시트 삭제
-                Console.WriteLine("🗑️ 기본 CV 템플릿 시트 삭제 시작...");
-                var templateWorksheet = workbook.Worksheet("CV");
-                templateWorksheet.Delete();
-                Console.WriteLine("✅ 기본 CV 템플릿 시트 삭제 완료");
-                
-                // 6. 파일 저장
-                Console.WriteLine("💾 Excel 파일 저장 시작...");
-                workbook.Save();
-                Console.WriteLine("✅ Excel 파일 저장 완료");
-                
-                Console.WriteLine("🔒 Excel 워크북 닫기...");
-                workbook.Dispose();
-                Console.WriteLine("✅ Excel 워크북 닫기 완료");
-                
-                // 7. Excel 파일을 EstimateAttachment에 저장 (기존 파일이 있으면 대체)
-                var existingAttachment = await _context.EstimateAttachment
-                    .FirstOrDefaultAsync(ea => ea.TempEstimateNo == tempEstimateNo && ea.ManagerFileType == "cvlist");
-                
-                if (existingAttachment != null)
-                {
-                    // 기존 파일 삭제
-                    if (File.Exists(existingAttachment.FilePath))
-                    {
-                        try
-                        {
-                            File.Delete(existingAttachment.FilePath);
-                        }
-                        catch (Exception ex)
-                        {
-                            // 파일 삭제 실패 시 로그만 남기고 계속 진행
-                            Console.WriteLine($"기존 파일 삭제 실패: {ex.Message}");
-                        }
-                    }
-                    
-                    // 기존 DB 레코드 업데이트
-                    existingAttachment.FileName = outputFileName;
-                    existingAttachment.FilePath = outputPath;
-                    existingAttachment.FileSize = (int)new FileInfo(outputPath).Length;
-                    existingAttachment.UploadDate = DateTime.Now;
-                }
-                else
-                {
-                    // 새 DB 레코드 생성
-                    var excelAttachment = new EstimateAttachment
-                    {
-                        TempEstimateNo = tempEstimateNo,
-                        FileName = outputFileName,
-                        FilePath = outputPath,
-                        FileSize = (int)new FileInfo(outputPath).Length,
-                        UploadDate = DateTime.Now,
-                        UploadUserID = null,
-                        ManagerFileType = "cvlist"
-                    };
-                    
-                    _context.EstimateAttachment.Add(excelAttachment);
-                }
-                
-                await _context.SaveChangesAsync();
-                
-                return $"{outputFileName}";
+                valveTypeGroups[valveType] = new List<Dictionary<string, object>>();
             }
-            catch (Exception ex)
+            
+            var rowData = new Dictionary<string, object>();
+            for (int i = 0; i < reader.FieldCount; i++)
             {
-                throw new Exception($"CV 리스트 생성 실패: {ex.Message}");
+                rowData[reader.GetName(i)] = reader[i];
             }
+            valveTypeGroups[valveType].Add(rowData);
+            
+            Console.WriteLine($"📊 ValveType: {valveType}, SheetID: {reader["SheetID"]} 데이터 추가됨");
         }
+        
+        Console.WriteLine($"✅ 총 {valveTypeGroups.Count}개 ValveType 그룹 생성됨");
+        
+        if (valveTypeGroups.Count == 0)
+        {
+            throw new Exception("데이터를 찾을 수 없습니다.");
+        }
+        
+        // 2. CV 템플릿 파일 복사 (1번 코드 구조 유지)
+        Console.WriteLine("📁 템플릿 파일 경로 확인...");
+        var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "CV.xlsx");
+        if (!File.Exists(templatePath))
+        {
+            throw new Exception($"템플릿 파일을 찾을 수 없습니다: {templatePath}");
+        }
+        
+        var outputFileName = $"{tempEstimateNo}_CV_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        var outputPath = Path.Combine(Directory.GetCurrentDirectory(), "files", tempEstimateNo, "ResultFiles", "cvlist", outputFileName);
+        
+        // 3. 출력 폴더 생성 (1번 코드 구조 유지)
+        var outputDir = Path.GetDirectoryName(outputPath);
+        if (!string.IsNullOrEmpty(outputDir))
+        {
+            Directory.CreateDirectory(outputDir);
+        }
+        File.Copy(templatePath, outputPath, true);
+        
+        // 4. Excel 파일 업데이트
+        Console.WriteLine("📊 Excel 파일 업데이트 시작...");
+        using var workbook = new ClosedXML.Excel.XLWorkbook(outputPath);
+        
+        // 5. 각 ValveType별로 시트 생성 및 데이터 입력
+        foreach (var valveTypeGroup in valveTypeGroups)
+        {
+            string valveType = valveTypeGroup.Key;
+            var dataRows = valveTypeGroup.Value;
+            
+            Console.WriteLine($"📋 ValveType '{valveType}' 시트 처리 시작...");
+            
+            var originalWorksheet = workbook.Worksheet("CV");
+            var newWorksheet = originalWorksheet.CopyTo($"CV_{valveType}");
+            Console.WriteLine($"✅ 시트 'CV_{valveType}' 생성 완료");
+
+            // ★★★ 2번 코드의 엑셀 입력 로직 적용 시작 ★★★
+            int rowCount = 0;
+            bool isFirstRow = true; // 각 시트의 첫 번째 행인지 확인하는 플래그
+
+            foreach (var rowData in dataRows)
+            {
+                int sheetID = Convert.ToInt32(rowData["SheetID"]);
+                int row_cv = 14 + rowCount; // 시작 행은 14부터
+                Console.WriteLine($"📊 SheetID: {sheetID}, CV 행: {row_cv} (인덱스: {rowCount})");
+
+                // 2번 코드의 배열 정의
+                int[] cv_skip_excel_cell = { 4, 9, 10, 11, 24, 26, 28, 29, 30, 31 };
+                string[] target_value = {
+                    "Tagno", "ValveTypeName", "BodySizeName", "TrimPortSizeName", "Medium",
+                    "Fluid", "InletPressureMaxQ", "InletPressureNorQ", "InletPressureMinQ",
+                    "OutletPressureMaxQ", "OutletPressureNorQ", "OutletPressureMinQ",
+                    "DifferentialPressureMaxQ", "DifferentialPressureNorQ", "DifferentialPressureMinQ",
+                    "InletTemperatureQ", "InletTemperatureNorQ", "InletTemperatureMinQ",
+                    "Density", "MolecularWeight", "CalculatedCvMaxQ", "CalculatedCvNorQ",
+                    "CalculatedCvMinQ", "SS100Max", "SS100Nor", "SS100Min", "LpAeMax",
+                    "LpAeNor", "LpAeMin", "NorFlowCoeff", "TrimFormName"
+                };
+                
+                // A열에 순번 입력 (2번 코드 로직)
+                newWorksheet.Cell(row_cv, 1).Value = rowCount + 1;
+
+                int cv_target_index = 0;
+                for (int i = 2; i < 43; i++) // B열(2)부터
+                {
+                    if (cv_skip_excel_cell.Contains(i)) { continue; }
+
+                    var cellValue = rowData.ContainsKey(target_value[cv_target_index]) 
+                        ? rowData[target_value[cv_target_index]]?.ToString() ?? "" 
+                        : "";
+                    newWorksheet.Cell(row_cv, i).Value = cellValue;
+                    cv_target_index++;
+                }
+                
+                // QM/QN 데이터 처리 (2번 코드 방식)
+                bool isQM = Convert.ToBoolean(rowData["IsQM"]);
+                for (int i = 28; i < 32; i++)
+                {
+                    string key = "";
+                    if (isQM)
+                    {
+                        key = i switch { 28 => "QMUnit", 29 => "QMMax", 30 => "QMNor", 31 => "QMMin", _ => "" };
+                    }
+                    else
+                    {
+                        key = i switch { 28 => "QNUnit", 29 => "QNMax", 30 => "QNNor", 31 => "QNMin", _ => "" };
+                    }
+                    
+                    if (!string.IsNullOrEmpty(key))
+                    {
+                        newWorksheet.Cell(row_cv, i).Value = rowData.ContainsKey(key) ? rowData[key]?.ToString() : "";
+                    }
+                }
+                
+                // 특정 위치 데이터 (첫 번째 행에만 적용 - 2번 코드 로직)
+                if (isFirstRow)
+                {
+                    newWorksheet.Cell(4, 1).Value = "Project : " + (rowData["Project"]?.ToString() ?? "");
+                    newWorksheet.Cell(13, 1).Value = "A. Pneumatic" + (rowData["ValveTypeName"]?.ToString() ?? "") + " Valve";
+                    newWorksheet.Cell(12, 4).Value = rowData["AiroperateAccSize"]?.ToString();
+                    newWorksheet.Cell(12, 5).Value = rowData["AiroperateAccSize"]?.ToString();
+                    newWorksheet.Cell(12, 6).Value = rowData["AiroperateAccSize"]?.ToString();
+                    newWorksheet.Cell(10, 12).Value = rowData["PressureUnit"]?.ToString();
+                    newWorksheet.Cell(10, 15).Value = rowData["PressureUnit"]?.ToString();
+                    newWorksheet.Cell(10, 18).Value = rowData["PressureUnit"]?.ToString();
+                    newWorksheet.Cell(10, 21).Value = rowData["TemperatureUnit"]?.ToString();
+                    newWorksheet.Cell(11, 25).Value = rowData["DensityUnit"]?.ToString();
+                    newWorksheet.Cell(11, 27).Value = rowData["MolecularWeightUnit"]?.ToString();
+                    newWorksheet.Cell(4, 43).Value = DateTime.Now.ToString("* 작성일자 : yyyy년 MM월 dd일");
+                    isFirstRow = false; // 플래그를 false로 변경하여 다음 행부터는 이 블록이 실행되지 않도록 함
+                }
+
+                rowCount++;
+                Console.WriteLine($"✅ SheetID {sheetID} 데이터 입력 완료");
+            }
+            // ★★★ 2번 코드 로직 적용 끝 ★★★
+            
+            Console.WriteLine($"✅ ValveType '{valveType}' 시트 처리 완료");
+        }
+        
+        // 5-1. 모든 시트 생성 완료 후 기본 CV 시트 삭제
+        Console.WriteLine("🗑️ 기본 CV 템플릿 시트 삭제 시작...");
+        workbook.Worksheet("CV").Delete();
+        Console.WriteLine("✅ 기본 CV 템플릿 시트 삭제 완료");
+        
+        // 6. 파일 저장
+        Console.WriteLine("💾 Excel 파일 저장 시작...");
+        workbook.Save();
+        
+        // 7. DB에 첨부파일 정보 저장 (1번 코드 구조 유지)
+        var existingAttachment = await _context.EstimateAttachment
+            .FirstOrDefaultAsync(ea => ea.TempEstimateNo == tempEstimateNo && ea.ManagerFileType == "cvlist");
+        
+        if (existingAttachment != null)
+        {
+            // 기존 파일 삭제 후 DB 레코드 업데이트
+            if (File.Exists(existingAttachment.FilePath))
+            {
+                try { File.Delete(existingAttachment.FilePath); }
+                catch (Exception ex) { Console.WriteLine($"기존 파일 삭제 실패: {ex.Message}"); }
+            }
+            existingAttachment.FileName = outputFileName;
+            existingAttachment.FilePath = outputPath;
+            existingAttachment.FileSize = (int)new FileInfo(outputPath).Length;
+            existingAttachment.UploadDate = DateTime.Now;
+        }
+        else
+        {
+            // 새 DB 레코드 생성
+            _context.EstimateAttachment.Add(new EstimateAttachment
+            {
+                TempEstimateNo = tempEstimateNo,
+                FileName = outputFileName,
+                FilePath = outputPath,
+                FileSize = (int)new FileInfo(outputPath).Length,
+                UploadDate = DateTime.Now,
+                ManagerFileType = "cvlist"
+            });
+        }
+        
+        await _context.SaveChangesAsync();
+        
+        return $"{outputFileName}";
+    }
+    catch (Exception ex)
+    {
+        // 예외 메시지를 더 명확하게
+        Console.WriteLine($"❌ CV 리스트 생성 중 심각한 오류 발생: {ex.ToString()}");
+        throw new Exception($"CV 리스트 생성 실패: {ex.Message}", ex);
+    }
+}
 
         public async Task<string> GenerateVLListAsync(string tempEstimateNo)
-        {
-            try
-            {
-                // 1. 템플릿 경로 설정
-                var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "VL.xlsx");
-                if (!File.Exists(templatePath))
-                {
-                    throw new Exception($"VL 템플릿 파일을 찾을 수 없습니다: {templatePath}");
-                }
-
-                // 2. 출력 경로 설정
-                var outputDir = Path.Combine(Directory.GetCurrentDirectory(), "files", tempEstimateNo, "ResultFiles", "vllist");
-                var outputFileName = $"VL_{tempEstimateNo}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
-                var outputPath = Path.Combine(outputDir, outputFileName);
-
-                // 3. 디렉토리 생성 및 템플릿 복사
-                if (!Directory.Exists(outputDir))
-                {
-                    Directory.CreateDirectory(outputDir);
-                }
-                
-                File.Copy(templatePath, outputPath, true);
-
-                // 4. 데이터베이스에서 데이터 조회
-                using var conn = new MySqlConnection(_context.Database.GetConnectionString());
-                await conn.OpenAsync();
-                
-                // only_full_group_by 모드 끄기
-                using var modeCmd = new MySqlCommand("SET sql_mode = (SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));", conn);
-                await modeCmd.ExecuteNonQueryAsync();
-                
-                string query = @"SELECT d.*, e.Project, er.Tagno, er.Qty, er.UnitPrice, er.SheetNo,
-                                       bvl.ValveSeries as ValveTypeName,
-                                       bsl.BodySize as BodySizeName,
-                                       tpsl.PortSize as TrimPortSizeName,
-                                       bml.BodyMat as BodyMatName,
-                                       tml.TrimMat as TrimMatName,
-                                       brl.RatingName as RatingName,
-                                       atl.ActType as ActTypeName,
-                                       asl.ActSize as ActSizeName,
-                                       ahl.HW as HWName,
-                                       bbl.BonnetType as BonnetTypeName,
-                                       tsl.TrimSeries as TrimSeriesName,
-                                       ttl.TrimType as TrimTypeName,
-                                       al.AccSize as AiroperateAccSize,
-                                       er.IsPositioner,
-                                       er.IsSolenoid,
-                                       er.IsLimSwitch,
-                                       er.IsLockUp,
-                                       er.IsVolumeBooster,
-                                       er.IsSnapActingRelay,
-                                       er.IsAirOperated
-                                FROM DataSheetLv3 d 
-                                JOIN EstimateSheetLv1 e ON d.TempEstimateNo = e.TempEstimateNo 
-                                LEFT JOIN EstimateRequest er ON d.TempEstimateNo = er.TempEstimateNo AND d.SheetID = er.SheetID
-                                LEFT JOIN BodyValveList bvl ON d.ValveType = bvl.ValveSeriesCode
-                                LEFT JOIN BodySizeList bsl ON d.BodySizeUnit = bsl.UnitCode AND d.BodySize = bsl.BodySizeCode
-                                LEFT JOIN TrimPortSizeList tpsl ON d.TrimPortSizeUnit = tpsl.UnitCode AND d.TrimPortSize = tpsl.PortSizeCode
-                                LEFT JOIN BodyMatList bml ON d.BodyMat = bml.BodyMatCode
-                                LEFT JOIN TrimMatList tml ON d.TrimMat = tml.TrimMatCode
-                                LEFT JOIN BodyRatingList brl ON d.RatingUnit = brl.RatingUnitCode AND d.Rating = brl.RatingCode
-                                LEFT JOIN ActTypeList atl ON d.ActType = atl.ActTypeCode
-                                LEFT JOIN ActSizeList asl ON d.ActSeriesCode = asl.ActSeriesCode AND d.ActSize = asl.ActSizeCode
-                                LEFT JOIN ActHWList ahl ON d.HW = ahl.HWCode
-                                LEFT JOIN BodyBonnetList bbl ON d.BonnetType = bbl.BonnetCode
-                                LEFT JOIN TrimSeriesList tsl ON d.TrimSeries = tsl.TrimSeriesCode
-                                LEFT JOIN TrimTypeList ttl ON d.TrimType = ttl.TrimTypeCode
-                                LEFT JOIN AiroperateList al ON d.AirOpMakerCode = al.AccMakerCode AND d.AirOpCode = al.AccModelCode
-                                WHERE d.TempEstimateNo = @tempEstimateNo
-                                GROUP BY d.TempEstimateNo, d.SheetID
-                                ORDER BY er.SheetNo;";
-
-                using var cmd = new MySqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@tempEstimateNo", tempEstimateNo);
-                using var reader = await cmd.ExecuteReaderAsync();
-
-                // 5. ValveType별로 데이터 그룹화
-                var valveTypeGroups = new Dictionary<string, List<Dictionary<string, object>>>();
-                
-                while (await reader.ReadAsync())
-                {
-                    var valveType = reader["ValveType"]?.ToString() ?? "Unknown";
-                    if (!valveTypeGroups.ContainsKey(valveType))
-                    {
-                        valveTypeGroups[valveType] = new List<Dictionary<string, object>>();
-                    }
-                    
-                    var rowData = new Dictionary<string, object>();
-                    for (int i = 0; i < reader.FieldCount; i++)
-                    {
-                        rowData[reader.GetName(i)] = reader[i];
-                    }
-                    valveTypeGroups[valveType].Add(rowData);
-                }
-
-                if (valveTypeGroups.Count == 0)
-                {
-                    throw new Exception("데이터를 찾을 수 없습니다.");
-                }
-
-                // 6. Excel 파일 업데이트
-                using var workbook = new ClosedXML.Excel.XLWorkbook(outputPath);
-                
-                // 7. 각 ValveType별로 시트 생성 및 데이터 입력
-                foreach (var valveTypeGroup in valveTypeGroups)
-                {
-                    string valveType = valveTypeGroup.Key;
-                    var dataRows = valveTypeGroup.Value;
-                    
-                    // 기존 VL 시트를 복사하여 새로운 시트 생성
-                    var originalWorksheet = workbook.Worksheet("VL");
-                    var newWorksheet = originalWorksheet.CopyTo($"VL_{valveType}");
-                    
-                    // 각 SheetID별로 데이터 입력
-                    for (int currentIndex = 0; currentIndex < dataRows.Count; currentIndex++)
-                    {
-                        var rowData = dataRows[currentIndex];
-                        int sheetID = Convert.ToInt32(rowData["SheetID"]);
-                        int row_vl = 10 + currentIndex; // VL은 10행부터 시작
-                        
-                        // VL 데이터 매핑 배열
-                        int[] vl_skip_excel_cell = { 3, 4, 5, 7, 12, 13, 14, 18, 23, 24, 26, 28, 29, 30, 31, 35, 39, 40, 41, 42 };
-                        string[] vl_target_value = {
-                            "Tagno",   // 견적번호
-                            "ValveTypeName",   // 밸브타입
-                            "BodySizeName",   // 바디사이즈
-                            "TrimPortSizeName",   // 포트사이즈
-                            "Medium",   // 매체
-                            "Fluid",   // 유체
-                            "BodyMatName",   // 바디재질
-                            "TrimMatName",   // 트림재질
-                            "RatingName",   // 레이팅
-                            "ActTypeName",   // 액추에이터타입
-                            "ActSizeName",   // 액추에이터사이즈
-                            "HWName",   // 액추에이터HW
-                            "BonnetTypeName",   // 보넷타입
-                            "BasicCharacter",   // 기본특성
-                            "IsPositioner",   // 에어셋
-                            "IsSolenoid",   // 솔레노이드
-                            "IsLimSwitch",   // 리미트스위치
-                            "IsLockUp",   // 락업밸브
-                            "IsVolumeBooster",   // 볼륨부스터
-                            "IsSnapActingRelay",   // 스냅액팅
-                            "IsAirOperated",   // 에어오퍼레이트
-                            "Qty",   // 수량
-                            "UnitPrice",   // 단가
-                        };
-                        
-                        int vl_target_index = 0;
-                        for (int i = 2; i < 45; i++)
-                        {
-                            if (vl_skip_excel_cell.Contains(i)) { continue; }
-                            
-                            var cellValue = rowData.ContainsKey(vl_target_value[vl_target_index]) 
-                                ? rowData[vl_target_value[vl_target_index]]?.ToString() ?? "" 
-                                : "";
-                            newWorksheet.Cell(row_vl, i).Value = cellValue;
-                            vl_target_index++;
-                        }
-                        
-                        // 특정 위치 데이터 (첫 번째 행에만 설정)
-                        if (currentIndex == 0)
-                        {
-                            newWorksheet.Cell(4, 1).Value = "Project : " + (rowData["Project"]?.ToString() ?? "");
-                            newWorksheet.Cell(9, 1).Value = "A. " + (rowData["ValveTypeName"]?.ToString() ?? "");
-                            newWorksheet.Cell(8, 7).Value = rowData["AiroperateAccSize"]?.ToString();
-                            newWorksheet.Cell(8, 8).Value = rowData["AiroperateAccSize"]?.ToString();
-                            newWorksheet.Cell(8, 9).Value = rowData["AiroperateAccSize"]?.ToString();
-                        }
-                    }
-                }
-                
-                // 8. 기본 VL 시트 삭제
-                var templateWorksheet = workbook.Worksheet("VL");
-                templateWorksheet.Delete();
-                
-                // 9. 파일 저장
-                workbook.Save();
-                workbook.Dispose();
-                
-                // 10. EstimateAttachment에 저장
-                var existingAttachment = await _context.EstimateAttachment
-    .FirstOrDefaultAsync(ea => ea.TempEstimateNo == tempEstimateNo && ea.ManagerFileType == "vllist");
-
-if (existingAttachment != null)
 {
-    // 기존 파일 삭제
-    if (File.Exists(existingAttachment.FilePath))
+    try
     {
-        try
+        // 1. 템플릿 및 출력 경로 설정
+        var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "VL.xlsx");
+        if (!File.Exists(templatePath))
         {
-            File.Delete(existingAttachment.FilePath);
+            throw new Exception($"VL 템플릿 파일을 찾을 수 없습니다: {templatePath}");
         }
-        catch (Exception ex)
+
+        var outputDir = Path.Combine(Directory.GetCurrentDirectory(), "files", tempEstimateNo, "ResultFiles", "vllist");
+        var outputFileName = $"VL_{tempEstimateNo}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        var outputPath = Path.Combine(outputDir, outputFileName);
+
+        Directory.CreateDirectory(outputDir);
+        File.Copy(templatePath, outputPath, true);
+
+        // 2. 데이터베이스에서 데이터 조회 (개선된 쿼리 적용)
+        using var conn = new MySqlConnection(_context.Database.GetConnectionString());
+        await conn.OpenAsync();
+
+        using var modeCmd = new MySqlCommand("SET sql_mode = (SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));", conn);
+        await modeCmd.ExecuteNonQueryAsync();
+        
+        string query = @"SELECT d.*, e.Project, er.Tagno, er.Qty, er.UnitPrice,
+                               bvl.ValveSeries as ValveTypeName,
+                               bsl.BodySize as BodySizeName,
+                               tpsl.PortSize as TrimPortSizeName,
+                               bml.BodyMat as BodyMatName,
+                               tml.TrimMat as TrimMatName,
+                               CONCAT(brul.RatingUnit, ' ', brl.RatingName, ' ', bcl.Connection) as RatingName,
+                               atl.ActType as ActTypeName,
+                               asl.ActSize as ActSizeName,
+                               ahl.HW as HWName,
+                               bbl.BonnetType as BonnetTypeName,
+                               tsl.TrimSeries as TrimSeriesName,
+                               ttl.TrimType as TrimTypeName,
+                               tfl.TrimForm as TrimFormName,
+                               al.AccSize as AiroperateAccSize,
+                               er.IsPositioner,
+                               er.IsSolenoid,
+                               er.IsLimSwitch,
+                               er.IsLockUp,
+                               er.IsVolumeBooster,
+                               er.IsSnapActingRelay,
+                               er.IsAirOperated
+                        FROM DataSheetLv3 d 
+                        JOIN EstimateSheetLv1 e ON d.TempEstimateNo = e.TempEstimateNo 
+                        LEFT JOIN EstimateRequest er ON d.TempEstimateNo = er.TempEstimateNo AND d.SheetID = er.SheetID
+                        LEFT JOIN BodyValveList bvl ON d.ValveType = bvl.ValveSeriesCode
+                        LEFT JOIN BodySizeList bsl ON d.BodySize = bsl.BodySizeCode AND d.BodySizeUnit = bsl.UnitCode
+                        LEFT JOIN TrimPortSizeList tpsl ON d.TrimPortSize = tpsl.PortSizeCode AND d.TrimPortSizeUnit = tpsl.UnitCode
+                        LEFT JOIN BodyMatList bml ON d.BodyMat = bml.BodyMatCode
+                        LEFT JOIN TrimMatList tml ON d.TrimMat = tml.TrimMatCode
+                        LEFT JOIN BodyRatingList brl ON d.Rating = brl.RatingCode AND d.RatingUnit = brl.RatingUnitCode
+                        LEFT JOIN BodyRatingUnitList brul ON d.RatingUnit = brul.RatingUnitCode
+                        LEFT JOIN BodyConnectionList bcl ON d.Connection = bcl.ConnectionCode
+                        LEFT JOIN ActTypeList atl ON d.ActType = atl.ActTypeCode
+                        LEFT JOIN ActSizeList asl ON d.ActSeriesCode = asl.ActSeriesCode AND d.ActSize = asl.ActSizeCode
+                        LEFT JOIN ActHWList ahl ON d.HW = ahl.HWCode
+                        LEFT JOIN BodyBonnetList bbl ON d.BonnetType = bbl.BonnetCode
+                        LEFT JOIN TrimSeriesList tsl ON d.TrimSeries = tsl.TrimSeriesCode
+                        LEFT JOIN TrimTypeList ttl ON d.TrimType = ttl.TrimTypeCode
+                        LEFT JOIN TrimFormList tfl ON d.TrimForm = tfl.TrimFormCode
+                        LEFT JOIN AiroperateList al ON d.AirOpMakerCode = al.AccMakerCode AND d.AirOpCode = al.AccModelCode
+                        WHERE d.TempEstimateNo = @tempEstimateNo
+                        ORDER BY er.SheetNo;";
+
+        using var cmd = new MySqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("@tempEstimateNo", tempEstimateNo);
+        using var reader = await cmd.ExecuteReaderAsync();
+
+        // 3. ValveType별로 데이터 그룹화
+        var valveTypeGroups = new Dictionary<string, List<Dictionary<string, object>>>();
+        while (await reader.ReadAsync())
         {
-            // 파일 삭제 실패 시 로그만 남기고 계속 진행
-            Console.WriteLine($"기존 파일 삭제 실패: {ex.Message}");
+            var valveType = reader["ValveType"]?.ToString() ?? "Unknown";
+            if (!valveTypeGroups.ContainsKey(valveType))
+            {
+                valveTypeGroups[valveType] = new List<Dictionary<string, object>>();
+            }
+            var rowData = new Dictionary<string, object>();
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                rowData[reader.GetName(i)] = reader[i];
+            }
+            valveTypeGroups[valveType].Add(rowData);
         }
+
+        if (valveTypeGroups.Count == 0)
+        {
+            throw new Exception("데이터를 찾을 수 없습니다.");
+        }
+
+        // 4. Excel 파일 업데이트
+        using var workbook = new ClosedXML.Excel.XLWorkbook(outputPath);
+        
+        foreach (var valveTypeGroup in valveTypeGroups)
+        {
+            string valveType = valveTypeGroup.Key;
+            var dataRows = valveTypeGroup.Value;
+            
+            var originalWorksheet = workbook.Worksheet("VL");
+            var newWorksheet = originalWorksheet.CopyTo($"VL_{valveType}");
+            
+            bool isFirstRow = true;
+            for (int currentIndex = 0; currentIndex < dataRows.Count; currentIndex++)
+            {
+                var rowData = dataRows[currentIndex];
+                int row_vl = 10 + currentIndex;
+                
+                string[] vl_target_value = {
+                    "Tagno", "ValveTypeName", "BodySizeName", "TrimPortSizeName", "Medium",
+                    "Fluid", "BodyMatName", "TrimMatName", "RatingName", "ActTypeName",
+                    "ActSizeName", "HWName", "BonnetTypeName", "TrimFormName", "IsPositioner",
+                    "IsSolenoid", "IsLimSwitch", "IsLockUp", "IsVolumeBooster",
+                    "IsSnapActingRelay", "IsAirOperated", "Qty", "UnitPrice",
+                };
+                int[] vl_skip_excel_cell = { 3, 4, 5, 7, 12, 13, 14, 18, 23, 24, 26, 28, 29, 30, 31, 35, 39, 40, 41, 42 };
+                
+                newWorksheet.Cell(row_vl, 1).Value = currentIndex + 1;
+                
+                int vl_target_index = 0;
+                for (int i = 2; i < 45; i++)
+                {
+                    if (vl_skip_excel_cell.Contains(i)) { continue; }
+                    
+                    var key = vl_target_value[vl_target_index];
+                    var cellValue = rowData.ContainsKey(key) ? rowData[key] : null;
+
+                    if (key.StartsWith("Is"))
+                    {
+                        newWorksheet.Cell(row_vl, i).Value = (cellValue != null && Convert.ToBoolean(cellValue)) ? "Y" : "";
+                    }
+                    else
+                    {
+                        newWorksheet.Cell(row_vl, i).Value = cellValue?.ToString() ?? "";
+                    }
+                    vl_target_index++;
+                }
+                
+                if (isFirstRow)
+                {
+                    newWorksheet.Cell(4, 1).Value = "Project : " + (rowData["Project"]?.ToString() ?? "");
+                    newWorksheet.Cell(9, 1).Value = "A. Pneumatic" + (rowData["ValveTypeName"]?.ToString() ?? "") + " Valve";
+                    newWorksheet.Cell(8, 7).Value = rowData["AiroperateAccSize"]?.ToString();
+                    newWorksheet.Cell(8, 8).Value = rowData["AiroperateAccSize"]?.ToString();
+                    newWorksheet.Cell(8, 9).Value = rowData["AiroperateAccSize"]?.ToString();
+                    isFirstRow = false;
+                }
+            }
+        }
+        
+        workbook.Worksheet("VL").Delete();
+        workbook.Save();
+        
+        // 5. EstimateAttachment에 저장
+        var existingAttachment = await _context.EstimateAttachment
+            .FirstOrDefaultAsync(ea => ea.TempEstimateNo == tempEstimateNo && ea.ManagerFileType == "vllist");
+
+        if (existingAttachment != null)
+        {
+            if (File.Exists(existingAttachment.FilePath))
+            {
+                try { File.Delete(existingAttachment.FilePath); }
+                catch (Exception ex) { Console.WriteLine($"기존 파일 삭제 실패: {ex.Message}"); }
+            }
+            existingAttachment.FileName = outputFileName;
+            existingAttachment.FilePath = outputPath;
+            existingAttachment.FileSize = (int)new FileInfo(outputPath).Length;
+            existingAttachment.UploadDate = DateTime.Now;
+        }
+        else
+        {
+            _context.EstimateAttachment.Add(new EstimateAttachment
+            {
+                TempEstimateNo = tempEstimateNo,
+                FileName = outputFileName,
+                FilePath = outputPath,
+                FileSize = (int)new FileInfo(outputPath).Length,
+                UploadDate = DateTime.Now,
+                ManagerFileType = "vllist"
+            });
+        }
+        await _context.SaveChangesAsync();
+        
+        return outputFileName;
     }
-    
-    // 기존 DB 레코드 업데이트
-    existingAttachment.FileName = outputFileName;
-    existingAttachment.FilePath = outputPath;
-    existingAttachment.FileSize = (int)new FileInfo(outputPath).Length;
-    existingAttachment.UploadDate = DateTime.Now;
-}
-else
-{
-    // 새 DB 레코드 생성
-    var excelAttachment = new EstimateAttachment
+    catch (Exception ex)
     {
-        TempEstimateNo = tempEstimateNo,
-        FileName = outputFileName,
-        FilePath = outputPath,
-        FileSize = (int)new FileInfo(outputPath).Length,
-        UploadDate = DateTime.Now,
-        UploadUserID = null,
-        ManagerFileType = "vllist"
-    };
-    
-    _context.EstimateAttachment.Add(excelAttachment);
+        throw new Exception($"VL 리스트 생성 실패: {ex.Message}");
+    }
 }
-await _context.SaveChangesAsync();
-                
-                return $"{outputFileName}";
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"VL 리스트 생성 실패: {ex.Message}");
-            }
+
+       public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
+{
+    try
+    {
+        // 1. 템플릿 및 출력 경로 설정
+        var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "DS.xlsx");
+        if (!File.Exists(templatePath))
+        {
+            throw new Exception($"DS 템플릿 파일을 찾을 수 없습니다: {templatePath}");
         }
 
-        public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
+        var outputDir = Path.Combine(Directory.GetCurrentDirectory(), "files", tempEstimateNo, "ResultFiles", "datasheet");
+        var outputFileName = $"DS_{tempEstimateNo}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        var outputPath = Path.Combine(outputDir, outputFileName);
+        
+        Directory.CreateDirectory(outputDir);
+        File.Copy(templatePath, outputPath, true);
+
+        // 2. 데이터베이스에서 데이터 조회 (개선된 쿼리 적용)
+        using var conn = new MySqlConnection(_context.Database.GetConnectionString());
+        await conn.OpenAsync();
+        
+        using var modeCmd = new MySqlCommand("SET sql_mode = (SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));", conn);
+        await modeCmd.ExecuteNonQueryAsync();
+        
+        string query = @"SELECT d.*, e.Project, er.Tagno, er.Qty,
+                               bvl.ValveSeries as ValveTypeName,
+                               bsl.BodySize as BodySizeName,
+                               tpsl.PortSize as TrimPortSizeName,
+                               bml.BodyMat as BodyMatName,
+                               tml.TrimMat as TrimMatName,
+                               CONCAT(brul.RatingUnit, ' ', brl.RatingName, ' ', bcl.Connection) as RatingName,
+                               atl.ActType as ActTypeName,
+                               asl.ActSize as ActSizeName,
+                               ahl.HW as HWName,
+                               bbl.BonnetType as BonnetTypeName,
+                               tsl.TrimSeries as TrimSeriesName,
+                               ttl.TrimType as TrimTypeName,
+                               tfl.TrimForm as TrimFormName,
+                               pl.AccModelName as PosCodeName,
+                               sl.AccModelName as SolCodeName,
+                               ll.AccModelName as LimCodeName,
+                               al.AccModelName as ASCodeName,
+                               vl.AccModelName as VolCodeName,
+                               aol.AccModelName as AirOpCodeName,
+                               lkl.AccModelName as LockupCodeName,
+                               sal.AccModelName as SnapActCodeName,
+                               al_acc.AccSize as AiroperateAccSize
+                        FROM DataSheetLv3 d 
+                        JOIN EstimateSheetLv1 e ON d.TempEstimateNo = e.TempEstimateNo 
+                        LEFT JOIN EstimateRequest er ON d.TempEstimateNo = er.TempEstimateNo AND d.SheetID = er.SheetID
+                        LEFT JOIN BodyValveList bvl ON d.ValveType = bvl.ValveSeriesCode
+                        LEFT JOIN BodySizeList bsl ON d.BodySize = bsl.BodySizeCode AND d.BodySizeUnit = bsl.UnitCode
+                        LEFT JOIN TrimPortSizeList tpsl ON d.TrimPortSize = tpsl.PortSizeCode AND d.TrimPortSizeUnit = tpsl.UnitCode
+                        LEFT JOIN BodyMatList bml ON d.BodyMat = bml.BodyMatCode
+                        LEFT JOIN TrimMatList tml ON d.TrimMat = tml.TrimMatCode
+                        LEFT JOIN BodyRatingList brl ON d.Rating = brl.RatingCode AND d.RatingUnit = brl.RatingUnitCode
+                        LEFT JOIN BodyRatingUnitList brul ON d.RatingUnit = brul.RatingUnitCode
+                        LEFT JOIN BodyConnectionList bcl ON d.Connection = bcl.ConnectionCode
+                        LEFT JOIN ActTypeList atl ON d.ActType = atl.ActTypeCode
+                        LEFT JOIN ActSizeList asl ON d.ActSeriesCode = asl.ActSeriesCode AND d.ActSize = asl.ActSizeCode
+                        LEFT JOIN ActHWList ahl ON d.HW = ahl.HWCode
+                        LEFT JOIN BodyBonnetList bbl ON d.BonnetType = bbl.BonnetCode
+                        LEFT JOIN TrimSeriesList tsl ON d.TrimSeries = tsl.TrimSeriesCode
+                        LEFT JOIN TrimTypeList ttl ON d.TrimType = ttl.TrimTypeCode
+                        LEFT JOIN TrimFormList tfl ON d.TrimForm = tfl.TrimFormCode
+                        LEFT JOIN PositionerList pl ON d.PosCode = pl.AccModelCode
+                        LEFT JOIN SolenoidList sl ON d.SolCode = sl.AccModelCode
+                        LEFT JOIN LimitList ll ON d.LimCode = ll.AccModelCode
+                        LEFT JOIN AirsetList al ON d.ASCode = al.AccModelCode
+                        LEFT JOIN VolumeList vl ON d.VolCode = vl.AccModelCode
+                        LEFT JOIN AiroperateList aol ON d.AirOpCode = aol.AccModelCode
+                        LEFT JOIN LockupList lkl ON d.LockupCode = lkl.AccModelCode
+                        LEFT JOIN SnapactingList sal ON d.SnapActCode = sal.AccModelCode
+                        LEFT JOIN AiroperateList al_acc ON d.AirOpMakerCode = al_acc.AccMakerCode AND d.AirOpCode = al_acc.AccModelCode
+                        WHERE d.TempEstimateNo = @tempEstimateNo
+                        ORDER BY er.SheetNo;";
+
+        using var cmd = new MySqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("@tempEstimateNo", tempEstimateNo);
+        using var reader = await cmd.ExecuteReaderAsync();
+
+        var dataRows = new List<Dictionary<string, object>>();
+        while(await reader.ReadAsync())
         {
-            try
+            var rowData = new Dictionary<string, object>();
+            for (int i = 0; i < reader.FieldCount; i++)
             {
-                // 1. 템플릿 경로 설정
-                var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "DS.xlsx");
-                if (!File.Exists(templatePath))
+                rowData[reader.GetName(i)] = reader[i];
+            }
+            dataRows.Add(rowData);
+        }
+        
+        if (dataRows.Count == 0)
+        {
+             throw new Exception("데이터를 찾을 수 없습니다.");
+        }
+
+        // 3. Excel 파일 업데이트
+        using var workbook = new ClosedXML.Excel.XLWorkbook(outputPath);
+        var templateWorksheet = workbook.Worksheet("DS");
+        
+        for (int i = 0; i < dataRows.Count; i++)
+        {
+            var rowData = dataRows[i];
+            
+            string sheetName = $"DS{i + 1}";
+            var worksheet_ds = (i == 0) ? templateWorksheet : templateWorksheet.CopyTo(sheetName);
+            if(i == 0) worksheet_ds.Name = sheetName;
+
+            // ▼▼▼▼▼▼ 시작: 생략되었던 전체 데이터 매핑 로직 ▼▼▼▼▼▼
+            int[] row_ds_1 = { 11, 12, 13, 14, 16, 17, 19, 20, 21 };
+            int[] col_ds_1 = { 17, 22, 30, 38 };
+            string[] ds_target_value_1 = {
+                "PressureUnit", "InletPressureMaxQ", "InletPressureNorQ", "InletPressureMinQ",
+                "PressureUnit", "OutletPressureMaxQ", "OutletPressureNorQ", "OutletPressureMinQ",
+                "PressureUnit", "DifferentialPressureMaxQ", "DifferentialPressureNorQ", "DifferentialPressureMinQ",
+                "TemperatureUnit", "InletTemperatureQ", "InletTemperatureNorQ", "InletTemperatureMinQ",
+                "DensityUnit", "Density", "Density", "Density",
+                "MolecularWeightUnit", "MolecularWeight", "MolecularWeight", "MolecularWeight",
+                "LpAeMax", "LpAeNor", "LpAeMin",
+                "CalculatedCvUnit", "CalculatedCvMaxQ", "CalculatedCvNorQ", "CalculatedCvMinQ",
+                "SS100Max", "SS100Nor", "SS100Min"
+            };
+            
+            int ds_target_index_1 = 0;
+            foreach (int row in row_ds_1)
+            {
+                foreach (int col in col_ds_1)
                 {
-                    throw new Exception($"DS 템플릿 파일을 찾을 수 없습니다: {templatePath}");
+                    if ((row == 19 && col == 17) || (row == 21 && col == 17)) { continue; }
+                    worksheet_ds.Cell(row, col).Value = rowData[ds_target_value_1[ds_target_index_1]]?.ToString();
+                    ds_target_index_1++;
                 }
+            }
 
-                // 2. 출력 경로 설정
-                var outputDir = Path.Combine(Directory.GetCurrentDirectory(), "files", tempEstimateNo, "ResultFiles", "datasheet");
-                var outputFileName = $"DS_{tempEstimateNo}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
-                var outputPath = Path.Combine(outputDir, outputFileName);
-
-                // 3. 디렉토리 생성 및 템플릿 복사
-                if (!Directory.Exists(outputDir))
+            // QM/QN 데이터 처리
+            int[] col_2 = { 17, 22, 30, 38 };
+            bool isQM = Convert.ToBoolean(rowData["IsQM"]);
+            for(int j = 0; j < col_2.Length; j++)
+            {
+                string value = "";
+                if (isQM)
                 {
-                    Directory.CreateDirectory(outputDir);
-                }
-                
-                File.Copy(templatePath, outputPath, true);
-
-                // 4. 데이터베이스에서 데이터 조회
-                using var conn = new MySqlConnection(_context.Database.GetConnectionString());
-                await conn.OpenAsync();
-                
-                // only_full_group_by 모드 끄기
-                using var modeCmd = new MySqlCommand("SET sql_mode = (SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));", conn);
-                await modeCmd.ExecuteNonQueryAsync();
-                
-                string query = @"SELECT d.*, e.Project, er.Tagno, er.Qty,
-                                       bvl.ValveSeries as ValveTypeName,
-                                       bsl.BodySize as BodySizeName,
-                                       tpsl.PortSize as TrimPortSizeName,
-                                       bml.BodyMat as BodyMatName,
-                                       tml.TrimMat as TrimMatName,
-                                       brl.RatingName as RatingName,
-                                       atl.ActType as ActTypeName,
-                                       asl.ActSize as ActSizeName,
-                                       ahl.HW as HWName,
-                                       bbl.BonnetType as BonnetTypeName,
-                                       tsl.TrimSeries as TrimSeriesName,
-                                       ttl.TrimType as TrimTypeCode,
-                                       pl.AccModelName as PosCodeName,
-                                       sl.AccModelName as SolCodeName,
-                                       ll.AccModelName as LimCodeName,
-                                       al.AccModelCode as ASCodeName,
-                                       vl.AccModelName as VolCodeName,
-                                       aol.AccModelName as AirOpCodeName,
-                                       lkl.AccModelName as LockupCodeName,
-                                       sal.AccModelName as SnapActCodeName,
-                                       al_acc.AccSize as AiroperateAccSize,
-                                       er.IsPositioner,
-                                       er.IsSolenoid,
-                                       er.IsLimSwitch,
-                                       er.IsLockUp,
-                                       er.IsVolumeBooster,
-                                       er.IsSnapActingRelay,
-                                       er.IsAirOperated
-                                FROM DataSheetLv3 d 
-                                JOIN EstimateSheetLv1 e ON d.TempEstimateNo = e.TempEstimateNo 
-                                LEFT JOIN EstimateRequest er ON d.TempEstimateNo = er.TempEstimateNo AND d.SheetID = er.SheetID
-                                LEFT JOIN BodyValveList bvl ON d.ValveType = bvl.ValveSeriesCode
-                                LEFT JOIN BodySizeList bsl ON d.BodySize = bsl.BodySizeCode
-                                LEFT JOIN TrimPortSizeList tpsl ON d.TrimPortSize = tpsl.PortSizeCode
-                                LEFT JOIN BodyMatList bml ON d.BodyMat = bml.BodyMatCode
-                                LEFT JOIN TrimMatList tml ON d.TrimMat = tml.TrimMatCode
-                                LEFT JOIN BodyRatingList brl ON d.Rating = brl.RatingCode
-                                LEFT JOIN ActTypeList atl ON d.ActType = atl.ActTypeCode
-                                LEFT JOIN ActSizeList asl ON d.ActSize = asl.ActSizeCode
-                                LEFT JOIN ActHWList ahl ON d.HW = ahl.HWCode
-                                LEFT JOIN BodyBonnetList bbl ON d.BonnetType = bbl.BonnetCode
-                                LEFT JOIN TrimSeriesList tsl ON d.TrimSeries = tsl.TrimSeriesCode
-                                LEFT JOIN TrimTypeList ttl ON d.TrimType = ttl.TrimTypeCode
-                                LEFT JOIN PositionerList pl ON d.PosCode = pl.AccModelCode
-                                LEFT JOIN SolenoidList sl ON d.SolCode = sl.AccModelCode
-                                LEFT JOIN LimitList ll ON d.LimCode = ll.AccModelCode
-                                LEFT JOIN AirsetList al ON d.ASCode = al.AccModelCode
-                                LEFT JOIN VolumeList vl ON d.VolCode = vl.AccModelCode
-                                LEFT JOIN AiroperateList aol ON d.AirOpCode = aol.AccModelCode
-                                LEFT JOIN LockupList lkl ON d.LockupCode = lkl.AccModelCode
-                                LEFT JOIN SnapactingList sal ON d.SnapActCode = sal.AccModelCode
-                                LEFT JOIN AiroperateList al_acc ON d.AirOpCode = al_acc.AccModelCode
-                                WHERE d.TempEstimateNo = @tempEstimateNo
-                                GROUP BY d.TempEstimateNo, d.SheetID
-                                ORDER BY er.SheetNo;";
-
-                using var cmd = new MySqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@tempEstimateNo", tempEstimateNo);
-                using var reader = await cmd.ExecuteReaderAsync();
-
-                // 5. Excel 파일 업데이트
-                using var workbook = new ClosedXML.Excel.XLWorkbook(outputPath);
-                var templateWorksheet = workbook.Worksheet("DS");
-                
-                int rowCount = 0;
-                while (await reader.ReadAsync())
-                {
-                    // SheetID에 따라 새로운 시트 생성 (Program 복사본.cs와 동일한 로직)
-                    string sheetName = rowCount == 0 ? "DS" : $"DS{rowCount + 1}";
-                    var worksheet_ds = rowCount == 0 ? templateWorksheet : templateWorksheet.CopyTo(sheetName);
-                    
-                    // DS 데이터 매핑 (Program 복사본.cs와 동일한 로직)
-                    int[] row_ds_1 = { 11, 12, 13, 14, 16, 17, 19, 20, 21 };
-                    int[] col_ds_1 = { 17, 22, 30, 38 };
-                    string[] ds_target_value_1 = {
-                        "PressureUnit",        // 압력단위
-                        "InletPressureMaxQ",           // P1 최대
-                        "InletPressureNorQ",        // P1 정상
-                        "InletPressureMinQ",           // P1 최소
-                        "PressureUnit",          // 압력단위
-                        "OutletPressureMaxQ",           // P2 최대
-                        "OutletPressureNorQ",        // P2 정상
-                        "OutletPressureMinQ",           // P2 최소
-                        "PressureUnit",     // 압력단위
-                        "DifferentialPressureMaxQ",      // 차압 최대
-                        "DifferentialPressureNorQ",   // 차압 정상
-                        "DifferentialPressureMinQ",      // 차압 최소
-                        "TemperatureUnit",          // 온도단위
-                        "InletTemperatureQ",           // 온도 최대
-                        "InletTemperatureNorQ",        // 온도 정상
-                        "InletTemperatureMinQ",           // 온도 최소
-                        "DensityUnit",    // 밀도단위
-                        "Density",            // 밀도
-                        "Density",            // 밀도
-                        "Density",            // 밀도
-                        "MolecularWeightUnit",  // 분자량단위
-                        "MolecularWeight",     // 분자량
-                        "MolecularWeight",     // 분자량
-                        "MolecularWeight",     // 분자량
-                        "LpAeMax",       // LpAe 최대
-                        "LpAeNor",    // LpAe 정상
-                        "LpAeMin",     // LpAe 최소
-                        "CalculatedCvUnit",          // Cv 단위
-                        "CalculatedCvMaxQ",           // Cv 최대
-                        "CalculatedCvNorQ",        // Cv 정상
-                        "CalculatedCvMinQ",           // Cv 최소
-                        "SS100Max",         // S/S100 최대
-                        "SS100Nor",      // S/S100 정상
-                        "SS100Min"        // S/S100 최소
+                    value = j switch {
+                        0 => rowData["QMUnit"]?.ToString() ?? "",
+                        1 => rowData["QMMax"]?.ToString() ?? "",
+                        2 => rowData["QMNor"]?.ToString() ?? "",
+                        3 => rowData["QMMin"]?.ToString() ?? "",
+                        _ => ""
                     };
-                    
-                    int ds_target_index_1 = 0;
-                    foreach (int row in row_ds_1)
-                    {
-                        foreach (int col in col_ds_1)
-                        {
-                            if ((row == 19 && col == 17) || (row == 21 && col == 17)) { continue; }
-                            worksheet_ds.Cell(row, col).Value = reader[ds_target_value_1[ds_target_index_1]]?.ToString();
-                            ds_target_index_1++;
-                        }
-                    }
-
-                    // QM/QN 데이터 처리
-                    int[] col_2 = { 17, 22, 30, 38 };
-                    string[] ds_target_value_2 = {
-                        "QMUnit",          // QM 단위
-                        "QNUnit",         // QN 단위
-                        "QMMax",          // QM 최대
-                        "QNMax",          // QN 최대
-                        "QMNor",       // QM 정상
-                        "QNNor",         // QN 정상
-                        "QMMin",          // QM 최소
-                        "QNMin"        // QN 최소
-                    };
-                    
-                    int ds_target_index_2 = 0;
-                    foreach (int col in col_2)
-                    {
-                        bool isQM = Convert.ToBoolean(reader["IsQM"]);
-                        string value;
-                        
-                        if (isQM)
-                        {
-                            switch (ds_target_index_2)
-                            {
-                                case 0: value = reader["QMUnit"]?.ToString() ?? ""; break;
-                                case 1: value = reader["QMMax"]?.ToString() ?? ""; break;
-                                case 2: value = reader["QMNor"]?.ToString() ?? ""; break;
-                                case 3: value = reader["QMMin"]?.ToString() ?? ""; break;
-                                default: value = ""; break;
-                            }
-                        }
-                        else
-                        {
-                            switch (ds_target_index_2)
-                            {
-                                case 0: value = reader["QNUnit"]?.ToString() ?? ""; break;
-                                case 1: value = reader["QNMax"]?.ToString() ?? ""; break;
-                                case 2: value = reader["QNNor"]?.ToString() ?? ""; break;
-                                case 3: value = reader["QNMin"]?.ToString() ?? ""; break;
-                                default: value = ""; break;
-                            }
-                        }
-                        
-                        worksheet_ds.Cell(10, col).Value = value;
-                        ds_target_index_2++;
-                    }
-
-                    // 기본 정보 데이터
-                    int[] row_ds_3 = { 29, 30, 31, 32, 34, 36, 37, 41, 42, 45 };
-                    string[] ds_target_value_3 = {
-                        "ValveTypeName",              // 밸브타입
-                        "BodySizeName",               // 바디사이즈
-                        "TrimSeriesName",                 // 트림시리즈
-                        "TrimTypeCode",               // 트림타입
-                        "RatingName",             // 레이팅
-                        "BodyMatName",           // 바디재질
-                        "TrimMatName",           // 트림재질
-                        "BonnetTypeName",        // 보넷타입
-                        "BasicCharacter",                 // 기본특성
-                        "NorFlowCoeff"                  // 정상유량계수
-                    };
-
-                    int ds_target_index_3 = 0;
-                    foreach (int row in row_ds_3)
-                    {
-                        worksheet_ds.Cell(row, 25).Value = reader[ds_target_value_3[ds_target_index_3]]?.ToString();
-                        ds_target_index_3++;
-                    }
-
-                    // 액세사리 코드 데이터
-                    int[] row_ds_4 = { 4, 12, 18, 24, 28, 30, 32, 35 };
-                    string[] ds_target_value_4 = {
-                        "PosCodeName", // 포지셔너코드
-                        "SolCodeName", // 솔레노이드코드
-                        "LimCodeName", // 리미트스위치코드
-                        "ASCodeName", // 에어셋코드
-                        "VolCodeName", // 볼륨부스터코드
-                        "AirOpCodeName", // 에어오퍼레이트코드
-                        "LockupCodeName", // 락업밸브코드
-                        "SnapActCodeName" // 스냅액팅코드
-                    };
-                    
-                    int ds_target_index_4 = 0;
-                    foreach (int row in row_ds_4)
-                    {
-                        worksheet_ds.Cell(row, 97).Value = reader[ds_target_value_4[ds_target_index_4]]?.ToString();
-                        ds_target_index_4++;
-                    }
-
-                    // 특정 위치 데이터
-                    worksheet_ds.Cell(2, 36).Value = reader["ValveTypeName"]?.ToString();
-                    worksheet_ds.Cell(3, 36).Value = reader["Project"]?.ToString();
-                    worksheet_ds.Cell(5, 36).Value = reader["Tagno"]?.ToString();
-                    worksheet_ds.Cell(6, 76).Value = reader["Qty"]?.ToString();
-                    worksheet_ds.Cell(8, 22).Value = reader["Medium"]?.ToString();
-                    worksheet_ds.Cell(8, 35).Value = reader["Fluid"]?.ToString();
-                    worksheet_ds.Cell(11, 69).Value = reader["ActTypeName"]?.ToString();
-                    worksheet_ds.Cell(30, 36).Value = reader["TrimPortSizeName"]?.ToString();
-                    worksheet_ds.Cell(4, 92).Value = reader["ActSizeName"]?.ToString();
-                    worksheet_ds.Cell(11, 92).Value = reader["HWName"]?.ToString();
-                    
-                    rowCount++;
-                }
-                
-                // 원본 템플릿 시트는 그대로 유지 (첫 번째 시트로 사용)
-                
-                // 6. 파일 저장
-                workbook.Save();
-                workbook.Dispose();
-                
-                // 7. EstimateAttachment에 저장 (기존 파일이 있으면 대체)
-                var existingAttachment = await _context.EstimateAttachment
-                    .FirstOrDefaultAsync(ea => ea.TempEstimateNo == tempEstimateNo && ea.ManagerFileType == "datasheet");
-                
-                if (existingAttachment != null)
-                {
-                    // 기존 파일 삭제
-                    if (File.Exists(existingAttachment.FilePath))
-                    {
-                        try
-                        {
-                            File.Delete(existingAttachment.FilePath);
-                        }
-                        catch (Exception ex)
-                        {
-                            // 파일 삭제 실패 시 로그만 남기고 계속 진행
-                            Console.WriteLine($"기존 파일 삭제 실패: {ex.Message}");
-                        }
-                    }
-                    
-                    // 기존 DB 레코드 업데이트
-                    existingAttachment.FileName = outputFileName;
-                    existingAttachment.FilePath = outputPath;
-                    existingAttachment.FileSize = (int)new FileInfo(outputPath).Length;
-                    existingAttachment.UploadDate = DateTime.Now;
                 }
                 else
                 {
-                    // 새 DB 레코드 생성
-                    var excelAttachment = new EstimateAttachment
-                    {
-                        TempEstimateNo = tempEstimateNo,
-                        FileName = outputFileName,
-                        FilePath = outputPath,
-                        FileSize = (int)new FileInfo(outputPath).Length,
-                        UploadDate = DateTime.Now,
-                        UploadUserID = null,
-                        ManagerFileType = "datasheet"
+                    value = j switch {
+                        0 => rowData["QNUnit"]?.ToString() ?? "",
+                        1 => rowData["QNMax"]?.ToString() ?? "",
+                        2 => rowData["QNNor"]?.ToString() ?? "",
+                        3 => rowData["QNMin"]?.ToString() ?? "",
+                        _ => ""
                     };
-                    
-                    _context.EstimateAttachment.Add(excelAttachment);
                 }
-                
-                await _context.SaveChangesAsync();
-                
-                return $"{outputFileName}";
+                worksheet_ds.Cell(10, col_2[j]).Value = value;
             }
-            catch (Exception ex)
+
+            // 기본 정보 데이터
+            int[] row_ds_3 = { 29, 30, 31, 32, 34, 36, 37, 41, 42, 45 };
+            string[] ds_target_value_3 = {
+                "ValveTypeName", "BodySizeName", "TrimSeriesName", "TrimTypeName", "RatingName",
+                "BodyMatName", "TrimMatName", "BonnetTypeName", "TrimFormName", "NorFlowCoeff"
+            };
+
+            for(int j = 0; j < row_ds_3.Length; j++)
             {
-                throw new Exception($"DataSheet 생성 실패: {ex.Message}");
+                worksheet_ds.Cell(row_ds_3[j], 25).Value = rowData[ds_target_value_3[j]]?.ToString();
             }
+
+            // 액세서리 코드 데이터
+            int[] row_ds_4 = { 4, 12, 18, 24, 28, 30, 32, 35 };
+            string[] ds_target_value_4 = {
+                "PosCodeName", "SolCodeName", "LimCodeName", "ASCodeName",
+                "VolCodeName", "AirOpCodeName", "LockupCodeName", "SnapActCodeName"
+            };
+            
+            for(int j = 0; j < row_ds_4.Length; j++)
+            {
+                worksheet_ds.Cell(row_ds_4[j], 97).Value = rowData[ds_target_value_4[j]]?.ToString();
+            }
+
+            // 특정 위치 데이터
+            worksheet_ds.Cell(1, 82).Value = $"{i + 1} OF {dataRows.Count}";
+            worksheet_ds.Cell(2, 36).Value = "Pneumatic " + rowData["ValveTypeName"]?.ToString() + " Valve";
+            worksheet_ds.Cell(3, 36).Value = rowData["Project"]?.ToString();
+            worksheet_ds.Cell(5, 36).Value = rowData["Tagno"]?.ToString();
+            worksheet_ds.Cell(6, 76).Value = rowData["Qty"]?.ToString();
+            worksheet_ds.Cell(8, 22).Value = rowData["Medium"]?.ToString();
+            worksheet_ds.Cell(8, 35).Value = rowData["Fluid"]?.ToString();
+            worksheet_ds.Cell(11, 69).Value = rowData["ActTypeName"]?.ToString();
+            worksheet_ds.Cell(30, 36).Value = rowData["TrimPortSizeName"]?.ToString();
+            worksheet_ds.Cell(4, 92).Value = rowData["ActSizeName"]?.ToString();
+            worksheet_ds.Cell(11, 92).Value = rowData["HWName"]?.ToString();
+            // ▲▲▲▲▲▲ 끝: 생략되었던 전체 데이터 매핑 로직 ▲▲▲▲▲▲
         }
+        
+        workbook.Save();
+        
+        // 4. EstimateAttachment에 저장
+        var existingAttachment = await _context.EstimateAttachment
+            .FirstOrDefaultAsync(ea => ea.TempEstimateNo == tempEstimateNo && ea.ManagerFileType == "datasheet");
+
+        if (existingAttachment != null)
+        {
+            if (File.Exists(existingAttachment.FilePath))
+            {
+                try { File.Delete(existingAttachment.FilePath); }
+                catch (Exception ex) { Console.WriteLine($"기존 파일 삭제 실패: {ex.Message}"); }
+            }
+            existingAttachment.FileName = outputFileName;
+            existingAttachment.FilePath = outputPath;
+            existingAttachment.FileSize = (int)new FileInfo(outputPath).Length;
+            existingAttachment.UploadDate = DateTime.Now;
+        }
+        else
+        {
+            _context.EstimateAttachment.Add(new EstimateAttachment
+            {
+                TempEstimateNo = tempEstimateNo,
+                FileName = outputFileName,
+                FilePath = outputPath,
+                FileSize = (int)new FileInfo(outputPath).Length,
+                UploadDate = DateTime.Now,
+                ManagerFileType = "datasheet"
+            });
+        }
+        await _context.SaveChangesAsync();
+        
+        return outputFileName;
+    }
+    catch (Exception ex)
+    {
+        throw new Exception($"DataSheet 생성 실패: {ex.Message}");
+    }
+}
 
         public async Task<string> GenerateSingleQuoteAsync(string tempEstimateNo)
+{
+    try
+    {
+        // 1. 템플릿 및 출력 경로 설정
+        var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "SingleQuote.xlsx");
+        if (!File.Exists(templatePath))
         {
-            try
-            {
-                // 1. 템플릿 경로 설정
-                var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "SingleQuote.xlsx");
-                if (!File.Exists(templatePath))
-                {
-                    throw new Exception($"SingleQuote 템플릿 파일을 찾을 수 없습니다: {templatePath}");
-                }
-
-                // 2. 출력 경로 설정
-                var outputDir = Path.Combine(Directory.GetCurrentDirectory(), "files", tempEstimateNo, "ResultFiles", "singlequote");
-                var outputFileName = $"SingleQuote_{tempEstimateNo}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
-                var outputPath = Path.Combine(outputDir, outputFileName);
-
-                // 3. 디렉토리 생성 및 템플릿 복사
-                if (!Directory.Exists(outputDir))
-                {
-                    Directory.CreateDirectory(outputDir);
-                }
-                
-                File.Copy(templatePath, outputPath, true);
-
-                // 4. 데이터베이스에서 데이터 조회
-                using var conn = new MySqlConnection(_context.Database.GetConnectionString());
-                await conn.OpenAsync();
-                
-                // only_full_group_by 모드 끄기
-                using var modeCmd = new MySqlCommand("SET sql_mode = (SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));", conn);
-                await modeCmd.ExecuteNonQueryAsync();
-                
-                string query = @"SELECT d.*, e.Project, e.ManagerID, er.Tagno, er.Qty, er.UnitPrice, er.SheetNo,
-                                       bvl.ValveSeries as ValveTypeName,
-                                       bml.BodyMat as BodyMatName,
-                                       tml.TrimMat as TrimMatName,
-                                       brl.RatingName as RatingName,
-                                       u.CompanyName
-                                FROM DataSheetLv3 d 
-                                JOIN EstimateSheetLv1 e ON d.TempEstimateNo = e.TempEstimateNo 
-                                LEFT JOIN EstimateRequest er ON d.TempEstimateNo = er.TempEstimateNo AND d.SheetID = er.SheetID
-                                LEFT JOIN BodyValveList bvl ON d.ValveType = bvl.ValveSeriesCode
-                                LEFT JOIN BodyMatList bml ON d.BodyMat = bml.BodyMatCode
-                                LEFT JOIN TrimMatList tml ON d.TrimMat = tml.TrimMatCode
-                                LEFT JOIN BodyRatingList brl ON d.Rating = brl.RatingCode
-                                LEFT JOIN User u ON e.ManagerID = u.UserID
-                                WHERE d.TempEstimateNo = @tempEstimateNo
-                                ORDER BY er.SheetNo;";
-
-                using var cmd = new MySqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@tempEstimateNo", tempEstimateNo);
-                using var reader = await cmd.ExecuteReaderAsync();
-
-                // 5. Excel 파일 업데이트
-                using var workbook = new ClosedXML.Excel.XLWorkbook(outputPath);
-                var templateWorksheet = workbook.Worksheet("단품견적서");
-                
-                int rowCount = 0;
-                while (await reader.ReadAsync())
-                {
-                    // SheetID에 따라 새로운 시트 생성 (Program 복사본.cs와 동일한 로직)
-                    string sheetName = rowCount == 0 ? "단품견적서" : $"단품견적서-{rowCount + 1}";
-                    var worksheet_est1 = rowCount == 0 ? templateWorksheet : templateWorksheet.CopyTo(sheetName);
-                    
-                    // 견적서1 데이터 입력
-                    worksheet_est1.Cell(3, 6).Value = reader["CompanyName"]?.ToString();
-                    worksheet_est1.Cell(4, 6).Value = reader["ManagerID"]?.ToString();
-                    worksheet_est1.Cell(5, 6).Value = reader["Project"]?.ToString();
-                    worksheet_est1.Cell(6, 6).Value = reader["Tagno"]?.ToString();
-                    worksheet_est1.Cell(7, 6).Value = DateTime.Now.ToString("yyyy년 MM월 dd일");
-                    worksheet_est1.Cell(22, 6).Value = reader["BodyMatName"]?.ToString();
-                    worksheet_est1.Cell(23, 6).Value = reader["TrimMatName"]?.ToString();
-                    worksheet_est1.Cell(26, 3).Value = reader["RatingName"]?.ToString();
-                    worksheet_est1.Cell(29, 3).Value = "ACT Full Name";
-                    worksheet_est1.Cell(16, 12).Value = "BodyTrim Size";
-                    worksheet_est1.Cell(16, 13).Value = reader["Qty"]?.ToString();
-                    worksheet_est1.Cell(16, 14).Value = reader["UnitPrice"]?.ToString();
-                    worksheet_est1.Cell(11, 4).Value = reader["ValveTypeName"]?.ToString();
-                    
-                    rowCount++;
-                }
-                
-                // 원본 템플릿 시트는 그대로 유지 (첫 번째 시트로 사용)
-                
-                // 6. 파일 저장
-                workbook.Save();
-                workbook.Dispose();
-                
-                // 7. EstimateAttachment에 저장 (기존 파일이 있으면 대체)
-                var existingAttachment = await _context.EstimateAttachment
-                    .FirstOrDefaultAsync(ea => ea.TempEstimateNo == tempEstimateNo && ea.ManagerFileType == "singlequote");
-                
-                if (existingAttachment != null)
-                {
-                    // 기존 파일 삭제
-                    if (File.Exists(existingAttachment.FilePath))
-                    {
-                        try
-                        {
-                            File.Delete(existingAttachment.FilePath);
-                        }
-                        catch (Exception ex)
-                        {
-                            // 파일 삭제 실패 시 로그만 남기고 계속 진행
-                            Console.WriteLine($"기존 파일 삭제 실패: {ex.Message}");
-                        }
-                    }
-                    
-                    // 기존 DB 레코드 업데이트
-                    existingAttachment.FileName = outputFileName;
-                    existingAttachment.FilePath = outputPath;
-                    existingAttachment.FileSize = (int)new FileInfo(outputPath).Length;
-                    existingAttachment.UploadDate = DateTime.Now;
-                }
-                else
-                {
-                    // 새 DB 레코드 생성
-                    var excelAttachment = new EstimateAttachment
-                    {
-                        TempEstimateNo = tempEstimateNo,
-                        FileName = outputFileName,
-                        FilePath = outputPath,
-                        FileSize = (int)new FileInfo(outputPath).Length,
-                        UploadDate = DateTime.Now,
-                        UploadUserID = null,
-                        ManagerFileType = "singlequote"
-                    };
-                    
-                    _context.EstimateAttachment.Add(excelAttachment);
-                }
-                
-                await _context.SaveChangesAsync();
-                
-                return $"{outputFileName}";
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"단품견적서 생성 실패: {ex.Message}");
-            }
+            throw new Exception($"SingleQuote 템플릿 파일을 찾을 수 없습니다: {templatePath}");
         }
+
+        var outputDir = Path.Combine(Directory.GetCurrentDirectory(), "files", tempEstimateNo, "ResultFiles", "singlequote");
+        var outputFileName = $"SingleQuote_{tempEstimateNo}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        var outputPath = Path.Combine(outputDir, outputFileName);
+
+        Directory.CreateDirectory(outputDir);
+        File.Copy(templatePath, outputPath, true);
+
+        // 2. 데이터베이스에서 데이터 조회 (개선된 쿼리 적용)
+        using var conn = new MySqlConnection(_context.Database.GetConnectionString());
+        await conn.OpenAsync();
+        
+        using var modeCmd = new MySqlCommand("SET sql_mode = (SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));", conn);
+        await modeCmd.ExecuteNonQueryAsync();
+        
+        string query = @"SELECT d.*, e.Project, e.ManagerID, er.Tagno, er.Qty, er.UnitPrice, er.SheetNo,
+                               bvl.ValveSeries as ValveTypeName,
+                               bml.BodyMat as BodyMatName,
+                               tml.TrimMat as TrimMatName,
+                               CONCAT(brul.RatingUnit, ' ', brl.RatingName, ' ', bcl.Connection) as RatingName,
+                               atl.ActType as ActTypeName,
+                               asl.ActSize as ActSizeName,
+                               ahl.HW as HWName,
+                               c.CompanyName as CustomerCompanyName,
+                               m.Name as ManagerName
+                        FROM DataSheetLv3 d 
+                        JOIN EstimateSheetLv1 e ON d.TempEstimateNo = e.TempEstimateNo 
+                        LEFT JOIN EstimateRequest er ON d.TempEstimateNo = er.TempEstimateNo AND d.SheetID = er.SheetID
+                        LEFT JOIN BodyValveList bvl ON d.ValveType = bvl.ValveSeriesCode
+                        LEFT JOIN BodyMatList bml ON d.BodyMat = bml.BodyMatCode
+                        LEFT JOIN TrimMatList tml ON d.TrimMat = tml.TrimMatCode
+                        LEFT JOIN BodyRatingList brl ON d.Rating = brl.RatingCode AND d.RatingUnit = brl.RatingUnitCode
+                        LEFT JOIN BodyRatingUnitList brul ON d.RatingUnit = brul.RatingUnitCode
+                        LEFT JOIN BodyConnectionList bcl ON d.Connection = bcl.ConnectionCode
+                        LEFT JOIN ActTypeList atl ON d.ActType = atl.ActTypeCode
+                        LEFT JOIN ActSizeList asl ON d.ActSeriesCode = asl.ActSeriesCode AND d.ActSize = asl.ActSizeCode
+                        LEFT JOIN ActHWList ahl ON d.HW = ahl.HWCode
+                        LEFT JOIN User c ON e.CustomerID = c.UserID
+                        LEFT JOIN User m ON e.ManagerID = m.UserID
+                        WHERE d.TempEstimateNo = @tempEstimateNo
+                        ORDER BY er.SheetNo;";
+
+        using var cmd = new MySqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("@tempEstimateNo", tempEstimateNo);
+        using var reader = await cmd.ExecuteReaderAsync();
+
+        // 3. Excel 파일 업데이트
+        using var workbook = new ClosedXML.Excel.XLWorkbook(outputPath);
+        var templateWorksheet = workbook.Worksheet("단품견적서");
+        
+        int rowCount = 0;
+        while (await reader.ReadAsync())
+        {
+            string sheetName = $"단품견적서-{rowCount + 1}";
+            var worksheet_est1 = (rowCount == 0) ? templateWorksheet : templateWorksheet.CopyTo(sheetName);
+            if (rowCount == 0) worksheet_est1.Name = sheetName;
+
+            worksheet_est1.Cell(3, 6).Value = reader["CustomerCompanyName"]?.ToString();
+            worksheet_est1.Cell(4, 6).Value = reader["ManagerName"]?.ToString();
+            worksheet_est1.Cell(5, 6).Value = reader["Project"]?.ToString();
+            worksheet_est1.Cell(6, 6).Value = reader["Tagno"]?.ToString();
+            worksheet_est1.Cell(7, 6).Value = DateTime.Now.ToString("yyyy년 MM월 dd일");
+            worksheet_est1.Cell(22, 6).Value = reader["BodyMatName"]?.ToString();
+            worksheet_est1.Cell(23, 6).Value = reader["TrimMatName"]?.ToString();
+            worksheet_est1.Cell(26, 3).Value = reader["RatingName"]?.ToString();
+            
+            string hwName = reader["HWName"]?.ToString() ?? "";
+            string actFullName = reader["ActSizeName"]?.ToString() ?? "";
+            if (!string.IsNullOrEmpty(hwName) && hwName.ToLower() != "none")
+            {
+                actFullName += " + " + hwName;
+            }
+            actFullName += " - " + (reader["ActTypeName"]?.ToString() ?? "");
+            worksheet_est1.Cell(29, 3).Value = actFullName;
+            
+            worksheet_est1.Cell(16, 12).Value = "BodyTrim Size";
+            worksheet_est1.Cell(16, 13).Value = reader["Qty"]?.ToString();
+            worksheet_est1.Cell(16, 14).Value = reader["UnitPrice"]?.ToString();
+            worksheet_est1.Cell(11, 4).Value = "Pneumatic" + reader["ValveTypeName"]?.ToString() + " Valve";
+            
+            rowCount++;
+        }
+        
+        if (workbook.Worksheets.Contains("단품견적서") && rowCount > 0)
+        {
+             workbook.Worksheet("단품견적서").Delete();
+        }
+        
+        workbook.Save();
+        
+        // 4. EstimateAttachment에 저장
+        var existingAttachment = await _context.EstimateAttachment
+            .FirstOrDefaultAsync(ea => ea.TempEstimateNo == tempEstimateNo && ea.ManagerFileType == "singlequote");
+
+        if (existingAttachment != null)
+        {
+            if (File.Exists(existingAttachment.FilePath))
+            {
+                try { File.Delete(existingAttachment.FilePath); }
+                catch (Exception ex) { Console.WriteLine($"기존 파일 삭제 실패: {ex.Message}"); }
+            }
+            existingAttachment.FileName = outputFileName;
+            existingAttachment.FilePath = outputPath;
+            existingAttachment.FileSize = (int)new FileInfo(outputPath).Length;
+            existingAttachment.UploadDate = DateTime.Now;
+        }
+        else
+        {
+            _context.EstimateAttachment.Add(new EstimateAttachment
+            {
+                TempEstimateNo = tempEstimateNo,
+                FileName = outputFileName,
+                FilePath = outputPath,
+                FileSize = (int)new FileInfo(outputPath).Length,
+                UploadDate = DateTime.Now,
+                ManagerFileType = "singlequote"
+            });
+        }
+        await _context.SaveChangesAsync();
+        
+        return outputFileName;
+    }
+    catch (Exception ex)
+    {
+        throw new Exception($"단품견적서 생성 실패: {ex.Message}");
+    }
+}
 
         public async Task<string> GenerateMultiQuoteAsync(string tempEstimateNo)
+{
+    try
+    {
+        // 1. 템플릿 및 출력 경로 설정
+        var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "MultiQuote.xlsx");
+        if (!File.Exists(templatePath))
         {
-            try
-            {
-                // 1. 템플릿 경로 설정
-                var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "Templates", "MultiQuote.xlsx");
-                if (!File.Exists(templatePath))
-                {
-                    throw new Exception($"MultiQuote 템플릿 파일을 찾을 수 없습니다: {templatePath}");
-                }
-
-                // 2. 출력 경로 설정
-                var outputDir = Path.Combine(Directory.GetCurrentDirectory(), "files", tempEstimateNo, "ResultFiles", "multiquote");
-                var outputFileName = $"MultiQuote_{tempEstimateNo}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
-                var outputPath = Path.Combine(outputDir, outputFileName);
-
-                // 3. 디렉토리 생성 및 템플릿 복사
-                if (!Directory.Exists(outputDir))
-                {
-                    Directory.CreateDirectory(outputDir);
-                }
-                
-                File.Copy(templatePath, outputPath, true);
-
-                // 4. 데이터베이스에서 데이터 조회
-                using var conn = new MySqlConnection(_context.Database.GetConnectionString());
-                await conn.OpenAsync();
-                
-                // only_full_group_by 모드 끄기
-                using var modeCmd = new MySqlCommand("SET sql_mode = (SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));", conn);
-                await modeCmd.ExecuteNonQueryAsync();
-                
-                string query = @"SELECT d.*, e.Project, e.ManagerID, er.Tagno, er.Qty, er.UnitPrice,
-                                       bvl.ValveSeries as ValveTypeName,
-                                       u.CompanyName
-                                FROM DataSheetLv3 d 
-                                JOIN EstimateSheetLv1 e ON d.TempEstimateNo = e.TempEstimateNo 
-                                LEFT JOIN EstimateRequest er ON d.TempEstimateNo = er.TempEstimateNo AND d.SheetID = er.SheetID
-                                LEFT JOIN BodyValveList bvl ON d.ValveType = bvl.ValveSeriesCode
-                                LEFT JOIN User u ON e.ManagerID = u.UserID
-                                WHERE d.TempEstimateNo = @tempEstimateNo
-                                GROUP BY d.TempEstimateNo, d.SheetID;";
-
-                using var cmd = new MySqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@tempEstimateNo", tempEstimateNo);
-                using var reader = await cmd.ExecuteReaderAsync();
-
-                // 5. Excel 파일 업데이트
-                using var workbook = new ClosedXML.Excel.XLWorkbook(outputPath);
-                var worksheet_est2 = workbook.Worksheet("다수량견적서");
-                
-                // 견적서2 헤더 정보 (첫 번째 행에만 설정)
-                bool isFirstRow = true;
-                int rowCount = 0;
-                
-                while (await reader.ReadAsync())
-                {
-                    if (isFirstRow)
-                    {
-                        worksheet_est2.Cell(3, 6).Value = reader["CompanyName"]?.ToString();
-                        worksheet_est2.Cell(4, 6).Value = reader["ManagerID"]?.ToString();
-                        worksheet_est2.Cell(5, 6).Value = reader["Project"]?.ToString();
-                        worksheet_est2.Cell(6, 6).Value = reader["Tagno"]?.ToString();
-                        isFirstRow = false;
-                    }
-                    
-                    // rowIndex를 사용해서 줄을 내려가면서 데이터 입력
-                    int row_est2 = 13 + rowCount;
-                    worksheet_est2.Cell(row_est2, 4).Value = reader["ValveTypeName"]?.ToString();
-                    worksheet_est2.Cell(row_est2, 12).Value = "BodyTrim Size";
-                    worksheet_est2.Cell(row_est2, 13).Value = reader["Qty"]?.ToString();
-                    worksheet_est2.Cell(row_est2, 14).Value = reader["UnitPrice"]?.ToString();
-                    
-                    rowCount++;
-                }
-                
-                // 6. 파일 저장
-                workbook.Save();
-                workbook.Dispose();
-                
-                // 7. EstimateAttachment에 저장 (기존 파일이 있으면 대체)
-                var existingAttachment = await _context.EstimateAttachment
-                    .FirstOrDefaultAsync(ea => ea.TempEstimateNo == tempEstimateNo && ea.ManagerFileType == "multiquote");
-                
-                if (existingAttachment != null)
-                {
-                    // 기존 파일 삭제
-                    if (File.Exists(existingAttachment.FilePath))
-                    {
-                        try
-                        {
-                            File.Delete(existingAttachment.FilePath);
-                        }
-                        catch (Exception ex)
-                        {
-                            // 파일 삭제 실패 시 로그만 남기고 계속 진행
-                            Console.WriteLine($"기존 파일 삭제 실패: {ex.Message}");
-                        }
-                    }
-                    
-                    // 기존 DB 레코드 업데이트
-                    existingAttachment.FileName = outputFileName;
-                    existingAttachment.FilePath = outputPath;
-                    existingAttachment.FileSize = (int)new FileInfo(outputPath).Length;
-                    existingAttachment.UploadDate = DateTime.Now;
-                }
-                else
-                {
-                    // 새 DB 레코드 생성
-                    var excelAttachment = new EstimateAttachment
-                    {
-                        TempEstimateNo = tempEstimateNo,
-                        FileName = outputFileName,
-                        FilePath = outputPath,
-                        FileSize = (int)new FileInfo(outputPath).Length,
-                        UploadDate = DateTime.Now,
-                        UploadUserID = null,
-                        ManagerFileType = "multiquote"
-                    };
-                    
-                    _context.EstimateAttachment.Add(excelAttachment);
-                }
-                
-                await _context.SaveChangesAsync();
-                
-                return $"{outputFileName}";
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"다수량견적서 생성 실패: {ex.Message}");
-            }
+            throw new Exception($"MultiQuote 템플릿 파일을 찾을 수 없습니다: {templatePath}");
         }
 
+        var outputDir = Path.Combine(Directory.GetCurrentDirectory(), "files", tempEstimateNo, "ResultFiles", "multiquote");
+        var outputFileName = $"MultiQuote_{tempEstimateNo}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        var outputPath = Path.Combine(outputDir, outputFileName);
+
+        Directory.CreateDirectory(outputDir);
+        File.Copy(templatePath, outputPath, true);
+
+        // 2. 데이터베이스에서 데이터 조회 (개선된 쿼리 적용)
+        using var conn = new MySqlConnection(_context.Database.GetConnectionString());
+        await conn.OpenAsync();
+        
+        using var modeCmd = new MySqlCommand("SET sql_mode = (SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));", conn);
+        await modeCmd.ExecuteNonQueryAsync();
+        
+        string query = @"SELECT d.*, e.Project, e.ManagerID, er.Tagno, er.Qty, er.UnitPrice,
+                               bvl.ValveSeries as ValveTypeName,
+                               c.CompanyName as CustomerCompanyName,
+                               m.Name as ManagerName
+                        FROM DataSheetLv3 d 
+                        JOIN EstimateSheetLv1 e ON d.TempEstimateNo = e.TempEstimateNo 
+                        LEFT JOIN EstimateRequest er ON d.TempEstimateNo = er.TempEstimateNo AND d.SheetID = er.SheetID
+                        LEFT JOIN BodyValveList bvl ON d.ValveType = bvl.ValveSeriesCode
+                        LEFT JOIN User c ON e.CustomerID = c.UserID
+                        LEFT JOIN User m ON e.ManagerID = m.UserID
+                        WHERE d.TempEstimateNo = @tempEstimateNo
+                        ORDER BY er.SheetNo;";
+
+        using var cmd = new MySqlCommand(query, conn);
+        cmd.Parameters.AddWithValue("@tempEstimateNo", tempEstimateNo);
+        using var reader = await cmd.ExecuteReaderAsync();
+
+        // 3. Excel 파일 업데이트
+        using var workbook = new ClosedXML.Excel.XLWorkbook(outputPath);
+        var worksheet_est2 = workbook.Worksheet("다수량견적서");
+        
+        bool isFirstRow = true;
+        int rowCount = 0;
+        
+        while (await reader.ReadAsync())
+        {
+            if (isFirstRow)
+            {
+                worksheet_est2.Cell(3, 6).Value = reader["CustomerCompanyName"]?.ToString();
+                worksheet_est2.Cell(4, 6).Value = reader["ManagerName"]?.ToString();
+                worksheet_est2.Cell(5, 6).Value = reader["Project"]?.ToString();
+                worksheet_est2.Cell(6, 6).Value = reader["Tagno"]?.ToString(); // 대표 Tagno 하나만 사용
+                worksheet_est2.Cell(7, 6).Value = DateTime.Now.ToString("yyyy년 MM월 dd일");
+                isFirstRow = false;
+            }
+            
+            int row_est2 = 13 + rowCount;
+            worksheet_est2.Cell(row_est2, 1).Value = ((char)('A' + rowCount)).ToString();
+            worksheet_est2.Cell(row_est2, 4).Value = "Pneumatic" + reader["ValveTypeName"]?.ToString() + " Valve";
+            worksheet_est2.Cell(row_est2, 12).Value = "BodyTrim Size";
+            worksheet_est2.Cell(row_est2, 13).Value = reader["Qty"]?.ToString();
+            worksheet_est2.Cell(row_est2, 14).Value = reader["UnitPrice"]?.ToString();
+            
+            rowCount++;
+        }
+        
+        workbook.Save();
+
+        // 4. EstimateAttachment에 저장
+        var existingAttachment = await _context.EstimateAttachment
+            .FirstOrDefaultAsync(ea => ea.TempEstimateNo == tempEstimateNo && ea.ManagerFileType == "multiquote");
+
+        if (existingAttachment != null)
+        {
+            if (File.Exists(existingAttachment.FilePath))
+            {
+                try { File.Delete(existingAttachment.FilePath); }
+                catch (Exception ex) { Console.WriteLine($"기존 파일 삭제 실패: {ex.Message}"); }
+            }
+            existingAttachment.FileName = outputFileName;
+            existingAttachment.FilePath = outputPath;
+            existingAttachment.FileSize = (int)new FileInfo(outputPath).Length;
+            existingAttachment.UploadDate = DateTime.Now;
+        }
+        else
+        {
+            _context.EstimateAttachment.Add(new EstimateAttachment
+            {
+                TempEstimateNo = tempEstimateNo,
+                FileName = outputFileName,
+                FilePath = outputPath,
+                FileSize = (int)new FileInfo(outputPath).Length,
+                UploadDate = DateTime.Now,
+                ManagerFileType = "multiquote"
+            });
+        }
+        await _context.SaveChangesAsync();
+        
+        return outputFileName;
+    }
+    catch (Exception ex)
+    {
+        throw new Exception($"다수량견적서 생성 실패: {ex.Message}");
+    }
+}
             // �� 관리자용 파일 목록 조회 메서드들
 public async Task<List<EstimateAttachmentResponseDto>> GetManagerFilesAsync(string tempEstimateNo)
 {
