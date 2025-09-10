@@ -44,7 +44,7 @@ namespace EstimateRequestSystem.Services
         Task<List<object>> GetTrimMatListAsync();
         Task<List<object>> GetTrimOptionListAsync();
         Task<List<object>> GetBodyRatingListAsync(string? ratingUnitCode = null);
-        Task<List<string>> GetBodySizeUnitsAsync();
+        Task<List<object>> GetBodySizeUnitsAsync();
         Task<List<object>> GetBodyRatingUnitsAsync();
 
         // Step 3 마스터 데이터 메서드들

@@ -522,7 +522,6 @@ namespace EstimateRequestSystem.Services
                             };
                             _context.DataSheetLv3.Add(dataSheetLv3);
     }
-                 
             }
 
             
@@ -1159,7 +1158,6 @@ namespace EstimateRequestSystem.Services
                 ManagerFileType = managerFileType
             };
         }
-
         // 파일명 중복 처리 메서드
         private async Task<string> GenerateUniqueFileNameAsync(string folderPath, string originalFileName)
         {
@@ -1533,14 +1531,14 @@ namespace EstimateRequestSystem.Services
             return OrderByCodePreferredObject(list.Cast<object>(), "ratingCode");
         }
 
-        public async Task<List<string>> GetBodySizeUnitsAsync()
+        public async Task<List<object>> GetBodySizeUnitsAsync()
         {
-            var units = await _context.BodySizeList
-                .Select(s => s.UnitCode)
-                .Distinct()
-                .OrderBy(u => u)
+            var units = await _context.BodySizeUnit
+                .Select(u => new { u.UnitCode, u.UnitName })
                 .ToListAsync();
-            return OrderByCodePreferred(units, u => u).ToList();
+
+            // Cast to List<object> before returning
+            return units.Cast<object>().ToList();
         }
 
 
@@ -2121,7 +2119,6 @@ namespace EstimateRequestSystem.Services
                 PageSize = request.PageSize
             };
         }
-
         // 견적관리 목록 조회 (임시저장 제외)
         public async Task<EstimateInquiryResponseDto> GetEstimateManagementAsync(EstimateInquiryRequestDto request, string currentUserId, string? customerId = null)
         {
@@ -2767,7 +2764,6 @@ namespace EstimateRequestSystem.Services
                 return false;
             }
         }
-
         public async Task<bool> DeleteBodyValveAsync(string valveSeriesCode)
         {
             try
@@ -3415,7 +3411,6 @@ namespace EstimateRequestSystem.Services
                 return false;
             }
         }
-
         public async Task<bool> DeleteActTypeAsync(string actTypeCode)
         {
             try
@@ -4378,10 +4373,10 @@ namespace EstimateRequestSystem.Services
         }
 
         // SaveSpecificationAsync 메서드 바로 위에 추가
-private string? ConvertEmptyToNull(string? value)
-{
-    return string.IsNullOrWhiteSpace(value) ? null : value;
-}
+        private string? ConvertEmptyToNull(string? value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? null : value;
+        }
         public async Task<bool> SaveSpecificationAsync(string tempEstimateNo, int sheetID, SaveSpecificationRequestDto specification)
         {
             try
@@ -5534,7 +5529,6 @@ private string? ConvertEmptyToNull(string? value)
                 return false;
             }
         }
-
         // Act Size 삭제 (새로운 시그니처)
         public async Task<bool> DeleteActSizeAsync(string actSeriesCode, string actSizeCode)
         {
@@ -6176,7 +6170,6 @@ private string? ConvertEmptyToNull(string? value)
         throw new Exception($"VL 리스트 생성 실패: {ex.Message}");
     }
 }
-
 public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
 {
     try

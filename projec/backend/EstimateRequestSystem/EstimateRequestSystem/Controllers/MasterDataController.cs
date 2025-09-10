@@ -174,7 +174,7 @@ namespace EstimateRequestSystem.Controllers
             }
         }
 
-        [HttpGet("body/size-units")]
+        [HttpGet("body/size-unit-list")]
         public async Task<IActionResult> GetBodySizeUnits()
         {
             try
