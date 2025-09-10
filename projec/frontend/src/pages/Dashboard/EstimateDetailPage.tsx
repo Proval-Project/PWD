@@ -1230,7 +1230,7 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
       // BODY 섹션 (6자리) - 코드 사용
       const bodySection = [
         bodySelections.bonnetTypeCode || '0',
-        '2', // valveSeries 기본값
+        selectedValve?.typeId || '0', // selectedValve에서 코드를 가져옴 (typeId가 정확한 속성명)
         bodySelections.materialBodyCode || '0',
         bodySelections.sizeBodyCode || '0',
         bodySelections.ratingCode || '0',
@@ -1277,7 +1277,7 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
       console.error('품번 생성 중 오류:', error);
       return '000000-000000-0000-00000000000';
     }
-  }, [bodySelections, trimSelections, actSelections, accSelections]);
+  }, [bodySelections, trimSelections, actSelections, accSelections, selectedValve]);
 
     // Conval 호출 함수
   const handleConvalCall = useCallback((sheetID: number) => {
