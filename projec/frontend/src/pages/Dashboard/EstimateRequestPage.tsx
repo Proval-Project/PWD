@@ -33,13 +33,20 @@ const EstimateRequestPage: React.FC = () => {
   };
 
   const handleLoadTemporary = () => {
-    if (!selectedCustomer) {
-      alert('고객을 먼저 선택해주세요.');
-      return;
+    if (isCustomer) {
+      // 고객은 바로 자신의 정보 사용
+      localStorage.setItem('selectedCustomerForTempStorage', JSON.stringify(currentUser));
+      navigate('/estimate-request/temporary');
+    } else {
+      // 관리자/직원은 고객 선택 확인
+      if (!selectedCustomer) {
+        alert('고객을 먼저 선택해주세요.');
+        return;
+      }
+      // 선택된 고객 정보를 localStorage에 저장
+      localStorage.setItem('selectedCustomerForTempStorage', JSON.stringify(selectedCustomer));
+      navigate('/estimate-request/temporary');
     }
-    // 선택된 고객 정보를 localStorage에 저장
-    localStorage.setItem('selectedCustomerForTempStorage', JSON.stringify(selectedCustomer));
-    navigate('/estimate-request/temporary');
   };
 
   const handleReInquiry = () => {

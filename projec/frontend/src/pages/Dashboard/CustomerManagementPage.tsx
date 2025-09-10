@@ -2,7 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DashboardPages.css';
 import './CustomerManagement.css';
-import { getCustomers, createCustomer, searchCustomers, UserListResponseDto, CreateUserDto } from '../../api/userManagement';
+import { 
+  getCustomers, 
+  createCustomer, 
+  searchCustomers, 
+  UserListResponseDto, 
+  CreateUserDto,
+  UpdateUserDto, 
+  updateCustomer,
+  getCustomerById,
+  UserResponseDto
+} from '../../api/userManagement';
 
 interface Customer {
   userID: string;
@@ -19,6 +29,8 @@ const CustomerManagementPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,6 +80,11 @@ const CustomerManagementPage: React.FC = () => {
 
   const handleAddCustomer = () => {
     setShowAddModal(true);
+  };
+
+  const handleEditCustomer = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setShowEditModal(true);
   };
 
   if (loading) {
@@ -132,8 +149,8 @@ const CustomerManagementPage: React.FC = () => {
             {filteredCustomers.map((customer) => (
               <tr 
                 key={customer.userID}
-                onClick={() => handleCustomerClick(customer.userID)}
                 className="customer-row"
+                onClick={() => handleEditCustomer(customer)}
               >
                 <td>{customer.userID}</td>
                 <td>{customer.companyName}</td>
@@ -165,6 +182,21 @@ const CustomerManagementPage: React.FC = () => {
             <CustomerAddForm 
               onClose={() => setShowAddModal(false)} 
               onSuccess={loadCustomers}
+            />
+          </div>
+        </div>
+      )}
+
+      {showEditModal && selectedCustomer && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <CustomerEditForm 
+              customer={selectedCustomer}
+              onClose={() => setShowEditModal(false)} 
+              onSuccess={() => {
+                setShowEditModal(false);
+                loadCustomers();
+              }}
             />
           </div>
         </div>
@@ -361,6 +393,109 @@ const CustomerAddForm: React.FC<{ onClose: () => void; onSuccess: () => void }> 
             {loading ? '추가 중...' : '추가'}
           </button>
           <button type="button" className="btn-cancel" onClick={onClose} disabled={loading}>취소</button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+// 고객 수정 폼 컴포넌트
+const CustomerEditForm: React.FC<{ customer: Customer; onClose: () => void; onSuccess: () => void }> = ({ customer, onClose, onSuccess }) => {
+  const [formData, setFormData] = useState<UpdateUserDto>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCustomerDetails = async () => {
+      try {
+        setLoading(true);
+        const customerDetails: UserResponseDto = await getCustomerById(customer.userID);
+        setFormData({
+          companyName: customerDetails.companyName,
+          name: customerDetails.name,
+          position: customerDetails.position,
+          email: customerDetails.email,
+          businessNumber: customerDetails.businessNumber,
+          address: customerDetails.address,
+          companyPhone: customerDetails.companyPhone,
+          phoneNumber: customerDetails.phoneNumber,
+        });
+      } catch (err) {
+        setError('고객 상세 정보를 불러오는데 실패했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCustomerDetails();
+  }, [customer.userID]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      setError(null);
+      await updateCustomer(customer.userID, formData);
+      onSuccess();
+    } catch (err: any) {
+      setError(err.response?.data?.message || '고객 정보 수정에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="loading-container"><span>Loading...</span></div>;
+  }
+
+  return (
+    <div className="customer-edit-form">
+      <h2>고객 정보 수정</h2>
+      {error && <p className="error-message">{error}</p>}
+      <form onSubmit={handleSubmit}>
+        <div className="form-group">
+          <label>회사명</label>
+          <input type="text" name="companyName" value={formData.companyName || ''} onChange={handleChange} />
+        </div>
+        <div className="form-group">
+          <label>담당자 이름</label>
+          <input type="text" name="name" value={formData.name || ''} onChange={handleChange} />
+        </div>
+        <div className="form-group">
+          <label>직급</label>
+          <input type="text" name="position" value={formData.position || ''} onChange={handleChange} />
+        </div>
+        <div className="form-group">
+          <label>이메일</label>
+          <input type="email" name="email" value={formData.email || ''} onChange={handleChange} />
+        </div>
+        <div className="form-group">
+          <label>사업자 번호</label>
+          <input type="text" name="businessNumber" value={formData.businessNumber || ''} onChange={handleChange} />
+        </div>
+        <div className="form-group">
+          <label>주소</label>
+          <input type="text" name="address" value={formData.address || ''} onChange={handleChange} />
+        </div>
+        <div className="form-group">
+          <label>회사 연락처</label>
+          <input type="text" name="companyPhone" value={formData.companyPhone || ''} onChange={handleChange} />
+        </div>
+        <div className="form-group">
+          <label>담당자 연락처</label>
+          <input type="text" name="phoneNumber" value={formData.phoneNumber || ''} onChange={handleChange} />
+        </div>
+        <div className="form-actions">
+          <button type="button" onClick={onClose} className="cancel-btn">취소</button>
+          <button type="submit" className="submit-btn" disabled={loading}>
+            {loading ? '저장 중...' : '저장'}
+          </button>
         </div>
       </form>
     </div>
