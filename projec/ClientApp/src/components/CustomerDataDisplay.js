@@ -216,7 +216,7 @@ const CustomerDataDisplay = ({ data, isLoading }) => {
               </tr>
               <tr>
                 <td className="fw-bold">Transmitter</td>
-                <td>{data?.IsTransmitter ? 'Yes' : (data?.IsTransmitter === false ? 'No' : '-')}</td>
+                <td>{data?.TransmitterType || '-'}</td>
               </tr>
               <tr>
                 <td className="fw-bold">Solenoid Valve</td>

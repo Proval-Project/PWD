@@ -28,8 +28,8 @@ namespace ConvalWebApi.Controllers
             {"3-Way Conventional Ball", "Ball valve"},
             {"S", "Ball valve"},
             {"H", "Butterfly valve"},
-            {"td. Butterfly", "Butterfly valve"},
-            {"1", "Angle globe valve"}
+            {"Std. Butterfly", "Butterfly valve"},
+            {"A", "Angle globe valve"}
         };
 
         // Fluid 매핑 Dictionary
@@ -175,14 +175,14 @@ namespace ConvalWebApi.Controllers
                     ["BodyRatingUnit"] = GetValueOrDash(customerData.GetValueOrDefault("BodyRatingUnit", null)),
 
                     // ACTUATOR
-                    ["ActType"] = GetValueOrDash(customerData.GetValueOrDefault("ActTypeName", customerData.GetValueOrDefault("ActType", null))),
+                    ["ActType"] = GetValueOrDash(customerData.GetValueOrDefault("ActType", null)),
                     ["IsHW"] = customerData.GetValueOrDefault("IsHW", null),
 
                     // ACCESSORY
                     ["IsPositioner"] = customerData.GetValueOrDefault("IsPositioner", null),
                     ["PositionerType"] = GetValueOrDash(customerData.GetValueOrDefault("PositionerType", null)),
                     ["ExplosionProof"] = GetValueOrDash(customerData.GetValueOrDefault("ExplosionProof", null)),
-                    ["IsTransmitter"] = customerData.GetValueOrDefault("IsTransmitter", null),
+                    ["TransmitterType"] = GetValueOrDash(customerData.GetValueOrDefault("TransmitterType", null)),
                     ["IsSolenoid"] = customerData.GetValueOrDefault("IsSolenoid", null),
                     ["IsLimSwitch"] = customerData.GetValueOrDefault("IsLimSwitch", null),
                     ["IsAirSet"] = customerData.GetValueOrDefault("IsAirSet", null),
@@ -674,7 +674,7 @@ namespace ConvalWebApi.Controllers
         private string GetResultsPath()
         {
             // ConvalQueueProcessor에서 파일을 저장하는 실제 경로 사용
-            string resultPath = @"C:\Program Files\IIS Express\TestData\Results";
+            string resultPath = @"C:\inetpub\wwwroot\ConvalServiceApi\ConvalServiceApi\TestData\Results";
             
             Console.WriteLine($"[DEBUG] GetResultsPath - IIS Express 경로 사용: {resultPath}");
             Console.WriteLine($"[DEBUG] GetResultsPath - 디렉토리 존재 여부: {Directory.Exists(resultPath)}");
@@ -837,6 +837,9 @@ namespace ConvalWebApi.Controllers
                     string sql = @"
                         SELECT 
                             er.*,
+                            es.TempEstimateNo AS EstimateNo,
+                            c.CompanyName AS CustomerName,
+                            w.Name AS Engineer,
                             bvl.ValveSeries AS ValveTypeName,
                             bsl.BodySize AS BodySizeName,
                              bsl.UnitCode AS BodySizeUnit,
@@ -846,6 +849,9 @@ namespace ConvalWebApi.Controllers
                              brl.RatingName AS BodyRatingName,
                              atl.ActType AS ActTypeName
                         FROM EstimateRequest er
+                        LEFT JOIN EstimateSheetLv1 es ON er.TempEstimateNo = es.TempEstimateNo
+                        LEFT JOIN User c ON es.CustomerID = c.UserID
+                        LEFT JOIN User w ON es.ManagerID = w.UserID
                         LEFT JOIN BodyValveList bvl ON er.ValveType = bvl.ValveSeriesCode
                         LEFT JOIN BodySizeList bsl ON er.BodySizeUnit = bsl.UnitCode AND er.BodySize = bsl.BodySizeCode
                         LEFT JOIN BodyMatList bml ON er.BodyMat = bml.BodyMatCode

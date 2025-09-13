@@ -120,11 +120,16 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
               <tr>
                 <td className="fw-bold">Fluid</td>
                 <td>
-                  <Form.Control
-                    size="sm"
-                    value={formData.Fluid || ''}
-                    onChange={(e) => handleInputChange('Fluid', null, e.target.value)}
-                  />
+                <Form.Select
+                  size="sm"
+                  value={formData.Fluid || ''}
+                  onChange={(e) => handleInputChange('Fluid', null, e.target.value)}
+                  >
+                  <option value="">선택</option>
+                  <option value="Liquid">Liquid</option>
+                  <option value="Vaporous">Vaporous</option>
+                  <option value="Gaseous">Gaseous</option>
+                </Form.Select>
                 </td>
               </tr>
               <tr>
@@ -671,13 +676,80 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                   />
                 </td>
                 <td>
-                  <Form.Control
+                  <Form.Select
                     size="sm"
-                    placeholder="Unit"
                     value={formData.qnUnit || ''}
                     onChange={(e) => setFormData({ ...formData, qnUnit: e.target.value })}
-                    
-                  />
+                    disabled={flowType !== 'qn'}
+                  >
+                    <option value="">단위 선택</option>
+                    {formData.Fluid === 'Gaseous' ? (
+                      // Gaseous용 단위 옵션
+                      <>
+                        <option value="m³/h">m³/h</option>
+                        <option value="m³/s">m³/s</option>
+                        <option value="m³/d">m³/d</option>
+                        <option value="l/h">l/h</option>
+                        <option value="l/s">l/s</option>
+                        <option value="l/min">l/min</option>
+                        <option value="GPH(US)">GPH(US)</option>
+                        <option value="GPM(US)">GPM(US)</option>
+                        <option value="MMSCFD">MMSCFD</option>
+                        <option value="MSCFD">MSCFD</option>
+                        <option value="MMSCFH">MMSCFH</option>
+                        <option value="MSCFH">MSCFH</option>
+                        <option value="SCFH">SCFH</option>
+                        <option value="MMSCFM">MMSCFM</option>
+                        <option value="MSCFM">MSCFM</option>
+                        <option value="SCFM">SCFM</option>
+                        <option value="GPH(UK)">GPH(UK)</option>
+                        <option value="GPM(UK)">GPM(UK)</option>
+                        <option value="dm³/h">dm³/h</option>
+                        <option value="MMSCMD">MMSCMD</option>
+                        <option value="MSCMD">MSCMD</option>
+                        <option value="MMSCMH">MMSCMH</option>
+                        <option value="MSCMH">MSCMH</option>
+                        <option value="MMSCMM">MMSCMM</option>
+                        <option value="MSCMM">MSCMM</option>
+                        <option value="bbl/d(US)">bbl/d(US)</option>
+                        <option value="bbl/d(oil)">bbl/d(oil)</option>
+                        <option value="bbl/d(UK)">bbl/d(UK)</option>
+                        <option value="bbl/h(US)">bbl/h(US)</option>
+                        <option value="bbl/h(oil)">bbl/h(oil)</option>
+                        <option value="bbl/h(UK)">bbl/h(UK)</option>
+                      </>
+                    ) : (
+                      // 일반용 단위 옵션 (액체용)
+                      <>
+                        <option value="bbl/d(oil)">bbl/d(oil)</option>
+                        <option value="bbl/d(UK)">bbl/d(UK)</option>
+                        <option value="bbl/d(US)">bbl/d(US)</option>
+                        <option value="bbl/h(oil)">bbl/h(oil)</option>
+                        <option value="bbl/h(UK)">bbl/h(UK)</option>
+                        <option value="bbl/h(US)">bbl/h(US)</option>
+                        <option value="dm³/h">dm³/h</option>
+                        <option value="ft³/h">ft³/h</option>
+                        <option value="ft³/min">ft³/min</option>
+                        <option value="gal/d(UK)">gal/d(UK)</option>
+                        <option value="gal/d(US)">gal/d(US)</option>
+                        <option value="gal/h(UK)">gal/h(UK)</option>
+                        <option value="gal/h(US)">gal/h(US)</option>
+                        <option value="gal/min(UK)">gal/min(UK)</option>
+                        <option value="gal/min(US)">gal/min(US)</option>
+                        <option value="GPD(US)">GPD(US)</option>
+                        <option value="GPH(US)">GPH(US)</option>
+                        <option value="GPM(US)">GPM(US)</option>
+                        <option value="l/h">l/h</option>
+                        <option value="l/min">l/min</option>
+                        <option value="l/s">l/s</option>
+                        <option value="m³/d">m³/d</option>
+                        <option value="m³/h">m³/h</option>
+                        <option value="m³/s">m³/s</option>
+                        <option value="ml/h">ml/h</option>
+                        <option value="ml/min">ml/min</option>
+                      </>
+                    )}
+                  </Form.Select>
                 </td>
               </tr>
               <tr>
@@ -1262,11 +1334,88 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
             <tr>
               <td className="fw-bold">Trim type</td>
               <td>
-                <Form.Control
+                <Form.Select
                   size="sm"
-                                      value={formData.CONVALTrim || ''}
+                  value={formData.CONVALTrim || ''}
                   onChange={(e) => handleInputChange('CONVALTrim', null, e.target.value)}
-                />
+                >
+                  <option value="">선택</option>
+                  {formData.ValveType === 'Straight globe valve' ? (
+                  // Straight globe valve용 Trim type 옵션
+                  <>
+                    <option value="Cage trim">Cage trim</option>
+                    <option value="Parabolic plug">Parabolic plug</option>
+                    <option value="V-port plug">V-port plug</option>
+                    <option value="Multi-hole trim">Multi-hole trim</option>
+                    <option value="Contoured plug">Contoured plug</option>
+                    <option value="Multi stage - multi channel">Multi stage - multi channel</option>
+                  </>
+                ) : formData.ValveType === 'Angle Y-seated valve' ? (
+                  // Angle Y-seated valve용 Trim type 옵션
+                  <>
+                    <option value="Cage trim">Cage trim</option>
+                    <option value="Parabolic plug">Parabolic plug</option>
+                    <option value="V-port plug">V-port plug</option>
+                    <option value="Multi-hole trim">Multi-hole trim</option>
+                    <option value="Contoured plug">Contoured plug</option>
+                    <option value="Multi stage - multi channel">Multi stage - multi channel</option>
+                  </>
+                ) : formData.ValveType === 'Rotary plug valve' ? (
+                  // Rotary plug valve용 Trim type 옵션
+                  <>
+                    <option value="Eccentric ball valve">Eccentric ball valve</option>
+                    <option value="Eccentric plug valve">Eccentric plug valve</option>
+                    <option value="Low-noise plug">Low-noise plug</option>
+                  </>
+                ) : formData.ValveType === 'Angle globe valve' ? (
+                  // Angle globe valve용 Trim type 옵션
+                  <>
+                    <option value="Cage trim">Cage trim</option>
+                    <option value="Parabolic plug">Parabolic plug</option>
+                    <option value="V-port plug">V-port plug</option>
+                    <option value="Multi-hole trim">Multi-hole trim</option>
+                    <option value="Contoured plug">Contoured plug</option>
+                    <option value="Multi stage - multi channel">Multi stage - multi channel</option>
+                  </>
+                ) : formData.ValveType === 'Butterfly valve' ? (
+                  // Butterfly valve용 Trim type 옵션
+                  <>
+                    <option value="Centric swing through 90°">Centric swing through 90°</option>
+                    <option value="Centric swing through 70°">Centric swing through 70°</option>
+                    <option value="Fluted vane 70°">Fluted vane 70°</option>
+                    <option value="Eccentric">Eccentric</option>
+                    <option value="Centric swing through 60°">Centric swing through 60°</option>
+                    <option value="Double eccentric">Double eccentric</option>
+                    <option value="Triple eccentric">Triple eccentric</option>
+                    <option value="Centric reinforced">Centric reinforced</option>
+                  </>
+                ) : formData.ValveType === 'Sleeved plug valve' ? (
+                  // Sleeved plug valve용 Trim type 옵션
+                  <>
+                    <option value="Segmented port">Segmented port</option>
+                    <option value="Full port">Full port</option>
+                    <option value="Low-noise plug">Low-noise plug</option>
+                  </>
+                ) : formData.ValveType === 'Ball valve' ? (
+                  // Ball valve용 Trim type 옵션
+                  <>
+                    <option value="Segmented port">Segmented port</option>
+                    <option value="Full port">Full port</option>
+                    <option value="Low-noise plug">Low-noise plug</option>
+                  </>
+                ) : formData.ValveType === 'Axial valve' ? (
+                  // Axial valve용 Trim type 옵션
+                  <>
+                    <option value="Standard plug">Standard plug</option>
+                    <option value="Low-noise plug">Low-noise plug</option>
+                  </>
+                ) : (
+                  // 기본 옵션 (Valve type이 선택되지 않은 경우)
+                  <>
+                    <option value="">-- trim type 없음 --</option>
+                  </>
+                )}
+                </Form.Select>
               </td>
             </tr>
             <tr>

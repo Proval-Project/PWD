@@ -5740,6 +5740,8 @@ namespace EstimateRequestSystem.Services
                         al.AccSize AS AiroperateAccSize,
                         bvl.ValveSeries AS ValveTypeName,
                         bsl.BodySize    AS BodySizeName,
+                        bsu.UnitName as BodySizeUnitName,
+                        tpsu.UnitName as TrimPortSizeUnitName,
                         tpsl.PortSize   AS TrimPortSizeName,
                         tfl.TrimForm    AS TrimFormName
                     FROM DataSheetLv3 d
@@ -5751,6 +5753,8 @@ namespace EstimateRequestSystem.Services
                     LEFT JOIN AiroperateList al
                       ON d.AirOpMakerCode = al.AccMakerCode
                      AND d.AirOpCode      = al.AccModelCode
+                    LEFT JOIN BodySizeUnit bsu ON d.BodySizeUnit = bsu.UnitCode
+                    LEFT JOIN TrimPortSizeUnit tpsu ON d.TrimPortSizeUnit = tpsu.UnitCode
                     LEFT JOIN BodyValveList bvl
                       ON d.ValveType = bvl.ValveSeriesCode
                     LEFT JOIN BodySizeList bsl
@@ -5902,10 +5906,10 @@ namespace EstimateRequestSystem.Services
                 if (isFirstRow)
                 {
                     newWorksheet.Cell(4, 1).Value = "Project : " + (rowData["Project"]?.ToString() ?? "");
-                    newWorksheet.Cell(13, 1).Value = "A. Pneumatic" + (rowData["ValveTypeName"]?.ToString() ?? "") + " Valve";
-                    newWorksheet.Cell(12, 4).Value = rowData["AiroperateAccSize"]?.ToString();
-                    newWorksheet.Cell(12, 5).Value = rowData["AiroperateAccSize"]?.ToString();
-                    newWorksheet.Cell(12, 6).Value = rowData["AiroperateAccSize"]?.ToString();
+                    newWorksheet.Cell(13, 1).Value = "A. Pneumatic " + (rowData["ValveTypeName"]?.ToString() ?? "") + " Valve";
+                    newWorksheet.Cell(12, 4).Value = rowData["BodySizeUnitName"]?.ToString();
+                    newWorksheet.Cell(12, 5).Value = rowData["BodySizeUnitName"]?.ToString();
+                    newWorksheet.Cell(12, 6).Value = rowData["TrimPortSizeUnitName"]?.ToString();
                     newWorksheet.Cell(10, 12).Value = rowData["PressureUnit"]?.ToString();
                     newWorksheet.Cell(10, 15).Value = rowData["PressureUnit"]?.ToString();
                     newWorksheet.Cell(10, 18).Value = rowData["PressureUnit"]?.ToString();
@@ -6012,6 +6016,8 @@ namespace EstimateRequestSystem.Services
                                asl.ActSize as ActSizeName,
                                ahl.HW as HWName,
                                bbl.BonnetType as BonnetTypeName,
+                               bsu.UnitName as BodySizeUnitName,
+                               tpsu.UnitName as TrimPortSizeUnitName,
                                tsl.TrimSeries as TrimSeriesName,
                                ttl.TrimType as TrimTypeName,
                                tfl.TrimForm as TrimFormName,
@@ -6028,7 +6034,9 @@ namespace EstimateRequestSystem.Services
                         LEFT JOIN EstimateRequest er ON d.TempEstimateNo = er.TempEstimateNo AND d.SheetID = er.SheetID
                         LEFT JOIN BodyValveList bvl ON d.ValveType = bvl.ValveSeriesCode
                         LEFT JOIN BodySizeList bsl ON d.BodySize = bsl.BodySizeCode AND d.BodySizeUnit = bsl.UnitCode
+                        LEFT JOIN BodySizeUnit bsu ON d.BodySizeUnit = bsu.UnitCode
                         LEFT JOIN TrimPortSizeList tpsl ON d.TrimPortSize = tpsl.PortSizeCode AND d.TrimPortSizeUnit = tpsl.UnitCode
+                        LEFT JOIN TrimPortSizeUnit tpsu ON d.TrimPortSizeUnit = tpsu.UnitCode
                         LEFT JOIN BodyMatList bml ON d.BodyMat = bml.BodyMatCode
                         LEFT JOIN TrimMatList tml ON d.TrimMat = tml.TrimMatCode
                         LEFT JOIN BodyRatingList brl ON d.Rating = brl.RatingCode AND d.RatingUnit = brl.RatingUnitCode
@@ -6121,12 +6129,21 @@ namespace EstimateRequestSystem.Services
                 if (isFirstRow)
                 {
                     newWorksheet.Cell(4, 1).Value = "Project : " + (rowData["Project"]?.ToString() ?? "");
-                    newWorksheet.Cell(9, 1).Value = "A. Pneumatic" + (rowData["ValveTypeName"]?.ToString() ?? "") + " Valve";
-                    newWorksheet.Cell(8, 7).Value = rowData["AiroperateAccSize"]?.ToString();
-                    newWorksheet.Cell(8, 8).Value = rowData["AiroperateAccSize"]?.ToString();
-                    newWorksheet.Cell(8, 9).Value = rowData["AiroperateAccSize"]?.ToString();
+                    newWorksheet.Cell(9, 1).Value = "A. Pneumatic " + (rowData["ValveTypeName"]?.ToString() ?? "") + " Valve";
+                    newWorksheet.Cell(8, 7).Value = rowData["BodySizeUnitName"]?.ToString();
+                    newWorksheet.Cell(8, 8).Value = rowData["BodySizeUnitName"]?.ToString();
+                    newWorksheet.Cell(8, 9).Value = rowData["TrimPortSizeUnitName"]?.ToString();
                     isFirstRow = false;
                 }
+            }
+
+            // Qty 합계를 (40, 43)에 설정: 10행부터 마지막 데이터 행까지 43열 합산
+            if (dataRows.Count > 0)
+            {
+                int lastDataRow = 10 + dataRows.Count - 1;
+                var fromAddress = newWorksheet.Cell(10, 43).Address.ToString();
+                var toAddress = newWorksheet.Cell(lastDataRow, 43).Address.ToString();
+                newWorksheet.Cell(40, 43).FormulaA1 = $"SUM({fromAddress}:{toAddress})";
             }
         }
         
@@ -6365,9 +6382,11 @@ public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
                                CONCAT(brul.RatingUnit, ' ', brl.RatingName, ' ', bcl.Connection) as RatingName,
                                atl.ActType as ActTypeName,
                                asl.ActSize as ActSizeName,
+                               bsl.BodySize as BodySizeName,
+                               tpsl.PortSize as TrimPortSizeName,
                                ahl.HW as HWName,
                                c.CompanyName as CustomerCompanyName,
-                               m.Name as ManagerName
+                               c.Name as CustomerName
                         FROM DataSheetLv3 d 
                         JOIN EstimateSheetLv1 e ON d.TempEstimateNo = e.TempEstimateNo 
                         LEFT JOIN EstimateRequest er ON d.TempEstimateNo = er.TempEstimateNo AND d.SheetID = er.SheetID
@@ -6379,6 +6398,8 @@ public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
                         LEFT JOIN BodyConnectionList bcl ON d.Connection = bcl.ConnectionCode
                         LEFT JOIN ActTypeList atl ON d.ActType = atl.ActTypeCode
                         LEFT JOIN ActSizeList asl ON d.ActSeriesCode = asl.ActSeriesCode AND d.ActSize = asl.ActSizeCode
+                        LEFT JOIN BodySizeList bsl ON d.BodySize = bsl.BodySizeCode AND d.BodySizeUnit = bsl.UnitCode
+                        LEFT JOIN TrimPortSizeList tpsl ON d.TrimPortSize = tpsl.PortSizeCode AND d.TrimPortSizeUnit = tpsl.UnitCode
                         LEFT JOIN ActHWList ahl ON d.HW = ahl.HWCode
                         LEFT JOIN User c ON e.CustomerID = c.UserID
                         LEFT JOIN User m ON e.ManagerID = m.UserID
@@ -6401,7 +6422,7 @@ public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
             if (rowCount == 0) worksheet_est1.Name = sheetName;
 
             worksheet_est1.Cell(3, 6).Value = reader["CustomerCompanyName"]?.ToString();
-            worksheet_est1.Cell(4, 6).Value = reader["ManagerName"]?.ToString();
+            worksheet_est1.Cell(4, 6).Value = reader["CustomerName"]?.ToString();
             worksheet_est1.Cell(5, 6).Value = reader["Project"]?.ToString();
             worksheet_est1.Cell(6, 6).Value = reader["Tagno"]?.ToString();
             worksheet_est1.Cell(7, 6).Value = DateTime.Now.ToString("yyyy년 MM월 dd일");
@@ -6418,10 +6439,18 @@ public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
             actFullName += " - " + (reader["ActTypeName"]?.ToString() ?? "");
             worksheet_est1.Cell(29, 3).Value = actFullName;
             
-            worksheet_est1.Cell(16, 12).Value = "BodyTrim Size";
+            string bodySizeName_est1 = reader["BodySizeName"]?.ToString() ?? "";
+                        string trimPortSizeName_est1 = reader["TrimPortSizeName"]?.ToString() ?? "";
+                        string sizeDisplay_est1 = (!string.IsNullOrWhiteSpace(bodySizeName_est1) && string.Equals(bodySizeName_est1, trimPortSizeName_est1, StringComparison.OrdinalIgnoreCase))
+                            ? bodySizeName_est1
+                            : $"{bodySizeName_est1}x{trimPortSizeName_est1}";
+                        worksheet_est1.Cell(16, 12).Value = sizeDisplay_est1; 
             worksheet_est1.Cell(16, 13).Value = reader["Qty"]?.ToString();
             worksheet_est1.Cell(16, 14).Value = reader["UnitPrice"]?.ToString();
-            worksheet_est1.Cell(11, 4).Value = "Pneumatic" + reader["ValveTypeName"]?.ToString() + " Valve";
+            worksheet_est1.Cell(16, 15).Value =
+                (reader["UnitPrice"] == DBNull.Value ? 0m : Convert.ToDecimal(reader["UnitPrice"])) *
+                (reader["Qty"] == DBNull.Value ? 0m : Convert.ToDecimal(reader["Qty"]));
+            worksheet_est1.Cell(11, 4).Value = "Pneumatic " + reader["ValveTypeName"]?.ToString() + " Valve";
             
             rowCount++;
         }
@@ -6498,12 +6527,16 @@ public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
         
         string query = @"SELECT d.*, e.Project, e.ManagerID, er.Tagno, er.Qty, er.UnitPrice,
                                bvl.ValveSeries as ValveTypeName,
+                               bsl.BodySize as BodySizeName,
+                               tpsl.PortSize as TrimPortSizeName,
                                c.CompanyName as CustomerCompanyName,
-                               m.Name as ManagerName
+                               c.Name as CustomerName
                         FROM DataSheetLv3 d 
                         JOIN EstimateSheetLv1 e ON d.TempEstimateNo = e.TempEstimateNo 
                         LEFT JOIN EstimateRequest er ON d.TempEstimateNo = er.TempEstimateNo AND d.SheetID = er.SheetID
                         LEFT JOIN BodyValveList bvl ON d.ValveType = bvl.ValveSeriesCode
+                        LEFT JOIN BodySizeList bsl ON d.BodySize = bsl.BodySizeCode AND d.BodySizeUnit = bsl.UnitCode
+                        LEFT JOIN TrimPortSizeList tpsl ON d.TrimPortSize = tpsl.PortSizeCode AND d.TrimPortSizeUnit = tpsl.UnitCode
                         LEFT JOIN User c ON e.CustomerID = c.UserID
                         LEFT JOIN User m ON e.ManagerID = m.UserID
                         WHERE d.TempEstimateNo = @tempEstimateNo
@@ -6517,31 +6550,55 @@ public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
         using var workbook = new ClosedXML.Excel.XLWorkbook(outputPath);
         var worksheet_est2 = workbook.Worksheet("다수량견적서");
         
-        bool isFirstRow = true;
-        int rowCount = 0;
+        bool headerSet = false;
+        var items = new List<(string ValveTypeName, decimal? UnitPrice)>();
         
         while (await reader.ReadAsync())
         {
-            if (isFirstRow)
+            if (!headerSet)
             {
                 worksheet_est2.Cell(3, 6).Value = reader["CustomerCompanyName"]?.ToString();
-                worksheet_est2.Cell(4, 6).Value = reader["ManagerName"]?.ToString();
+                worksheet_est2.Cell(4, 6).Value = reader["CustomerName"]?.ToString();
                 worksheet_est2.Cell(5, 6).Value = reader["Project"]?.ToString();
                 worksheet_est2.Cell(6, 6).Value = reader["Tagno"]?.ToString(); // 대표 Tagno 하나만 사용
                 worksheet_est2.Cell(7, 6).Value = DateTime.Now.ToString("yyyy년 MM월 dd일");
-                isFirstRow = false;
+                headerSet = true;
             }
             
-            int row_est2 = 13 + rowCount;
-            worksheet_est2.Cell(row_est2, 1).Value = ((char)('A' + rowCount)).ToString();
-            worksheet_est2.Cell(row_est2, 4).Value = "Pneumatic" + reader["ValveTypeName"]?.ToString() + " Valve";
-            worksheet_est2.Cell(row_est2, 12).Value = "BodyTrim Size";
-            worksheet_est2.Cell(row_est2, 13).Value = reader["Qty"]?.ToString();
-            worksheet_est2.Cell(row_est2, 14).Value = reader["UnitPrice"]?.ToString();
-            
-            rowCount++;
+            string vt = reader["ValveTypeName"]?.ToString() ?? string.Empty;
+            decimal? unitPrice = null;
+            if (decimal.TryParse(reader["UnitPrice"]?.ToString(), out var parsed)) unitPrice = parsed;
+            items.Add((vt, unitPrice));
         }
-        
+
+        int rowIndex = 0;
+        foreach (var group in items.GroupBy(x => x.ValveTypeName))
+        {
+            int row_est2 = 13 + rowIndex;
+            worksheet_est2.Cell(row_est2, 1).Value = ((char)('A' + rowIndex)).ToString();
+            worksheet_est2.Cell(row_est2, 4).Value = "Pneumatic " + group.Key + " Valve";
+            var distinctBodySizes = grp.Select(g => g.BodySizeName ?? "").Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            var distinctPortSizes = grp.Select(g => g.TrimPortSizeName ?? "").Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            if (distinctBodySizes.Count == 1 && distinctPortSizes.Count == 1)
+            {
+                string bodySize = distinctBodySizes[0];
+                string portSize = distinctPortSizes[0];
+                string sizeDisplay = (!string.IsNullOrWhiteSpace(bodySize) && string.Equals(bodySize, portSize, StringComparison.OrdinalIgnoreCase))
+                    ? bodySize
+                    : $"{bodySize}x{portSize}";
+                worksheet_est2.Cell(row_est2, 12).Value = sizeDisplay;
+            }
+            else
+            {
+                worksheet_est2.Cell(row_est2, 12).Value = "";
+            }
+            worksheet_est2.Cell(row_est2, 13).Value = group.Count();
+            worksheet_est2.Cell(row_est2, 14).Value = group.First().UnitPrice?.ToString();
+            // 합계 = 단가 × 수량(같은 ValveType 개수)
+            worksheet_est2.Cell(row_est2, 15).Value = (group.First().UnitPrice ?? 0m) * group.Count();
+            rowIndex++;
+        }
+
         workbook.Save();
 
         // 4. EstimateAttachment에 저장

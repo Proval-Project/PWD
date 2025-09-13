@@ -560,7 +560,7 @@ namespace ConvalServiceApi.Controllers
             {"S", "Ball valve"},
             {"H", "Butterfly valve"},
             {"Std. Butterfly", "Butterfly valve"},
-            {"4", "Angle globe valve"}
+            {"A", "Angle globe valve"}
         };
 
         // Fluid 매핑 Dictionary
