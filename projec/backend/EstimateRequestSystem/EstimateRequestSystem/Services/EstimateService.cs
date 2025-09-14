@@ -6216,7 +6216,7 @@ public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
         using var modeCmd = new MySqlCommand("SET sql_mode = (SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));", conn);
         await modeCmd.ExecuteNonQueryAsync();
         
-        string query = @"SELECT d.*, e.Project, er.Tagno, er.Qty, bvl.ValveSeries as ValveTypeName, bsl.BodySize as BodySizeName, tpsl.PortSize as TrimPortSizeName, bml.BodyMat as BodyMatName, tml.TrimMat as TrimMatName, CONCAT(brul.RatingUnit, ' ', brl.RatingName, ' ', bcl.Connection) as RatingName, atl.ActType as ActTypeName, asl.ActSize as ActSizeName, ahl.HW as HWName, bbl.BonnetType as BonnetTypeName, tsl.TrimSeries as TrimSeriesName, ttl.TrimType as TrimTypeName, tfl.TrimForm as TrimFormName, pl.AccModelName as PosCodeName, sl.AccModelName as SolCodeName, ll.AccModelName as LimCodeName, al.AccModelName as ASCodeName, vl.AccModelName as VolCodeName, aol.AccModelName as AirOpCodeName, lkl.AccModelName as LockupCodeName, sal.AccModelName as SnapActCodeName, al_acc.AccSize as AiroperateAccSize, er.IsPositioner, er.IsSolenoid, er.IsLimSwitch, er.IsLockUp, er.IsVolumeBooster, er.IsSnapActingRelay, er.IsAirOperated 
+        string query = @"SELECT d.*, e.Project, er.Tagno, er.Qty, bvl.ValveSeries as ValveTypeName, bsl.BodySize as BodySizeName, tpsl.PortSize as TrimPortSizeName, bml.BodyMat as BodyMatName, tml.TrimMat as TrimMatName, CONCAT(brul.RatingUnit, ' ', brl.RatingName, ' ', bcl.Connection) as RatingName, atl.ActType as ActTypeName, asl.ActSize as ActSizeName, ahl.HW as HWName, bbl.BonnetType as BonnetTypeName, tsl.TrimSeries as TrimSeriesName, ttl.TrimType as TrimTypeName, tfl.TrimForm as TrimFormName, pl.AccModelName as PosCodeName, sl.AccModelName as SolCodeName, ll.AccModelName as LimCodeName, al.AccModelName as ASCodeName, vl.AccModelName as VolCodeName, aol.AccModelName as AirOpCodeName, lkl.AccModelName as LockupCodeName, sal.AccModelName as SnapActCodeName, al_acc.AccSize as AiroperateAccSize, er.IsPositioner, er.IsSolenoid, er.IsLimSwitch, er.IsLockUp, er.IsVolumeBooster, er.IsSnapActingRelay, er.IsAirOperated, ac.ActSeries as ActSeriesName
                         FROM DataSheetLv3 d 
                         JOIN EstimateSheetLv1 e ON d.TempEstimateNo = e.TempEstimateNo 
                         LEFT JOIN EstimateRequest er ON d.TempEstimateNo = er.TempEstimateNo AND d.SheetID = er.SheetID 
@@ -6228,7 +6228,8 @@ public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
                         LEFT JOIN BodyRatingList brl ON d.Rating = brl.RatingCode AND d.RatingUnit = brl.RatingUnitCode 
                         LEFT JOIN BodyRatingUnitList brul ON d.RatingUnit = brul.RatingUnitCode 
                         LEFT JOIN BodyConnectionList bcl ON d.Connection = bcl.ConnectionCode 
-                        LEFT JOIN ActTypeList atl ON d.ActType = atl.ActTypeCode 
+                        LEFT JOIN ActTypeList atl ON d.ActType = atl.ActTypeCode
+                        LEFT JOIN ActSeriesList ac ON d.ActSeriesCode = ac.ActSeriesCode 
                         LEFT JOIN ActSizeList asl ON d.ActSeriesCode = asl.ActSeriesCode AND d.ActSize = asl.ActSizeCode 
                         LEFT JOIN ActHWList ahl ON d.HW = ahl.HWCode 
                         LEFT JOIN BodyBonnetList bbl ON d.BonnetType = bbl.BonnetCode 
@@ -6307,7 +6308,8 @@ public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
             newWorksheet.Cell(6, 76).Value = rowData["Qty"]?.ToString();
             newWorksheet.Cell(8, 22).Value = rowData["Medium"]?.ToString();
             newWorksheet.Cell(8, 35).Value = rowData["Fluid"]?.ToString();
-            newWorksheet.Cell(11, 69).Value = rowData["ActTypeName"]?.ToString();
+            newWorksheet.Cell(17, 92).Value = rowData["ActTypeName"]?.ToString();
+            newWorksheet.Cell(18, 92).Value = rowData["ActSeriesName"]?.ToString();
             newWorksheet.Cell(30, 36).Value = rowData["TrimPortSizeName"]?.ToString();
             newWorksheet.Cell(4, 92).Value = rowData["ActSizeName"]?.ToString();
             newWorksheet.Cell(11, 92).Value = rowData["HWName"]?.ToString();
@@ -6551,7 +6553,7 @@ public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
         var worksheet_est2 = workbook.Worksheet("다수량견적서");
         
         bool headerSet = false;
-        var items = new List<(string ValveTypeName, decimal? UnitPrice)>();
+        var items = new List<(string ValveTypeName, decimal? UnitPrice, string BodySizeName, string TrimPortSizeName)>();
         
         while (await reader.ReadAsync())
         {
@@ -6564,11 +6566,12 @@ public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
                 worksheet_est2.Cell(7, 6).Value = DateTime.Now.ToString("yyyy년 MM월 dd일");
                 headerSet = true;
             }
-            
+            string bodySize = reader["BodySizeName"]?.ToString() ?? string.Empty;
+            string trimPortSize = reader["TrimPortSizeName"]?.ToString() ?? string.Empty;
             string vt = reader["ValveTypeName"]?.ToString() ?? string.Empty;
             decimal? unitPrice = null;
             if (decimal.TryParse(reader["UnitPrice"]?.ToString(), out var parsed)) unitPrice = parsed;
-            items.Add((vt, unitPrice));
+            items.Add((vt, unitPrice, bodySize, trimPortSize));
         }
 
         int rowIndex = 0;
@@ -6577,8 +6580,8 @@ public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
             int row_est2 = 13 + rowIndex;
             worksheet_est2.Cell(row_est2, 1).Value = ((char)('A' + rowIndex)).ToString();
             worksheet_est2.Cell(row_est2, 4).Value = "Pneumatic " + group.Key + " Valve";
-            var distinctBodySizes = grp.Select(g => g.BodySizeName ?? "").Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-            var distinctPortSizes = grp.Select(g => g.TrimPortSizeName ?? "").Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            var distinctBodySizes = group.Select(g => g.BodySizeName ?? "").Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            var distinctPortSizes = group.Select(g => g.TrimPortSizeName ?? "").Distinct(StringComparer.OrdinalIgnoreCase).ToList();
             if (distinctBodySizes.Count == 1 && distinctPortSizes.Count == 1)
             {
                 string bodySize = distinctBodySizes[0];
