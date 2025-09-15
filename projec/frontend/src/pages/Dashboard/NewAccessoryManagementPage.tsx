@@ -194,7 +194,7 @@ const NewAccessoryManagementPage: React.FC = () => {
             const makers = await makerResponse.json();
             console.log('🔍 Volume B 디버그 - Maker API 응답 데이터:', makers);
             
-            const formattedMakers = makers.map((item: any) => ({ code: item.accMakerCode, name: item.accMakerName }));
+            const formattedMakers = makers.map((item: any) => ({ code: item.accMakerCode, name: item.accMakerName, status: item.status }));
             console.log('🔍 Volume B 디버그 - 포맷된 Maker 데이터:', formattedMakers);
             setMakerData(formattedMakers);
             
@@ -363,7 +363,8 @@ const NewAccessoryManagementPage: React.FC = () => {
         const formattedModels = models.map((item: any) => ({ 
             code: item.accModelCode, 
             name: item.accModelName, 
-            spec: item.accSize || 'N/A'
+            spec: item.accSize || 'N/A',
+            status: item.status
         }));
         console.log('🔍 Volume B 디버그 - 포맷된 Model 데이터:', formattedModels);
         setModelData(formattedModels);
@@ -393,6 +394,13 @@ const NewAccessoryManagementPage: React.FC = () => {
     fetchData();
   }, [activeTab, selectedBodySection, selectedAccessorySection, selectedUnitCode, selectedBodySizeUnitCode, selectedTrimPortSizeUnitCode, selectedTrimSection]); // Remove fetchData from dependencies to prevent infinite loop
 
+  // 작동기 탭 진입/소분류 변경 시 자동 새로고침 보장
+  useEffect(() => {
+    if (activeTab === 'act') {
+      fetchData();
+    }
+  }, [activeTab, selectedActSection, selectedActSeriesCode]);
+
   const handleMakerSelect = (makerCode: string) => {
       console.log('🔍 Volume B 디버그 - handleMakerSelect 호출됨');
       console.log('🔍 Volume B 디버그 - 선택된 makerCode:', makerCode);
@@ -417,6 +425,38 @@ const NewAccessoryManagementPage: React.FC = () => {
   };
 
   // --- Modal and CRUD Functions ---
+
+  const toggleMakerStatus = async (maker: MasterDataItem) => {
+    try {
+      const accTypeCode = accessorySections.find(s => s.id === selectedAccessorySection)?.apiId;
+      if (!accTypeCode) return;
+      const url = `${API_BASE_URL}/acc/maker/${maker.code}/status`;
+      await fetch(url, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accTypeCode, status: !maker.status })
+      });
+      await fetchData();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to toggle maker status');
+    }
+  };
+
+  const toggleModelStatus = async (model: MasterDataItem) => {
+    try {
+      const accTypeCode = accessorySections.find(s => s.id === selectedAccessorySection)?.apiId;
+      if (!accTypeCode || !selectedMakerCode) return;
+      const url = `${API_BASE_URL}/acc/model/${model.code}/status`;
+      await fetch(url, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accTypeCode, accMakerCode: selectedMakerCode, status: !model.status })
+      });
+      await fetchModelsForMaker(selectedMakerCode);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to toggle model status');
+    }
+  };
 
   const openModal = (type: 'maker' | 'model' | 'unit' | 'rating' | 'actType' | 'actSeries' | 'actSize' | 'actHW' | 'trimType' | 'trimSeries' | 'trimPortSize' | 'trimForm' | 'trimMaterial' | 'trimOption' | 'bodyBonnet' | 'bodyValve' | 'bodyMaterial' | 'bodySize' | 'bodyConnection' | 'bodySizeUnit' | 'trimPortSizeUnit' | null, mode: 'add' | 'edit', item: MasterDataItem | null = null) => {
     setModalType(type);
@@ -1340,6 +1380,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                 <tr>
                                     <th>Code</th>
                                     <th>NAME</th>
+                                    <th>상태</th>
                                     <th>작업</th>
                                 </tr>
                             </thead>
@@ -1352,6 +1393,15 @@ const NewAccessoryManagementPage: React.FC = () => {
                                     >
                                         <td>{item.code}</td>
                                         <td>{item.name}</td>
+                                        <td>
+                                            <button 
+                                                className={`status-chip ${item.status ? 'on' : 'off'}`}
+                                                onClick={(e) => { e.stopPropagation(); toggleMakerStatus(item); }}
+                                                title={item.status ? '현재: 사용' : '현재: 미사용'}
+                                            >
+                                                {item.status ? '미사용' : '사용'}
+                                            </button>
+                                        </td>
                                         <td>
                                             <button className="action-btn edit-btn" onClick={(e) => { e.stopPropagation(); openModal('maker', 'edit', item); }}>수정</button>
                                             <button className="action-btn delete-btn" onClick={(e) => { e.stopPropagation(); handleDelete('maker', item); }}>삭제</button>
@@ -1376,6 +1426,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                     <th>Code*</th>
                                     <th>NAME</th>
                                     <th>규격</th>
+                                    <th>상태</th>
                                     <th>작업</th>
                                 </tr>
                             </thead>
@@ -1385,6 +1436,15 @@ const NewAccessoryManagementPage: React.FC = () => {
                                         <td>{item.code}</td>
                                         <td>{item.name}</td>
                                         <td>{item.spec}</td>
+                                        <td>
+                                            <button 
+                                                className={`status-chip ${item.status ? 'on' : 'off'}`}
+                                                onClick={() => toggleModelStatus(item)}
+                                                title={item.status ? '현재: 사용' : '현재: 미사용'}
+                                            >
+                                                {item.status ? '미사용' : '사용'}
+                                            </button>
+                                        </td>
                                         <td>
                                             <button className="action-btn edit-btn" onClick={() => openModal('model', 'edit', item)}>수정</button>
                                             <button className="action-btn delete-btn" onClick={() => handleDelete('model', item)}>삭제</button>

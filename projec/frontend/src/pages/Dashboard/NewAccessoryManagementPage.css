@@ -198,3 +198,22 @@ thead {
 table tbody tr.selected {
     background-color: #e0eaff;
 }
+
+/* 상태 칩 스타일 */
+.status-chip {
+    padding: 4px 10px;
+    border-radius: 14px;
+    border: 1px solid #ccc;
+    background: #f4f4f6;
+    color: #666;
+    cursor: pointer;
+}
+.status-chip.on {
+    background: #e7f7ee;
+    color: #0a7a3b;
+    border-color: #0a7a3b33;
+}
+.status-chip.off {
+    background: #f4f4f6;
+    color: #666;
+}

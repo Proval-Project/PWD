@@ -263,6 +263,19 @@ const NewEstimateRequestPage: React.FC = () => {
   const totalQty = useMemo(() => valves.reduce((sum, v) => sum + (Number(v.qty) || 0), 0), [valves]);
   const statusText = useMemo(() => (isReadOnly ? '조회' : (valves.length > 0 ? '작성중' : '신규')), [isReadOnly, valves.length]);
   const uiStatusText = useMemo(() => backendStatusText || statusText, [backendStatusText, statusText]);
+  // 고정 상태 텍스트 매핑 적용
+  const displayStatus = useMemo(() => {
+    const map: Record<number, string> = {
+      1: '임시저장',
+      2: '견적요청',
+      3: '견적처리중',
+      4: '견적완료',
+      5: '주문',
+    };
+    if (backendStatus && map[backendStatus]) return map[backendStatus];
+    if (backendStatusText) return backendStatusText;
+    return uiStatusText;
+  }, [backendStatus, backendStatusText, uiStatusText]);
   
   // 🔑 관리 첨부파일 상태 추가
   const [managerAttachments, setManagerAttachments] = useState<any[]>([]);
@@ -3223,10 +3236,10 @@ const NewEstimateRequestPage: React.FC = () => {
           <div className="mini-card-header">견적 세부 정보</div>
           <div className="mini-card-body summary-grid">
             <div className="summary-item"><span className="label">견적번호</span><strong className="value">{tempEstimateNo || '-'}</strong></div>
-            <div className="summary-item"><span className="label">상태</span><strong className="value">{uiStatusText}</strong></div>
+            <div className="summary-item"><span className="label">상태</span><strong className="value">{displayStatus}</strong></div>
             <div className="summary-item"><span className="label">회사명</span><strong className="value">{selectedCustomer?.companyName || selectedCustomer?.name || '-'}</strong></div>
             <div className="summary-item"><span className="label">수량</span><strong className="value">{totalQty}</strong></div>
-            <div className="summary-item"><span className="label">요청자</span><strong className="value">{currentUser?.name || currentUser?.userName || '-'}</strong></div>
+            <div className="summary-item"><span className="label">요청자</span><strong className="value">{selectedCustomer?.name || selectedCustomer?.userName || '-'}</strong></div>
             <div className="summary-item"><span className="label">요청일자</span><strong className="value">{new Date().toISOString().slice(0,10).replaceAll('-','.')}</strong></div>
             <div className="summary-item"><span className="label">담당자</span><strong className="value">-</strong></div>
             <div className="summary-item"><span className="label">완료일자</span><strong className="value">-</strong></div>
