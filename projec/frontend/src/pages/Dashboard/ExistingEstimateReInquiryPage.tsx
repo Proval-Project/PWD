@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getEstimateInquiry, EstimateInquiryRequest, EstimateInquiryItem, statusOptions } from '../../api/estimateInquiry';
 import { buildApiUrl } from '../../config/api';
+import { getEstimateDetail } from '../../api/estimateRequest';
 import './DashboardPages.css';
 import './EstimateInquiry.css';
 
@@ -158,34 +159,9 @@ const ExistingEstimateReInquiryPage: React.FC = () => {
         return;
       }
 
-      console.log('기존 견적에서 새로운 견적 생성 시작:', item);
-      console.log('기존 견적 번호:', item.tempEstimateNo);
-      console.log('현재 사용자:', user);
-
-      // 새로운 견적 생성 API 호출
-              const apiUrl = buildApiUrl(`/estimate/sheets/reinquiry?currentUserId=${user.userId}&existingEstimateNo=${item.tempEstimateNo}`);
-      console.log('🔍 API 호출 URL:', apiUrl);
-      
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          Project: item.project || '',
-          CustomerRequirement: item.customerRequirement || ''
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('새로운 견적 생성에 실패했습니다.');
-      }
-
-      const newTempEstimateNo = await response.text();
-      console.log('새로운 견적 번호 생성됨:', newTempEstimateNo);
-
-      // 새로운 견적 요청 페이지로 이동
-      navigate(`/estimate-request/new?load=${newTempEstimateNo}&readonly=false`);
+      console.log('기존 견적 복제 준비:', item.tempEstimateNo);
+      // 상세를 즉시 조회하지 않고, 대상 TempEstimateNo만 전달 → 신규 페이지에서 기존 로딩 로직 사용
+      navigate(`/estimate-request/new?readonly=false`, { state: { cloned: true, loadTempEstimateNo: item.tempEstimateNo } });
 
     } catch (error) {
       console.error('기존 견적에서 새로운 견적 생성 실패:', error);

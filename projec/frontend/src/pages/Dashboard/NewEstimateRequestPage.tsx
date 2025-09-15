@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { buildApiUrl } from '../../config/api';
 import {
@@ -252,6 +252,20 @@ const NewEstimateRequestPage: React.FC = () => {
   const [isReadOnly, setIsReadOnly] = useState<boolean>(false); // READONLY 모드 상태
   const [backendStatusText, setBackendStatusText] = useState<string>(''); // 백엔드 상태 텍스트
   const [backendStatus, setBackendStatus] = useState<number | null>(null);   // 백엔드 상태 코드 (1~5)
+  const [prevEstimateNo, setPrevEstimateNo] = useState<string | null>(null);  // 재문의 원본 번호
+  // 기존견적 복제: 라우팅 state에 loadTempEstimateNo가 오면 기존 로딩 함수로 전체 복원
+  const location = useLocation() as any;
+  useEffect(() => {
+    const loadParam = location.state?.loadTempEstimateNo;
+    if (!loadParam) return;
+    // 읽기 전용 아님, 새 요청 작성 플로우이므로 readonly=false 유지
+    loadExistingData(loadParam);
+    setPrevEstimateNo(loadParam);
+    // 첫 Type/첫 Valve 자동 선택은 loadExistingData 내 정렬/생성 로직에 따름
+  }, [location.state]);
+  const [curEstimateNo, setCurEstimateNo] = useState<string | null>(null);   // 최종 견적번호 (있으면 Temp 대신 표시)
+  const [managerName, setManagerName] = useState<string | null>(null);       // 담당자 이름
+  const [managerId, setManagerId] = useState<string | null>(null);           // 담당자 ID
   const [staffComment, setStaffComment] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -263,19 +277,6 @@ const NewEstimateRequestPage: React.FC = () => {
   const totalQty = useMemo(() => valves.reduce((sum, v) => sum + (Number(v.qty) || 0), 0), [valves]);
   const statusText = useMemo(() => (isReadOnly ? '조회' : (valves.length > 0 ? '작성중' : '신규')), [isReadOnly, valves.length]);
   const uiStatusText = useMemo(() => backendStatusText || statusText, [backendStatusText, statusText]);
-  // 고정 상태 텍스트 매핑 적용
-  const displayStatus = useMemo(() => {
-    const map: Record<number, string> = {
-      1: '임시저장',
-      2: '견적요청',
-      3: '견적처리중',
-      4: '견적완료',
-      5: '주문',
-    };
-    if (backendStatus && map[backendStatus]) return map[backendStatus];
-    if (backendStatusText) return backendStatusText;
-    return uiStatusText;
-  }, [backendStatus, backendStatusText, uiStatusText]);
   
   // 🔑 관리 첨부파일 상태 추가
   const [managerAttachments, setManagerAttachments] = useState<any[]>([]);
@@ -314,6 +315,44 @@ const NewEstimateRequestPage: React.FC = () => {
 
     return a.localeCompare(b, undefined, { numeric: true });
   };
+
+  // 타입 마스터가 로드되면 Type.name을 코드→이름으로 교정
+  useEffect(() => {
+    if (!bodyValveList || bodyValveList.length === 0 || types.length === 0) return;
+    setTypes(prev => prev.map(t => {
+      const found = bodyValveList.find((b: any) => b.valveSeriesCode === t.code);
+      return found ? { ...t, name: found.valveSeries } : t;
+    }));
+  }, [bodyValveList, types.length]);
+
+  // 타입 이름 교정 후, 각 Valve의 body.type도 code→이름으로 동기화하여 Step2 필터 매칭 유지
+  useEffect(() => {
+    if (!bodyValveList || bodyValveList.length === 0 || valves.length === 0) return;
+    let changed = false;
+    const updated = valves.map(v => {
+      const found = bodyValveList.find((b: any) => b.valveSeriesCode === v.body.typeCode);
+      const newName = found?.valveSeries;
+      if (newName && newName !== v.body.type) {
+        changed = true;
+        return { ...v, body: { ...v.body, type: newName } };
+      }
+      return v;
+    });
+    if (changed) {
+      setValves(updated);
+      // 선택된 타입과 현재 밸브 보정
+      if (selectedType) {
+        const typeData = types.find(t => t.id === selectedType);
+        if (typeData) {
+          const firstOfType = updated.find(v => v.body.type === typeData.name);
+          if (firstOfType) {
+            setSelectedValveId(firstOfType.id);
+            setCurrentValve(firstOfType);
+          }
+        }
+      }
+    }
+  }, [bodyValveList, valves.length, selectedType, types]);
 
   const uniqueRatingUnits = useMemo(() => {
     if (!bodyRatingList || bodyRatingList.length === 0) {
@@ -1187,6 +1226,13 @@ const NewEstimateRequestPage: React.FC = () => {
       // 상태 텍스트/코드 저장 (최상위 또는 estimateSheet 내부 모두 대응)
       const statusTextServer = existingData?.statusText ?? existingData?.estimateSheet?.statusText ?? '';
       const statusCodeServer = existingData?.status ?? existingData?.estimateSheet?.status;
+      // curEstimateNo, manager 정보 세팅
+      const curNo = existingData?.curEstimateNo ?? existingData?.estimateSheet?.curEstimateNo ?? null;
+      const mgrName = existingData?.managerName ?? existingData?.estimateSheet?.managerName ?? null;
+      const mgrId = existingData?.managerID ?? existingData?.estimateSheet?.managerID ?? null;
+      setCurEstimateNo(curNo);
+      setManagerName(mgrName);
+      setManagerId(mgrId);
       if (statusTextServer) setBackendStatusText(statusTextServer);
       if (typeof statusCodeServer === 'number') {
         setBackendStatus(statusCodeServer);
@@ -1465,7 +1511,7 @@ const NewEstimateRequestPage: React.FC = () => {
                   type: valveSeriesName,
                   typeCode: valveType,
                   size: req.bodySize || '',  // 기존 저장된 Size 값 복원
-                  sizeUnit: req.bodySizeUnit || getSizeUnitFromSize(req.bodySize) || '',  // 기존 저장된 Size Unit 복원 또는 Size 값으로부터 유추
+                  sizeUnit: req.bodySizeUnit || '',  // 기존 저장된 Size Unit 복원 또는 Size 값으로부터 유추
                   materialBody: req.bodyMat || '',
                   materialTrim: req.trimMat || '',
                   option: req.trimOption || '',
@@ -1508,6 +1554,14 @@ const NewEstimateRequestPage: React.FC = () => {
 
         console.log('setValves를 호출하기 직전입니다. loadedValves 데이터:', loadedValves);
         setValves(loadedValves);
+        // 첫 타입과 첫 밸브 자동 선택 → Step3 즉시 보이게
+        if (loadedTypes.length > 0) {
+          setSelectedType(loadedTypes[0].id);
+        }
+        if (loadedValves.length > 0) {
+          setSelectedValveId(loadedValves[0].id);
+          setCurrentValve(loadedValves[0]);
+        }
         console.log('setValves가 호출되었습니다.');
         
         console.log('복원된 Types:', loadedTypes);
@@ -1777,7 +1831,18 @@ const NewEstimateRequestPage: React.FC = () => {
   const handleSaveDraft = async () => {
     // TempEstimateNo가 없으면 먼저 생성
     let currentTempEstimateNo = tempEstimateNo;
-    if (!currentTempEstimateNo) {
+    // 재문의 케이스: 기존 번호로 덮어쓰지 않도록 항상 새 번호 발급
+    if (prevEstimateNo && currentTempEstimateNo === prevEstimateNo) {
+      try {
+        const response = await axios.post(buildApiUrl('/estimate/generate-temp-no'), null, { params: { currentUserId: currentUser?.userId || 'admin' } });
+        currentTempEstimateNo = response.data.tempEstimateNo;
+        setTempEstimateNo(currentTempEstimateNo);
+      } catch (error) {
+        console.error('TempEstimateNo 생성 실패:', error);
+        alert('TempEstimateNo 생성에 실패했습니다.');
+        return;
+      }
+    } else if (!currentTempEstimateNo) {
       try {
         const response = await axios.post(buildApiUrl('/estimate/generate-temp-no'), null, { params: { currentUserId: currentUser?.userId || 'admin' } });
         currentTempEstimateNo = response.data.tempEstimateNo;
@@ -1802,6 +1867,10 @@ const NewEstimateRequestPage: React.FC = () => {
     
     try {
       const submitData = createSavePayload();
+      // 재문의 복제인 경우, 이전 견적번호(prevEstimateNo)를 같이 전달
+      if (prevEstimateNo) {
+        (submitData as any).PrevEstimateNo = prevEstimateNo;
+      }
       console.log('Submit Data - CustomerRequirement:', submitData.CustomerRequirement);
       console.log('Submit Data 전체:', JSON.stringify(submitData, null, 2));
 
@@ -1822,7 +1891,18 @@ const NewEstimateRequestPage: React.FC = () => {
   const handleSubmitEstimate = async () => {
     // TempEstimateNo가 없으면 먼저 생성
     let currentTempEstimateNo = tempEstimateNo;
-    if (!currentTempEstimateNo) {
+    // 재문의 케이스: 기존 번호로 덮어쓰지 않도록 항상 새 번호 발급
+    if (prevEstimateNo && currentTempEstimateNo === prevEstimateNo) {
+      try {
+        const response = await axios.post(buildApiUrl('/estimate/generate-temp-no'), {});
+        currentTempEstimateNo = response.data.tempEstimateNo;
+        setTempEstimateNo(currentTempEstimateNo);
+      } catch (error) {
+        console.error('TempEstimateNo 생성 실패:', error);
+        alert('TempEstimateNo 생성에 실패했습니다.');
+        return;
+      }
+    } else if (!currentTempEstimateNo) {
       try {
         const response = await axios.post(buildApiUrl('/estimate/generate-temp-no'), {});
         currentTempEstimateNo = response.data.tempEstimateNo;
@@ -1853,6 +1933,10 @@ const NewEstimateRequestPage: React.FC = () => {
         ...submitData,
         StaffComment: staffComment, // createSavePayload 밖에서 staffComment 사용
       };
+      // 재문의 복제인 경우, 이전 견적번호(prevEstimateNo)를 같이 전달
+      if (prevEstimateNo) {
+        (finalSubmitData as any).PrevEstimateNo = prevEstimateNo;
+      }
       
       console.log('Submit Data - CustomerRequirement:', finalSubmitData.CustomerRequirement);
       console.log('Submit Data 전체:', JSON.stringify(finalSubmitData, null, 2));
@@ -3235,14 +3319,28 @@ const NewEstimateRequestPage: React.FC = () => {
         <div className="mini-card estimate-summary">
           <div className="mini-card-header">견적 세부 정보</div>
           <div className="mini-card-body summary-grid">
-            <div className="summary-item"><span className="label">견적번호</span><strong className="value">{tempEstimateNo || '-'}</strong></div>
-            <div className="summary-item"><span className="label">상태</span><strong className="value">{displayStatus}</strong></div>
+            <div className="summary-item"><span className="label">견적번호</span><strong className="value">{(() => {
+              // 재문의로 진입해 아직 새 번호를 발급하지 않았다면 기존 번호를 명시적으로 표기
+              if (prevEstimateNo && (!curEstimateNo || tempEstimateNo === prevEstimateNo)) {
+                return `(기존견적) ${prevEstimateNo}`;
+              }
+              return curEstimateNo || tempEstimateNo || '-';
+            })()}</strong></div>
+            <div className="summary-item"><span className="label">상태</span><strong className="value">{backendStatus === 1 ? '임시저장' : backendStatus === 2 ? '견적요청' : backendStatus === 3 ? '견적처리중' : backendStatus === 4 ? '견적완료' : backendStatus === 5 ? '주문' : (uiStatusText || '-')}</strong></div>
             <div className="summary-item"><span className="label">회사명</span><strong className="value">{selectedCustomer?.companyName || selectedCustomer?.name || '-'}</strong></div>
             <div className="summary-item"><span className="label">수량</span><strong className="value">{totalQty}</strong></div>
             <div className="summary-item"><span className="label">요청자</span><strong className="value">{selectedCustomer?.name || selectedCustomer?.userName || '-'}</strong></div>
-            <div className="summary-item"><span className="label">요청일자</span><strong className="value">{new Date().toISOString().slice(0,10).replaceAll('-','.')}</strong></div>
-            <div className="summary-item"><span className="label">담당자</span><strong className="value">-</strong></div>
-            <div className="summary-item"><span className="label">완료일자</span><strong className="value">-</strong></div>
+            <div className="summary-item"><span className="label">요청일자</span><strong className="value">{(() => {
+              // 재문의로 들어와 아직 요청(제출) 전이면 표시하지 않음
+              if (prevEstimateNo && (!curEstimateNo || tempEstimateNo === prevEstimateNo) && (!backendStatus || backendStatus < 2)) {
+                return '-';
+              }
+              const no = tempEstimateNo;
+              const m = /TEMP(\d{4})(\d{2})(\d{2})/.exec(no || '');
+              return m ? `${m[1]}.${m[2]}.${m[3]}` : '-';
+            })()}</strong></div>
+            <div className="summary-item"><span className="label">담당자</span><strong className="value">{managerName || '-'}</strong></div>
+            <div className="summary-item"><span className="label">완료일자</span><strong className="value">{(() => { if (!curEstimateNo) return '-'; const m = /YA(\d{4})(\d{2})(\d{2})-(\d{3})/.exec(curEstimateNo); return m ? `${m[1]}.${m[2]}.${m[3]}` : '-'; })()}</strong></div>
           </div>
         </div>
 
