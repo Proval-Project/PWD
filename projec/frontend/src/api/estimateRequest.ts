@@ -308,6 +308,7 @@ export interface EstimateSheetInfoDto {
   writerID: string;
   writerName: string;
   managerID?: string;
+  managerName?: string;
   status: number;
   statusText: string;
   project?: string;

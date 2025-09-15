@@ -28,6 +28,7 @@ namespace EstimateRequestSystem.DTOs
         public string? CustomerRequirement { get; set; }
         public string? StaffComment { get; set; }
         public string? CustomerName { get; set; }
+        public string? ManagerName { get; set; }
         public string? WriterName { get; set; }
         public List<EstimateRequestResponseDto> EstimateRequests { get; set; } = new List<EstimateRequestResponseDto>();
         public List<EstimateAttachmentResponseDto> Attachments { get; set; } = new List<EstimateAttachmentResponseDto>();

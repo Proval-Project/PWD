@@ -559,6 +559,7 @@ namespace EstimateRequestSystem.Services
                 CustomerRequirement = estimateSheet.CustomerRequirement,
                 StaffComment = estimateSheet.StaffComment,
                 CustomerName = estimateSheet.Customer?.Name,
+                ManagerName = estimateSheet.Manager?.Name,
                 WriterName = estimateSheet.Writer?.Name,
                 EstimateRequests = estimateSheet.EstimateRequests.Select(er => new EstimateRequestResponseDto
                 {
@@ -602,6 +603,7 @@ namespace EstimateRequestSystem.Services
                     MolecularWeightUnit = er.MolecularWeightUnit,
                     MolecularWeight = er.MolecularWeight,
                     BodySize = er.BodySize,
+                    BodySizeUnit = er.BodySizeUnit,
                     BodyMat = er.BodyMat,
                     TrimMat = er.TrimMat,
                     TrimOption = er.TrimOption,
