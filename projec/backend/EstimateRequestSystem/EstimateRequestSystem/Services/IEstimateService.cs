@@ -173,10 +173,12 @@ namespace EstimateRequestSystem.Services
         Task<bool> AddAccMakerAsync(string accTypeCode, string makerCode, string maker);
         Task<bool> UpdateAccMakerAsync(string accTypeCode, string makerCode, string maker);
         Task<bool> DeleteAccMakerAsync(string accTypeCode, string makerCode);
+        Task<bool> UpdateAccMakerStatusAsync(string accTypeCode, string makerCode, bool status);
         
         Task<bool> AddAccModelAsync(string modelCode, string model, string accTypeCode, string accMakerCode, string? accSize);
         Task<bool> UpdateAccModelAsync(string modelCode, string model, string accTypeCode, string accMakerCode, string? accSize);
         Task<bool> DeleteAccModelAsync(string modelCode, string accTypeCode, string accMakerCode);
+        Task<bool> UpdateAccModelStatusAsync(string modelCode, string accTypeCode, string accMakerCode, bool status);
 
         // Act Series-Size 조회를 위한 새로운 메서드
         Task<List<object>> GetActSeriesSizeListAsync();

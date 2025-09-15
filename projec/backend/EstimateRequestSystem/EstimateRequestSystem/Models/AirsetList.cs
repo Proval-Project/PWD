@@ -23,6 +23,9 @@ namespace EstimateRequestSystem.Models
         [Column(TypeName = "varchar(255)")]
         public string? AccSize { get; set; }
 
+        [Column(TypeName = "tinyint(1)")]
+        public bool Status { get; set; }
+
         [ForeignKey("AccMakerCode")]
         public virtual AirsetMakerList AirsetMaker { get; set; }
     }

@@ -13,5 +13,7 @@ namespace EstimateRequestSystem.Models
         [Required]
         [Column(TypeName = "varchar(100)")]
         public string AccMakerName { get; set; }
+        [Column(TypeName = "tinyint(1)")]
+        public bool Status { get; set; }
     }
 }

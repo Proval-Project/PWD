@@ -1193,6 +1193,44 @@ namespace EstimateRequestSystem.Controllers
             }
         }
 
+        // 악세사리 메이커/모델 상태 토글
+        [HttpPut("acc/maker/{makerCode}/status")]
+        public async Task<IActionResult> UpdateAccMakerStatus(string makerCode, [FromBody] JsonElement body)
+        {
+            try
+            {
+                var accTypeCode = body.GetProperty("accTypeCode").GetString();
+                var status = body.GetProperty("status").GetBoolean();
+                if (string.IsNullOrEmpty(accTypeCode)) return BadRequest(new { message = "accTypeCode is required" });
+
+                var ok = await _estimateService.UpdateAccMakerStatusAsync(accTypeCode!, makerCode, status);
+                return ok ? Ok(new { message = "Maker status updated" }) : BadRequest(new { message = "Failed to update maker status" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPut("acc/model/{modelCode}/status")]
+        public async Task<IActionResult> UpdateAccModelStatus(string modelCode, [FromBody] JsonElement body)
+        {
+            try
+            {
+                var accTypeCode = body.GetProperty("accTypeCode").GetString();
+                var accMakerCode = body.GetProperty("accMakerCode").GetString();
+                var status = body.GetProperty("status").GetBoolean();
+                if (string.IsNullOrEmpty(accTypeCode) || string.IsNullOrEmpty(accMakerCode)) return BadRequest(new { message = "accTypeCode and accMakerCode are required" });
+
+                var ok = await _estimateService.UpdateAccModelStatusAsync(modelCode, accTypeCode!, accMakerCode!, status);
+                return ok ? Ok(new { message = "Model status updated" }) : BadRequest(new { message = "Failed to update model status" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
         // 악세사리 검색 API (새로 추가)
         [HttpGet("acc/search")]
         public async Task<IActionResult> SearchAccessories([FromQuery] string? accTypeCode = null, [FromQuery] string? searchKeyword = null)

@@ -2537,42 +2537,42 @@ namespace EstimateRequestSystem.Services
             {
                 case "Positioner":
                     resultList.AddRange(await _context.PositionerMakerList
-                        .Select(m => new { AccMakerCode = m.AccMakerCode, AccMakerName = m.AccMakerName })
+                        .Select(m => new { AccMakerCode = m.AccMakerCode, AccMakerName = m.AccMakerName, Status = m.Status })
                         .ToListAsync());
                     break;
                 case "Solenoid":
                     resultList.AddRange(await _context.SolenoidMakerList
-                        .Select(m => new { AccMakerCode = m.AccMakerCode, AccMakerName = m.AccMakerName })
+                        .Select(m => new { AccMakerCode = m.AccMakerCode, AccMakerName = m.AccMakerName, Status = m.Status })
                         .ToListAsync());
                     break;
                 case "Limit":
                     resultList.AddRange(await _context.LimitMakerList
-                        .Select(m => new { AccMakerCode = m.AccMakerCode, AccMakerName = m.AccMakerName })
+                        .Select(m => new { AccMakerCode = m.AccMakerCode, AccMakerName = m.AccMakerName, Status = m.Status })
                         .ToListAsync());
                     break;
                 case "Airset":
                     resultList.AddRange(await _context.AirsetMakerList
-                        .Select(m => new { AccMakerCode = m.AccMakerCode, AccMakerName = m.AccMakerName })
+                        .Select(m => new { AccMakerCode = m.AccMakerCode, AccMakerName = m.AccMakerName, Status = m.Status })
                         .ToListAsync());
                     break;
                 case "Volume":
                     resultList.AddRange(await _context.VolumeMakerList
-                        .Select(m => new { AccMakerCode = m.AccMakerCode, AccMakerName = m.AccMakerName })
+                        .Select(m => new { AccMakerCode = m.AccMakerCode, AccMakerName = m.AccMakerName, Status = m.Status })
                         .ToListAsync());
                     break;
                 case "Airoperate":
                     resultList.AddRange(await _context.AiroperateMakerList
-                        .Select(m => new { AccMakerCode = m.AccMakerCode, AccMakerName = m.AccMakerName })
+                        .Select(m => new { AccMakerCode = m.AccMakerCode, AccMakerName = m.AccMakerName, Status = m.Status })
                         .ToListAsync());
                     break;
                 case "Lockup":
                     resultList.AddRange(await _context.LockupMakerList
-                        .Select(m => new { AccMakerCode = m.AccMakerCode, AccMakerName = m.AccMakerName })
+                        .Select(m => new { AccMakerCode = m.AccMakerCode, AccMakerName = m.AccMakerName, Status = m.Status })
                         .ToListAsync());
                     break;
                 case "Snapacting":
                     resultList.AddRange(await _context.SnapactingMakerList
-                        .Select(m => new { AccMakerCode = m.AccMakerCode, AccMakerName = m.AccMakerName })
+                        .Select(m => new { AccMakerCode = m.AccMakerCode, AccMakerName = m.AccMakerName, Status = m.Status })
                         .ToListAsync());
                     break;
                 default:
@@ -2598,7 +2598,7 @@ namespace EstimateRequestSystem.Services
                         .Join(_context.PositionerMakerList, 
                               model => model.AccMakerCode, 
                               maker => maker.AccMakerCode, 
-                              (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize })
+                              (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, model.Status })
                         .ToListAsync());
                     break;
                 case "Solenoid":
@@ -2611,7 +2611,7 @@ namespace EstimateRequestSystem.Services
                         .Join(_context.SolenoidMakerList,
                               model => model.AccMakerCode,
                               maker => maker.AccMakerCode,
-                              (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize })
+                              (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, model.Status })
                         .ToListAsync());
                     break;
                 case "Limit":
@@ -2624,7 +2624,7 @@ namespace EstimateRequestSystem.Services
                         .Join(_context.LimitMakerList,
                               model => model.AccMakerCode,
                               maker => maker.AccMakerCode,
-                              (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize })
+                              (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, model.Status })
                         .ToListAsync());
                     break;
                 case "Airset":
@@ -2637,7 +2637,7 @@ namespace EstimateRequestSystem.Services
                         .Join(_context.AirsetMakerList,
                               model => model.AccMakerCode,
                               maker => maker.AccMakerCode,
-                              (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize })
+                              (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, model.Status })
                         .ToListAsync());
                     break;
                 case "Volume":
@@ -2650,7 +2650,7 @@ namespace EstimateRequestSystem.Services
                         .Join(_context.VolumeMakerList,
                               model => model.AccMakerCode,
                               maker => maker.AccMakerCode,
-                              (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize })
+                              (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, model.Status })
                         .ToListAsync());
                     break;
                 case "Airoperate":
@@ -2663,7 +2663,7 @@ namespace EstimateRequestSystem.Services
                         .Join(_context.AiroperateMakerList,
                               model => model.AccMakerCode,
                               maker => maker.AccMakerCode,
-                              (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize })
+                              (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, model.Status })
                         .ToListAsync());
                     break;
                 case "Lockup":
@@ -2676,7 +2676,7 @@ namespace EstimateRequestSystem.Services
                         .Join(_context.LockupMakerList,
                               model => model.AccMakerCode,
                               maker => maker.AccMakerCode,
-                              (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize })
+                              (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, model.Status })
                         .ToListAsync());
                     break;
                 case "Snapacting":
@@ -2689,7 +2689,7 @@ namespace EstimateRequestSystem.Services
                         .Join(_context.SnapactingMakerList,
                               model => model.AccMakerCode,
                               maker => maker.AccMakerCode,
-                              (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize })
+                              (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, model.Status })
                         .ToListAsync());
                     break;
                 default:
@@ -4372,6 +4372,173 @@ namespace EstimateRequestSystem.Services
             }
         }
 
+        // ===== 상태 토글 =====
+        public async Task<bool> UpdateAccMakerStatusAsync(string accTypeCode, string makerCode, bool status)
+        {
+            try
+            {
+                switch (accTypeCode)
+                {
+                    case "Positioner":
+                        {
+                            var maker = await _context.PositionerMakerList.FirstOrDefaultAsync(m => m.AccMakerCode == makerCode);
+                            if (maker == null) return false;
+                            var prop = maker.GetType().GetProperty("Status");
+                            if (prop != null) prop.SetValue(maker, status);
+                        }
+                        break;
+                    case "Solenoid":
+                        {
+                            var maker = await _context.SolenoidMakerList.FirstOrDefaultAsync(m => m.AccMakerCode == makerCode);
+                            if (maker == null) return false;
+                            var prop = maker.GetType().GetProperty("Status");
+                            if (prop != null) prop.SetValue(maker, status);
+                        }
+                        break;
+                    case "Limit":
+                        {
+                            var maker = await _context.LimitMakerList.FirstOrDefaultAsync(m => m.AccMakerCode == makerCode);
+                            if (maker == null) return false;
+                            var prop = maker.GetType().GetProperty("Status");
+                            if (prop != null) prop.SetValue(maker, status);
+                        }
+                        break;
+                    case "Airset":
+                        {
+                            var maker = await _context.AirsetMakerList.FirstOrDefaultAsync(m => m.AccMakerCode == makerCode);
+                            if (maker == null) return false;
+                            var prop = maker.GetType().GetProperty("Status");
+                            if (prop != null) prop.SetValue(maker, status);
+                        }
+                        break;
+                    case "Volume":
+                        {
+                            var maker = await _context.VolumeMakerList.FirstOrDefaultAsync(m => m.AccMakerCode == makerCode);
+                            if (maker == null) return false;
+                            var prop = maker.GetType().GetProperty("Status");
+                            if (prop != null) prop.SetValue(maker, status);
+                        }
+                        break;
+                    case "Airoperate":
+                        {
+                            var maker = await _context.AiroperateMakerList.FirstOrDefaultAsync(m => m.AccMakerCode == makerCode);
+                            if (maker == null) return false;
+                            var prop = maker.GetType().GetProperty("Status");
+                            if (prop != null) prop.SetValue(maker, status);
+                        }
+                        break;
+                    case "Lockup":
+                        {
+                            var maker = await _context.LockupMakerList.FirstOrDefaultAsync(m => m.AccMakerCode == makerCode);
+                            if (maker == null) return false;
+                            var prop = maker.GetType().GetProperty("Status");
+                            if (prop != null) prop.SetValue(maker, status);
+                        }
+                        break;
+                    case "Snapacting":
+                        {
+                            var maker = await _context.SnapactingMakerList.FirstOrDefaultAsync(m => m.AccMakerCode == makerCode);
+                            if (maker == null) return false;
+                            var prop = maker.GetType().GetProperty("Status");
+                            if (prop != null) prop.SetValue(maker, status);
+                        }
+                        break;
+                    default:
+                        return false;
+                }
+
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateAccModelStatusAsync(string modelCode, string accTypeCode, string accMakerCode, bool status)
+        {
+            try
+            {
+                switch (accTypeCode)
+                {
+                    case "Positioner":
+                        {
+                            var m = await _context.PositionerList.FirstOrDefaultAsync(a => a.AccMakerCode == accMakerCode && a.AccModelCode == modelCode);
+                            if (m == null) return false;
+                            var prop = m.GetType().GetProperty("Status");
+                            if (prop != null) prop.SetValue(m, status);
+                        }
+                        break;
+                    case "Solenoid":
+                        {
+                            var m = await _context.SolenoidList.FirstOrDefaultAsync(a => a.AccMakerCode == accMakerCode && a.AccModelCode == modelCode);
+                            if (m == null) return false;
+                            var prop = m.GetType().GetProperty("Status");
+                            if (prop != null) prop.SetValue(m, status);
+                        }
+                        break;
+                    case "Limit":
+                        {
+                            var m = await _context.LimitList.FirstOrDefaultAsync(a => a.AccMakerCode == accMakerCode && a.AccModelCode == modelCode);
+                            if (m == null) return false;
+                            var prop = m.GetType().GetProperty("Status");
+                            if (prop != null) prop.SetValue(m, status);
+                        }
+                        break;
+                    case "Airset":
+                        {
+                            var m = await _context.AirsetList.FirstOrDefaultAsync(a => a.AccMakerCode == accMakerCode && a.AccModelCode == modelCode);
+                            if (m == null) return false;
+                            var prop = m.GetType().GetProperty("Status");
+                            if (prop != null) prop.SetValue(m, status);
+                        }
+                        break;
+                    case "Volume":
+                        {
+                            var m = await _context.VolumeList.FirstOrDefaultAsync(a => a.AccMakerCode == accMakerCode && a.AccModelCode == modelCode);
+                            if (m == null) return false;
+                            var prop = m.GetType().GetProperty("Status");
+                            if (prop != null) prop.SetValue(m, status);
+                        }
+                        break;
+                    case "Airoperate":
+                        {
+                            var m = await _context.AiroperateList.FirstOrDefaultAsync(a => a.AccMakerCode == accMakerCode && a.AccModelCode == modelCode);
+                            if (m == null) return false;
+                            var prop = m.GetType().GetProperty("Status");
+                            if (prop != null) prop.SetValue(m, status);
+                        }
+                        break;
+                    case "Lockup":
+                        {
+                            var m = await _context.LockupList.FirstOrDefaultAsync(a => a.AccMakerCode == accMakerCode && a.AccModelCode == modelCode);
+                            if (m == null) return false;
+                            var prop = m.GetType().GetProperty("Status");
+                            if (prop != null) prop.SetValue(m, status);
+                        }
+                        break;
+                    case "Snapacting":
+                        {
+                            var m = await _context.SnapactingList.FirstOrDefaultAsync(a => a.AccMakerCode == accMakerCode && a.AccModelCode == modelCode);
+                            if (m == null) return false;
+                            var prop = m.GetType().GetProperty("Status");
+                            if (prop != null) prop.SetValue(m, status);
+                        }
+                        break;
+                    default:
+                        return false;
+                }
+
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         // SaveSpecificationAsync 메서드 바로 위에 추가
         private string? ConvertEmptyToNull(string? value)
         {
@@ -4916,7 +5083,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.PositionerMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Positioner" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Positioner", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .ToListAsync();
                         allResults.AddRange(allPositioner);
 
@@ -4925,7 +5093,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.SolenoidMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Solenoid" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Solenoid", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .ToListAsync();
                         allResults.AddRange(allSolenoid);
 
@@ -4934,7 +5103,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.LimitMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Limit" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Limit", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .ToListAsync();
                         allResults.AddRange(allLimit);
 
@@ -4943,7 +5113,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.AirsetMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Airset" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Airset", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .ToListAsync();
                         allResults.AddRange(allAirset);
 
@@ -4952,7 +5123,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.VolumeMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Volume" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Volume", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .ToListAsync();
                         allResults.AddRange(allVolume);
 
@@ -4961,7 +5133,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.AiroperateMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Airoperate" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Airoperate", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .ToListAsync();
                         allResults.AddRange(allAiroperate);
 
@@ -4970,7 +5143,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.LockupMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Lockup" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Lockup", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .ToListAsync();
                         allResults.AddRange(allLockup);
 
@@ -4979,7 +5153,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.SnapactingMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Snapacting" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Snapacting", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .ToListAsync();
                         allResults.AddRange(allSnapacting);
 
@@ -5001,7 +5176,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.PositionerMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Positioner" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Positioner", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .Where(item => 
                                 item.AccMakerName.ToLower().Contains(lowerSearchKeyword) ||
                                 item.AccModelName.ToLower().Contains(lowerSearchKeyword) ||
@@ -5015,7 +5191,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.SolenoidMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Solenoid" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Solenoid", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .Where(item => 
                                 item.AccMakerName.ToLower().Contains(lowerSearchKeyword) ||
                                 item.AccModelName.ToLower().Contains(lowerSearchKeyword) ||
@@ -5029,7 +5206,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.LimitMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Limit" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Limit", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .Where(item => 
                                 item.AccMakerName.ToLower().Contains(lowerSearchKeyword) ||
                                 item.AccModelName.ToLower().Contains(lowerSearchKeyword) ||
@@ -5043,7 +5221,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.AirsetMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Airset" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Airset", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .Where(item => 
                                 item.AccMakerName.ToLower().Contains(lowerSearchKeyword) ||
                                 item.AccModelName.ToLower().Contains(lowerSearchKeyword) ||
@@ -5057,7 +5236,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.VolumeMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Volume" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Volume", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .Where(item => 
                                 item.AccMakerName.ToLower().Contains(lowerSearchKeyword) ||
                                 item.AccModelName.ToLower().Contains(lowerSearchKeyword) ||
@@ -5071,7 +5251,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.AiroperateMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Airoperate" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Airoperate", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .Where(item => 
                                 item.AccMakerName.ToLower().Contains(lowerSearchKeyword) ||
                                 item.AccModelName.ToLower().Contains(lowerSearchKeyword) ||
@@ -5085,7 +5266,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.LockupMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Lockup" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Lockup", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .ToListAsync();
                         resultList.AddRange(lockupResults.Where(item => 
                             item.AccMakerName.ToLower().Contains(lowerSearchKeyword) ||
@@ -5098,7 +5280,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.SnapactingMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Snapacting" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Snapacting", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .ToListAsync();
                         resultList.AddRange(snapactingResults.Where(item => 
                             item.AccMakerName.ToLower().Contains(lowerSearchKeyword) ||
@@ -5115,7 +5298,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.PositionerMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Positioner" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Positioner", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .ToListAsync();
                         allResults.AddRange(allPositioner);
 
@@ -5124,7 +5308,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.SolenoidMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Solenoid" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Solenoid", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .ToListAsync();
                         allResults.AddRange(allSolenoid);
 
@@ -5133,7 +5318,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.LimitMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Limit" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Limit", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .ToListAsync();
                         allResults.AddRange(allLimit);
 
@@ -5142,7 +5328,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.AirsetMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Airset" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Airset", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .ToListAsync();
                         allResults.AddRange(allAirset);
 
@@ -5151,7 +5338,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.VolumeMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Volume" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Volume", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .ToListAsync();
                         allResults.AddRange(allVolume);
 
@@ -5160,7 +5348,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.AiroperateMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Airoperate" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Airoperate", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .ToListAsync();
                         allResults.AddRange(allAiroperate);
 
@@ -5169,7 +5358,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.LockupMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Lockup" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Lockup", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .ToListAsync();
                         allResults.AddRange(allLockup);
 
@@ -5178,7 +5368,8 @@ namespace EstimateRequestSystem.Services
                             .Join(_context.SnapactingMakerList,
                                   model => model.AccMakerCode,
                                   maker => maker.AccMakerCode,
-                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Snapacting" })
+                                  (model, maker) => new { model.AccMakerCode, model.AccModelCode, model.AccModelName, maker.AccMakerName, model.AccSize, AccTypeCode = "Snapacting", ModelStatus = model.Status, MakerStatus = maker.Status })
+                            .Where(x => x.ModelStatus && x.MakerStatus)
                             .ToListAsync();
                         allResults.AddRange(allSnapacting);
 
