@@ -5,6 +5,7 @@ import { buildApiUrl } from '../../config/api';
 import { getEstimateDetail } from '../../api/estimateRequest';
 import './DashboardPages.css';
 import './EstimateInquiry.css';
+import CustomerSearchModal from '../../components/CustomerSearchModal';
 
 const ExistingEstimateReInquiryPage: React.FC = () => {
   const navigate = useNavigate();
@@ -19,6 +20,8 @@ const ExistingEstimateReInquiryPage: React.FC = () => {
   const [endDate, setEndDate] = useState('');
   const [isDescending, setIsDescending] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [showCustomerSearch, setShowCustomerSearch] = useState(false);
   
   // 페이징 상태
   const [currentPage, setCurrentPage] = useState(1);
@@ -49,25 +52,61 @@ const ExistingEstimateReInquiryPage: React.FC = () => {
         searchKeyword: searchKeyword || undefined,
         startDate: startDate || undefined,
         endDate: endDate || undefined,
-        status: statusFilter ? Number(statusFilter) : undefined,
+        // 재문의 페이지는 '견적완료(4), 주문(5)'만 대상. 서버 조회는 상태별로 따로 불러와 합치기 때문에 여기 기본 status는 넣지 않음
         page,
         pageSize,
         isDescending,
         ...overrideParams, // 매개변수로 전달된 값이 우선
       };
 
-      // 고객(roleID가 3)인 경우 자신의 UserID만 조회
-      if (user && user.roleId === 3) {
-        params.customerID = user.userId;
-        console.log('고객 권한으로 조회 - CustomerID(UserID):', user.userId);
+      // 고객(roleID=3): 자신의 건만. 관리자/직원: 고객 선택 강제
+      if (user) {
+        if (user.roleId === 3) {
+          params.customerID = user.userId;
+          console.log('고객 권한으로 조회 - CustomerID(UserID):', user.userId);
+        } else {
+          // 관리자/직원은 고객 선택이 있어야 함
+          if (selectedCustomer?.userID) {
+            params.customerID = selectedCustomer.userID;
+          } else {
+            // 고객 미선택 시 빈 결과 강제
+            setItems([]);
+            setTotalCount(0);
+            setTotalPages(1);
+            setCurrentPage(1);
+            return;
+          }
+        }
       }
 
-      console.log('API 요청 파라미터:', params); // 디버깅용
-      const response = await getEstimateInquiry(params);
-      setItems(response.items);
-      setCurrentPage(response.currentPage);
-      setTotalPages(response.totalPages);
-      setTotalCount(response.totalCount);
+      console.log('API 요청 파라미터(기본):', params); // 디버깅용
+      // 상태 4, 5를 각각 조회하여 병합
+      const MAX_PAGE = 1000;
+      const [resp4, resp5] = await Promise.all([
+        getEstimateInquiry({ ...params, status: 4, page: 1, pageSize: MAX_PAGE }),
+        getEstimateInquiry({ ...params, status: 5, page: 1, pageSize: MAX_PAGE })
+      ]);
+
+      const combined = [...(resp4.items || []), ...(resp5.items || [])];
+      // 정렬: 요청일자 우선, 없으면 TempEstimateNo 날짜로 대체
+      const toDateKey = (it: any) => {
+        if (it.requestDate) return new Date(it.requestDate).getTime();
+        const m = /TEMP(\d{4})(\d{2})(\d{2})/.exec(it.tempEstimateNo || '');
+        if (m) return new Date(`${m[1]}-${m[2]}-${m[3]}T00:00:00`).getTime();
+        return 0;
+      };
+      combined.sort((a, b) => {
+        const da = toDateKey(a);
+        const db = toDateKey(b);
+        return isDescending ? db - da : da - db;
+      });
+
+      const startIdx = (page - 1) * pageSize;
+      const paged = combined.slice(startIdx, startIdx + pageSize);
+      setItems(paged);
+      setCurrentPage(page);
+      setTotalCount(combined.length);
+      setTotalPages(Math.max(1, Math.ceil(combined.length / pageSize)));
     } catch (error) {
       console.error('데이터 조회 실패:', error);
       alert('데이터 조회에 실패했습니다.');
@@ -82,6 +121,17 @@ const ExistingEstimateReInquiryPage: React.FC = () => {
     const userStr = localStorage.getItem('user');
     if (userStr) {
       setCurrentUser(JSON.parse(userStr));
+    }
+
+    // EstimateRequestPage에서 전달된 선택 고객 복원
+    const preselected = localStorage.getItem('selectedCustomerForReInquiry');
+    if (preselected) {
+      try {
+        const cust = JSON.parse(preselected);
+        setSelectedCustomer(cust);
+        // 일회성 사용 후 제거
+        localStorage.removeItem('selectedCustomerForReInquiry');
+      } catch {}
     }
 
     // 기본 날짜 범위 설정 (최근 1개월)
@@ -245,7 +295,19 @@ const ExistingEstimateReInquiryPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="search-field">
+          <div className="search-field" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            {/* 관리자/직원: 고객 선택 강제 */}
+            {currentUser?.roleId !== 3 && (
+              <>
+                <button className="btn-search" onClick={() => setShowCustomerSearch(true)}>고객 검색</button>
+                {selectedCustomer && (
+                  <span className="selected-customer">{selectedCustomer.companyName} / {selectedCustomer.name}</span>
+                )}
+                {selectedCustomer && (
+                  <button className="btn-clear" onClick={() => setSelectedCustomer(null)}>선택 해제</button>
+                )}
+              </>
+            )}
             <input
               type="text"
               placeholder="검색 (견적번호, 회사명, 프로젝트명)"
@@ -274,6 +336,20 @@ const ExistingEstimateReInquiryPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* 고객 검색 모달 */}
+      {showCustomerSearch && (
+        <CustomerSearchModal
+          isOpen={showCustomerSearch}
+          onClose={() => setShowCustomerSearch(false)}
+          onSelectUser={(user: any) => {
+            setSelectedCustomer(user);
+            setShowCustomerSearch(false);
+            setCurrentPage(1);
+            setTimeout(() => fetchData(1), 100);
+          }}
+        />
+      )}
 
       {/* 결과 정보 및 정렬 */}
       <div className="results-header">

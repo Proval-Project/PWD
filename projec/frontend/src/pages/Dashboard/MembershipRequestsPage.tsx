@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './DashboardPages.css';
 import './MembershipRequests.css';
-import { getPendingApprovals, approveUser, UserListResponseDto } from '../../api/userManagement';
+import { getPendingApprovals, approveUser, rejectUser, UserListResponseDto } from '../../api/userManagement';
 
 interface MembershipRequest {
   userID: string;
@@ -79,9 +79,9 @@ const MembershipRequestsPage: React.FC = () => {
         await approveUser(selectedRequest.userID);
         setSuccessMessage('해당 고객의 회원가입 요청이 성공적으로 승인되었습니다.');
       } else {
-        // 거절 로직은 삭제로 구현
-        // await deleteUser(selectedRequest.userID);
-        setSuccessMessage('해당 고객의 회원가입 요청이 성공적으로 거절되었습니다.');
+        // 거절: 대기 목록에서 제거(삭제)
+        await rejectUser(selectedRequest.userID);
+        setSuccessMessage('해당 고객의 회원가입 요청이 거절되어 목록에서 삭제되었습니다.');
       }
 
       setShowConfirmModal(false);

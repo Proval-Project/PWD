@@ -50,6 +50,19 @@ const EstimateRequestPage: React.FC = () => {
   };
 
   const handleReInquiry = () => {
+    if (isCustomer) {
+      // 고객은 바로 자신의 리스트로
+      navigate('/existing-estimate-reinquiry');
+      return;
+    }
+    // 관리자/직원은 고객 선택 필수
+    if (!selectedCustomer) {
+      alert('재문의할 고객을 먼저 선택해주세요.');
+      setShowCustomerSearch(true);
+      return;
+    }
+    // 선택 고객을 전달
+    localStorage.setItem('selectedCustomerForReInquiry', JSON.stringify(selectedCustomer));
     navigate('/existing-estimate-reinquiry');
   };
 

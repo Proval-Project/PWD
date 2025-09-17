@@ -148,6 +148,10 @@ export const approveUser = async (userID: string): Promise<void> => {
   await axios.patch(`${USER_MANAGEMENT_API_BASE_URL}/user/${userID}/approve`);
 };
 
+export const rejectUser = async (userID: string): Promise<void> => {
+  await axios.delete(`${USER_MANAGEMENT_API_BASE_URL}/user/${userID}`);
+};
+
 // 사용자 검색 (회사명, 이름, 이메일로 검색)
 export const searchUsers = async (searchTerm: string): Promise<UserListResponseDto[]> => {
   const response = await axios.get(`${USER_MANAGEMENT_API_BASE_URL}/user/search?term=${encodeURIComponent(searchTerm)}`);
