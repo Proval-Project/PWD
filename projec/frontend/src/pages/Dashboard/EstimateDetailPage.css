@@ -1946,6 +1946,29 @@
 .summary-row .k { color:#6c757d; }
 .summary-row .v { font-weight:600; }
 
+/* 견적시작 버튼 강제 표시 */
+.quote-actions {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 999 !important;
+}
+
+.quote-actions .btn {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  background: #28a745 !important;
+  color: white !important;
+  padding: 10px 20px !important;
+  border: none !important;
+  border-radius: 5px !important;
+  cursor: pointer !important;
+  font-size: 14px !important;
+  font-weight: bold !important;
+}
+
 /* 미니 패널이 본문을 가리지 않도록 우측 여백 확보 */
 .main-content-detail { padding-right: 360px; }
 

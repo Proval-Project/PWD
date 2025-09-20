@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getDraftEstimates, assignEstimate } from '../../api/estimateRequest';
+import { getDraftEstimates, assignEstimate, getEstimateManagement } from '../../api/estimateRequest';
 import { IoIosArrowBack, IoIosSearch, IoIosCalendar } from "react-icons/io";
 import { AiOutlineDoubleLeft, AiOutlineLeft, AiOutlineRight, AiOutlineDoubleRight } from "react-icons/ai";
 import './DashboardPages.css';
@@ -23,7 +23,6 @@ interface DraftItem {
 
 const statusOptions = [
   { value: '', label: '전체' },
-  { value: '1', label: '임시저장' },
   { value: '2', label: '견적요청' },
   { value: '3', label: '견적처리중' },
   { value: '4', label: '견적완료' },
@@ -54,9 +53,9 @@ const EstimateManagementPage: React.FC = () => {
     try {
       const params = {
         searchKeyword: searchKeyword || undefined,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
+        // startDate, endDate 제거 - 전체 데이터 조회
         status: statusFilter ? parseInt(statusFilter) : undefined,
+        // excludeStatus 제거 - 서버에서 지원하지 않을 수 있음
         page,
         pageSize,
         isDescending: true,
@@ -64,12 +63,29 @@ const EstimateManagementPage: React.FC = () => {
       };
 
       const user = currentUser || JSON.parse(localStorage.getItem('user') || '{}');
-      const response = await getDraftEstimates(params, user.userId);
+      // 관리자용 API 사용 - 전체 견적 조회
+      console.log('🔍 API 호출 파라미터:', params);
+      console.log('🔍 사용자 ID:', user.userId);
+      
+      let response;
+      try {
+        // 먼저 관리자용 API 시도
+        response = await getEstimateManagement(params, user.userId);
+        console.log('✅ 관리자용 API 성공');
+      } catch (error) {
+        console.log('❌ 관리자용 API 실패, 기본 API 시도');
+        // 관리자용 API가 실패하면 기본 API 사용
+        response = await getDraftEstimates(params, user.userId);
+      }
 
-      setItems(response.Items || response.items || []);
+      // 임시저장(상태 1) 제외하고 필터링
+      const allItems = response.Items || response.items || [];
+      const filteredItems = allItems.filter((item: DraftItem) => item.status !== 1);
+      
+      setItems(filteredItems);
       setCurrentPage(response.CurrentPage || response.currentPage || 1);
       setTotalPages(response.TotalPages || response.totalPages || 1);
-      setTotalCount(response.TotalCount || response.totalCount || 0);
+      setTotalCount(filteredItems.length); // 필터링된 결과의 실제 개수
     } catch (err) {
       console.error('견적 목록 조회 실패:', err);
     } finally {
@@ -81,17 +97,16 @@ const EstimateManagementPage: React.FC = () => {
     const userStr = localStorage.getItem('user');
     if (userStr) setCurrentUser(JSON.parse(userStr));
 
-    const today = new Date();
-    const oneMonthAgo = new Date();
-    oneMonthAgo.setMonth(today.getMonth() - 1);
-    setStartDate(oneMonthAgo.toISOString().split('T')[0]);
-    setEndDate(today.toISOString().split('T')[0]);
+    // 날짜 필터 제거 - 전체 데이터 조회
+    setStartDate('');
+    setEndDate('');
   }, []);
 
   useEffect(() => {
-    if (startDate && endDate) fetchData(1);
+    // 날짜 필터 없이 바로 데이터 조회
+    fetchData(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startDate, endDate, statusFilter]);
+  }, [statusFilter]);
 
   const handlePageChange = (page: number) => {
     fetchData(page);
@@ -125,7 +140,7 @@ const EstimateManagementPage: React.FC = () => {
         <button className="text-xl text-black p-1" onClick={() => navigate(-1)}>
           <IoIosArrowBack />
         </button>
-        <h1 className="text-2xl font-bold text-black">견적 요청 관리</h1>
+        <h1 className="text-2xl font-bold text-black">전체 견적 관리</h1>
       </div>
 
       {/* 검색/필터 */}

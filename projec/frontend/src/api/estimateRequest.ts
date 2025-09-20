@@ -395,9 +395,21 @@ export interface TagNoDetailDto {
 }
 
 // 임시저장 목록 조회 API
-export const getDraftEstimates = async (params: any, currentUserId: string, customerId?: string): Promise<any> => {
+export const getDraftEstimates = async (params: any, currentUserId: string | null, customerId?: string): Promise<any> => {
+  const apiParams = { ...params };
+  
+  // currentUserId가 null이 아닐 때만 추가
+  if (currentUserId !== null) {
+    apiParams.currentUserId = currentUserId;
+  }
+  
+  // customerId가 있을 때만 추가
+  if (customerId) {
+    apiParams.customerId = customerId;
+  }
+  
   const response = await axios.get(`${ESTIMATE_API_BASE_URL}/estimate/drafts`, { 
-    params: { ...params, currentUserId, customerId } 
+    params: apiParams
   });
   return response.data;
 };

@@ -1328,6 +1328,7 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
       
       // 현재 상태 설정 + 견적시작 토글
       if (data.estimateSheet && data.estimateSheet.statusText) {
+        console.log('🔍 현재 상태 설정:', data.estimateSheet.statusText);
         setCurrentStatus(data.estimateSheet.statusText);
       }
       // status === 3(견적처리중) 이면 버튼을 보라색 상태로 토글
@@ -3436,7 +3437,10 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
         <div className="quote-actions">
           {(() => {
             // 명확한 상태 기반 분기 처리
-            if (currentStatus === '견적요청') {
+            console.log('🔍 현재 currentStatus:', currentStatus);
+            // 임시로 항상 견적시작 버튼 표시 (디버깅용)
+            if (currentStatus === '견적요청' || currentStatus === '' || !currentStatus) {
+              console.log('✅ 견적시작 버튼 렌더링');
               return (
                 <button className="btn btn-success" onClick={handleStartQuote}>견적시작</button>
               );
