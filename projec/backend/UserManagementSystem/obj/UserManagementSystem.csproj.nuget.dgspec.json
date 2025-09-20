@@ -1,27 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Administrator\\Desktop\\git_test\\PWD\\projec\\backend\\UserManagementSystem\\UserManagementSystem.csproj": {}
+    "/Users/simjimin/Downloads/PWD/projec/backend/UserManagementSystem/UserManagementSystem.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Administrator\\Desktop\\git_test\\PWD\\projec\\backend\\UserManagementSystem\\UserManagementSystem.csproj": {
+    "/Users/simjimin/Downloads/PWD/projec/backend/UserManagementSystem/UserManagementSystem.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Administrator\\Desktop\\git_test\\PWD\\projec\\backend\\UserManagementSystem\\UserManagementSystem.csproj",
+        "projectUniqueName": "/Users/simjimin/Downloads/PWD/projec/backend/UserManagementSystem/UserManagementSystem.csproj",
         "projectName": "UserManagementSystem",
-        "projectPath": "C:\\Users\\Administrator\\Desktop\\git_test\\PWD\\projec\\backend\\UserManagementSystem\\UserManagementSystem.csproj",
-        "packagesPath": "C:\\Users\\Administrator\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Administrator\\Desktop\\git_test\\PWD\\projec\\backend\\UserManagementSystem\\obj\\",
+        "projectPath": "/Users/simjimin/Downloads/PWD/projec/backend/UserManagementSystem/UserManagementSystem.csproj",
+        "packagesPath": "/Users/simjimin/.nuget/packages/",
+        "outputPath": "/Users/simjimin/Downloads/PWD/projec/backend/UserManagementSystem/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Administrator\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/Users/simjimin/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -89,7 +87,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.413/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/8.0.412/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

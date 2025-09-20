@@ -16,7 +16,7 @@ namespace ConvalServiceApi.Controllers
             try
             {
                 string connectionString = ConfigurationManager.ConnectionStrings["DefaultConnection"]?.ConnectionString 
-                    ?? "Server=192.168.0.59;Database=pwd_final;Uid=root;";
+                    ?? "Server=localhost;Database=pwd_final;Uid=root;";
                 
                 using (var connection = new MySqlConnection(connectionString))
                 {
@@ -56,7 +56,7 @@ namespace ConvalServiceApi.Controllers
             try
             {
                 string connectionString = ConfigurationManager.ConnectionStrings["DefaultConnection"]?.ConnectionString 
-                    ?? "Server=192.168.0.59;Database=pwd_final;Uid=root;";
+                    ?? "Server=localhost;Database=pwd_final;Uid=root;";
                 
                 using (var connection = new MySqlConnection(connectionString))
                 {

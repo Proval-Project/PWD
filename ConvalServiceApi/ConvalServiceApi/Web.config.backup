@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ASP.NET ¾ÖÇÃ¸®ÄÉÀÌ¼ÇÀ» ±¸¼ºÇÏ´Â ¹æ¹ý¿¡ ´ëÇÑ ÀÚ¼¼ÇÑ ³»¿ëÀº ´ÙÀ½À» ÂüÁ¶ÇÏ¼¼¿ä.
+  ASP.NET ï¿½ï¿½ï¿½Ã¸ï¿½ï¿½ï¿½ï¿½Ì¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ú¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½.
   https://go.microsoft.com/fwlink/?LinkId=301879
   -->
 <configuration>
@@ -11,7 +11,7 @@
     <add key="UnobtrusiveJavaScriptEnabled" value="true" />
   </appSettings>
   <connectionStrings>
-    <add name="DefaultConnection" connectionString="Server=192.168.0.59;Database=pwd_final;Uid=root;" providerName="MySql.Data.MySqlClient" />
+    <add name="DefaultConnection" connectionString="Server=localhost;Database=pwd_final;Uid=root;" providerName="MySql.Data.MySqlClient" />
   </connectionStrings>
   <system.web>
     <compilation debug="true" targetFramework="4.7.2" />
