@@ -2675,37 +2675,20 @@ const NewEstimateRequestPage: React.FC = () => {
                             disabled={!currentValve.isQM || isReadOnly}
                             className={!currentValve.isQM ? 'disabled-input' : ''}
                           >
-                            <option value="m³/h">m³/h</option>
-                            <option value="m³/s">m³/s</option>
-                            <option value="m³/d">m³/d</option>
-                            <option value="l/h">l/h</option>
-                            <option value="l/s">l/s</option>
-                            <option value="l/min">l/min</option>
-                            <option value="GPH(US)">GPH(US)</option>
-                            <option value="GPM(US)">GPM(US)</option>
-                            <option value="MMSCFD">MMSCFD</option>
-                            <option value="MSCFD">MSCFD</option>
-                            <option value="MMSCFH">MMSCFH</option>
-                            <option value="MSCFH">MSCFH</option>
-                            <option value="SCFH">SCFH</option>
-                            <option value="MMSCFM">MMSCFM</option>
-                            <option value="MSCFM">MSCFM</option>
-                            <option value="SCFM">SCFM</option>
-                            <option value="GPH(UK)">GPH(UK)</option>
-                            <option value="GPM(UK)">GPM(UK)</option>
-                            <option value="dm³/h">dm³/h</option>
-                            <option value="MMSCMD">MMSCMD</option>
-                            <option value="MSCMD">MSCMD</option>
-                            <option value="MMSCMH">MMSCMH</option>
-                            <option value="MSCMH">MSCMH</option>
-                            <option value="MMSCMM">MMSCMM</option>
-                            <option value="MSCMM">MSCMM</option>
-                            <option value="bbl/d(US)">bbl/d(US)</option>
-                            <option value="bbl/d(oil)">bbl/d(oil)</option>
-                            <option value="bbl/d(UK)">bbl/d(UK)</option>
-                            <option value="bbl/h(US)">bbl/h(US)</option>
-                            <option value="bbl/h(oil)">bbl/h(oil)</option>
-                            <option value="bbl/h(UK)">bbl/h(UK)</option>
+                            <option value="">단위 선택</option>
+                    <option value="kg/h">kg/h</option>
+                    <option value="kg/s">kg/s</option>
+                    <option value="t/h">t/h</option>
+                    <option value="t/d">t/d</option>
+                    <option value="ton/h(US)">ton/h(US)</option>
+                    <option value="ton/d(US)">ton/d(US)</option>
+                    <option value="ton/h(UK)">ton/h(UK)</option>
+                    <option value="ton/d(UK)">ton/d(UK)</option>
+                    <option value="lb/h">lb/h</option>
+                    <option value="lb/s">lb/s</option>
+                    <option value="g/h">g/h</option>
+                    <option value="g/min">g/min</option>
+                    <option value="g/s">g/s</option>
                           </select>
                         </td>
                       </tr>
@@ -2731,7 +2714,36 @@ const NewEstimateRequestPage: React.FC = () => {
                             className={currentValve.isQM ? 'disabled-input' : ''}
                           >
                             <option value="m³/h">m³/h</option>
-                            <option value="GPM(US)">GPM(US)</option>
+                        <option value="m³/s">m³/s</option>
+                        <option value="m³/d">m³/d</option>
+                        <option value="l/h">l/h</option>
+                        <option value="l/s">l/s</option>
+                        <option value="l/min">l/min</option>
+                        <option value="GPH(US)">GPH(US)</option>
+                        <option value="GPM(US)">GPM(US)</option>
+                        <option value="MMSCFD">MMSCFD</option>
+                        <option value="MSCFD">MSCFD</option>
+                        <option value="MMSCFH">MMSCFH</option>
+                        <option value="MSCFH">MSCFH</option>
+                        <option value="SCFH">SCFH</option>
+                        <option value="MMSCFM">MMSCFM</option>
+                        <option value="MSCFM">MSCFM</option>
+                        <option value="SCFM">SCFM</option>
+                        <option value="GPH(UK)">GPH(UK)</option>
+                        <option value="GPM(UK)">GPM(UK)</option>
+                        <option value="dm³/h">dm³/h</option>
+                        <option value="MMSCMD">MMSCMD</option>
+                        <option value="MSCMD">MSCMD</option>
+                        <option value="MMSCMH">MMSCMH</option>
+                        <option value="MSCMH">MSCMH</option>
+                        <option value="MMSCMM">MMSCMM</option>
+                        <option value="MSCMM">MSCMM</option>
+                        <option value="bbl/d(US)">bbl/d(US)</option>
+                        <option value="bbl/d(oil)">bbl/d(oil)</option>
+                        <option value="bbl/d(UK)">bbl/d(UK)</option>
+                        <option value="bbl/h(US)">bbl/h(US)</option>
+                        <option value="bbl/h(oil)">bbl/h(oil)</option>
+                        <option value="bbl/h(UK)">bbl/h(UK)</option>
                           </select>
                         </td>
                       </tr>
