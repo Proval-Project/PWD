@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { resetPassword } from '../../api/auth';
 
-const ResetPasswordForm: React.FC = () => {
+interface ResetPasswordFormProps {
+  email?: string;
+}
+
+const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ email }) => {
   const [token, setToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,6 +39,12 @@ const ResetPasswordForm: React.FC = () => {
   return (
     <form onSubmit={handleSubmit} className="auth-form">
       {error && <div className="error-message">{error}</div>}
+      {email && (
+        <div className="form-group">
+          <label>이메일</label>
+          <div className="form-input bg-gray-100">{email}</div>
+        </div>
+      )}
       <div className="form-group">
         <label htmlFor="token">토큰</label>
         <input

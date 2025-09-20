@@ -7,7 +7,11 @@ const roleMap: Record<string, number> = {
   Customer: 3
 };
 
-const RegisterForm: React.FC = () => {
+interface RegisterFormProps {
+  setRegistrationSuccess: (success: boolean) => void;
+}
+
+const RegisterForm: React.FC<RegisterFormProps> = ({ setRegistrationSuccess }) => {
   const [formData, setFormData] = useState({
     userID: '',
     email: '',
@@ -64,6 +68,7 @@ const RegisterForm: React.FC = () => {
       };
       const response = await register(payload);
       setSuccess('회원가입이 완료되었습니다. 관리자 승인 후 로그인이 가능합니다.');
+      setRegistrationSuccess(true);
       setFormData({
         userID: '', email: '', password: '', confirmPassword: '', role: 'Customer',
         companyName: '', businessNumber: '', address: '', companyPhone: '',

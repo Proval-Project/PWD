@@ -652,7 +652,7 @@ const NewEstimateRequestPage: React.FC = () => {
         dp: { max: 0, normal: 0, min: 0 },
         qm: { max: 0, normal: 0, min: 0, unit: 'm³/h' },
         qn: { max: 0, normal: 0, min: 0, unit: 'm³/h' },
-        pressureUnit: 'Mpa(g)',
+        pressureUnit: 'MPa(g)',
         temperatureUnit: '°C'
       },
       body: {
@@ -1355,7 +1355,7 @@ const NewEstimateRequestPage: React.FC = () => {
                     min: tagNo.qnMin || 0, 
                     unit: tagNo.qnUnit || 'm³/h' 
                   },
-                  pressureUnit: tagNo.pressureUnit || 'Mpa(g)',
+                  pressureUnit: tagNo.pressureUnit || 'MPa(g)',
                   temperatureUnit: tagNo.temperatureUnit || '℃'
                 },
                 body: {
@@ -1504,7 +1504,7 @@ const NewEstimateRequestPage: React.FC = () => {
                     min: req.qnMin || 0, 
                     unit: req.qnUnit || 'm³/h' 
                   },
-                  pressureUnit: req.pressureUnit || 'Mpa(g)',
+                  pressureUnit: req.pressureUnit || 'MPa(g)',
                   temperatureUnit: req.temperatureUnit || '℃'
                 },
                 body: {

@@ -1,113 +1,91 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './DashboardPages.css';
-import './MembershipRequests.css';
-import { getPendingApprovals, approveUser, rejectUser, UserListResponseDto } from '../../api/userManagement';
+import './StaffManagement.css'; // 담당자 목록 CSS 재사용
+import { getPendingApprovals } from '../../api/userManagement';
+import { IoIosArrowBack, IoIosSearch } from "react-icons/io";
+import { AiOutlineDoubleLeft, AiOutlineLeft, AiOutlineRight, AiOutlineDoubleRight } from "react-icons/ai";
 
 interface MembershipRequest {
   userID: string;
   companyName: string;
   name: string;
   email: string;
-  businessNumber: string;
-  address: string;
-  companyPhone: string;
-  department: string;
-  position: string;
-  phoneNumber: string;
 }
 
 const MembershipRequestsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [requests, setRequests] = useState<MembershipRequest[]>([]);
-  const [selectedRequest, setSelectedRequest] = useState<MembershipRequest | null>(null);
+  const [filteredRequests, setFilteredRequests] = useState<MembershipRequest[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [confirmAction, setConfirmAction] = useState<'approve' | 'reject' | null>(null);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
 
-  // 승인 대기 요청 목록 로드
+  // 요청 목록 로드
   useEffect(() => {
-    loadPendingRequests();
+    loadRequests();
   }, []);
 
-  const loadPendingRequests = async () => {
+  const loadRequests = async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await getPendingApprovals();
-      const requestData: MembershipRequest[] = data.map(request => ({
-        userID: request.userID,
-        companyName: request.companyName,
-        name: request.name,
-        email: request.email,
-        businessNumber: request.businessNumber,
-        address: request.address,
-        companyPhone: request.companyPhone,
-        department: request.department,
-        position: request.position,
-        phoneNumber: request.phoneNumber
+      const requestData: MembershipRequest[] = data.map((r: any) => ({
+        userID: r.userID,
+        companyName: r.companyName,
+        name: r.name,
+        email: r.email
       }));
       setRequests(requestData);
+      setFilteredRequests(requestData);
     } catch (err) {
-      console.error('승인 대기 요청 로드 실패:', err);
-      setError('승인 대기 요청을 불러오는데 실패했습니다.');
+      console.error('회원가입 요청 로드 실패:', err);
+      setError('회원가입 요청을 불러오는데 실패했습니다.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRequestClick = (request: MembershipRequest) => {
-    setSelectedRequest(request);
-  };
-
-  const handleApprove = () => {
-    setConfirmAction('approve');
-    setShowConfirmModal(true);
-  };
-
-  const handleReject = () => {
-    setConfirmAction('reject');
-    setShowConfirmModal(true);
-  };
-
-  const handleConfirmAction = async () => {
-    if (!selectedRequest || !confirmAction) return;
-
-    try {
-      if (confirmAction === 'approve') {
-        await approveUser(selectedRequest.userID);
-        setSuccessMessage('해당 고객의 회원가입 요청이 성공적으로 승인되었습니다.');
-      } else {
-        // 거절: 대기 목록에서 제거(삭제)
-        await rejectUser(selectedRequest.userID);
-        setSuccessMessage('해당 고객의 회원가입 요청이 거절되어 목록에서 삭제되었습니다.');
-      }
-
-      setShowConfirmModal(false);
-      setShowSuccessModal(true);
-      
-      // 목록 새로고침
-      await loadPendingRequests();
-      setSelectedRequest(null);
-    } catch (err: any) {
-      console.error('요청 처리 실패:', err);
-      setError(err.response?.data?.message || '요청 처리에 실패했습니다.');
-      setShowConfirmModal(false);
+  // 검색 기능
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredRequests(requests);
+    } else {
+      const filtered = requests.filter(r =>
+        r.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        r.companyName.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredRequests(filtered);
     }
+    setCurrentPage(1);
+  }, [searchTerm, requests]);
+
+  // 페이지네이션
+  const totalPages = Math.ceil(filteredRequests.length / pageSize);
+  const paginatedRequests = filteredRequests.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
   };
 
-  const handleCloseSuccessModal = () => {
-    setShowSuccessModal(false);
-    setSuccessMessage('');
+  const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setPageSize(Number(e.target.value));
+    setCurrentPage(1);
   };
 
   if (loading) {
     return (
-      <div className="membership-requests-page">
+      <div className="staff-management-page">
         <div className="loading-container">
           <div className="loading-spinner"></div>
-          <p>승인 대기 요청을 불러오는 중...</p>
+          <p>회원가입 요청을 불러오는 중...</p>
         </div>
       </div>
     );
@@ -115,157 +93,102 @@ const MembershipRequestsPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="membership-requests-page">
+      <div className="staff-management-page">
         <div className="error-container">
           <p className="error-message">{error}</p>
-          <button onClick={loadPendingRequests} className="retry-btn">다시 시도</button>
+          <button onClick={loadRequests} className="retry-btn">다시 시도</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="membership-requests-page">
-      <div className="page-header">
-        <h1>회원가입 요청</h1>
+    <div className="p-5 max-w-[1200px] mx-auto">
+      {/* 헤더 */}
+      <div className="flex items-center mb-1 gap-3 mt-7">
+        <button className="text-xl text-black p-1" onClick={() => navigate(-1)}>
+          <IoIosArrowBack />
+        </button>
+        <div className="text-2xl font-bold text-black">
+          <h1>회원가입 요청 목록</h1>
+        </div>
       </div>
 
-      <div className="content-container">
-        {/* 좌측: 요청 목록 */}
-        <div className="requests-list">
-          <h2>회원가입 요청 목록</h2>
-          <div className="table-container">
-            <table className="requests-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>회사명</th>
-                  <th>담당자 성함</th>
-                  <th>담당자 이메일</th>
+      {/* 테이블 */}
+      <div className="table-wrapper mt-8">
+        <div className="table-container">
+          <table className="staff-table">
+            <thead>
+              <tr>
+                <th>아이디</th>
+                <th>회사명</th>
+                <th>담당자 성함</th>
+                <th>담당자 이메일</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedRequests.map((r) => (
+                <tr
+                  key={r.userID}
+                  onClick={() => navigate(`/membership-request-detail/${r.userID}`)}
+                  className="staff-row"
+                >
+                  <td>{r.userID}</td>
+                  <td>{r.companyName}</td>
+                  <td>{r.name}</td>
+                  <td>{r.email}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {requests.map((request) => (
-                  <tr 
-                    key={request.userID}
-                    onClick={() => handleRequestClick(request)}
-                    className={`request-row ${selectedRequest?.userID === request.userID ? 'selected' : ''}`}
-                  >
-                    <td>{request.userID}</td>
-                    <td>{request.companyName}</td>
-                    <td>{request.name}</td>
-                    <td>{request.email}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="table-hint">표에 커서를 가져다 대는 경우 - 회색으로 표시 / 클릭하면 상세페이지로 이동</p>
-        </div>
-
-        {/* 우측: 상세 정보 */}
-        <div className="request-detail">
-          <h2>회원가입 요청 상세 정보</h2>
-          {selectedRequest ? (
-            <div className="detail-content">
-              <div className="detail-row">
-                <label>회사명:</label>
-                <span>{selectedRequest.companyName}</span>
-              </div>
-              <div className="detail-row">
-                <label>사업자등록번호:</label>
-                <span>{selectedRequest.businessNumber}</span>
-              </div>
-              <div className="detail-row">
-                <label>주소:</label>
-                <span>{selectedRequest.address}</span>
-              </div>
-              <div className="detail-row">
-                <label>대표번호:</label>
-                <span>{selectedRequest.companyPhone}</span>
-              </div>
-              <div className="detail-row">
-                <label>담당자 성함:</label>
-                <span>{selectedRequest.name}</span>
-              </div>
-              <div className="detail-row">
-                <label>담당자 부서:</label>
-                <span>{selectedRequest.department}</span>
-              </div>
-              <div className="detail-row">
-                <label>담당자 직급:</label>
-                <span>{selectedRequest.position}</span>
-              </div>
-              <div className="detail-row">
-                <label>담당자 연락처:</label>
-                <span>{selectedRequest.phoneNumber}</span>
-              </div>
-              <div className="detail-row">
-                <label>담당자 이메일:</label>
-                <span>{selectedRequest.email}</span>
-              </div>
-
-              <div className="action-buttons">
-                <button className="btn-approve" onClick={handleApprove}>
-                  승인
-                </button>
-                <button className="btn-reject" onClick={handleReject}>
-                  거절
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="no-selection">
-              <p>요청을 선택하면 상세 정보가 표시됩니다.</p>
-            </div>
-          )}
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {/* 확인 모달 */}
-      {showConfirmModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>{confirmAction === 'approve' ? '승인하시겠습니까?' : '거절하시겠습니까?'}</h3>
-            <p>
-              {confirmAction === 'approve' 
-                ? '해당 고객의 회원가입 요청을 승인하시겠습니까?' 
-                : '해당 고객의 회원가입 요청을 거절하시겠습니까?'}
-            </p>
-            <div className="modal-actions">
-              <button 
-                className="btn-cancel" 
-                onClick={() => setShowConfirmModal(false)}
-              >
-                취소
-              </button>
-              <button 
-                className={confirmAction === 'approve' ? 'btn-approve' : 'btn-reject'}
-                onClick={handleConfirmAction}
-              >
-                {confirmAction === 'approve' ? '승인' : '거절'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 페이지네이션 */}
+      <div className="flex items-center justify-center gap-2 mt-7">
+        <button onClick={() => handlePageChange(1)} disabled={currentPage === 1}
+          className="w-8 h-8 flex items-center justify-center bg-white border rounded disabled:opacity-50">
+          <AiOutlineDoubleLeft />
+        </button>
+        <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}
+          className="w-8 h-8 flex items-center justify-center bg-white border rounded disabled:opacity-50">
+          <AiOutlineLeft />
+        </button>
 
-      {/* 성공 모달 */}
-      {showSuccessModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h3>성공하였습니다!</h3>
-            <p>{successMessage}</p>
-            <div className="modal-actions">
-              <button className="btn-close" onClick={handleCloseSuccessModal}>
-                닫기
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+          const page = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+          return (
+            <button
+              key={page}
+              onClick={() => handlePageChange(page)}
+              className={`w-8 h-8 flex items-center justify-center rounded font-semibold ${
+                currentPage === page ? 'bg-blue-600 text-white' : 'text-black'
+              }`}
+            >
+              {page}
+            </button>
+          );
+        })}
+
+        <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}
+          className="w-8 h-8 flex items-center justify-center bg-white border rounded disabled:opacity-50">
+          <AiOutlineRight />
+        </button>
+        <button onClick={() => handlePageChange(totalPages)} disabled={currentPage === totalPages}
+          className="w-8 h-8 flex items-center justify-center bg-white border rounded disabled:opacity-50">
+          <AiOutlineDoubleRight />
+        </button>
+
+        <select value={pageSize} onChange={handlePageSizeChange} className="ml-4 p-1 border rounded font-semibold">
+          <option value={10}>10</option>
+          <option value={20}>20</option>
+          <option value={30}>30</option>
+          <option value={40}>40</option>
+          <option value={50}>50</option>
+        </select>
+      </div>
     </div>
   );
 };
 
-export default MembershipRequestsPage; 
+export default MembershipRequestsPage;

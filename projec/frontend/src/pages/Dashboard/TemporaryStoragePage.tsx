@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { getDraftEstimates } from '../../api/estimateRequest';
 import './DashboardPages.css';
 import './EstimateInquiry.css';
+import { IoIosArrowBack, IoIosSearch, IoIosCalendar } from "react-icons/io";
+import Modal from "../../components/common/Modal";
+import { AiOutlineDoubleLeft, AiOutlineLeft, AiOutlineRight, AiOutlineDoubleRight } from "react-icons/ai";
 
 interface DraftItem {
   estimateNo: string;
@@ -25,6 +28,9 @@ const TemporaryStoragePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<DraftItem | null>(null);
   
   // 필터 상태
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -35,10 +41,10 @@ const TemporaryStoragePage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [pageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(10);
 
   // 데이터 조회 함수
-  const fetchData = async (page: number = 1) => {
+  const fetchData = async (page: number = 1, size: number = pageSize) => {
     setLoading(true);
     try {
       const params = {
@@ -46,14 +52,11 @@ const TemporaryStoragePage: React.FC = () => {
         startDate: startDate || undefined,
         endDate: endDate || undefined,
         page,
-        pageSize,
+        pageSize: size,
         isDescending: true,
       };
 
-      // 현재 사용자 ID 가져오기
       const currentUserId = currentUser?.userId || 'defaultUser';
-      
-      // 선택된 고객 ID 가져오기 (있으면)
       const customerId = selectedCustomer?.userId;
       
       const response = await getDraftEstimates(params, currentUserId, customerId);
@@ -69,23 +72,18 @@ const TemporaryStoragePage: React.FC = () => {
     }
   };
 
-  // 초기 데이터 로드
   useEffect(() => {
-    // 현재 사용자 정보 가져오기
     const userStr = localStorage.getItem('user');
     if (userStr) {
       setCurrentUser(JSON.parse(userStr));
     }
 
-    // 선택된 고객 정보 가져오기 (임시저장용)
     const selectedCustomerStr = localStorage.getItem('selectedCustomerForTempStorage');
     if (selectedCustomerStr) {
       setSelectedCustomer(JSON.parse(selectedCustomerStr));
-      // 사용 후 제거
       localStorage.removeItem('selectedCustomerForTempStorage');
     }
 
-    // 기본 날짜 범위 설정 (최근 3개월)
     const today = new Date();
     const threeMonthsAgo = new Date();
     threeMonthsAgo.setMonth(today.getMonth() - 3);
@@ -94,7 +92,6 @@ const TemporaryStoragePage: React.FC = () => {
     setEndDate(today.toISOString().split('T')[0]);
   }, []);
 
-  // 날짜가 설정되면 데이터 조회
   useEffect(() => {
     if (startDate && endDate) {
       fetchData(1);
@@ -102,18 +99,21 @@ const TemporaryStoragePage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startDate, endDate]);
 
-  // 검색 버튼 클릭
   const handleSearch = () => {
     setCurrentPage(1);
     fetchData(1);
   };
 
-  // 페이지 변경
   const handlePageChange = (page: number) => {
     fetchData(page);
   };
 
-  // TempEstimateNo에서 날짜 추출 (YYYY.MM.DD)
+  const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newSize = Number(e.target.value);
+    setPageSize(newSize);
+    fetchData(1, newSize);
+  };
+
   const extractDateFromTempEstimateNo = (tempEstimateNo: string): string => {
     const match = tempEstimateNo.match(/TEMP(\d{4})(\d{2})(\d{2})/);
     if (match) {
@@ -125,78 +125,88 @@ const TemporaryStoragePage: React.FC = () => {
     return tempEstimateNo;
   };
 
-  // 요청일자 YYYY.MM.DD 포맷 (시간 제거)
   const formatDateYmd = (dateString?: string): string => {
     if (!dateString) return '';
     const head = dateString.slice(0, 10);
     return head.replace(/[-\/]/g, '.');
   };
 
-  // 행 클릭 핸들러 (견적 작성 페이지로 이동하여 불러오기)
   const handleRowClick = (item: DraftItem) => {
-    // 현재 사용자 정보 가져오기
-    let user = currentUser;
-    if (!user) {
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        user = JSON.parse(userStr);
-        setCurrentUser(user);
-      }
-    }
-    
-    // 수정 가능 여부 확인: 현재 사용자가 작성자이고 상태가 '임시저장'(1) 또는 '견적요청'(2)인 경우만 수정 가능
-    const canEdit = (item.status === 1 || item.status === 2) && user && item.writerID === user.userId;
-    const readonly = canEdit ? 'false' : 'true';
-    
-    // tempEstimateNo와 readonly 상태를 쿼리 파라미터로 전달
-    navigate(`/estimate-request/new?load=${item.tempEstimateNo}&readonly=${readonly}`);
+    setSelectedItem(item);
+    setIsModalOpen(true);
   };
 
+  const handleConfirmLoad = () => {
+    if (selectedItem) {
+      const user = currentUser;
+      const canEdit =
+        (selectedItem.status === 1 || selectedItem.status === 2) &&
+        user &&
+        selectedItem.writerID === user.userId;
+      const readonly = canEdit ? "false" : "true";
+
+      navigate(`/estimate-request/new?load=${selectedItem.tempEstimateNo}&readonly=${readonly}`);
+    }
+    setIsModalOpen(false);
+  };
+
+  const handleCancel = () => setIsModalOpen(false);
+
   return (
-    <div className="page">
-      <div className="page-header">
-        <div className="header-left">
-          <button className="back-btn" onClick={() => navigate(-1)}>
-            &lt;
-          </button>
-          <h1>📁 임시저장함</h1>
-          {selectedCustomer && (
-            <span style={{ marginLeft: '10px', fontSize: '16px', color: '#666' }}>
-              - {selectedCustomer.companyName}
-            </span>
-          )}
-        </div>
+    <div className="p-5 max-w-[1200px] mx-auto">
+      <div className="flex items-center mb-1 gap-3 mt-7">
+        <button
+          className="text-xl text-black p-1"
+          onClick={() => navigate(-1)}
+        >
+          <IoIosArrowBack />
+        </button>
+        <h1 className="text-2xl font-bold text-black">임시저장함</h1>
       </div>
 
       {/* 검색 섹션 */}
       <div className="search-section">
         <div className="search-row">
           <div className="search-field">
-            <input
-              type="text"
-              placeholder="검색어 입력 (프로젝트명, 회사명 등)"
-              value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            />
+            <div className="search-bar">
+              <IoIosSearch className="search-icon" />
+              <input
+                type="text"
+                placeholder="검색"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              />
+            </div>
           </div>
-          
           <div className="date-range">
-            <span>기간:</span>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
+            <div className="date-picker">
+              <IoIosCalendar className="calendar-icon"
+                onClick={() => (document.getElementById("startDate") as HTMLInputElement)?.showPicker?.()}
+              />
+              <input
+                type="date"
+                id="startDate"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
             <span>~</span>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
+            <div className="date-picker">
+              <IoIosCalendar
+                className="calendar-icon"
+                onClick={() => (document.getElementById("endDate") as HTMLInputElement)?.showPicker?.()}
+              />
+              <input
+                type="date"
+                id="endDate"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
           </div>
-          
-          <button className="action-btn" onClick={handleSearch}>
+
+          <button className="search-btn" onClick={handleSearch}>
             검색
           </button>
         </div>
@@ -243,7 +253,7 @@ const TemporaryStoragePage: React.FC = () => {
                   <td>{item.managerName || '미지정'}</td>
                   <td>{item.requestDate ? formatDateYmd(item.requestDate) : extractDateFromTempEstimateNo(item.tempEstimateNo)}</td>
                   <td>
-                    <span className={`status-badge status-${item.status}`}>
+                    <span className={`status-${item.status}`}>
                       {item.statusText}
                     </span>
                   </td>
@@ -256,50 +266,82 @@ const TemporaryStoragePage: React.FC = () => {
       </div>
 
       {/* 페이징 */}
-      {totalPages > 1 && (
-        <div className="pagination">
-          <button 
-            onClick={() => handlePageChange(1)}
-            disabled={currentPage === 1}
-          >
-            처음
-          </button>
-          <button 
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            이전
-          </button>
-          
-          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-            const page = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
-            return (
-              <button
-                key={page}
-                onClick={() => handlePageChange(page)}
-                className={currentPage === page ? 'active' : ''}
-              >
-                {page}
-              </button>
-            );
-          })}
-          
-          <button 
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            다음
-          </button>
-          <button 
-            onClick={() => handlePageChange(totalPages)}
-            disabled={currentPage === totalPages}
-          >
-            마지막
-          </button>
-        </div>
-      )}
+      <div className="flex items-center justify-center gap-2 mt-7">
+        <button
+          onClick={() => handlePageChange(1)}
+          disabled={currentPage === 1}
+          className="w-8 h-8 flex items-center justify-center bg-white border rounded disabled:opacity-50"
+        >
+          <AiOutlineDoubleLeft />
+        </button>
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="w-8 h-8 flex items-center justify-center bg-white border rounded disabled:opacity-50"
+        >
+          <AiOutlineLeft />
+        </button>
+
+        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+          const page = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+          return (
+            <button
+              key={page}
+              onClick={() => handlePageChange(page)}
+              className={`w-8 h-8 flex items-center justify-center rounded font-semibold ${
+                currentPage === page
+                  ? 'bg-blue-600 text-white'
+                  : 'text-black'
+              }
+              !border-0
+            `}
+            >
+              {page}
+            </button>
+          );
+        })}
+
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="w-8 h-8 flex items-center justify-center bg-white border rounded disabled:opacity-50"
+        >
+          <AiOutlineRight />
+        </button>
+        <button
+          onClick={() => handlePageChange(totalPages)}
+          disabled={currentPage === totalPages}
+          className="w-8 h-8 flex items-center justify-center bg-white border rounded disabled:opacity-50"
+        >
+          <AiOutlineDoubleRight />
+        </button>
+
+        {/* ✅ pageSize 드롭다운 */}
+        <select
+          value={pageSize}
+          onChange={handlePageSizeChange}
+          className="ml-4 p-1 border rounded font-semibold"
+        >
+          <option value={10}>10</option>
+          <option value={20}>20</option>
+          <option value={30}>30</option>
+          <option value={40}>40</option>
+          <option value={50}>50</option>
+        </select>
+      </div>
+
+      <Modal
+        isOpen={isModalOpen}
+        title="임시저장본"
+        message="해당 임시저장본을 불러오시겠습니까?"
+        confirmText="확인"
+        cancelText="취소"
+        confirmColor="green"
+        onConfirm={handleConfirmLoad}
+        onCancel={handleCancel}
+      />
     </div>
   );
 };
 
-export default TemporaryStoragePage; 
+export default TemporaryStoragePage;

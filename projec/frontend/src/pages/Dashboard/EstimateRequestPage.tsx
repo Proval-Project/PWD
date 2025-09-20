@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './DashboardPages.css';
-import './EstimateRequest.css';
-import { searchUsers } from '../../api/userManagement';
 import CustomerSearchModal from '../../components/CustomerSearchModal';
+import { IoIosArrowBack } from "react-icons/io";
 
 const EstimateRequestPage: React.FC = () => {
   const navigate = useNavigate();
@@ -18,52 +16,34 @@ const EstimateRequestPage: React.FC = () => {
 
   const handleNewEstimate = () => {
     if (isCustomer) {
-      // 고객은 바로 이동
       navigate('/estimate-request/new');
     } else {
-      // 관리자/직원은 고객 선택 확인
       if (!selectedCustomer) {
         alert('고객을 먼저 선택해주세요.');
         return;
       }
-      // 선택된 고객 정보를 localStorage에 저장
       localStorage.setItem('selectedCustomer', JSON.stringify(selectedCustomer));
       navigate('/estimate-request/new');
     }
   };
 
   const handleLoadTemporary = () => {
-    if (isCustomer) {
-      // 고객은 바로 자신의 정보 사용
-      localStorage.setItem('selectedCustomerForTempStorage', JSON.stringify(currentUser));
-      navigate('/estimate-request/temporary');
-    } else {
-      // 관리자/직원은 고객 선택 확인
-      if (!selectedCustomer) {
-        alert('고객을 먼저 선택해주세요.');
-        return;
-      }
-      // 선택된 고객 정보를 localStorage에 저장
-      localStorage.setItem('selectedCustomerForTempStorage', JSON.stringify(selectedCustomer));
-      navigate('/estimate-request/temporary');
+  if (isCustomer) {
+    localStorage.setItem("selectedCustomerForTempStorage", JSON.stringify(currentUser));
+    navigate('/estimate-request/temporary');
+  } else {
+    if (!selectedCustomer) {
+      alert('고객을 먼저 선택해주세요.');
+      return;
     }
-  };
+    localStorage.setItem('selectedCustomerForTempStorage', JSON.stringify(selectedCustomer));
+    navigate('/estimate-request/temporary');
+  }
+};
+
 
   const handleReInquiry = () => {
-    if (isCustomer) {
-      // 고객은 바로 자신의 리스트로
-      navigate('/existing-estimate-reinquiry');
-      return;
-    }
-    // 관리자/직원은 고객 선택 필수
-    if (!selectedCustomer) {
-      alert('재문의할 고객을 먼저 선택해주세요.');
-      setShowCustomerSearch(true);
-      return;
-    }
-    // 선택 고객을 전달
-    localStorage.setItem('selectedCustomerForReInquiry', JSON.stringify(selectedCustomer));
-    navigate('/existing-estimate-reinquiry');
+    navigate('/estimate-inquiry');
   };
 
   const handleCustomerSelect = (user: any) => {
@@ -71,80 +51,93 @@ const EstimateRequestPage: React.FC = () => {
     setShowCustomerSearch(false);
   };
 
-  const handleCustomerSearch = () => {
-    setShowCustomerSearch(true);
-  };
-
   return (
-    <div className="estimate-request-page">
-      <div className="page-header">
-        <div className="header-left">
-          <button className="back-btn" onClick={() => navigate(-1)}>
-            &lt;
-          </button>
-          <h1>견적요청</h1>
-        </div>
+    <div className="p-5 max-w-[1200px] mx-auto">
+      {/* 헤더 */}
+      <div className="flex items-center mb-20 gap-3 mt-7">
+        <button
+          className="text-xl text-black p-1"
+          onClick={() => navigate(-1)}
+        >
+          <IoIosArrowBack />
+        </button>
+        <h1 className="text-2xl font-bold text-black">견적요청</h1>
       </div>
 
-      <div className="main-content">
-        <div className="action-cards">
-          <div className="action-card" onClick={handleNewEstimate}>
-            <h3>신규 견적 요청하기</h3>
-            <p>새로운 견적을 요청합니다</p>
+      <div className="flex flex-col gap-8">
+        {/* 액션 카드 */}
+        <div className="flex flex-row gap-5 justify-center mt-20">
+          <div
+            className="flex flex-col items-center justify-center flex-1 min-w-[250px] min-h-[200px] bg-[#D9D9D9] rounded-lg p-8 text-center cursor-pointer transition hover:bg-gray-200 hover:-translate-y-0.5 hover:shadow-md"
+            onClick={handleNewEstimate}
+          >
+            <h3 className="text-4xl font-semibold text-gray-800 mb-2 ">신규 견적 요청하기</h3>
+            <p className="text-sm text-gray-600">새로운 견적을 요청합니다.</p>
           </div>
-          
-          <div className="action-card" onClick={handleLoadTemporary}>
-            <h3>임시저장 불러오기</h3>
-            <p>임시저장된 견적을 불러옵니다</p>
+
+          <div
+            className="flex flex-col items-center justify-center flex-1 min-w-[250px] min-h-[200px] bg-[#D9D9D9] rounded-lg p-8 text-center cursor-pointer transition hover:bg-gray-200 hover:-translate-y-0.5 hover:shadow-md"
+            onClick={handleLoadTemporary}
+          >
+            <h3 className="text-4xl font-semibold text-gray-800 mb-2">임시저장 불러오기</h3>
+            <p className="text-sm text-gray-600">임시저장된 견적을 불러옵니다.</p>
           </div>
-          
-          <div className="action-card" onClick={handleReInquiry}>
-            <h3>기존 견적 재문의</h3>
-            <p>기존 견적에 대해 재문의합니다</p>
+
+          <div
+            className="flex flex-col items-center justify-center flex-1 min-w-[250px] min-h-[200px] bg-[#D9D9D9] rounded-lg p-8 text-center cursor-pointer transition hover:bg-gray-200 hover:-translate-y-0.5 hover:shadow-md"
+            onClick={handleReInquiry}
+          >
+            <h3 className="text-4xl font-semibold text-gray-800 mb-2">기존 견적 재문의</h3>
+            <p className="text-sm text-gray-600">기존 견적에 대해 재문의합니다.</p>
           </div>
         </div>
 
-        {/* 관리자/직원용 고객 검색 및 정보 표시 */}
+        {/* 관리자/직원용 고객 검색 */}
         {!isCustomer && (
-          <div className="customer-section">
-            <div className="customer-search">
-              <h3>고객 검색</h3>
-              <div className="search-controls">
-                <button 
-                  className="btn-search" 
-                  onClick={handleCustomerSearch}
-                >
-                  고객 검색
-                </button>
-                {selectedCustomer && (
-                  <button 
-                    className="btn-clear" 
-                    onClick={() => setSelectedCustomer(null)}
+          <div className="flex justify-center">
+            <div className="flex flex-col min-w-[400px] items-center text-center bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
+              <div className="mb-3">
+                <h3 className="text-base font-semibold text-gray-800 mb-2">고객 검색</h3>
+                <div className="flex gap-3">
+                  <button
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
+                    onClick={() => setShowCustomerSearch(true)}
                   >
-                    선택 해제
+                    고객 검색
                   </button>
-                )}
+                  {selectedCustomer && (
+                    <button
+                      className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 text-sm"
+                      onClick={() => setSelectedCustomer(null)}
+                    >
+                      선택 해제
+                    </button>
+                  )}
               </div>
             </div>
 
             {selectedCustomer && (
-              <div className="customer-info">
-                <h3>선택된 고객 정보</h3>
-                <div className="info-row">
-                  <span className="label">회사명:</span>
-                  <span className="value">{selectedCustomer.companyName}</span>
-                </div>
-                <div className="info-row">
-                  <span className="label">담당자 성함:</span>
-                  <span className="value">{selectedCustomer.name}</span>
-                </div>
-                <div className="info-row">
-                  <span className="label">직급:</span>
-                  <span className="value">{selectedCustomer.position}</span>
-                </div>
+              <div className="overflow-hidden rounded-lg border border-[#CDCDCD] bg-white shadow min-w-[400px] mx-auto mt-3">
+                <table className="w-full border-collapse">
+                  <tbody>
+                    <tr>
+                      <th className="w-1/3 bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">회사명</th>
+                      <td className="p-3 font-semibold">{selectedCustomer.companyName}</td>
+                    </tr>
+                    <tr>
+                      <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">담당자 성함</th>
+                      <td className="p-3 font-semibold">{selectedCustomer.name}</td>
+                    </tr>
+                    <tr>
+                      <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">직급</th>
+                      <td className="p-3 font-semibold">{selectedCustomer.position}</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
+        </div>
         )}
 
         {/* 고객 검색 모달 */}
@@ -160,4 +153,4 @@ const EstimateRequestPage: React.FC = () => {
   );
 };
 
-export default EstimateRequestPage; 
+export default EstimateRequestPage;

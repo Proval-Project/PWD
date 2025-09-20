@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './CustomerDetail.css';
+import { IoIosArrowBack } from "react-icons/io";
+import Modal from "../../components/common/Modal";
 
 interface User {
   userID: string;
@@ -20,9 +22,10 @@ const CustomerDetailPage: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
   useEffect(() => {
-    // 실제로는 API 호출로 사용자 정보를 가져와야 함
-    // 임시 데이터
     const mockUser: User = {
       userID: userID || '',
       name: '김고객',
@@ -38,15 +41,6 @@ const CustomerDetailPage: React.FC = () => {
     setLoading(false);
   }, [userID]);
 
-  const handleBack = () => {
-    navigate('/customer-management');
-  };
-
-  const handleEdit = () => {
-    // 편집 페이지로 이동
-    navigate(`/customer-edit/${userID}`);
-  };
-
   if (loading) {
     return <div>로딩 중...</div>;
   }
@@ -55,81 +49,112 @@ const CustomerDetailPage: React.FC = () => {
     return <div>사용자를 찾을 수 없습니다.</div>;
   }
 
-  const isAdmin = user?.roleId === 1; // Admin은 1
+  const confirmDelete = () => {
+    console.log("회원탈퇴 처리 실행");
+    setIsDeleteModalOpen(false);
+    navigate("/customer-management");
+  };
 
   return (
-    <div className="customer-detail-page">
-      <div className="customer-detail-header">
-        <button onClick={handleBack} className="back-button">
-          ← 뒤로 가기
+    <div className="p-5 max-w-[1200px] mx-auto">
+      <div className="flex items-center mb-1 gap-3 mt-7">
+        <button
+          className="text-xl text-black p-1"
+          onClick={() => navigate(-1)}
+        >
+          <IoIosArrowBack />
         </button>
-        <h1>고객 상세 정보</h1>
-        {isAdmin && (
-          <button onClick={handleEdit} className="edit-button">
-            편집
-          </button>
-        )}
+        <h1 className="text-2xl font-bold text-black">고객 상세 정보</h1>
       </div>
 
-      <div className="customer-detail-content">
-        <div className="detail-section">
-          <h2>기본 정보</h2>
-          <div className="detail-grid">
-            <div className="detail-item">
-              <label>사용자 ID:</label>
-              <span>{user.userID}</span>
-            </div>
-            <div className="detail-item">
-              <label>이름:</label>
-              <span>{user.name}</span>
-            </div>
-            <div className="detail-item">
-              <label>이메일:</label>
-              <span>{user.email}</span>
-            </div>
-            <div className="detail-item">
-              <label>역할:</label>
-              <span>{user.roleId === 1 ? '관리자' : user.roleId === 2 ? '직원' : '고객'}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="detail-section">
-          <h2>회사 정보</h2>
-          <div className="detail-grid">
-            <div className="detail-item">
-              <label>회사명:</label>
-              <span>{user.companyName}</span>
-            </div>
-            <div className="detail-item">
-              <label>부서:</label>
-              <span>{user.department}</span>
-            </div>
-            <div className="detail-item">
-              <label>직책:</label>
-              <span>{user.position}</span>
-            </div>
-            <div className="detail-item">
-              <label>연락처:</label>
-              <span>{user.phoneNumber}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="detail-section">
-          <h2>계정 상태</h2>
-          <div className="detail-grid">
-            <div className="detail-item">
-              <label>승인 상태:</label>
-              <span className={user.isApproved ? 'approved' : 'pending'}>
-                {user.isApproved ? '승인됨' : '승인 대기'}
-              </span>
-            </div>
-          </div>
-        </div>
+      <div className="overflow-hidden rounded-lg border border-[#CDCDCD] bg-white shadow max-w-[800px] mx-auto mt-8">
+        <table className="w-full border-collapse">
+          <tbody>
+            <tr>
+              <th className="w-1/3 bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">아이디</th>
+              <td className="p-3 font-semibold">{user.userID}</td>
+            </tr>
+            <tr>
+              <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">회사명</th>
+              <td className="p-3 font-semibold">{user.companyName}</td>
+            </tr>
+            <tr>
+              <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">사업자등록번호</th>
+              <td className="p-3 font-semibold">123-45-67890</td> {/* 더미 */}
+            </tr>
+            <tr>
+              <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">주소</th>
+              <td className="p-3 font-semibold">서울시 강남구 테헤란로 123</td> {/* 더미 */}
+            </tr>
+            <tr>
+              <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">대표번호</th>
+              <td className="p-3 font-semibold">{user.phoneNumber}</td>
+            </tr>
+            <tr>
+              <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">담당자 성함</th>
+              <td className="p-3 font-semibold">{user.name}</td>
+            </tr>
+            <tr>
+              <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">담당자 부서</th>
+              <td className="p-3 font-semibold">{user.department}</td>
+            </tr>
+            <tr>
+              <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">담당자 직급</th>
+              <td className="p-3 font-semibold">{user.position}</td>
+            </tr>
+            <tr>
+              <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">담당자 연락처</th>
+              <td className="p-3 font-semibold">010-1111-2222</td> {/* 더미 */}
+            </tr>
+            <tr>
+              <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">담당자 이메일</th>
+              <td className="p-3 font-semibold">{user.email}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
+
+      <div className="flex justify-center gap-20 mt-10">
+        <button
+          onClick={() => setIsEditModalOpen(true)}
+          className="px-20 py-2 rounded bg-green-600 text-white font-semibold hover:bg-green-700"
+        >
+          수정
+        </button>
+        <button
+          onClick={() => setIsDeleteModalOpen(true)}
+          className="px-20 py-2 rounded bg-red-600 text-white font-semibold hover:bg-red-700"
+        >
+          삭제
+        </button>
+      </div>
+
+      <Modal
+        isOpen={isEditModalOpen}
+        title="수정하시겠습니까?"
+        message="해당 고객의 정보를 수정하시겠습니까?"
+        confirmText="수정"
+        cancelText="취소"
+        confirmColor="green"
+        onConfirm={() => {
+          setIsEditModalOpen(false);
+          console.log("수정 페이지 이동 or 수정 로직 실행");
+        }}
+        onCancel={() => setIsEditModalOpen(false)}
+      />
+
+      <Modal
+        isOpen={isDeleteModalOpen}
+        title="삭제하시겠습니까?"
+        message="해당 고객의 정보를 삭제하시겠습니까?"
+        confirmText="삭제"
+        cancelText="취소"
+        confirmColor="red"
+        onConfirm={confirmDelete}
+        onCancel={() => setIsDeleteModalOpen(false)}
+      />
     </div>
   );
 };
 
-export default CustomerDetailPage; 
+export default CustomerDetailPage;

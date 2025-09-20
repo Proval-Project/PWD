@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DashboardPages.css';
 import './StaffManagement.css';
-import { getStaff, createStaff, searchStaff, UserListResponseDto, CreateUserDto } from '../../api/userManagement';
+import { getStaff, createStaff, CreateUserDto } from '../../api/userManagement';
+import { IoIosArrowBack, IoIosSearch } from "react-icons/io";
+import { AiOutlineDoubleLeft, AiOutlineLeft, AiOutlineRight, AiOutlineDoubleRight } from "react-icons/ai";
 
 interface Staff {
   userID: string;
@@ -17,6 +19,7 @@ const StaffManagementPage: React.FC = () => {
   const [filteredStaff, setFilteredStaff] = useState<Staff[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [showAddModal, setShowAddModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,14 +61,24 @@ const StaffManagementPage: React.FC = () => {
       );
       setFilteredStaff(filtered);
     }
+    setCurrentPage(1);
   }, [searchTerm, staffMembers]);
 
-  const handleStaffClick = (staffId: string) => {
-    navigate(`/staff-detail/${staffId}`);
+  // 페이지네이션 데이터
+  const totalPages = Math.ceil(filteredStaff.length / pageSize);
+  const paginatedStaff = filteredStaff.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
   };
 
-  const handleAddStaff = () => {
-    setShowAddModal(true);
+  const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setPageSize(Number(e.target.value));
+    setCurrentPage(1);
   };
 
   if (loading) {
@@ -91,79 +104,117 @@ const StaffManagementPage: React.FC = () => {
   }
 
   return (
-    <div className="staff-management-page">
-      <div className="page-header">
-        <div className="header-left">
+    <div className="p-5 max-w-[1200px] mx-auto">
+      {/* 헤더 */}
+      <div className="flex items-center mb-1 gap-3 mt-7">
+        <button className="text-xl text-black p-1" onClick={() => navigate(-1)}>
+          <IoIosArrowBack />
+        </button>
+        <div className="text-2xl font-bold text-black">
           <h1>담당자 목록</h1>
         </div>
-        <div className="header-right">
-          <button className="add-staff-btn" onClick={handleAddStaff}>
+      </div>
+
+      {/* 검색창 */}
+      <div className="search-section">
+        <div className="search-row">
+          <div className="search-field">
+            <div className="search-bar">
+              <IoIosSearch className="search-icon" />
+              <input
+                type="text"
+                placeholder="검색"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 테이블 */}
+      <div className="table-wrapper mt-8">
+        <div className="add-staff-btn-wrapper flex justify-end mb-6">
+          <button
+            className="min-w-[150px] bg-[#DFDFDF] border-2 border-[#CDCDCD] text-black font-semibold px-4 py-2 rounded-2xl hover:bg-blue-700 hover:text-white hover:border-blue-700"
+            onClick={() => setShowAddModal(true)}
+          >
             담당자 추가
           </button>
         </div>
-      </div>
-
-      <div className="search-section">
-        <div className="search-box">
-          <span className="search-icon">🔍</span>
-          <input
-            type="text"
-            placeholder="검색"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
+        <div className="table-container">
+          <table className="customer-table">
+            <thead>
+              <tr>
+                <th>아이디</th>
+                <th>담당자 성함</th>
+                <th>담당자 부서</th>
+                <th>담당자 이메일</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedStaff.map((staff) => (
+                <tr 
+                  key={staff.userID}
+                  onClick={() => navigate(`/staff-detail/${staff.userID}`)}
+                  className="customer-row"
+                >
+                  <td>{staff.userID}</td>
+                  <td>{staff.name}</td>
+                  <td>{staff.department}</td>
+                  <td>{staff.email}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <div className="table-container">
-        <table className="staff-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>담당자 성함</th>
-              <th>담당자 부서</th>
-              <th>담당자 이메일</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredStaff.map((staff) => (
-              <tr 
-                key={staff.userID}
-                onClick={() => handleStaffClick(staff.userID)}
-                className="staff-row"
-              >
-                <td>{staff.userID}</td>
-                <td>{staff.name}</td>
-                <td>{staff.department}</td>
-                <td>{staff.email}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* 페이지네이션 */}
+      <div className="flex items-center justify-center gap-2 mt-7">
+        <button onClick={() => handlePageChange(1)} disabled={currentPage === 1} className="w-8 h-8 flex items-center justify-center bg-white border rounded disabled:opacity-50">
+          <AiOutlineDoubleLeft />
+        </button>
+        <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="w-8 h-8 flex items-center justify-center bg-white border rounded disabled:opacity-50">
+          <AiOutlineLeft />
+        </button>
+
+        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+          const page = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+          return (
+            <button
+              key={page}
+              onClick={() => handlePageChange(page)}
+              className={`w-8 h-8 flex items-center justify-center rounded font-semibold ${
+                currentPage === page ? 'bg-blue-600 text-white' : 'text-black'
+              }`}
+            >
+              {page}
+            </button>
+          );
+        })}
+
+        <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="w-8 h-8 flex items-center justify-center bg-white border rounded disabled:opacity-50">
+          <AiOutlineRight />
+        </button>
+        <button onClick={() => handlePageChange(totalPages)} disabled={currentPage === totalPages} className="w-8 h-8 flex items-center justify-center bg-white border rounded disabled:opacity-50">
+          <AiOutlineDoubleRight />
+        </button>
+
+        <select value={pageSize} onChange={handlePageSizeChange} className="ml-4 p-1 border rounded font-semibold">
+          <option value={10}>10</option>
+          <option value={20}>20</option>
+          <option value={30}>30</option>
+          <option value={40}>40</option>
+          <option value={50}>50</option>
+        </select>
       </div>
 
-      <div className="pagination">
-        <button className="pagination-btn">&lt;</button>
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((page) => (
-          <button
-            key={page}
-            className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
-            onClick={() => setCurrentPage(page)}
-          >
-            {page}
-          </button>
-        ))}
-        <button className="pagination-btn">&gt;</button>
-      </div>
-
+      {/* 추가 모달 */}
       {showAddModal && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <StaffAddForm 
-              onClose={() => setShowAddModal(false)} 
-              onSuccess={loadStaff}
-            />
+            <StaffAddForm onClose={() => setShowAddModal(false)} onSuccess={loadStaff} />
           </div>
         </div>
       )}
@@ -171,7 +222,7 @@ const StaffManagementPage: React.FC = () => {
   );
 };
 
-// 담당자 추가 폼 컴포넌트
+// ✅ 담당자 추가 폼 (표 스타일)
 const StaffAddForm: React.FC<{ onClose: () => void; onSuccess: () => void }> = ({ onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     userID: '',
@@ -197,16 +248,16 @@ const StaffAddForm: React.FC<{ onClose: () => void; onSuccess: () => void }> = (
     try {
       setLoading(true);
       setError(null);
-      
+
       const staffData: CreateUserDto = {
         ...formData,
-        roleID: 2, // 담당자 역할
-        companyName: '프로발', // 담당자는 프로발로 디폴트 설정
+        roleID: 2,
+        companyName: '프로발',
         businessNumber: '',
         address: '',
         companyPhone: ''
       };
-      
+
       await createStaff(staffData);
       onSuccess();
       onClose();
@@ -220,103 +271,51 @@ const StaffAddForm: React.FC<{ onClose: () => void; onSuccess: () => void }> = (
 
   return (
     <div className="staff-add-form">
-      <h2>담당자 추가</h2>
       <form onSubmit={handleSubmit}>
-        <div className="form-row">
-          <div className="form-group">
-            <label>아이디</label>
-            <input
-              type="text"
-              name="userID"
-              value={formData.userID}
-              onChange={handleChange}
-              placeholder="user_ID"
-            />
-          </div>
-          <div className="form-group">
-            <label>비밀번호</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="user_Password"
-            />
-          </div>
+        <div className="overflow-hidden rounded-lg border border-[#CDCDCD] bg-white shadow">
+          <table className="w-full border-collapse">
+            <tbody>
+              {[
+                { label: "아이디", name: "userID", type: "text" },
+                { label: "비밀번호", name: "password", type: "password" },
+                { label: "담당자 성함", name: "name", type: "text" },
+                { label: "담당자 부서", name: "department", type: "text" },
+                { label: "담당자 직급", name: "position", type: "text" },
+                { label: "담당자 이메일", name: "email", type: "email" },
+                { label: "담당자 연락처", name: "phoneNumber", type: "text" },
+              ].map((field) => (
+                <tr key={field.name}>
+                  <th className="w-1/3 bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">
+                    {field.label}
+                  </th>
+                  <td className="p-3">
+                    <input
+                      type={field.type}
+                      name={field.name}
+                      value={(formData as any)[field.name]}
+                      onChange={handleChange}
+                      className="w-full border border-[#CDCDCD] rounded px-2 py-1"
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label>담당자 성함</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="담당자1"
-            />
-          </div>
-          <div className="form-group">
-            <label>담당자 부서</label>
-            <input
-              type="text"
-              name="department"
-              value={formData.department}
-              onChange={handleChange}
-              placeholder="영업팀"
-            />
-          </div>
-        </div>
+        {error && <div className="error-message mt-2">{error}</div>}
 
-        <div className="form-row">
-          <div className="form-group">
-            <label>담당자 직급</label>
-            <input
-              type="text"
-              name="position"
-              value={formData.position}
-              onChange={handleChange}
-              placeholder="대리"
-            />
-          </div>
-          <div className="form-group">
-            <label>담당자 이메일</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="emailaddress@gmail.com"
-            />
-          </div>
-        </div>
-
-        <div className="form-group">
-          <label>담당자 연락처</label>
-          <input
-            type="text"
-            name="phoneNumber"
-            value={formData.phoneNumber}
-            onChange={handleChange}
-            placeholder="010-1234-5678"
-          />
-        </div>
-
-        {error && (
-          <div className="error-message">
-            {error}
-          </div>
-        )}
-        
-        <div className="form-actions">
-          <button type="submit" className="btn-add" disabled={loading}>
+        <div className="flex justify-center gap-20 mt-10">
+          <button type="submit" className="px-20 py-2 bg-green-600 text-white rounded font-semibold" disabled={loading}>
             {loading ? '추가 중...' : '추가'}
           </button>
-          <button type="button" className="btn-cancel" onClick={onClose} disabled={loading}>취소</button>
+          <button type="button" className="px-20 py-2 bg-red-600 text-white rounded font-semibold" onClick={onClose} disabled={loading}>
+            취소
+          </button>
         </div>
       </form>
     </div>
   );
 };
 
-export default StaffManagementPage; 
+export default StaffManagementPage;

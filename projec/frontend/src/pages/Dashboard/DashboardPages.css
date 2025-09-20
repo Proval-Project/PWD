@@ -1,5 +1,11 @@
-.dashboard-page .page {
+.dashboard-page {
+  background-color: #EFEFEF;
+  min-height: 100vh;
   padding: 20px;
+  box-sizing: border-box;
+}
+
+.dashboard-page .page {
   max-width: 1200px;
   margin: 0 auto;
 }
