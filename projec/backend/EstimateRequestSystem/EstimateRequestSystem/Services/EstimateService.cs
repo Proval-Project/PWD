@@ -6336,7 +6336,16 @@ namespace EstimateRequestSystem.Services
                 int lastDataRow = 10 + dataRows.Count - 1;
                 var fromAddress = newWorksheet.Cell(10, 43).Address.ToString();
                 var toAddress = newWorksheet.Cell(lastDataRow, 43).Address.ToString();
+                
+                // 셀 범위의 형식을 숫자로 설정
+                var range = newWorksheet.Range($"{fromAddress}:{toAddress}");
+                range.Style.NumberFormat.NumberFormatId = 2; // 숫자 형식
+                
+                // SUM 공식 설정
                 newWorksheet.Cell(40, 43).FormulaA1 = $"SUM({fromAddress}:{toAddress})";
+                
+                // 결과 셀도 숫자 형식으로 설정
+                newWorksheet.Cell(40, 43).Style.NumberFormat.NumberFormatId = 2;
             }
         }
         
@@ -6489,9 +6498,9 @@ public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
             for(int j = 0; j < row_ds_3.Length; j++) { newWorksheet.Cell(row_ds_3[j], 25).Value = rowData[ds_target_value_3[j]]?.ToString(); }
 
             // Part 4: 액세서리 코드 데이터
-            int[] row_ds_4 = { 4, 12, 18, 24, 28, 30, 32, 35 };
-            string[] ds_target_value_4 = { "PosCodeName", "SolCodeName", "LimCodeName", "ASCodeName", "VolCodeName", "AirOpCodeName", "LockupCodeName", "SnapActCodeName" };
-            for(int j = 0; j < row_ds_4.Length; j++) { newWorksheet.Cell(row_ds_4[j], 97).Value = rowData[ds_target_value_4[j]]?.ToString(); }
+            int[] row_ds_4 = { 9, 11, 13, 15, 18, 24, 26, 30, 34, 36, 38, 41 };
+            string[] ds_target_value_4 = { "ActSeriesName", "ActSizeName", "ActTypeName", "HWName", "PosCodeName", "ASCodeName", "SolCodeName" , "LimCodeName", "LockupCodeName", "SnapActCodeName", "AirOpCodeName" , "VolCodeName" };
+            for(int j = 0; j < row_ds_4.Length; j++) { newWorksheet.Cell(row_ds_4[j], 91).Value = rowData[ds_target_value_4[j]]?.ToString(); }
 
             // Part 5: 특정 위치 데이터
             newWorksheet.Cell(1, 82).Value = $"{i + 1} OF {dataRows.Count}";
@@ -6501,11 +6510,7 @@ public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
             newWorksheet.Cell(6, 76).Value = rowData["Qty"]?.ToString();
             newWorksheet.Cell(8, 22).Value = rowData["Medium"]?.ToString();
             newWorksheet.Cell(8, 35).Value = rowData["Fluid"]?.ToString();
-            newWorksheet.Cell(17, 92).Value = rowData["ActTypeName"]?.ToString();
-            newWorksheet.Cell(18, 92).Value = rowData["ActSeriesName"]?.ToString();
             newWorksheet.Cell(30, 36).Value = rowData["TrimPortSizeName"]?.ToString();
-            newWorksheet.Cell(4, 92).Value = rowData["ActSizeName"]?.ToString();
-            newWorksheet.Cell(11, 92).Value = rowData["HWName"]?.ToString();
         }
         
         // 모든 시트 생성이 끝난 후 원본 템플릿 시트를 삭제합니다.
@@ -6746,7 +6751,7 @@ public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
         var worksheet_est2 = workbook.Worksheet("다수량견적서");
         
         bool headerSet = false;
-        var items = new List<(string ValveTypeName, decimal? UnitPrice, string BodySizeName, string TrimPortSizeName)>();
+        var items = new List<(string ValveTypeName, decimal? UnitPrice, string BodySizeName, string TrimPortSizeName, int Qty)>();
         
         while (await reader.ReadAsync())
         {
@@ -6764,7 +6769,8 @@ public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
             string vt = reader["ValveTypeName"]?.ToString() ?? string.Empty;
             decimal? unitPrice = null;
             if (decimal.TryParse(reader["UnitPrice"]?.ToString(), out var parsed)) unitPrice = parsed;
-            items.Add((vt, unitPrice, bodySize, trimPortSize));
+            int qty = int.TryParse(reader["Qty"]?.ToString(), out var qtyParsed) ? qtyParsed : 0;
+            items.Add((vt, unitPrice, bodySize, trimPortSize, qty));
         }
 
         int rowIndex = 0;
@@ -6788,10 +6794,10 @@ public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
             {
                 worksheet_est2.Cell(row_est2, 12).Value = "";
             }
-            worksheet_est2.Cell(row_est2, 13).Value = group.Count();
+            worksheet_est2.Cell(row_est2, 13).Value = group.Sum(x => x.Qty);
             worksheet_est2.Cell(row_est2, 14).Value = group.First().UnitPrice?.ToString();
             // 합계 = 단가 × 수량(같은 ValveType 개수)
-            worksheet_est2.Cell(row_est2, 15).Value = (group.First().UnitPrice ?? 0m) * group.Count();
+            worksheet_est2.Cell(row_est2, 15).Value = (group.First().UnitPrice ?? 0m) * group.Sum(x => x.Qty);
             rowIndex++;
         }
 

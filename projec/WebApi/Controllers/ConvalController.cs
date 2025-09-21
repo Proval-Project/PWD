@@ -124,6 +124,7 @@ namespace ConvalWebApi.Controllers
                 {
                     ["EstimateNo"] = customerData.GetValueOrDefault("EstimateNo", estimateNo),
                     ["CustomerName"] = GetValueOrDash(customerData.GetValueOrDefault("CustomerName", null)),
+                    ["Requester"] = GetValueOrDash(customerData.GetValueOrDefault("Requester", null)),
                     ["Engineer"] = GetValueOrDash(customerData.GetValueOrDefault("Engineer", null)),
                     ["Medium"] = GetValueOrDash(customerData.GetValueOrDefault("Medium", null)),
                     ["Fluid"] = GetValueOrDash(customerData.GetValueOrDefault("Fluid", null)),
@@ -284,6 +285,8 @@ namespace ConvalWebApi.Controllers
 
                     ["PressureClassUnit"] = GetValueOrDash(convalData.GetValueOrDefault("PressureClassUnit", null)),
                     ["BodySizeUnit"] = GetValueOrDash(convalData.GetValueOrDefault("BodySizeUnit", null)),
+                    ["SS100Unit"] = GetValueOrDash(convalData.GetValueOrDefault("SS100Unit", null)),
+                    ["TheoreticalRangeabilityUnit"] = GetValueOrDash(convalData.GetValueOrDefault("TheoreticalRangeabilityUnit", null)),
 
                     ["CONVALTrim"] = GetValueOrDash(convalData.GetValueOrDefault("CONVALTrim", null)),
                     ["FlowDirection"] = GetValueOrDash(convalData.GetValueOrDefault("FlowDirection", null)),
@@ -473,6 +476,7 @@ namespace ConvalWebApi.Controllers
                                     FluidCF1Max = @FluidCF1Max, FluidCF1Nor = @FluidCF1Nor, FluidCF1Min = @FluidCF1Min, FluidCF1Unit = @FluidCF1Unit,
                                     ValveType = @ValveType, FlowDirection = @FlowDirection, ValvePerformClass = @ValvePerformClass,
                                     Protection = @Protection, BasicCharacter = @BasicCharacter, TheoreticalRangeability = @TheoreticalRangeability,
+                                    TheoreticalRangeabilityUnit = @TheoreticalRangeabilityUnit, SS100Unit = @SS100Unit,
                                     FlowCoeff = @FlowCoeff, FlowCoeffUnit = @FlowCoeffUnit, NorFlowCoeff = @NorFlowCoeff, NorFlowCoeffUnit = @NorFlowCoeffUnit,
                                     Rating = @PressureClass, PressureClassUnit = @PressureClassUnit,
                                     BodySize = @BodySize, SizePressureClass = @SizePressureClass,
@@ -512,6 +516,7 @@ namespace ConvalWebApi.Controllers
                                     FluidCF1Max, FluidCF1Nor, FluidCF1Min, FluidCF1Unit,
                                     ValveType, FlowDirection, ValvePerformClass,
                                     Protection, BasicCharacter, TheoreticalRangeability,
+                                    TheoreticalRangeabilityUnit, SS100Unit,
                                     FlowCoeff, FlowCoeffUnit, NorFlowCoeff, NorFlowCoeffUnit,
                                     Rating, PressureClassUnit,
                                     BodySize, SizePressureClass,
@@ -545,6 +550,7 @@ namespace ConvalWebApi.Controllers
                                     @FluidCF1Max, @FluidCF1Nor, @FluidCF1Min, @FluidCF1Unit,
                                     @ValveType, @FlowDirection, @ValvePerformClass,
                                     @Protection, @BasicCharacter, @TheoreticalRangeability,
+                                    @TheoreticalRangeabilityUnit, @SS100Unit,
                                     @FlowCoeff, @FlowCoeffUnit, @NorFlowCoeff, @NorFlowCoeffUnit,
                                     @PressureClass, @PressureClassUnit,
                                     @BodySize, @SizePressureClass,
@@ -839,6 +845,7 @@ namespace ConvalWebApi.Controllers
                             er.*,
                             es.TempEstimateNo AS EstimateNo,
                             c.CompanyName AS CustomerName,
+                            c.Name AS Requester,
                             w.Name AS Engineer,
                             bvl.ValveSeries AS ValveTypeName,
                             bsl.BodySize AS BodySizeName,

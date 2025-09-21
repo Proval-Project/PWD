@@ -25,6 +25,10 @@ const CustomerDataDisplay = ({ data, isLoading }) => {
               <td>{data?.CustomerName || '-'}</td>
             </tr>
             <tr>
+              <td className="fw-bold">요청자</td>
+              <td>{data?.Requester || '-'}</td>
+            </tr>
+            <tr>
               <td className="fw-bold">담당자</td>
               <td>{data?.Engineer || '-'}</td>
             </tr>

@@ -778,7 +778,16 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                     style={{ backgroundColor: '#e9ecef' }}
                   />
                 </td>
-                <td>%</td>
+                <td>
+                  <Form.Select
+                    size="sm"
+                    value={formData.SS100Unit || '%'}
+                    onChange={(e) => setFormData({ ...formData, SS100Unit: e.target.value })}
+                  >
+                    <option value="%">%</option>
+                    <option value="-">-</option>
+                  </Form.Select>
+                </td>
               </tr>
               <tr>
                 <td className="fw-bold">LpAe</td>
@@ -1505,7 +1514,15 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                     value={formData.TheoreticalRangeability || ''}
                     onChange={(e) => handleInputChange('TheoreticalRangeability', null, e.target.value)}
                   />
-                  <span>%</span>
+                  <Form.Select
+                    size="sm"
+                    value={formData.TheoreticalRangeabilityUnit || '%'}
+                    onChange={(e) => setFormData({ ...formData, TheoreticalRangeabilityUnit: e.target.value })}
+                    style={{ maxWidth: 100 }}
+                  >
+                    <option value="%">%</option>
+                    <option value="-">-</option>
+                  </Form.Select>
                 </div>
               </td>
             </tr>
@@ -1570,72 +1587,61 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
               </td>
             </tr>
             <tr>
-              <td className="fw-bold">Suggested valve size</td>
+              <td className="fw-bold">Selected valve size</td>
               <td>
-                <Form.Control
+                <Form.Select
                   size="sm"
-                  value={formData.SuggestedValveSize || ''}
-                  readOnly
-                  style={{ backgroundColor: '#e9ecef' }}
-                />
+                  value={formData.BodySize || ''}
+                  onChange={(e) => handleInputChange('BodySize', null, e.target.value)}
+                >
+                  <option value="">선택</option>
+                  <option value={'1/2"'}>1/2"</option>
+                  <option value={'3/4"'}>3/4"</option>
+                  <option value={'1"'}>1"</option>
+                  <option value={'1 1/4"'}>1 1/4"</option>
+                  <option value={'1 1/2"'}>1 1/2"</option>
+                  <option value={'2"'}>2"</option>
+                  <option value={'2 1/2"'}>2 1/2"</option>
+                  <option value={'3"'}>3"</option>
+                  <option value={'4"'}>4"</option>
+                  <option value={'5"'}>5"</option>
+                  <option value={'6"'}>6"</option>
+                  <option value={'8"'}>8"</option>
+                  <option value={'10"'}>10"</option>
+                  <option value={'12"'}>12"</option>
+                  <option value={'14"'}>14"</option>
+                  <option value={'16"'}>16"</option>
+                  <option value={'18"'}>18"</option>
+                  <option value={'20"'}>20"</option>
+                  <option value={'22"'}>22"</option>
+                  <option value={'24"'}>24"</option>
+                  <option value={'26"'}>26"</option>
+                  <option value={'28"'}>28"</option>
+                  <option value={'30"'}>30"</option>
+                  <option value={'32"'}>32"</option>
+                  <option value={'36"'}>36"</option>
+                </Form.Select>
               </td>
             </tr>
-                         <tr>
-               <td className="fw-bold">Selected valve size</td>
-               <td>
-                 <Form.Select
-                   size="sm"
-                   value={formData.BodySize || ''}
-                   onChange={(e) => handleInputChange('BodySize', null, e.target.value)}
-                 >
-                   <option value="">선택</option>
-                   <option value={'1/2"'}>1/2"</option>
-                   <option value={'3/4"'}>3/4"</option>
-                   <option value={'1"'}>1"</option>
-                   <option value={'1 1/4"'}>1 1/4"</option>
-                   <option value={'1 1/2"'}>1 1/2"</option>
-                   <option value={'2"'}>2"</option>
-                   <option value={'2 1/2"'}>2 1/2"</option>
-                   <option value={'3"'}>3"</option>
-                   <option value={'4"'}>4"</option>
-                   <option value={'5"'}>5"</option>
-                   <option value={'6"'}>6"</option>
-                   <option value={'8"'}>8"</option>
-                   <option value={'10"'}>10"</option>
-                   <option value={'12"'}>12"</option>
-                   <option value={'14"'}>14"</option>
-                   <option value={'16"'}>16"</option>
-                   <option value={'18"'}>18"</option>
-                   <option value={'20"'}>20"</option>
-                   <option value={'22"'}>22"</option>
-                   <option value={'24"'}>24"</option>
-                   <option value={'26"'}>26"</option>
-                   <option value={'28"'}>28"</option>
-                   <option value={'30"'}>30"</option>
-                   <option value={'32"'}>32"</option>
-                   <option value={'36"'}>36"</option>
-                 </Form.Select>
-               </td>
-             </tr>
-             <tr>
-               <td className="fw-bold">Pressure class</td>
-               <td>
-                 <Form.Select
-                   size="sm"
-                   value={formData.PressureClass || ''}
-                   onChange={(e) => handleInputChange('PressureClass', null, e.target.value)}
-                 >
-                   <option value="">선택</option>
-                   <option value="class 150">class 150</option>
-                   <option value="class 300">class 300</option>
-                   <option value="class 600">class 600</option>
-                   <option value="class 900">class 900</option>
-                   <option value="class 1500">class 1500</option>
-                   <option value="class 2500">class 2500</option>
-                   <option value="class 4500">class 4500</option>
-                 </Form.Select>
-               </td>
-             </tr>
+            <tr>
+              <td className="fw-bold">Pressure class</td>
+              <td>
+                <Form.Select
+                  size="sm"
+                  value={formData.PressureClass || ''}
+                  onChange={(e) => handleInputChange('PressureClass', null, e.target.value)}
+                >
+                  <option value="">선택</option>
+                  <option value="class 150">class 150</option>
+                  <option value="class 300">class 300</option>
+                  <option value="class 600">class 600</option>
+                  <option value="class 900">class 900</option>
+                  <option value="class 1500">class 1500</option>
+                  <option value="class 2500">class 2500</option>
+                  <option value="class 4500">class 4500</option>
+                </Form.Select>
+              </td>
+            </tr>
           </tbody>
         </Table>
       </div>
@@ -1648,35 +1654,43 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
         <h6 className="mb-3">Load-dependent values (부하 의존 값)</h6>
         <Table bordered size="sm">
           <tbody>
-            <tr>
-              <td className="fw-bold" style={{width: '30%'}}>s/s100</td>
-              <td>
-                <div className="d-flex align-items-center gap-2">
-                  <Form.Control
-                    size="sm"
-                    placeholder="Max"
-                    value={formData.SS100Max || ''}
-                    readOnly
-                    style={{ maxWidth: 120, backgroundColor: '#e9ecef' }}
-                  />
-                  <Form.Control
-                    size="sm"
-                    placeholder="Normal"
-                    value={formData.SS100Nor || ''}
-                    readOnly
-                    style={{ maxWidth: 120, backgroundColor: '#e9ecef' }}
-                  />
-                  <Form.Control
-                    size="sm"
-                    placeholder="Min"
-                    value={formData.SS100Min || ''}
-                    readOnly
-                    style={{ maxWidth: 120, backgroundColor: '#e9ecef' }}
-                  />
-                  <span className="ms-2">%</span>
-                </div>
-              </td>
-            </tr>
+          <tr>
+            <td className="fw-bold" style={{width: '30%'}}>s/s100</td>
+            <td>
+              <div className="d-flex align-items-center gap-2">
+                <Form.Control
+                  size="sm"
+                  placeholder="Max"
+                  value={formData.SS100Max || ''}
+                  readOnly
+                  style={{ maxWidth: 120, backgroundColor: '#e9ecef' }}
+                />
+                <Form.Control
+                  size="sm"
+                  placeholder="Normal"
+                  value={formData.SS100Nor || ''}
+                  readOnly
+                  style={{ maxWidth: 120, backgroundColor: '#e9ecef' }}
+                />
+                <Form.Control
+                  size="sm"
+                  placeholder="Min"
+                  value={formData.SS100Min || ''}
+                  readOnly
+                  style={{ maxWidth: 120, backgroundColor: '#e9ecef' }}
+                />
+                <Form.Select
+                  size="sm"
+                  value={formData.SS100Unit || '%'}
+                  onChange={(e) => setFormData({ ...formData, SS100Unit: e.target.value })}
+                  style={{ maxWidth: 100 }}
+                >
+                  <option value="%">%</option>
+                  <option value="-">-</option>
+                </Form.Select>
+              </div>
+            </td>
+          </tr>
             <tr>
               <td className="fw-bold">u1</td>
               <td>
@@ -1869,23 +1883,50 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
   };
 
   // PDF 파일 바로 읽기 (새 탭에서 열기)
-  const handlePdfView = async () => {
+    const handlePdfView = async () => {
     if (!data?.TempEstimateNo) return;
     
     try {
-      // api.js의 downloadPdf 함수와 동일한 방식으로 처리
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://localhost:7001/api'}/conval/download/pdf/${data.TempEstimateNo}`);
+      const apiUrl = `http://192.168.0.59:7001/api/conval/download/pdf/${data.TempEstimateNo}`;
+      console.log('PDF 요청 URL:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/pdf',
+        },
+        mode: 'cors', // CORS 모드 명시적 설정
+      });
+      
+      console.log('PDF 응답 상태:', response.status, response.statusText);
+      
       if (response.ok) {
         const blob = await response.blob();
+        console.log('PDF Blob 크기:', blob.size);
         const url = window.URL.createObjectURL(blob);
-        window.open(url, '_blank');
+        
+        // 새 탭에서 PDF 열기
+        const newWindow = window.open(url, '_blank');
+        if (!newWindow) {
+          alert('팝업이 차단되었습니다. 팝업 차단을 해제해주세요.');
+          window.URL.revokeObjectURL(url);
+          return;
+        }
+        
         // 메모리 누수 방지를 위해 나중에 URL 해제
-        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+        setTimeout(() => window.URL.revokeObjectURL(url), 10000);
       } else {
-        alert('PDF 파일을 열 수 없습니다.');
+        const errorText = await response.text();
+        console.error('PDF 서버 오류:', response.status, errorText);
+        alert(`PDF 파일을 열 수 없습니다: ${response.status} ${response.statusText}`);
       }
     } catch (error) {
-      alert('PDF 파일 열기 실패: ' + error.message);
+      console.error('PDF 파일 열기 실패:', error);
+      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+        alert('네트워크 연결을 확인해주세요. 서버가 실행 중인지 확인하세요.');
+      } else {
+        alert('PDF 파일 열기 실패: ' + error.message);
+      }
     }
   };
 
@@ -1894,19 +1935,46 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
     if (!data?.TempEstimateNo) return;
     
     try {
-      // api.js의 downloadCcv 함수와 동일한 방식으로 처리
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://localhost:7001/api'}/conval/download/ccv/${data.TempEstimateNo}`);
+      const apiUrl = `http://192.168.0.59:7001/api/conval/download/ccv/${data.TempEstimateNo}`;
+      console.log('CCV 요청 URL:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/plain, application/octet-stream',
+        },
+        mode: 'cors', // CORS 모드 명시적 설정
+      });
+      
+      console.log('CCV 응답 상태:', response.status, response.statusText);
+      
       if (response.ok) {
         const blob = await response.blob();
+        console.log('CCV Blob 크기:', blob.size);
         const url = window.URL.createObjectURL(blob);
-        window.open(url, '_blank');
+        
+        // 새 탭에서 CCV 파일 열기
+        const newWindow = window.open(url, '_blank');
+        if (!newWindow) {
+          alert('팝업이 차단되었습니다. 팝업 차단을 해제해주세요.');
+          window.URL.revokeObjectURL(url);
+          return;
+        }
+        
         // 메모리 누수 방지를 위해 나중에 URL 해제
-        setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+        setTimeout(() => window.URL.revokeObjectURL(url), 10000);
       } else {
-        alert('CCV 파일을 열 수 없습니다.');
+        const errorText = await response.text();
+        console.error('CCV 서버 오류:', response.status, errorText);
+        alert(`CCV 파일을 열 수 없습니다: ${response.status} ${response.statusText}`);
       }
     } catch (error) {
-      alert('CCV 파일 열기 실패: ' + error.message);
+      console.error('CCV 파일 열기 실패:', error);
+      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+        alert('네트워크 연결을 확인해주세요. 서버가 실행 중인지 확인하세요.');
+      } else {
+        alert('CCV 파일 열기 실패: ' + error.message);
+      }
     }
   };
 

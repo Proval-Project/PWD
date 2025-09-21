@@ -4,7 +4,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 import ConvalDataDisplay from './components/ConvalDataDisplay';
 import CustomerDataDisplay from './components/CustomerDataDisplay';
-import DatabaseTest from './components/DatabaseTest';
 import { fetchCustomerData, fetchConvalData, recalculateConval, retryConval } from './services/api';
 
 function App() {
@@ -25,18 +24,13 @@ function App() {
     }
   }, []);
 
-  // 견적번호가 설정되면 자동으로 데이터 로드
-  useEffect(() => {
-    if (estimateNo) {
-      loadData();
-    }
-  }, [estimateNo]);
   const [customerData, setCustomerData] = useState(null);
   const [convalData, setConvalData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [hasAutoExecuted, setHasAutoExecuted] = useState(false); // 자동 실행 여부 추적
 
   // 상태 폴링
   useEffect(() => {
@@ -61,7 +55,7 @@ function App() {
     }
   }, [isProcessing, estimateNo]);
 
-  const loadData = async () => {
+  const loadData = async (autoExecuteConval = false) => {
     if (!estimateNo) return;
 
     setIsLoading(true);
@@ -77,12 +71,29 @@ function App() {
       setCustomerData(customerResult);
       setConvalData(convalResult);
       setSuccess('데이터를 성공적으로 로드했습니다.');
+      
+      // 자동 CONVAL 재호출이 요청된 경우 실행
+      if (autoExecuteConval && !hasAutoExecuted) {
+        console.log('[UI] 자동 CONVAL 재호출 시작');
+        setHasAutoExecuted(true); // 자동 실행 완료 표시
+        // 잠시 대기 후 CONVAL 재호출 실행
+        setTimeout(() => {
+          handleRecalculate(convalResult);
+        }, 1000);
+      }
     } catch (error) {
       setError('데이터 로드 중 오류가 발생했습니다: ' + error.message);
     } finally {
       setIsLoading(false);
     }
   };
+
+  // 견적번호가 설정되면 자동으로 데이터 로드 및 CONVAL 재호출
+  useEffect(() => {
+    if (estimateNo) {
+      loadData(true); // 자동 CONVAL 재호출 활성화
+    }
+  }, [estimateNo]);
 
   const handleRecalculate = async (updatedConvalData) => {
     if (!estimateNo) {
@@ -104,7 +115,7 @@ function App() {
       // ConvalDataDisplay에서 전달받은 업데이트된 데이터 사용
       const convalDataToSend = updatedConvalData || convalData;
       console.log('[UI] calling retryConval', {
-        url: 'http://localhost:44340/api/conval/retry',
+        url: 'http://192.168.0.59:44340/api/conval/retry',
         body: { SomeParam: estimateNo, SheetId: sheetId, ConvalData: convalDataToSend }
       });
       const result = await retryConval({ SomeParam: estimateNo, SheetId: sheetId, ConvalData: convalDataToSend });
@@ -145,121 +156,95 @@ function App() {
 
   return (
     <Container className="mt-4">
-             <Row>
-         <Col>
-           <div className="d-flex justify-content-between align-items-center mb-4">
-                           <button 
-                className="btn btn-outline-secondary"
-                onClick={() => {
-                  const url = `http://localhost:3000/dashboard/estimate-detail/${estimateNo}`;
-                  window.open(url, '_self');
-                }}
-              >
-                ← 견적 상세로 돌아가기
-              </button>
-             <h1 className="text-center mb-0">CONVAL 테스트 웹 애플리케이션</h1>
-             <div style={{width: '120px'}}></div> {/* 오른쪽 여백을 위한 더미 div */}
-           </div>
-         </Col>
-       </Row>
+      <Row>
+        <Col>
+          <div className="d-flex justify-content-between align-items-center mb-4">
+            <button 
+              className="btn btn-outline-secondary"
+              onClick={() => {
+                const url = `http://192.168.0.59:3000/dashboard/estimate-detail/${estimateNo}`;
+                window.open(url, '_self');
+              }}
+            >
+              ← 견적 상세로 돌아가기
+            </button>
+            <h1 className="text-center mb-0">CONVAL 테스트 웹 애플리케이션</h1>
+            <div style={{width: '120px'}}></div> {/* 오른쪽 여백을 위한 더미 div */}
+          </div>
+        </Col>
+      </Row>
 
-      {/* 탭 네비게이션 */}
-      <Tab.Container id="main-tabs" defaultActiveKey="main">
-        <Row>
-          <Col>
-            <Nav variant="tabs" className="mb-4">
-              <Nav.Item>
-                <Nav.Link eventKey="main">메인 애플리케이션</Nav.Link>
-              </Nav.Item>
-              <Nav.Item>
-                <Nav.Link eventKey="database-test">데이터베이스 테스트</Nav.Link>
-              </Nav.Item>
-            </Nav>
-          </Col>
-        </Row>
-
-        <Tab.Content>
-          {/* 메인 애플리케이션 탭 */}
-          <Tab.Pane eventKey="main">
-            {/* 입력 폼 */}
-            <Card className="mb-4">
-              <Card.Header>
-                <h5>데이터 조회</h5>
-              </Card.Header>
-              <Card.Body>
-                <Row>
-                                     <Col md={6}>
-                     <Form.Group className="mb-3">
-                       <Form.Label>견적 번호</Form.Label>
-                       <Form.Control
-                         type="text"
-                         value={estimateNo}
-                         readOnly
-                         className="form-control-plaintext"
-                       />
-                     </Form.Group>
-                   </Col>
-                   <Col md={3}>
-                     <Form.Group className="mb-3">
-                       <Form.Label>시트 ID</Form.Label>
-                       <Form.Control
-                         type="number"
-                         value={sheetId}
-                         readOnly
-                         className="form-control-plaintext"
-                       />
-                     </Form.Group>
-                   </Col>
-                                     <Col md={3} className="d-flex align-items-end">
-                     <div className="text-muted">
-                       <small>URL 파라미터에서 자동 로드됩니다</small>
-                     </div>
-                   </Col>
-                </Row>
-              </Card.Body>
-            </Card>
-
-            {/* 알림 메시지 */}
-            {error && (
-              <Alert variant="danger" onClose={() => setError('')} dismissible>
-                {error}
-              </Alert>
-            )}
-            {success && (
-              <Alert variant="success" onClose={() => setSuccess('')} dismissible>
-                {success}
-              </Alert>
-            )}
-
-            {/* 데이터 표시 */}
-            <Row>
-              {/* 고객 데이터 */}
-              <Col md={6}>
-                <CustomerDataDisplay 
-                  data={customerData} 
-                  isLoading={isLoading}
+      {/* 메인 애플리케이션 */}
+      <Card className="mb-4">
+        <Card.Header>
+          <h5>데이터 조회</h5>
+        </Card.Header>
+        <Card.Body>
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>견적 번호</Form.Label>
+                <Form.Control
+                  type="text"
+                  value={estimateNo}
+                  readOnly
+                  className="form-control-plaintext"
                 />
-              </Col>
-
-              {/* CONVAL 데이터 */}
-              <Col md={6}>
-                <ConvalDataDisplay 
-                  data={convalData} 
-                  isLoading={isLoading}
-                  onRecalculate={handleRecalculate}
-                  isProcessing={isProcessing}
-                  onFileStatusRefresh={refreshFileStatus}
+              </Form.Group>
+            </Col>
+            <Col md={3}>
+              <Form.Group className="mb-3">
+                <Form.Label>시트 ID</Form.Label>
+                <Form.Control
+                  type="number"
+                  value={sheetId}
+                  readOnly
+                  className="form-control-plaintext"
                 />
-              </Col>
-            </Row>
-          </Tab.Pane>
+              </Form.Group>
+            </Col>
+            <Col md={3} className="d-flex align-items-end">
+              <div className="text-muted">
+                <small>URL 파라미터에서 자동 로드됩니다</small>
+              </div>
+            </Col>
+          </Row>
+        </Card.Body>
+      </Card>
 
-          {/* 데이터베이스 테스트 탭 */}
-          <Tab.Pane eventKey="database-test">
-            <DatabaseTest />
-          </Tab.Pane>
-        </Tab.Content>
-      </Tab.Container>
+      {/* 알림 메시지 */}
+      {error && (
+        <Alert variant="danger" onClose={() => setError('')} dismissible>
+          {error}
+        </Alert>
+      )}
+      {success && (
+        <Alert variant="success" onClose={() => setSuccess('')} dismissible>
+          {success}
+        </Alert>
+      )}
+
+      {/* 데이터 표시 */}
+      <Row>
+        {/* 고객 데이터 */}
+        <Col md={6}>
+          <CustomerDataDisplay 
+            data={customerData} 
+            isLoading={isLoading}
+          />
+        </Col>
+
+        {/* CONVAL 데이터 */}
+        <Col md={6}>
+          <ConvalDataDisplay 
+            data={convalData} 
+            isLoading={isLoading}
+            onRecalculate={handleRecalculate}
+            isProcessing={isProcessing}
+            onFileStatusRefresh={refreshFileStatus}
+          />
+        </Col>
+      </Row>
     </Container>
   );
 }
