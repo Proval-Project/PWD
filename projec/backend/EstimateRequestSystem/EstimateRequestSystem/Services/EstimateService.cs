@@ -6320,6 +6320,20 @@ namespace EstimateRequestSystem.Services
                     {
                         newWorksheet.Cell(row_vl, i).Value = (cellValue != null && Convert.ToBoolean(cellValue)) ? "Y" : "";
                     }
+                    else if (key == "Qty")
+                    {
+                        // *** 중요: 문자열일 수 있는 cellValue를 숫자로 변환하여 삽입 ***
+                        if (cellValue != null && double.TryParse(cellValue.ToString(), out double qtyValue))
+                        {
+                            // 변환 성공 시, 숫자 타입으로 값 설정
+                            newWorksheet.Cell(row_vl, i).Value(qtyValue); 
+                        }
+                        else
+                        {
+                            // 변환 실패 또는 null일 경우 0 또는 빈 값 처리
+                            newWorksheet.Cell(row_vl, i).Value(0); 
+                        }
+                    }
                     else
                     {
                         newWorksheet.Cell(row_vl, i).Value = cellValue?.ToString() ?? "";
@@ -6426,7 +6440,7 @@ public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
         using var modeCmd = new MySqlCommand("SET sql_mode = (SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));", conn);
         await modeCmd.ExecuteNonQueryAsync();
         
-        string query = @"SELECT d.*, e.Project, er.Tagno, er.Qty, bvl.ValveSeries as ValveTypeName, bsl.BodySize as BodySizeName, tpsl.PortSize as TrimPortSizeName, bml.BodyMat as BodyMatName, tml.TrimMat as TrimMatName, CONCAT(brul.RatingUnit, ' ', brl.RatingName, ' ', bcl.Connection) as RatingName, atl.ActType as ActTypeName, asl.ActSize as ActSizeName, ahl.HW as HWName, bbl.BonnetType as BonnetTypeName, tsl.TrimSeries as TrimSeriesName, ttl.TrimType as TrimTypeName, tfl.TrimForm as TrimFormName, pl.AccModelName as PosCodeName, sl.AccModelName as SolCodeName, ll.AccModelName as LimCodeName, al.AccModelName as ASCodeName, vl.AccModelName as VolCodeName, aol.AccModelName as AirOpCodeName, lkl.AccModelName as LockupCodeName, sal.AccModelName as SnapActCodeName, al_acc.AccSize as AiroperateAccSize, er.IsPositioner, er.IsSolenoid, er.IsLimSwitch, er.IsLockUp, er.IsVolumeBooster, er.IsSnapActingRelay, er.IsAirOperated, ac.ActSeries as ActSeriesName
+        string query = @"SELECT d.*, e.Project, er.Tagno, er.Qty, bvl.ValveSeries as ValveTypeName, bsl.BodySize as BodySizeName, tpsl.PortSize as TrimPortSizeName, bml.BodyMat as BodyMatName, tml.TrimMat as TrimMatName, CONCAT(brul.RatingUnit, ' ', brl.RatingName, ' ', bcl.Connection) as RatingName, atl.ActType as ActTypeName, asl.ActSize as ActSizeName, ahl.HW as HWName, bbl.BonnetType as BonnetTypeName, tsl.TrimSeries as TrimSeriesName, ttl.TrimType as TrimTypeName, tfl.TrimForm as TrimFormName, pl.AccModelName as PosCodeName, sl.AccModelName as SolCodeName, ll.AccModelName as LimCodeName, al.AccModelName as ASCodeName, vl.AccModelName as VolCodeName, al_acc.AccModelName as AirOpCodeName, lkl.AccModelName as LockupCodeName, sal.AccModelName as SnapActCodeName, er.IsPositioner, er.IsSolenoid, er.IsLimSwitch, er.IsLockUp, er.IsVolumeBooster, er.IsSnapActingRelay, er.IsAirOperated, ac.ActSeries as ActSeriesName
                         FROM DataSheetLv3 d 
                         JOIN EstimateSheetLv1 e ON d.TempEstimateNo = e.TempEstimateNo 
                         LEFT JOIN EstimateRequest er ON d.TempEstimateNo = er.TempEstimateNo AND d.SheetID = er.SheetID 
@@ -6446,15 +6460,15 @@ public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
                         LEFT JOIN TrimSeriesList tsl ON d.TrimSeries = tsl.TrimSeriesCode 
                         LEFT JOIN TrimTypeList ttl ON d.TrimType = ttl.TrimTypeCode 
                         LEFT JOIN TrimFormList tfl ON d.TrimForm = tfl.TrimFormCode 
-                        LEFT JOIN PositionerList pl ON d.PosCode = pl.AccModelCode 
-                        LEFT JOIN SolenoidList sl ON d.SolCode = sl.AccModelCode 
-                        LEFT JOIN LimitList ll ON d.LimCode = ll.AccModelCode 
-                        LEFT JOIN AirsetList al ON d.ASCode = al.AccModelCode 
-                        LEFT JOIN VolumeList vl ON d.VolCode = vl.AccModelCode 
-                        LEFT JOIN AiroperateList aol ON d.AirOpCode = aol.AccModelCode 
-                        LEFT JOIN LockupList lkl ON d.LockupCode = lkl.AccModelCode 
-                        LEFT JOIN SnapactingList sal ON d.SnapActCode = sal.AccModelCode 
-                        LEFT JOIN AiroperateList al_acc ON d.AirOpMakerCode = al_acc.AccMakerCode AND d.AirOpCode = al_acc.AccModelCode 
+                        LEFT JOIN AiroperateList al_acc ON d.AirOpMakerCode = al_acc.AccMakerCode AND d.AirOpCode = al_acc.AccModelCode
+                        LEFT JOIN PositionerList pl ON d.PosCode = pl.AccModelCode AND d.PosMakerCode = pl.AccMakerCode 
+                        LEFT JOIN SolenoidList sl ON d.SolCode = sl.AccModelCode AND d.SolMakerCode = sl.AccMakerCode 
+                        LEFT JOIN LimitList ll ON d.LimCode = ll.AccModelCode AND d.LimMakerCode = ll.AccMakerCode 
+                        LEFT JOIN AirsetList al ON d.ASCode = al.AccModelCode AND d.ASMakerCode = al.AccMakerCode 
+                        LEFT JOIN VolumeList vl ON d.VolCode = vl.AccModelCode AND d.VolMakerCode = vl.AccMakerCode 
+                        LEFT JOIN LockupList lkl ON d.LockupCode = lkl.AccModelCode AND d.LockupMakerCode = lkl.AccMakerCode 
+                        LEFT JOIN SnapactingList sal ON d.SnapActCode = sal.AccModelCode AND d.SnapActMakerCode = sal.AccMakerCode 
+
                         WHERE d.TempEstimateNo = @tempEstimateNo 
                         GROUP BY d.TempEstimateNo, d.SheetID 
                         ORDER BY er.SheetNo;";
