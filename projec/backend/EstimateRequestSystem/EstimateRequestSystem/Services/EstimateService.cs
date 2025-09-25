@@ -1750,6 +1750,7 @@ namespace EstimateRequestSystem.Services
                                CustomerName = c != null ? c.CompanyName : sheet.CustomerID,
                                ManagerName = m != null ? (m.Name ?? m.UserID) : sheet.ManagerID, // 담당자명
                                WriterName = w != null ? w.Name : null, // 작성자명
+                               WriterPosition = w != null ? w.Position : null, // 작성자 직급
                                EstimateRequestCount = _context.EstimateRequest
                                    .Where(er => er.TempEstimateNo == sheet.TempEstimateNo)
                                    .Sum(er => er.Qty)
@@ -1770,6 +1771,7 @@ namespace EstimateRequestSystem.Services
                 x.CustomerName,
                 x.ManagerName, // ManagerName 추가
                 x.WriterName,
+                x.WriterPosition,
                 x.EstimateRequestCount,
                 RequestDate = ParseDateFromTempEstimateNo(x.TempEstimateNo)
             }).AsQueryable();
@@ -1842,6 +1844,8 @@ namespace EstimateRequestSystem.Services
                     Project = x.Project ?? "",
                     TempEstimateNo = x.TempEstimateNo,
                     WriterID = x.WriterID ?? "", // 작성자 ID 추가
+                    WriterName = x.WriterName,
+                    WriterPosition = x.WriterPosition,
                     ManagerID = x.ManagerID, // ManagerID 추가
                     ManagerName = x.ManagerName ?? x.ManagerID ?? "미지정" // ManagerName 추가 및 fallback
                 })
@@ -2172,6 +2176,7 @@ namespace EstimateRequestSystem.Services
                        sheet.Project,
                        CustomerName = c != null ? c.CompanyName : sheet.CustomerID,
                        WriterName = w != null ? w.Name : null,
+                       WriterPosition = w != null ? w.Position : null,
                        ManagerName = m != null ? m.Name : null,
                        EstimateRequestCount = _context.EstimateRequest
                            .Where(er => er.TempEstimateNo == sheet.TempEstimateNo)
@@ -2192,6 +2197,7 @@ namespace EstimateRequestSystem.Services
         x.Project,
         x.CustomerName,
         x.WriterName,
+        x.WriterPosition,
         x.ManagerName,
         x.EstimateRequestCount,
         RequestDate = ParseDateFromTempEstimateNo(x.TempEstimateNo)
@@ -2253,6 +2259,8 @@ namespace EstimateRequestSystem.Services
             Project = x.Project ?? "",
             TempEstimateNo = x.TempEstimateNo,
             WriterID = x.WriterID,
+            WriterName = x.WriterName,
+            WriterPosition = x.WriterPosition,
             ManagerID = x.ManagerID,
             ManagerName = x.ManagerName,
         })

@@ -17,6 +17,8 @@ interface DraftItem {
   project: string;
   tempEstimateNo: string;
   writerID: string;
+  writerName?: string;
+  writerPosition?: string;
   managerID?: string;
   managerName?: string;
 }
@@ -208,11 +210,11 @@ const EstimateManagementPage: React.FC = () => {
             <tr>
               <th>견적번호</th>
               <th>회사명</th>
-              <th>담당자</th>
+              <th>요청자</th>
               <th>요청일자</th>
               <th>상태</th>
               <th>프로젝트명</th>
-              <th>작업</th>
+              <th>담당자</th>
             </tr>
           </thead>
           <tbody>
@@ -225,11 +227,11 @@ const EstimateManagementPage: React.FC = () => {
                 <tr key={item.tempEstimateNo} onClick={() => handleRowClick(item)} className="clickable-row">
                   <td>{item.estimateNo || '-'}</td>
                   <td>{item.companyName || '-'}</td>
-                  <td>{item.managerName || '미지정'}</td>
+                  <td>{`${item.writerName || item.writerID || '-'}`}{item.writerPosition ? ` / ${item.writerPosition}` : ''}</td>
                   <td>{item.requestDate ? formatDateYmd(item.requestDate) : extractDateFromTempEstimateNo(item.tempEstimateNo)}</td>
                   <td><span className={`status-${item.status}`}>{item.statusText}</span></td>
                   <td>{item.project || '-'}</td>
-                  <td>{item.managerID ? '담당중' : '담당가능'}</td>
+                  <td>{item.managerName || '미지정'}</td>
                 </tr>
               ))
             )}

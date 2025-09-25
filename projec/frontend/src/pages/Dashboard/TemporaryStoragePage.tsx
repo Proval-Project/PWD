@@ -18,6 +18,7 @@ interface DraftItem {
   project: string;
   tempEstimateNo: string;
   writerID: string;
+  writerName?: string;
   managerID?: string;
   managerName?: string;
 }
@@ -226,20 +227,21 @@ const TemporaryStoragePage: React.FC = () => {
             <tr>
               <th>견적번호</th>
               <th>회사명</th>
-              <th>담당자</th>
+              <th>요청자</th>
               <th>요청일자</th>
               <th>상태</th>
               <th>프로젝트명</th>
+              <th>담당자</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} className="loading">데이터를 불러오는 중...</td>
+                <td colSpan={7} className="loading">데이터를 불러오는 중...</td>
               </tr>
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={6} className="no-data">임시저장된 견적이 없습니다.</td>
+                <td colSpan={7} className="no-data">임시저장된 견적이 없습니다.</td>
               </tr>
             ) : (
               items.map((item) => (
@@ -250,7 +252,7 @@ const TemporaryStoragePage: React.FC = () => {
                 >
                   <td>{item.estimateNo}</td>
                   <td>{item.companyName}</td>
-                  <td>{item.managerName || '미지정'}</td>
+                  <td>{item.writerName || item.writerID || '-'}</td>
                   <td>{item.requestDate ? formatDateYmd(item.requestDate) : extractDateFromTempEstimateNo(item.tempEstimateNo)}</td>
                   <td>
                     <span className={`status-${item.status}`}>
@@ -258,6 +260,7 @@ const TemporaryStoragePage: React.FC = () => {
                     </span>
                   </td>
                   <td>{item.project || '-'}</td>
+                  <td>{item.managerName || '미지정'}</td>
                 </tr>
               ))
             )}

@@ -234,7 +234,7 @@ const EstimateInquiryPage: React.FC = () => {
             <tr>
               <th>견적번호</th>
               <th>회사명</th>
-              <th>담당자</th>
+              <th>요청자</th>
               <th>요청일자</th>
               <th>상태</th>
               <th>프로젝트명</th>
@@ -258,7 +258,7 @@ const EstimateInquiryPage: React.FC = () => {
                 >
                   <td>{item.estimateNo}</td>
                   <td>{item.companyName}</td>
-                  <td>{item.managerName || '미지정'}</td>
+                  <td>{`${(item as any).writerName || item.writerID || '-'}`}{(item as any).writerPosition ? ` / ${(item as any).writerPosition}` : ''}</td>
                   <td>{item.requestDate ? formatDateYmd(item.requestDate) : extractDateFromTempEstimateNo(item.tempEstimateNo)}</td>
                   <td>
                     <span className={`status-${item.status}`}>

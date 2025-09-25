@@ -40,6 +40,8 @@ export interface EstimateInquiryItem {
   managerID?: string; // 담당자 ID
   managerName?: string; // 담당자 이름
   customerRequirement?: string; // 고객 요구사항
+  writerName?: string; // 작성자 이름
+  writerPosition?: string; // 작성자 직급
 }
 
 // 견적 요청 조회 API

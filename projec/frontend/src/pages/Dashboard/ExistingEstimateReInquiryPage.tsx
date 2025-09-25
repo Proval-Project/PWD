@@ -375,20 +375,21 @@ const ExistingEstimateReInquiryPage: React.FC = () => {
             <tr>
               <th>견적번호</th>
               <th>회사명</th>
-              <th>담당자</th>
+              <th>요청자</th>
               <th>요청일자</th>
               <th>상태</th>
               <th>프로젝트명</th>
+              <th>담당자</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} className="loading">로딩 중...</td>
+                <td colSpan={7} className="loading">로딩 중...</td>
               </tr>
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={6} className="no-data">조회된 데이터가 없습니다.</td>
+                <td colSpan={7} className="no-data">조회된 데이터가 없습니다.</td>
               </tr>
             ) : (
               items.map((item) => (
@@ -399,7 +400,7 @@ const ExistingEstimateReInquiryPage: React.FC = () => {
                 >
                   <td>{item.estimateNo}</td>
                   <td>{item.companyName}</td>
-                  <td>{item.managerName || '미지정'}</td>
+                  <td>{(item as any).writerName || item.writerID || '-'}</td>
                   <td>{item.requestDate ? formatDateYmd(item.requestDate) : extractDateFromTempEstimateNo(item.tempEstimateNo)}</td>
                   <td>
                     <span className={`status-badge status-${item.status}`}>
@@ -407,6 +408,7 @@ const ExistingEstimateReInquiryPage: React.FC = () => {
                     </span>
                   </td>
                   <td>{item.project}</td>
+                  <td>{item.managerName || '미지정'}</td>
                 </tr>
               ))
             )}
