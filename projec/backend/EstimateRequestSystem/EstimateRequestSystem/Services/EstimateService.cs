@@ -1751,6 +1751,7 @@ namespace EstimateRequestSystem.Services
                                ManagerName = m != null ? (m.Name ?? m.UserID) : sheet.ManagerID, // 담당자명
                                WriterName = w != null ? w.Name : null, // 작성자명
                                WriterPosition = w != null ? w.Position : null, // 작성자 직급
+                               WriterRoleId = w != null ? w.RoleID : (int?)null,
                                CustomerContactName = c != null ? c.Name : null,
                                CustomerPosition = c != null ? c.Position : null,
                                EstimateRequestCount = _context.EstimateRequest
@@ -1774,6 +1775,7 @@ namespace EstimateRequestSystem.Services
                 x.ManagerName, // ManagerName 추가
                 x.WriterName,
                 x.WriterPosition,
+                x.WriterRoleId,
                 x.CustomerContactName,
                 x.CustomerPosition,
                 x.EstimateRequestCount,
@@ -1850,6 +1852,7 @@ namespace EstimateRequestSystem.Services
                     WriterID = x.WriterID ?? "", // 작성자 ID 추가
                     WriterName = x.WriterName,
                     WriterPosition = x.WriterPosition,
+                    WriterRoleId = x.WriterRoleId,
                     CustomerName = x.CustomerContactName,
                     CustomerPosition = x.CustomerPosition,
                     ManagerID = x.ManagerID, // ManagerID 추가
@@ -2185,6 +2188,7 @@ namespace EstimateRequestSystem.Services
                        CustomerPosition = c != null ? c.Position : null,
                        WriterName = w != null ? w.Name : null,
                        WriterPosition = w != null ? w.Position : null,
+                       WriterRoleId = w != null ? w.RoleID : (int?)null,
                        ManagerName = m != null ? m.Name : null,
                        ManagerPosition = m != null ? m.Position : null,
                        EstimateRequestCount = _context.EstimateRequest
@@ -2209,6 +2213,7 @@ namespace EstimateRequestSystem.Services
         x.CustomerPosition,
         x.WriterName,
         x.WriterPosition,
+        x.WriterRoleId,
         x.ManagerName,
         x.ManagerPosition,
         x.EstimateRequestCount,
@@ -2273,6 +2278,7 @@ namespace EstimateRequestSystem.Services
             WriterID = x.WriterID,
             WriterName = x.WriterName,
             WriterPosition = x.WriterPosition,
+            WriterRoleId = x.WriterRoleId,
             CustomerName = x.CustomerContactName,
             CustomerPosition = x.CustomerPosition,
             ManagerID = x.ManagerID,

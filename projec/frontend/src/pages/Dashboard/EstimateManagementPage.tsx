@@ -232,7 +232,13 @@ const EstimateManagementPage: React.FC = () => {
                   <td>{item.estimateNo || '-'}</td>
                   <td>{item.companyName || '-'}</td>
                   <td>{`${item.customerName || item.writerName || item.writerID || '-'}`}{item.customerPosition ? `  ${item.customerPosition}` : (item.writerPosition ? ` / ${item.writerPosition}` : '')}</td>
-                  <td>{`${item.writerName || item.writerID || '-'}`}{item.writerPosition ? ` ${item.writerPosition}` : ''}</td>
+                  <td>{
+                    (item as any).writerRoleId === 1
+                      ? '관리자'
+                      : (item as any).writerRoleId === 3
+                        ? '고객'
+                        : `${item.writerName || item.writerID || '-'}` + (item.writerPosition ? ` ${item.writerPosition}` : '')
+                  }</td>
                   <td>{item.requestDate ? formatDateYmd(item.requestDate) : extractDateFromTempEstimateNo(item.tempEstimateNo)}</td>
                   <td><span className={`status-${item.status}`}>{item.statusText}</span></td>
                   <td>{item.project || '-'}</td>

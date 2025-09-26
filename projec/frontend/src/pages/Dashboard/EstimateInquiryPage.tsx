@@ -260,7 +260,13 @@ const EstimateInquiryPage: React.FC = () => {
                   <td>{item.estimateNo}</td>
                   <td>{item.companyName}</td>
                   <td>{`${(item as any).customerName || (item as any).writerName || item.writerID || '-'}`}{(item as any).customerPosition ? `  ${(item as any).customerPosition}` : ((item as any).writerPosition ? ` / ${(item as any).writerPosition}` : '')}</td>
-                  <td>{`${(item as any).writerName || item.writerID || '-'}`}{(item as any).writerPosition ? ` ${(item as any).writerPosition}` : ''}</td>
+                  <td>{
+                    (item as any).writerRoleId === 1
+                      ? '관리자'
+                      : (item as any).writerRoleId === 3
+                        ? '고객'
+                        : `${(item as any).writerName || item.writerID || '-'}` + ((item as any).writerPosition ? ` ${(item as any).writerPosition}` : '')
+                  }</td>
                   <td>{item.requestDate ? formatDateYmd(item.requestDate) : extractDateFromTempEstimateNo(item.tempEstimateNo)}</td>
                   <td>
                     <span className={`status-${item.status}`}>

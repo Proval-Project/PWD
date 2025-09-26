@@ -42,6 +42,7 @@ export interface EstimateInquiryItem {
   customerRequirement?: string; // 고객 요구사항
   writerName?: string; // 작성자 이름
   writerPosition?: string; // 작성자 직급
+  writerRoleId?: number; // 작성자 역할 ID (1=관리자,2=직원,3=고객)
   customerName?: string; // 고객 담당자 이름
   customerPosition?: string; // 고객 직급
 }
