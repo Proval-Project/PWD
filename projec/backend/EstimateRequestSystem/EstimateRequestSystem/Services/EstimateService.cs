@@ -2191,6 +2191,7 @@ namespace EstimateRequestSystem.Services
                        WriterRoleId = w != null ? w.RoleID : (int?)null,
                        ManagerName = m != null ? m.Name : null,
                        ManagerPosition = m != null ? m.Position : null,
+                       ManagerRoleId = m != null ? m.RoleID : (int?)null,
                        EstimateRequestCount = _context.EstimateRequest
                            .Where(er => er.TempEstimateNo == sheet.TempEstimateNo)
                            .Sum(er => er.Qty)
@@ -2216,6 +2217,7 @@ namespace EstimateRequestSystem.Services
         x.WriterRoleId,
         x.ManagerName,
         x.ManagerPosition,
+        x.ManagerRoleId,
         x.EstimateRequestCount,
         RequestDate = ParseDateFromTempEstimateNo(x.TempEstimateNo)
     }).AsQueryable();
@@ -2284,6 +2286,7 @@ namespace EstimateRequestSystem.Services
             ManagerID = x.ManagerID,
             ManagerName = x.ManagerName,
             ManagerPosition = x.ManagerPosition,
+            ManagerRoleId = x.ManagerRoleId,
         })
         .ToList();
 

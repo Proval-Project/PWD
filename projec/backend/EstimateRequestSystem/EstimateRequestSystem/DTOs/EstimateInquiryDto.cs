@@ -40,8 +40,10 @@ namespace EstimateRequestSystem.DTOs
         public string? ManagerID { get; set; }                    // 담당자 ID
         public string? ManagerName { get; set; }                  // 담당자 이름
         public string? ManagerPosition { get; set; }              // 담당자 직급
+        public int? ManagerRoleId { get; set; }                   // 담당자 역할 ID
         public string? WriterName { get; set; }                   // 작성자 이름
         public string? WriterPosition { get; set; }               // 작성자 직급
+        public int? WriterRoleId { get; set; }                    // 작성자 역할 ID (1=관리자,3=고객 등)
         public string? CustomerName { get; set; }                 // 고객 담당자 이름 (User.Name)
         public string? CustomerPosition { get; set; }             // 고객 직급 (User.Position)
     }

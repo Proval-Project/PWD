@@ -243,7 +243,13 @@ const EstimateManagementPage: React.FC = () => {
                   <td><span className={`status-${item.status}`}>{item.statusText}</span></td>
                   <td>{item.project || '-'}</td>
                   <td>
-                    {item.managerName ? `${item.managerName}${item.managerPosition ? ` ${item.managerPosition}` : ''}` : '미지정'}
+                    {(() => {
+                      const roleId = (item as any).managerRoleId;
+                      if (roleId === 1) return '관리자';
+                      // role 2는 이름 직급 표시, 그 외/미지정 처리
+                      if (item.managerName) return `${item.managerName}${item.managerPosition ? ` ${item.managerPosition}` : ''}`;
+                      return '미지정';
+                    })()}
                   </td>
                 </tr>
               ))
