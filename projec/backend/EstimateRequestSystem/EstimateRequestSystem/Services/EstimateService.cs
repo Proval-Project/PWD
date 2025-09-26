@@ -6326,12 +6326,12 @@ namespace EstimateRequestSystem.Services
                         if (cellValue != null && double.TryParse(cellValue.ToString(), out double qtyValue))
                         {
                             // 변환 성공 시, 숫자 타입으로 값 설정
-                            newWorksheet.Cell(row_vl, i).Value(qtyValue); 
+                            newWorksheet.Cell(row_vl, i).Value = qtyValue;
                         }
                         else
                         {
                             // 변환 실패 또는 null일 경우 0 또는 빈 값 처리
-                            newWorksheet.Cell(row_vl, i).Value(0); 
+                            newWorksheet.Cell(row_vl, i).Value = 0d;
                         }
                     }
                     else

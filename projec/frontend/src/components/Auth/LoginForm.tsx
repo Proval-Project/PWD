@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { login } from '../../api/auth';
 import { useNavigate } from 'react-router-dom';
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { Toast } from '../common/Toast';
 
 const LoginForm: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -9,6 +11,8 @@ const LoginForm: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,18 +40,33 @@ const LoginForm: React.FC = () => {
         window.location.href = '/'; // 고객은 메인 대시보드로 이동
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || '로그인에 실패했습니다.');
+      setToast({
+        message: err.response?.data?.message || '로그인에 실패했습니다.',
+        type: "error",
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
+  <div className="relative">
+    {toast && (
+      <div className="fixed top-5 left-1/2 transform -translate-x-1/2 z-50">
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      </div>
+    )}
+
     <form onSubmit={handleSubmit} className="auth-form">
       {error && <div className="error-message">{error}</div>}
       
-      <div className="form-group">
-        <label htmlFor="userID">아이디</label>
+      <div className="flex items-center border border-[#989898] rounded-lg bg-white px-3 h-12 mt-12">
+        <span className="text-gray-400 w-16 text-sm font-semibold">아이디</span>
+        <span className="text-gray-400 ml-2 text-sm font-semibold">|</span>
         <input
           type="text"
           id="userID"
@@ -55,28 +74,41 @@ const LoginForm: React.FC = () => {
           value={formData.userID}
           onChange={handleChange}
           required
-          className="form-input"
+          className="flex-1 outline-none text-sm bg-white pl-2"
         />
       </div>
 
-      <div className="form-group">
-        <label htmlFor="password">비밀번호</label>
+      <div className="flex items-center border border-[#989898] rounded-lg bg-white px-3 h-12 relative mt-8">
+        <span className="text-gray-400 w-16 text-sm font-semibold">비밀번호</span>
+        <span className="text-gray-400 ml-2 text-sm font-semibold">|</span>
         <input
-          type="password"
+          type={showPassword ? "text" : "password"}
           id="password"
           name="password"
           value={formData.password}
           onChange={handleChange}
           required
-          className="form-input"
+          className="flex-1 outline-none text-sm bg-white pl-2"
         />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-3 text-gray-400 hover:text-gray-600"
+        >
+          {showPassword ? <FaEye /> : <FaEyeSlash />}
+        </button>
       </div>
 
-      <button type="submit" disabled={loading} className="submit-button">
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full h-12 mt-8 rounded-lg bg-[#2320F1] text-white font-semibold text-lg hover:bg-blue-700 transition disabled:opacity-50"
+      >
         {loading ? '로그인 중...' : '로그인'}
       </button>
     </form>
+  </div>
   );
-};
+}
 
 export default LoginForm;

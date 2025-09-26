@@ -51,10 +51,17 @@ export const forgotPassword = async (email: string) => {
 };
 
 // 비밀번호 재설정
-export const resetPassword = async (token: string, newPassword: string) => {
+export const resetPassword = async (
+  email: string,
+  verificationCode: string,
+  newPassword: string,
+  confirmPassword: string
+) => {
   const response = await axios.post(`${AUTH_API_BASE_URL}/auth/reset-password`, {
-    token,
-    newPassword
+    email,
+    verificationCode,
+    newPassword,
+    confirmPassword,
   });
   return response.data;
 };
@@ -63,4 +70,10 @@ export const resetPassword = async (token: string, newPassword: string) => {
 export const logout = async () => {
   const response = await axios.post(`${AUTH_API_BASE_URL}/auth/logout`);
   return response.data;
+};
+
+// 고객 정보 조회 (추가)
+export const getCustomerInfo = async (userID: string) => {
+  const res = await axios.get(`${AUTH_API_BASE_URL}/customer/${userID}`);
+  return res.data;
 };

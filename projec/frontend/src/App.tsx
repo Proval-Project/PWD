@@ -18,6 +18,9 @@ import CustomerDetailPage from './pages/Dashboard/CustomerDetailPage';
 import StaffManagementPage from './pages/Dashboard/StaffManagementPage';
 import StaffDetailPage from './pages/Dashboard/StaffDetailPage';
 import MembershipRequestsPage from './pages/Dashboard/MembershipRequestsPage';
+import BlankPage from './pages/Dashboard/BlankPage';
+import CustomerProfileManagement from './pages/Dashboard/CustomerProfileManagement';
+import MembershipRequestDetailPage from './pages/Dashboard/MembershipRequestDetailPage';
 
 
 import EstimateRequestPage from './pages/Dashboard/EstimateRequestPage';
@@ -106,13 +109,14 @@ function App() {
       <Routes>
         {/* 대시보드 레이아웃이 적용된 라우트들 */}
         <Route path="/" element={<DashboardLayout userRole={user.roleId} />}>
-          <Route index element={<StatisticsPage />} />
+          <Route index element={<BlankPage />} />
           <Route path="statistics" element={<StatisticsPage />} />
           <Route path="customer-management" element={<CustomerManagementPage />} />
           <Route path="customer-detail/:customerId" element={<CustomerDetailPage />} />
           <Route path="staff-management" element={<StaffManagementPage />} />
           <Route path="staff-detail/:staffId" element={<StaffDetailPage />} />
           <Route path="membership-requests" element={<MembershipRequestsPage />} />
+          <Route path="membership-request-detail/:userID" element={<MembershipRequestDetailPage />} />
 
           <Route path="estimate-request" element={<EstimateRequestPage />} />
           <Route path="estimate-request/new" element={<NewEstimateRequestPage />} />
@@ -126,11 +130,12 @@ function App() {
           <Route path="accessory-management" element={<NewAccessoryManagementPage />} />
           <Route path="estimate-requests" element={<EstimateInquiryPage />} />
           <Route path="existing-estimate-reinquiry" element={<ExistingEstimateReInquiryPage />} />
+          <Route path="profile-management" element={<CustomerProfileManagement />} />
         </Route>
 
         {/* 대시보드 레이아웃이 적용된 다른 경로들 */}
         <Route path="/dashboard" element={<DashboardLayout userRole={user.roleId} />}>
-          <Route index element={<StatisticsPage />} />
+          <Route index element={<BlankPage />} />
           <Route path="statistics" element={<StatisticsPage />} />
           <Route path="customer-management" element={<CustomerManagementPage />} />
           <Route path="customer-detail/:customerId" element={<CustomerDetailPage />} />
@@ -140,14 +145,16 @@ function App() {
           <Route path="estimate-requests" element={<EstimateInquiryPage />} />
           <Route path="existing-estimate-reinquiry" element={<ExistingEstimateReInquiryPage />} />
           <Route path="estimate-detail/:tempEstimateNo" element={<EstimateDetailPage />} />
+          <Route path="profile-management" element={<CustomerProfileManagement />} />
+          <Route path="membership-request-detail/:userID" element={<MembershipRequestDetailPage />} />
         </Route>
 
         {/* 권한별 메인 페이지 라우트들 */}
-        <Route path="/admin" element={<DashboardLayout userRole={user.roleId} />}>
-          <Route index element={<StatisticsPage />} />
+        <Route path="/admin" element={<DashboardLayout userRole={user.roleId} />}> 
+          <Route index element={<BlankPage />} />
         </Route>
-        <Route path="/sales" element={<DashboardLayout userRole={user.roleId} />}>
-          <Route index element={<StatisticsPage />} />
+        <Route path="/sales" element={<DashboardLayout userRole={user.roleId} />}> 
+          <Route index element={<BlankPage />} />
         </Route>
 
         {/* AuthSystem 관련 라우트들 */}

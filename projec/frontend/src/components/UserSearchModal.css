@@ -137,6 +137,7 @@
 
 .user-info {
   flex: 1;
+  gap: 5px;
 }
 
 .user-name {
