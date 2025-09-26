@@ -1751,6 +1751,8 @@ namespace EstimateRequestSystem.Services
                                ManagerName = m != null ? (m.Name ?? m.UserID) : sheet.ManagerID, // 담당자명
                                WriterName = w != null ? w.Name : null, // 작성자명
                                WriterPosition = w != null ? w.Position : null, // 작성자 직급
+                               CustomerContactName = c != null ? c.Name : null,
+                               CustomerPosition = c != null ? c.Position : null,
                                EstimateRequestCount = _context.EstimateRequest
                                    .Where(er => er.TempEstimateNo == sheet.TempEstimateNo)
                                    .Sum(er => er.Qty)
@@ -1772,6 +1774,8 @@ namespace EstimateRequestSystem.Services
                 x.ManagerName, // ManagerName 추가
                 x.WriterName,
                 x.WriterPosition,
+                x.CustomerContactName,
+                x.CustomerPosition,
                 x.EstimateRequestCount,
                 RequestDate = ParseDateFromTempEstimateNo(x.TempEstimateNo)
             }).AsQueryable();
@@ -1836,7 +1840,7 @@ namespace EstimateRequestSystem.Services
                 {
                     EstimateNo = !string.IsNullOrEmpty(x.CurEstimateNo) ? x.CurEstimateNo : x.TempEstimateNo,
                     CompanyName = x.CustomerName,
-                    ContactPerson = x.WriterName ?? x.WriterID, // 작성자는 WriterName으로 설정
+                    ContactPerson = x.CustomerContactName ?? x.WriterName ?? x.WriterID,
                     RequestDate = x.RequestDate,
                     Quantity = x.EstimateRequestCount,
                     Status = x.Status,
@@ -1846,6 +1850,8 @@ namespace EstimateRequestSystem.Services
                     WriterID = x.WriterID ?? "", // 작성자 ID 추가
                     WriterName = x.WriterName,
                     WriterPosition = x.WriterPosition,
+                    CustomerName = x.CustomerContactName,
+                    CustomerPosition = x.CustomerPosition,
                     ManagerID = x.ManagerID, // ManagerID 추가
                     ManagerName = x.ManagerName ?? x.ManagerID ?? "미지정" // ManagerName 추가 및 fallback
                 })
@@ -2175,9 +2181,12 @@ namespace EstimateRequestSystem.Services
                        sheet.Status,
                        sheet.Project,
                        CustomerName = c != null ? c.CompanyName : sheet.CustomerID,
+                       CustomerContactName = c != null ? c.Name : null,
+                       CustomerPosition = c != null ? c.Position : null,
                        WriterName = w != null ? w.Name : null,
                        WriterPosition = w != null ? w.Position : null,
                        ManagerName = m != null ? m.Name : null,
+                       ManagerPosition = m != null ? m.Position : null,
                        EstimateRequestCount = _context.EstimateRequest
                            .Where(er => er.TempEstimateNo == sheet.TempEstimateNo)
                            .Sum(er => er.Qty)
@@ -2196,9 +2205,12 @@ namespace EstimateRequestSystem.Services
         x.Status,
         x.Project,
         x.CustomerName,
+        x.CustomerContactName,
+        x.CustomerPosition,
         x.WriterName,
         x.WriterPosition,
         x.ManagerName,
+        x.ManagerPosition,
         x.EstimateRequestCount,
         RequestDate = ParseDateFromTempEstimateNo(x.TempEstimateNo)
     }).AsQueryable();
@@ -2251,7 +2263,7 @@ namespace EstimateRequestSystem.Services
         {
             EstimateNo = x.CurEstimateNo ?? x.TempEstimateNo,
             CompanyName = x.CustomerName,
-            ContactPerson = x.WriterName ?? x.WriterID,
+            ContactPerson = x.CustomerContactName ?? x.WriterName ?? x.WriterID,
             RequestDate = x.RequestDate,
             Quantity = x.EstimateRequestCount,
             StatusText = EstimateStatusExtensions.ToKoreanText(x.Status),
@@ -2261,8 +2273,11 @@ namespace EstimateRequestSystem.Services
             WriterID = x.WriterID,
             WriterName = x.WriterName,
             WriterPosition = x.WriterPosition,
+            CustomerName = x.CustomerContactName,
+            CustomerPosition = x.CustomerPosition,
             ManagerID = x.ManagerID,
             ManagerName = x.ManagerName,
+            ManagerPosition = x.ManagerPosition,
         })
         .ToList();
 

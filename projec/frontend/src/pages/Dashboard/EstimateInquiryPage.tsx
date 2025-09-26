@@ -235,6 +235,7 @@ const EstimateInquiryPage: React.FC = () => {
               <th>견적번호</th>
               <th>회사명</th>
               <th>요청자</th>
+              <th>작성자</th>
               <th>요청일자</th>
               <th>상태</th>
               <th>프로젝트명</th>
@@ -243,11 +244,11 @@ const EstimateInquiryPage: React.FC = () => {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} className="loading">로딩 중...</td>
+                <td colSpan={7} className="loading">로딩 중...</td>
               </tr>
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={6} className="no-data">조회된 데이터가 없습니다.</td>
+                <td colSpan={7} className="no-data">조회된 데이터가 없습니다.</td>
               </tr>
             ) : (
               items.map((item) => (
@@ -258,7 +259,8 @@ const EstimateInquiryPage: React.FC = () => {
                 >
                   <td>{item.estimateNo}</td>
                   <td>{item.companyName}</td>
-                  <td>{`${(item as any).writerName || item.writerID || '-'}`}{(item as any).writerPosition ? ` / ${(item as any).writerPosition}` : ''}</td>
+                  <td>{`${(item as any).customerName || (item as any).writerName || item.writerID || '-'}`}{(item as any).customerPosition ? `  ${(item as any).customerPosition}` : ((item as any).writerPosition ? ` / ${(item as any).writerPosition}` : '')}</td>
+                  <td>{`${(item as any).writerName || item.writerID || '-'}`}{(item as any).writerPosition ? ` ${(item as any).writerPosition}` : ''}</td>
                   <td>{item.requestDate ? formatDateYmd(item.requestDate) : extractDateFromTempEstimateNo(item.tempEstimateNo)}</td>
                   <td>
                     <span className={`status-${item.status}`}>

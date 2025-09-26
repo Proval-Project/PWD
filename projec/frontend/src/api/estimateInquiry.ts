@@ -42,6 +42,8 @@ export interface EstimateInquiryItem {
   customerRequirement?: string; // 고객 요구사항
   writerName?: string; // 작성자 이름
   writerPosition?: string; // 작성자 직급
+  customerName?: string; // 고객 담당자 이름
+  customerPosition?: string; // 고객 직급
 }
 
 // 견적 요청 조회 API

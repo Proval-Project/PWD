@@ -39,7 +39,10 @@ namespace EstimateRequestSystem.DTOs
         public string WriterID { get; set; } = string.Empty;       // 작성자 ID (수정 권한 확인용)
         public string? ManagerID { get; set; }                    // 담당자 ID
         public string? ManagerName { get; set; }                  // 담당자 이름
+        public string? ManagerPosition { get; set; }              // 담당자 직급
         public string? WriterName { get; set; }                   // 작성자 이름
         public string? WriterPosition { get; set; }               // 작성자 직급
+        public string? CustomerName { get; set; }                 // 고객 담당자 이름 (User.Name)
+        public string? CustomerPosition { get; set; }             // 고객 직급 (User.Position)
     }
 }

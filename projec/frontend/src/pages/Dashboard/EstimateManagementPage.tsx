@@ -19,8 +19,11 @@ interface DraftItem {
   writerID: string;
   writerName?: string;
   writerPosition?: string;
+  customerName?: string;
+  customerPosition?: string;
   managerID?: string;
   managerName?: string;
+  managerPosition?: string;
 }
 
 const statusOptions = [
@@ -211,6 +214,7 @@ const EstimateManagementPage: React.FC = () => {
               <th>견적번호</th>
               <th>회사명</th>
               <th>요청자</th>
+              <th>작성자</th>
               <th>요청일자</th>
               <th>상태</th>
               <th>프로젝트명</th>
@@ -219,19 +223,22 @@ const EstimateManagementPage: React.FC = () => {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={7} className="loading">로딩 중...</td></tr>
+              <tr><td colSpan={8} className="loading">로딩 중...</td></tr>
             ) : items.length === 0 ? (
-              <tr><td colSpan={7} className="no-data">데이터가 없습니다.</td></tr>
+              <tr><td colSpan={8} className="no-data">데이터가 없습니다.</td></tr>
             ) : (
               items.map((item) => (
                 <tr key={item.tempEstimateNo} onClick={() => handleRowClick(item)} className="clickable-row">
                   <td>{item.estimateNo || '-'}</td>
                   <td>{item.companyName || '-'}</td>
-                  <td>{`${item.writerName || item.writerID || '-'}`}{item.writerPosition ? ` / ${item.writerPosition}` : ''}</td>
+                  <td>{`${item.customerName || item.writerName || item.writerID || '-'}`}{item.customerPosition ? `  ${item.customerPosition}` : (item.writerPosition ? ` / ${item.writerPosition}` : '')}</td>
+                  <td>{`${item.writerName || item.writerID || '-'}`}{item.writerPosition ? ` ${item.writerPosition}` : ''}</td>
                   <td>{item.requestDate ? formatDateYmd(item.requestDate) : extractDateFromTempEstimateNo(item.tempEstimateNo)}</td>
                   <td><span className={`status-${item.status}`}>{item.statusText}</span></td>
                   <td>{item.project || '-'}</td>
-                  <td>{item.managerName || '미지정'}</td>
+                  <td>
+                    {item.managerName ? `${item.managerName}${item.managerPosition ? ` ${item.managerPosition}` : ''}` : '미지정'}
+                  </td>
                 </tr>
               ))
             )}
