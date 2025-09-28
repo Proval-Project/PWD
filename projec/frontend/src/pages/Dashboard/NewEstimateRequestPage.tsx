@@ -1032,6 +1032,67 @@ const NewEstimateRequestPage: React.FC = () => {
     }
   }, []);
 
+  // pendingFiles를 실제로 업로드하는 함수
+  const uploadPendingFiles = useCallback(async (tempEstimateNo: string) => {
+    if (pendingFiles.length === 0) return;
+
+    console.log('📤 pendingFiles 업로드 시작:', pendingFiles.length, '개 파일');
+    
+    // 현재 사용자 ID 가져오기
+    const userStr = localStorage.getItem('user');
+    const currentUser = userStr ? JSON.parse(userStr) : null;
+    const uploadUserID = currentUser?.userId || 'admin';
+
+    const uploadPromises = pendingFiles.map(async (file) => {
+      try {
+        console.log('파일 업로드 시도:', file.name);
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const response = await fetch(buildApiUrl(`/estimate/sheets/${tempEstimateNo}/attachments?uploadUserID=${uploadUserID}&fileType=customer`), {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log('파일 업로드 성공:', file.name);
+          
+          // 업로드 성공한 파일을 fileAttachments에서 isPending: false로 업데이트
+          setFileAttachments(prev => prev.map(att => 
+            att.name === file.name ? { ...att, isPending: false, id: result.attachmentId || result.id } : att
+          ));
+          
+          return { success: true, file: file.name };
+        } else {
+          const error = await response.json();
+          console.error('파일 업로드 실패:', file.name, error);
+          return { success: false, file: file.name, error: error.message };
+        }
+      } catch (error) {
+        console.error('파일 업로드 중 오류:', file.name, error);
+        return { success: false, file: file.name, error: error instanceof Error ? error.message : String(error) };
+      }
+    });
+
+    const results = await Promise.all(uploadPromises);
+    
+    // 결과 처리
+    const successCount = results.filter(r => r.success).length;
+    const failCount = results.filter(r => !r.success).length;
+    
+    console.log(`📤 업로드 완료: 성공 ${successCount}개, 실패 ${failCount}개`);
+    
+    if (failCount > 0) {
+      const failedFiles = results.filter(r => !r.success).map(r => r.file).join(', ');
+      alert(`일부 파일 업로드에 실패했습니다: ${failedFiles}`);
+    }
+    
+    // pendingFiles 초기화
+    setPendingFiles([]);
+  }, [pendingFiles]);
+
   // 첨부파일 삭제 함수 (즉시 백엔드 API 호출)
   const handleDeleteAttachment = useCallback(async (fileId: string | number, filePath?: string) => {
     try {
@@ -1866,6 +1927,13 @@ const NewEstimateRequestPage: React.FC = () => {
     }
     
     try {
+      // 1. 첨부파일 먼저 업로드
+      if (pendingFiles.length > 0) {
+        console.log('첨부파일 업로드 시작:', pendingFiles.length, '개 파일');
+        await uploadPendingFiles(currentTempEstimateNo);
+      }
+
+      // 2. 견적 데이터 저장
       const submitData = createSavePayload();
       // 재문의 복제인 경우, 이전 견적번호(prevEstimateNo)를 같이 전달
       if (prevEstimateNo) {
@@ -1926,6 +1994,13 @@ const NewEstimateRequestPage: React.FC = () => {
     }
     
     try {
+      // 1. 첨부파일 먼저 업로드
+      if (pendingFiles.length > 0) {
+        console.log('첨부파일 업로드 시작:', pendingFiles.length, '개 파일');
+        await uploadPendingFiles(currentTempEstimateNo);
+      }
+
+      // 2. 견적 데이터 저장
       const submitData = createSavePayload();
       
       // StaffComment 추가
