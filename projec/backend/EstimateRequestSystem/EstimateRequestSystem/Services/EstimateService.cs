@@ -354,14 +354,15 @@ namespace EstimateRequestSystem.Services
 
             if (estimateSheet == null)
             {
-                // 새로 생성
+                // 새로 생성 - 견적요청 시 CurEstimateNo도 함께 생성
+                var curEstimateNo = await GenerateCurEstimateNoAsync();
                 estimateSheet = new EstimateSheetLv1
                 {
                     TempEstimateNo = tempEstimateNo,
                     CustomerID = dto.CustomerID,
                     WriterID = dto.WriterID,
                     ManagerID = null,
-                    CurEstimateNo = null,
+                    CurEstimateNo = curEstimateNo, // 견적요청 시 CurEstimateNo 생성
                     PrevEstimateNo = null,
                     Status = (int)EstimateStatus.Requested, // 견적요청 상태
                     Project = dto.Project ?? "",
@@ -372,7 +373,11 @@ namespace EstimateRequestSystem.Services
             }
             else
             {
-                // 기존 데이터 업데이트
+                // 기존 데이터 업데이트 - CurEstimateNo가 없으면 생성
+                if (string.IsNullOrEmpty(estimateSheet.CurEstimateNo))
+                {
+                    estimateSheet.CurEstimateNo = await GenerateCurEstimateNoAsync();
+                }
                 estimateSheet.CustomerID = dto.CustomerID;
                 estimateSheet.WriterID = dto.WriterID;
                 estimateSheet.Project = dto.Project ?? "";
@@ -1963,25 +1968,18 @@ namespace EstimateRequestSystem.Services
             var sheet = await _context.EstimateSheetLv1.FirstOrDefaultAsync(x => x.TempEstimateNo == tempEstimateNo);
             if (sheet == null) return null;
 
-            if (string.IsNullOrEmpty(sheet.CurEstimateNo))
-            {
-                sheet.CurEstimateNo = await GenerateCurEstimateNoAsync();
-            }
+            // CurEstimateNo가 이미 있으면 그대로 사용, 없으면 생성하지 않음
+            // 견적번호는 견적요청 시점에만 생성되고 이후 변경되지 않음
             sheet.Status = (int)EstimateStatus.Completed; // 견적완료(가정: 4)
             await _context.SaveChangesAsync();
-            return sheet.CurEstimateNo;
+            return sheet.CurEstimateNo; // 기존 CurEstimateNo 반환 (없으면 null)
         }
 
         public async Task<bool> CancelCompletionAsync(string tempEstimateNo)
         {
             var sheet = await _context.EstimateSheetLv1.FirstOrDefaultAsync(x => x.TempEstimateNo == tempEstimateNo);
             if (sheet == null) return false;
-            // 이전 완료 번호를 보존하고 현재 번호는 해제하여 재발급 가능하게 함
-            if (!string.IsNullOrEmpty(sheet.CurEstimateNo))
-            {
-                sheet.PrevEstimateNo = sheet.CurEstimateNo;
-                sheet.CurEstimateNo = null;
-            }
+            // 견적번호는 변경하지 않고 상태만 되돌림
             sheet.Status = (int)EstimateStatus.InProgress; // 진행중으로 되돌림
             await _context.SaveChangesAsync();
             return true;
@@ -2108,7 +2106,7 @@ namespace EstimateRequestSystem.Services
                 .Take(request.PageSize)
                 .Select(x => new EstimateInquiryItemDto
                 {
-                    EstimateNo = x.CurEstimateNo ?? x.TempEstimateNo,
+                    EstimateNo = x.TempEstimateNo, // 임시저장 페이지에서는 무조건 TempEstimateNo 표시
                     CompanyName = x.CustomerName,
                     ContactPerson = x.WriterName ?? x.WriterID,
                     RequestDate = x.RequestDate,
