@@ -2013,6 +2013,24 @@ namespace EstimateRequestSystem.Services
             return true;
         }
 
+        public async Task<bool> SaveStaffCommentAsync(string tempEstimateNo, string? staffComment)
+        {
+            try
+            {
+                var sheet = await _context.EstimateSheetLv1.FirstOrDefaultAsync(x => x.TempEstimateNo == tempEstimateNo);
+                if (sheet == null) return false;
+
+                sheet.StaffComment = staffComment ?? "";
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"SaveStaffCommentAsync 오류: {ex.Message}");
+                return false;
+            }
+        }
+
         // 임시저장 목록 조회
         public async Task<EstimateInquiryResponseDto> GetDraftEstimatesAsync(EstimateInquiryRequestDto request, string currentUserId, string? customerId = null)
         {

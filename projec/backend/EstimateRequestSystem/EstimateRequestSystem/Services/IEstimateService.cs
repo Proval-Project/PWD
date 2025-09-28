@@ -86,6 +86,9 @@ namespace EstimateRequestSystem.Services
         Task<bool> CancelOrderAsync(string tempEstimateNo);
         Task<bool> CancelStartAsync(string tempEstimateNo);
 
+        // 관리자 코멘트 저장
+        Task<bool> SaveStaffCommentAsync(string tempEstimateNo, string? staffComment);
+
         // 파일 생성 메서드들
         Task<string> GenerateCVListAsync(string tempEstimateNo);
         Task<string> GenerateVLListAsync(string tempEstimateNo);

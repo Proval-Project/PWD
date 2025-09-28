@@ -168,6 +168,35 @@ interface EstimateAttachment {
   managerFileType: string;
 }
 
+// StaffCommentSection 컴포넌트를 EstimateDetailPage 바깥으로 분리
+interface StaffCommentSectionProps {
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  isReadOnly: boolean;
+}
+
+const StaffCommentSection = React.memo<StaffCommentSectionProps>(({ value, onChange, isReadOnly }) => {
+  console.log("StaffCommentSection is rendering"); // 디버깅용 로그
+  return (
+    <div className="step-section-detail">
+      <div className="step-header-detail">
+        <h3>관리자 코멘트</h3>
+      </div>
+      <div className="staff-comment-content-detail">
+        <textarea
+          value={value} // props로 받은 value 사용
+          onChange={onChange} // props로 받은 onChange 사용
+          readOnly={isReadOnly} // props로 받은 isReadOnly 사용
+          placeholder="관리자 코멘트가 없습니다."
+          className="staff-comment-textarea-detail"
+          autoComplete="off"
+          spellCheck="false"
+        />
+      </div>
+    </div>
+  );
+});
+
 const EstimateDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const { tempEstimateNo } = useParams<{ tempEstimateNo: string }>();
@@ -206,6 +235,12 @@ const EstimateDetailPage: React.FC = () => {
   // 기타 데이터
   const [customerRequirement, setCustomerRequirement] = useState(''); // 고객 요청사항
   const [staffComment, setStaffComment] = useState(''); // 관리자 코멘트
+
+  // useCallback을 사용하여 함수가 불필요하게 재생성되는 것을 방지
+  const handleStaffCommentChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setStaffComment(e.target.value);
+  }, []); // 의존성 배열이 비어있으므로 이 함수는 처음 한 번만 생성됩니다
+  
   const [attachments, setAttachments] = useState<File[]>([]);
   const [customerAttachments, setCustomerAttachments] = useState<any[]>([]); // 고객 요청 첨부파일
   const [managerAttachments, setManagerAttachments] = useState<any[]>([]); // 관리 첨부파일
@@ -1894,6 +1929,10 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
   const handleCompleteQuote = async () => {
     if (!tempEstimateNo) return;
     try {
+      // 1. 사양 저장 먼저 실행
+      await handleSaveSpecification();
+      
+      // 2. 견적완료 처리
       const resp = await fetch(buildApiUrl(`/estimate/sheets/${tempEstimateNo}/complete`), { method: 'POST' });
       if (!resp.ok) {
         const er = await resp.json().catch(()=>({message:'처리 실패'}));
@@ -2122,7 +2161,7 @@ const saveValveOrder = async () => {
     body: JSON.stringify(sheetIDs),
   });
 };
-const handleSaveSpecification = useCallback(async () => {
+const handleSaveSpecification = async () => {
   try {
     // 0) 순서 먼저 저장 → SheetNo DB 반영
     await saveValveOrder();
@@ -2152,14 +2191,30 @@ const handleSaveSpecification = useCallback(async () => {
       body: JSON.stringify({ items })
     });
 
-    if (resp.ok) alert('모든 태그에 사양이 일괄 저장되었습니다.');
-    else alert('사양 일괄 저장에 실패했습니다.');
+    if (!resp.ok) {
+      alert('사양 일괄 저장에 실패했습니다.');
+      return;
+    }
+
+    // 3) StaffComment 저장
+    if (staffComment && staffComment.trim()) {
+      const commentResp = await fetch(buildApiUrl(`/estimate/sheets/${tempEstimateNo}/staff-comment`), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ staffComment })
+      });
+
+      if (!commentResp.ok) {
+        console.warn('관리자 코멘트 저장에 실패했습니다.');
+      }
+    }
+
+    alert('모든 태그에 사양이 일괄 저장되었습니다.');
   } catch (e) {
     console.error(e);
     alert('사양 일괄 저장 중 오류가 발생했습니다.');
   }
-  // 의존성: valves, specBySheetId, tempSelections, bodySelections, trimSelections, actSelections, accSelections, selectedValve, tempEstimateNo
-}, [valves, specBySheetId, tempSelections, bodySelections, trimSelections, actSelections, accSelections, selectedValve, tempEstimateNo]);
+};
 
   const AccessorySelector: React.FC<AccessorySelectorProps> = ({
     accTypeKey,
@@ -3175,23 +3230,6 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
     </div>
   );
 
-  // 관리자 코멘트 섹션
-  const StaffCommentSection = () => (
-    <div className="step-section-detail">
-      <div className="step-header-detail">
-        <h3>관리자 코멘트</h3>
-      </div>
-      <div className="staff-comment-content-detail">
-        <textarea
-          value={staffComment}
-          onChange={(e) => !isReadOnly && setStaffComment(e.target.value)}
-          readOnly={isReadOnly}
-          placeholder="관리자 코멘트가 없습니다."
-          className="staff-comment-textarea-detail"
-        />
-      </div>
-    </div>
-  );
 
   // 고객 요청 첨부파일 섹션 (다운로드만 가능)
   const CustomerAttachmentsSection = () => (
@@ -3522,7 +3560,11 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
             <CustomerAttachmentsSection />
           </div>
 
-          <StaffCommentSection />
+          <StaffCommentSection 
+            value={staffComment}
+            onChange={handleStaffCommentChange}
+            isReadOnly={isReadOnly}
+          />
         </div>
         
         {/* 품번 표시 섹션 - 한 줄 모눈종이 */}

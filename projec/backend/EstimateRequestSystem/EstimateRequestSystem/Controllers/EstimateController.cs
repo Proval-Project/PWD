@@ -158,6 +158,24 @@ namespace EstimateRequestSystem.Controllers
             }
         }
 
+        // 관리자 코멘트 저장
+        [HttpPost("sheets/{tempEstimateNo}/staff-comment")]
+        public async Task<ActionResult> SaveStaffComment(string tempEstimateNo, [FromBody] SaveStaffCommentDto dto)
+        {
+            try
+            {
+                var success = await _estimateService.SaveStaffCommentAsync(tempEstimateNo, dto.StaffComment);
+                if (!success)
+                    return NotFound();
+
+                return Ok(new { message = "관리자 코멘트가 저장되었습니다." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         // TempEstimateNo 생성 API
         [HttpPost("generate-temp-no")]
         public async Task<ActionResult<object>> GenerateTempEstimateNo()

@@ -7081,11 +7081,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/simjimin/Downloads/PWD/projec/backend/EstimateRequestSystem/EstimateRequestSystem/EstimateRequestSystem.csproj",
+      "projectUniqueName": "/Users/simjimin/실험/PWD/projec/backend/EstimateRequestSystem/EstimateRequestSystem/EstimateRequestSystem.csproj",
       "projectName": "EstimateRequestSystem",
-      "projectPath": "/Users/simjimin/Downloads/PWD/projec/backend/EstimateRequestSystem/EstimateRequestSystem/EstimateRequestSystem.csproj",
+      "projectPath": "/Users/simjimin/실험/PWD/projec/backend/EstimateRequestSystem/EstimateRequestSystem/EstimateRequestSystem.csproj",
       "packagesPath": "/Users/simjimin/.nuget/packages/",
-      "outputPath": "/Users/simjimin/Downloads/PWD/projec/backend/EstimateRequestSystem/EstimateRequestSystem/obj/",
+      "outputPath": "/Users/simjimin/실험/PWD/projec/backend/EstimateRequestSystem/EstimateRequestSystem/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/simjimin/.nuget/NuGet/NuGet.Config"

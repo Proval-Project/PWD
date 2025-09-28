@@ -119,6 +119,12 @@ namespace EstimateRequestSystem.DTOs
         public string? StaffComment { get; set; }
     }
 
+    // 관리자 코멘트 저장을 위한 DTO
+    public class SaveStaffCommentDto
+    {
+        public string? StaffComment { get; set; }
+    }
+
     // Type 선택 데이터
     public class TypeSelectionDto
     {
