@@ -653,8 +653,11 @@ div.type-item.selected {
 .body-spec-grid {
   display: flex !important;
   flex-direction: column !important;
-  gap: 8px !important;
+  gap: 0px !important;
   align-items: stretch !important;
+  min-height: auto !important;  /* 최소 높이를 auto로 변경 */
+  padding: 4px 8px !important;  /* 패딩 줄임 */
+  height: fit-content !important;  /* 내용에 맞는 높이로 설정 */
 }
 
 /* 3행 유지 + 각 행은 내용 높이(auto) */
@@ -664,23 +667,27 @@ div.type-item.selected {
   align-content: start !important;        /* 그리드 전체 위 정렬 */
   row-gap: 8px !important;
   column-gap: 16px !important;
+  max-height: 220px !important;
+  
 }
 
 /* 각 카드가 셀 상단에 고정, 불필요한 높이/마진 제거 */
 .specification-grid .spec-section {
   align-self: start !important;
   margin: 0 !important;
-  padding: 6px 8px !important;
+  padding: 6px 8px !important;  /* 패딩 줄임 */
   width: 100%;
-  min-width: 0;                           /* 넘침 방지 */
-  grid-row: auto !important;              /* 행 span 금지 */
+  min-width: 0;
+  min-height: auto !important;  /* 최소 높이를 auto로 변경 */
+  max-height: 200px !important;  /* 최대 높이 유지 */
+  height: fit-content !important;  /* 내용에 맞는 높이로 설정 */
 }
 
 /* 카드 제목 간격 축소로 시각 높이 통일 */
 .specification-grid .spec-section h4 {
-  margin: 4px 0 4px 0 !important;
-  line-height: 1.1 !important;
-  font-size: 8px !important;
+  margin: 1px 0 2px 0 !important;  /* 마진 최소화 */
+  line-height: 1.0 !important;     /* 줄 간격 최소화 */
+  font-size: 6px !important;       /* 폰트 크기 더 줄임 */
 }
 
 
@@ -689,74 +696,76 @@ div.type-item.selected {
 .spec-item {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 2px;  /* 간격 최소화 */
 }
 
 /* Body 부분의 작은 항목들을 위한 클래스 */
 .body-spec-item {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-bottom: 8px;
+  gap: 1px;  /* 간격 최소화 */
+  margin-bottom: 2px;  /* 하단 마진 최소화 */
 }
 
 .spec-item label {
   font-weight: 500;
   color: #555;
-  font-size: 8px !important;
+  font-size: 6px !important;  /* 폰트 크기 더 줄임 */
+  margin: 0;  /* 마진 제거 */
 }
 
 .spec-item input,
 .spec-item select {
-  padding: 6px 8px;
+  padding: 2px 4px !important;  /* 패딩 최소화 */
   border: 1px solid #ddd;
-  border-radius: 3px;
-  font-size: 10px !important;
-  height: 28px !important;
-  min-height: 28px !important;
-  line-height: 1.2 !important;
+  border-radius: 2px;
+  font-size: 8px !important;    /* 폰트 크기 더 줄임 */
+  height: 20px !important;      /* 높이 더 줄임 */
+  min-height: 20px !important;
+  line-height: 1.0 !important;  /* 줄 간격 최소화 */
 }
 
 /* Body 부분의 label과 input/select 스타일 */
 .body-spec-item label {
   font-weight: 500;
   color: #555;
-  font-size: 10px !important;
+  font-size: 6px !important;  /* 폰트 크기 더 줄임 */
+  margin: 0;  /* 마진 제거 */
 }
 
 .body-spec-item input,
 .body-spec-item select {
-  padding: 6px 0px;
+  padding: 2px 4px !important;  /* 패딩 최소화 */
   border: 1px solid #ddd;
-  border-radius: 3px;
-  font-size: 10px !important;
-  height: 28px !important;
-  min-height: 28px !important;
-  line-height: 1.2 !important;
+  border-radius: 2px;
+  font-size: 8px !important;    /* 폰트 크기 더 줄임 */
+  height: 10px !important;      /* 높이 더 줄임 */
+  min-height: 20px !important;
+  line-height: 1.0 !important;  /* 줄 간격 최소화 */
 }
 
 /* Size Unit과 Size 선택 부분의 간격 조정 */
 .spec-item .size-selection-group {
   display: flex !important;
-  gap: 20px !important;
+  gap: 8px !important;  /* 간격 줄임 */
   align-items: center;
   width: 100%;
-  height: 28px !important;
+  height: 30px !important;  /* 높이 줄임 */
 }
 
 .spec-item .size-selection-group select:first-child {
   width: 90px !important;
   flex-shrink: 0;
-  height: 28px !important;
-  min-height: 28px !important;
+  height: 18px !important;  /* 높이 줄임 */
+  min-height: 18px !important;  /* 최소 높이 줄임 */
 }
 
 .spec-item .size-selection-group select:last-child {
   flex: 1;
   min-width: 140px !important;
   max-width: calc(100% - 110px) !important;
-  height: 28px !important;
-  min-height: 28px !important;
+  height: 20px !important;  /* 높이 줄임 */
+  min-height: 20px !important;  /* 최소 높이 줄임 */
 }
 
 /* Rating Unit과 Rating 선택 부분의 간격 조정 */
@@ -1423,25 +1432,31 @@ div.type-item.selected {
 .accessory-section {
   background: #f8f9fa;
   padding: 0px;
-  border-radius: 6px;
+  border-radius: 0px;
   border: 1px solid #e0e0e0;
   margin-top: 0px;
+  height: 100px !important;
+  width: 120%;  /* 폭을 1.2배로 확장 */
+  margin: 0 auto;  /* 가운데 정렬 */
 }
 
 .accessory-section h3 {
-  margin: 0 0 0px 0;
+  margin: 0 0 4px 0;  /* 하단 마진 추가 */
   color: #495057;
-  font-size: 1.1rem;
+  font-size: 0.9rem;  /* 폰트 크기 줄임 */
   font-weight: 600;
   background: none;
   padding: 0;
   border: none;
+  line-height: 1.0;  /* 줄 간격 최소화 */
 }
 
 .accessory-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0px;
+  width: 120%;  /* 폭을 1.2배로 확장 */
+  margin: 0 auto;  /* 가운데 정렬 */
 }
 
 .accessory-item {
@@ -1463,14 +1478,27 @@ div.type-item.selected {
   font-size: 8px;
 }
 .accessory-section table tr {
-  height: 20px; /* 행 높이 줄이기 */
+  height: 12px !important; /* 행 높이 더 줄이기 */
 }
 
 .accessory-section table th,
 .accessory-section table td {
-  height: 20px; /* 셀 높이 줄이기 */
-  padding: 2px 4px; /* 패딩 줄이기 */
-  line-height: 1; /* 줄 간격 줄이기 */
+  height: 12px !important; /* 셀 높이 더 줄이기 */
+  padding: 1px 2px !important; /* 패딩 더 줄이기 */
+  line-height: 1.0 !important; /* 줄 간격 최소화 */
+  font-size: 8px !important; /* 폰트 크기 줄이기 */
+  vertical-align: middle !important; /* 세로 정렬 */
+}
+
+/* Accessory 테이블 내부 select 요소 */
+.accessory-section table select {
+  height: 10px !important; /* select 높이 줄이기 */
+  min-height: 10px !important;
+  padding: 0px 2px !important; /* select 패딩 줄이기 */
+  font-size: 7px !important; /* select 폰트 크기 줄이기 */
+  border: 1px solid #ddd;
+  border-radius: 2px;
+  line-height: 1.0 !important;
 }
 
 /* 반응형 디자인 */
@@ -1570,9 +1598,10 @@ div.type-item.selected {
 
 /* 제목(h4)과 카드 상단 간격도 살짝 띄움 */
 .specification-grid .spec-section h4 {
-  margin: 6px 0 6px 0 !important;
-  line-height: 1.2;
+  margin: 1px 0 2px 0 !important;  /* 마진 더 줄임 */
+  line-height: 1.0 !important;     /* 줄 간격 최소화 */
   font-weight: 600;
+  font-size: 6px !important;       /* 폰트 크기 더 줄임 */
 }
 
 /* 상단 행 높이/크기 통일(선택) */
