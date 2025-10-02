@@ -6362,16 +6362,13 @@ namespace EstimateRequestSystem.Services
                     }
                     else if (key == "Qty")
                     {
-                        // *** 중요: 문자열일 수 있는 cellValue를 숫자로 변환하여 삽입 ***
-                        if (cellValue != null && double.TryParse(cellValue.ToString(), out double qtyValue))
+                        if (cellValue != null && double.TryParse(cellValue.ToString(), out double numericValue))
                         {
-                            // 변환 성공 시, 숫자 타입으로 값 설정
-                            newWorksheet.Cell(row_vl, i).Value = qtyValue;
+                            newWorksheet.Cell(row_vl, i).Value = (int)numericValue;
                         }
                         else
                         {
-                            // 변환 실패 또는 null일 경우 0 또는 빈 값 처리
-                            newWorksheet.Cell(row_vl, i).Value = 0d;
+                            newWorksheet.Cell(row_vl, i).Value = 0;
                         }
                     }
                     else
@@ -6401,13 +6398,13 @@ namespace EstimateRequestSystem.Services
                 
                 // 셀 범위의 형식을 숫자로 설정
                 var range = newWorksheet.Range($"{fromAddress}:{toAddress}");
-                range.Style.NumberFormat.NumberFormatId = 2; // 숫자 형식
+                range.Style.NumberFormat.NumberFormatId = 1;
                 
                 // SUM 공식 설정
                 newWorksheet.Cell(40, 43).FormulaA1 = $"SUM({fromAddress}:{toAddress})";
                 
                 // 결과 셀도 숫자 형식으로 설정
-                newWorksheet.Cell(40, 43).Style.NumberFormat.NumberFormatId = 2;
+                newWorksheet.Cell(40, 43).Style.NumberFormat.NumberFormatId = 1;
             }
         }
         
