@@ -49,6 +49,20 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ setRegistrationSuccess }) =
     return types >= 2;
   };
   const isPasswordValid = validatePassword(formData.password);
+  const isStep1Ready =
+    !!formData.userID &&
+    !!formData.email &&
+    !!formData.password &&
+    !!formData.confirmPassword &&
+    formData.password === formData.confirmPassword &&
+    isUserIDValid &&
+    isPasswordValid;
+
+  const isStep2Ready =
+    !!formData.name &&
+    !!formData.phoneNumber &&
+    !!formData.department &&
+    !!formData.position;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -129,9 +143,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ setRegistrationSuccess }) =
         {step === 1 && (
           <>
             <div className="mb-4">
-              <div className="flex items-center border border-gray-400 rounded-lg bg-white px-3 h-12">
-                <span className="text-gray-500 w-20 text-sm font-semibold">아이디</span>
-                <span className="text-gray-300">|</span>
+              <div className="flex items-center border border-[#989898] rounded-lg bg-white px-3 h-12">
+                <span className="text-gray-400 w-20 text-sm font-semibold">아이디</span>
+                <span className="text-gray-400 ml-2 text-sm font-semibold">|</span>
                 <input
                   type="text"
                   id="userID"
@@ -147,9 +161,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ setRegistrationSuccess }) =
               </div>
             </div>
 
-            <div className="flex items-center border border-gray-400 rounded-lg bg-white px-3 h-12 mb-4">
-              <span className="text-gray-500 w-20 text-sm font-semibold">이메일</span>
-              <span className="text-gray-300">|</span>
+            <div className="flex items-center border border-[#989898] rounded-lg bg-white px-3 h-12 mb-4">
+              <span className="text-gray-400 w-20 text-sm font-semibold">이메일</span>
+              <span className="text-gray-400 ml-2 text-sm font-semibold">|</span>
               <input
                 type="email"
                 id="email"
@@ -160,21 +174,21 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ setRegistrationSuccess }) =
               />
             </div>
 
-            <div className="flex items-center border border-gray-400 rounded-lg bg-white px-3 h-12 relative">
-              <span className="text-gray-500 w-20 text-sm font-semibold">비밀번호</span>
-              <span className="text-gray-300">|</span>
+            <div className="flex items-center border border-[#989898] rounded-lg bg-white px-3 h-12 relative">
+              <span className="text-gray-400 w-20 text-sm font-semibold">비밀번호</span>
+              <span className="text-gray-400 ml-2 text-sm font-semibold">|</span>
               <input
                 type={showPassword ? 'text' : 'password'}
                 id="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="flex-1 outline-none text-sm pl-2"
+                className="flex-1 outline-none text-sm pl-2 pr-10"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 text-gray-400 hover:text-gray-600"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 flex items-center justify-center text-gray-400 hover:text-gray-600"
               >
                 {showPassword ? <FaEye /> : <FaEyeSlash />}
               </button>
@@ -184,21 +198,21 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ setRegistrationSuccess }) =
               <p>◦ 대문자, 소문자, 숫자 중 2가지 포함 필수</p>
             </div>
 
-            <div className="flex items-center border border-gray-400 rounded-lg bg-white px-3 h-12 relative mb-1">
-              <span className="text-gray-500 w-20 text-sm font-semibold">재입력</span>
-              <span className="text-gray-300">|</span>
+            <div className="flex items-center border border-[#989898] rounded-lg bg-white px-3 h-12 relative mb-1">
+              <span className="text-gray-400 w-20 text-sm font-semibold">재입력</span>
+              <span className="text-gray-400 ml-2 text-sm font-semibold">|</span>
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
                 id="confirmPassword"
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="flex-1 outline-none text-sm pl-2"
+                className="flex-1 outline-none text-sm pl-2 pr-10"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 text-gray-400 hover:text-gray-600"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 flex items-center justify-center text-gray-400 hover:text-gray-600"
               >
                 {showConfirmPassword ? <FaEye /> : <FaEyeSlash />}
               </button>
@@ -207,9 +221,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ setRegistrationSuccess }) =
               <p className="text-xs text-red-500 mb-4">비밀번호가 일치하지 않습니다.</p>
             )}
 
-            <div className="flex items-center border border-gray-400 rounded-lg bg-white px-3 h-12 mt-4 mb-6">
-              <span className="text-gray-500 w-20 text-sm font-semibold">역할</span>
-              <span className="text-gray-300">|</span>
+            <div className="flex items-center border border-[#989898] rounded-lg bg-white px-3 h-12 mt-4 mb-6">
+              <span className="text-gray-400 w-20 text-sm font-semibold">역할</span>
+              <span className="text-gray-400 ml-2 text-sm font-semibold">|</span>
               <select
                 id="role"
                 name="role"
@@ -226,7 +240,12 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ setRegistrationSuccess }) =
             <button
               type="button"
               onClick={handleNext}
-              className="w-full h-12 rounded-lg bg-[#2320F1] text-white font-semibold text-lg hover:bg-blue-700 transition"
+              disabled={!isStep1Ready}
+              className={`w-full h-12 rounded-lg font-semibold text-lg transition ${
+                isStep1Ready
+                  ? 'bg-[#2320F1] text-white hover:bg-blue-700'
+                  : 'bg-gray-300 text-white cursor-not-allowed'
+              }`}
             >
               다음 단계
             </button>
@@ -242,9 +261,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ setRegistrationSuccess }) =
               { id: 'department', label: '부서', type: 'text' },
               { id: 'position', label: '직책', type: 'text' },
             ].map((field) => (
-              <div key={field.id} className="flex items-center border border-gray-400 rounded-lg bg-white px-3 h-12 mb-4">
-                <span className="text-gray-500 w-28 text-sm font-semibold">{field.label}</span>
-                <span className="text-gray-300">|</span>
+              <div key={field.id} className="flex items-center border border-[#989898] rounded-lg bg-white px-3 h-12 mb-4">
+                <span className="text-gray-400 w-28 text-sm font-semibold">{field.label}</span>
+                <span className="text-gray-400 ml-2 text-sm font-semibold">|</span>
                 <input
                   type={field.type}
                   id={field.id}
@@ -256,7 +275,18 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ setRegistrationSuccess }) =
               </div>
             ))}
 
-            <button type="button" onClick={handleNext} className="w-full h-12 rounded-lg bg-[#2320F1] text-white font-semibold text-lg hover:bg-blue-700 transition">다음 단계</button>
+            <button
+              type="button"
+              onClick={handleNext}
+              disabled={!isStep2Ready}
+              className={`w-full h-12 rounded-lg font-semibold text-lg transition ${
+                isStep2Ready
+                  ? 'bg-[#2320F1] text-white hover:bg-blue-700'
+                  : 'bg-gray-300 text-white cursor-not-allowed'
+              }`}
+            >
+              다음 단계
+            </button>
           </>
         )}
 
@@ -269,9 +299,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ setRegistrationSuccess }) =
               { id: 'address', label: '회사 주소', type: 'text' },
               { id: 'companyPhone', label: '회사 연락처', type: 'tel' },
             ].map((field) => (
-              <div key={field.id} className="flex items-center border border-gray-400 rounded-lg bg-white px-3 h-12 mb-4">
-                <span className="text-gray-500 w-28 text-sm font-semibold">{field.label}</span>
-                <span className="text-gray-300">|</span>
+              <div key={field.id} className="flex items-center border border-[#989898] rounded-lg bg-white px-3 h-12 mb-4">
+                <span className="text-gray-400 w-28 text-sm font-semibold">{field.label}</span>
+                <span className="text-gray-400 ml-2 text-sm font-semibold">|</span>
                 <input
                   type={field.type}
                   id={field.id}
@@ -283,7 +313,15 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ setRegistrationSuccess }) =
               </div>
             ))}
 
-            <button type="submit" disabled={loading} className="w-full h-12 rounded-lg bg-[#2320F1] text-white font-semibold text-lg hover:bg-blue-700 transition">
+            <button
+              type="submit"
+              disabled={loading || !formData.companyName || !formData.businessNumber || !formData.address || !formData.companyPhone}
+              className={`w-full h-12 rounded-lg font-semibold text-lg transition ${
+                loading || !formData.companyName || !formData.businessNumber || !formData.address || !formData.companyPhone
+                  ? 'bg-gray-300 text-white cursor-not-allowed'
+                  : 'bg-[#2320F1] text-white hover:bg-blue-700'
+              }`}
+            >
               {loading ? '회원가입 중...' : '회원가입'}
             </button>
           </>

@@ -56,49 +56,13 @@ function App() {
   if (!user) {
     return (
       <Router>
-        <div className="App">
-          <nav className="navbar">
-            <div className="nav-container">
-              <h1 className="nav-title">컨트롤 밸브 견적 시스템</h1>
-              <div className="nav-links">
-                <Link to="/" className="nav-link">홈</Link>
-                <Link to="/login" className="nav-link">로그인</Link>
-                <Link to="/register" className="nav-link">회원가입</Link>
-              </div>
-            </div>
-          </nav>
-
-          <main className="app-shell">
-            <Routes>
-              <Route path="/" element={
-                <div className="home-page">
-                  <h2>컨트롤 밸브 견적 시스템에 오신 것을 환영합니다</h2>
-                  <div className="feature-grid">
-                    <div className="feature-card">
-                      <h3>인증 관리</h3>
-                      <p>로그인 및 회원가입</p>
-                      <Link to="/login" className="feature-link">바로가기</Link>
-                    </div>
-                    <div className="feature-card">
-                      <h3>아이디 찾기</h3>
-                      <p>이메일로 아이디 찾기</p>
-                      <Link to="/forgot-password" className="feature-link">바로가기</Link>
-                    </div>
-                    <div className="feature-card">
-                      <h3>비밀번호 재설정</h3>
-                      <p>이메일 인증을 통한 비밀번호 재설정</p>
-                      <Link to="/forgot-password" className="feature-link">바로가기</Link>
-                    </div>
-                  </div>
-                </div>
-              } />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
-            </Routes>
-          </main>
-        </div>
+        <Routes>
+          <Route path="/" element={<LoginPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />  
+        </Routes>
       </Router>
     );
   }

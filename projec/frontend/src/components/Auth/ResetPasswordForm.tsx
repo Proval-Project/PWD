@@ -163,12 +163,12 @@ const ResetPasswordForm: React.FC<{ email?: string }> = ({ email = "" }) => {
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             required
-            className="flex-1 outline-none text-sm bg-white pl-2"
+            className="flex-1 outline-none text-sm bg-white pl-2 pr-10"
           />
           <button
             type="button"
             onClick={() => setShowNewPassword(!showNewPassword)}
-            className="absolute right-3 text-gray-400 hover:text-gray-600"
+            className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 flex items-center justify-center text-gray-400 hover:text-gray-600"
           >
             {showNewPassword ? <FaEye /> : <FaEyeSlash />}
           </button>
@@ -188,12 +188,12 @@ const ResetPasswordForm: React.FC<{ email?: string }> = ({ email = "" }) => {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
-            className="flex-1 outline-none text-sm bg-white pl-2"
+            className="flex-1 outline-none text-sm bg-white pl-2 pr-10"
           />
           <button
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute right-3 text-gray-400 hover:text-gray-600"
+            className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 flex items-center justify-center text-gray-400 hover:text-gray-600"
           >
             {showConfirmPassword ? <FaEye /> : <FaEyeSlash />}
           </button>

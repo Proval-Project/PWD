@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { forgotPassword } from '../../api/auth';
+import { forgotPassword, findId } from '../../api/auth';
 import { Toast } from '../common/Toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -30,6 +30,8 @@ const ForgotPasswordForm: React.FC = () => {
     }
 
     try {
+      // 가입 여부 선검증 (이메일로 가입된 계정이 있는지 확인)
+      await findId(email);
       await forgotPassword(email);
       setSuccessMessage("입력하신 이메일로 아이디를 전송했습니다!\n비밀번호 재설정을 진행해주세요.");
     } catch (err: any) {
