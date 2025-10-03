@@ -158,3 +158,57 @@
   border-radius: 4px;
 }
 
+/* ====== 견적요청 상세/신규 공통 카드/표 스타일 ====== */
+.dashboard-page .mini-card {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  overflow: hidden;
+}
+.dashboard-page .mini-card-header {
+  padding: 14px 16px;
+  font-weight: 800;
+  border-bottom: 1px solid #E5E7EB;
+}
+.dashboard-page .mini-card-body {
+  padding: 16px;
+}
+
+/* 표 라운드 처리 (요청 목록/상세 내 표 공통) */
+.dashboard-page .table-container table,
+.dashboard-page .inquiry-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.dashboard-page .table-container table thead th:first-child,
+.dashboard-page .inquiry-table thead th:first-child { border-top-left-radius: 12px; }
+.dashboard-page .table-container table thead th:last-child,
+.dashboard-page .inquiry-table thead th:last-child { border-top-right-radius: 12px; }
+.dashboard-page .table-container table tbody tr:last-child td:first-child,
+.dashboard-page .inquiry-table tbody tr:last-child td:first-child { border-bottom-left-radius: 12px; }
+.dashboard-page .table-container table tbody tr:last-child td:last-child,
+.dashboard-page .inquiry-table tbody tr:last-child td:last-child { border-bottom-right-radius: 12px; }
+
+/* 텍스트 오버플로우 기본 처리 */
+.dashboard-page .table-container td,
+.dashboard-page .inquiry-table td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dashboard-page .table-container td[title],
+.dashboard-page .inquiry-table td[title] { cursor: help; }
+
+/* 작업 열 최소 폭 확보 */
+.dashboard-page .table-container th:last-child,
+.dashboard-page .table-container td:last-child,
+.dashboard-page .inquiry-table th:last-child,
+.dashboard-page .inquiry-table td:last-child {
+  min-width: 140px;
+  white-space: nowrap;
+}
+

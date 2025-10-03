@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { getEstimateDetail, assignEstimate } from '../../api/estimateRequest';
 import { buildApiUrl, buildClientAppUrl } from '../../config/api';
 import './DashboardPages.css';
 import './EstimateDetailPage.css';
+import { IoIosArrowBack } from "react-icons/io";
 
 // 단위/사이즈 마스터 데이터 타입
 interface BodySizeListDto {
@@ -199,6 +200,7 @@ const StaffCommentSection = React.memo<StaffCommentSectionProps>(({ value, onCha
 
 const EstimateDetailPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { tempEstimateNo } = useParams<{ tempEstimateNo: string }>();
   
   // 상태 관리
@@ -3425,11 +3427,21 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
   return (
     <div className="estimate-detail-page dashboard-page">
       {/* 헤더 */}
-      <div className="page-header-detail">
-        <button className="back-button-detail" onClick={() => navigate(-1)}>
-          ← 견적요청
+      <div className="flex items-center mb-1 gap-3 mt-7">
+        <button
+          className="text-xl text-black p-1"
+          onClick={() => navigate(-1)}
+        >
+          <IoIosArrowBack />
         </button>
-        <h1>사양 선정</h1>
+        <h1 className="text-2xl font-bold text-black">
+          {(() => {
+            const st = (location.state || {}) as any;
+            if (st.from === 'management') return '견적요청 관리';
+            if (st.from === 'inquiry') return '견적요청 조회';
+            return '견적요청';
+          })()}
+        </h1>
       </div>
 
       {/* 상단 우측 미니 패널: 견적 서류 발급 + 고객 제출 문서 업로드 */}

@@ -1,3 +1,15 @@
+.attachments-header { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.attachments-header .upload-btn.header {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f3f4f6;
+  color: #111827;
+  font-weight: 700;
+  cursor: pointer;
+}
+.attachments-header .upload-btn.header:hover { background:#e5e7eb; }
 /* NewEstimateRequest.css */
 
 /* 유체 조건 테이블의 숫자 입력 필드에서 스피너(업/다운 화살표) 숨기기 및 스타일 조정 */
@@ -37,49 +49,300 @@
   margin: 0 auto;
 }
 
+/* .request-sheet 제거 (최근 변경 취소) */
+
+/* 상단 큰 카드(흰색 둥근 박스) */
+.request-card { margin-top: 28px; margin-bottom: 16px; background:transparent; border:none; border-radius:0; box-shadow:none; padding:0; }
+.request-header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:0; }
+.info-table { flex:1; }
+.info-table .row { display:grid; grid-template-columns:140px 1fr; }
+.info-table .cell { padding:8px 12px; border:1px solid #e5e7eb; }
+.info-table .label { background:#e5e7eb; color:#000; font-weight:600; border-right:none; border-top-left-radius:8px; border-bottom-left-radius:8px; text-align:left; padding-top:16px; }
+.info-table .value { background:#fff; border:1px solid #e5e7eb; border-left:none; border-top-right-radius:8px; border-bottom-right-radius:8px; display:flex; align-items:center; }
+.info-table .value { background:#fff; border-left:none; border-top-right-radius:8px; border-bottom-right-radius:8px; }
+.section-divider { border:0; border-top:1px solid #e5e7eb; margin:0; }
+
+.project-input-lg { flex:1; width:100%; min-width:0; height:40px; padding:0 12px; border:0; border-radius:10px; background:#fff; font-size:14px; color:#111827; outline:none; box-shadow:none; }
+.project-input-lg:focus { border-color:#3b82f6; background:#fff; box-shadow:0 0 0 3px rgba(59,130,246,0.15); }
+.project-bar-actions { display:flex; align-items:center; gap:10px; }
+.btn-lg { height:40px; padding:0 22px; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; }
+.btn-lg:disabled { opacity:.6; cursor:not-allowed; }
+.btn-draft { background:#22c55e; color:#fff; }
+.btn-draft:hover { background:#16a34a; }
+.btn-request { background:#ef4444; color:#fff; }
+.btn-request:hover { background:#dc2626; }
+
 /* 상단 2열 패널 */
 .top-two-panel {
   display: flex !important;
   flex-direction: row !important;
-  gap: 8px !important;
-  margin-bottom: 8px !important;
-  height: 120px !important; /* compact 고정 높이 */
+  gap: 12px !important; /* 두 카드 간격 더 축소 */
+  margin-bottom: 12px !important;
   width: 100% !important;
+  background: #ffffff;               /* 두 영역을 잇는 하나의 흰 바탕 */
+  border: 1px solid #e5e7eb;         /* 윤곽선 */
+  border-radius: 12px;               /* 둥근 모서리 */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 16px;                     /* 내부 여백 */
+  align-items: stretch;               /* 좌우 동일 높이 */
+  min-height: 120px;                 /* 더 컴팩트 */
 }
 
 .top-two-panel .mini-card {
   flex: 1 1 0;
   display: flex;
   flex-direction: column;
-  border: 1px solid #e9ecef;
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  overflow: hidden;
+  border: none;                      /* 내부 카드는 투명 처리하여 바탕을 하나로 보이게 */
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  min-height: 140px;                 /* 두 카드 균일 높이 */
 }
 
+/* 좌/우 비율 조정: 우측 박스를 더 넓게 */
 .top-two-panel .estimate-summary { 
-  flex: 0 0 calc(66.666% - 4px) !important; 
-  max-width: calc(66.666% - 4px) !important;
+  flex: 0 0 calc(58% - 6px) !important; 
+  max-width: calc(58% - 6px) !important;
 }
 .top-two-panel .manager-files   { 
-  flex: 0 0 calc(33.333% - 4px) !important; 
-  max-width: calc(33.333% - 4px) !important;
+  flex: 0 0 calc(42% - 6px) !important; 
+  max-width: calc(42% - 6px) !important;
 }
 
 .mini-card-header {
-  padding: 6px 10px;
-  font-size: 12px;
-  font-weight: 600;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
+  padding: 0;                       /* 제목 아래 선/여백 제거 */
+  margin: 0 0 8px 0;                /* 살짝만 띄움 */
+  font-size: 16px;                  /* 제목 더 크게 (두 카드 동일) */
+  font-weight: 800;                 /* 굵게 */
+  background: transparent;
+  border-bottom: none !important;   /* 선 제거 */
+  display: flex;                    /* 아이콘 + 텍스트 정렬 */
+  align-items: center;              /* 같은 라인 정렬 */
+  height: 24px;                     /* 두 카드 동일 헤더 높이 */
+}
+
+/* 제목 앞 동그라미 포인트 (사진 스타일) */
+/* 제목 앞 빈 동그라미 */
+.top-two-panel .mini-card-header::before {
+  content: '○';
+  display: inline-block;
+  margin-right: 8px;
+  color: #9ca3af; /* gray-400 */
+  font-weight: 400;
 }
 
 .mini-card-body {
   flex: 1;
-  padding: 6px 8px;
-  overflow: auto;
+  padding: 0;              /* 시트 내부와 자연스럽게 */
+  overflow: visible;
 }
+
+/* 헤더와 바디 사이 간격 균일화 */
+.top-two-panel .mini-card-body { margin-top: 0; }
+.top-two-panel .estimate-summary .mini-card-body { padding-top: 2px; }
+.top-two-panel .manager-files .mini-card-body { padding-top: 2px; }
+
+/* 좌측 '견적 세부 정보' 내부 여백을 우측과 균등하게 맞춤 */
+.top-two-panel .estimate-summary .mini-card-body { padding: 16px; }
+.top-two-panel .estimate-summary .summary-grid { gap: 10px 24px !important; }
+
+/* 본문 텍스트 약간 키움 (좌측 표, 우측 메시지) */
+.estimate-summary .summary-item .label,
+.estimate-summary .summary-item .value { font-size: 14px; color:#111827; }
+.top-two-panel .manager-files .mini-empty { font-size: 20px; }
+
+/* 견적 세부정보 표 글씨를 조금 키우고 확실히 검은색으로 */
+.top-two-panel .estimate-summary .summary-item .label,
+.top-two-panel .estimate-summary .summary-item .value {
+  font-size: 15px !important;
+  color: #111827 !important;
+}
+
+/* 각 카드 헤더를 개별 타깃팅해서 완전히 동일 라인/크기로 고정 */
+.top-two-panel .estimate-summary .mini-card-header,
+.top-two-panel .manager-files .mini-card-header {
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  margin: 0 0 8px 0 !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  height: 24px !important;
+}
+
+/* 두 헤더 앞의 동그라미 아이콘도 동일 간격으로 */
+.top-two-panel .estimate-summary .mini-card-header::before,
+.top-two-panel .manager-files .mini-card-header::before {
+  content: '○';
+  display: inline-block;
+  margin-right: 8px;
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+/* 좌측: 견적 세부 정보 표 간격 조금 여유롭게 */
+.estimate-summary .summary-item { padding: 2px 0; }
+.estimate-summary .summary-item .label { color:#6b7280; }
+.estimate-summary .summary-item .value { color:#111827; }
+
+/* 우측: 관리 첨부파일 메시지를 박스 형태로 중앙 정렬 */
+.top-two-panel .manager-files .mini-card-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+.top-two-panel .manager-files .mini-empty {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 20px 16px;       /* 여백 축소로 높이 컴팩트 */
+  text-align: center;
+  color: #111827;
+  font-weight: 800;
+  font-size: 18px;
+  line-height: 1.4;
+  height: 100%;              /* 좌측 카드 높이에 맞추기 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* =========================
+   기타요청사항 / 첨부파일 2열 블록
+   ========================= */
+.compact-two-panel {
+  display: flex;
+  gap: 28px;                 /* 두 박스 사이 간격 조금 더 */
+  margin-top: 16px;          /* 위 요소와 간격 확대 */
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 16px;
+}
+
+/* 그리드 레이아웃(.step-section)의 영향 제거 후 전체 가로 폭 차지 */
+.step-section.compact-two-panel {
+  display: flex !important;           /* grid → flex 강제 */
+  grid-column: 1 / -1 !important;     /* 전체 열 병합 */
+  width: 100% !important;             /* 가로 꽉 차게 */
+  align-items: stretch !important;     /* 두 상자 동일 높이 */
+}
+.compact-two-panel .compact-box {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;               /* 줄바꿈/오버플로 방지 */
+  padding: 0 10px;            /* 좌우 안쪽 여백으로 박스끼리 시각적 간격 */
+}
+
+/* 박스 내부의 흰색 컨테이너들을 가로로 길게(꽉 차게) */
+.compact-two-panel .other-requests-compact textarea,
+.compact-two-panel .other-requests-compact #customer-requirement,
+.compact-two-panel .attachments-compact .file-upload-container.compact,
+.compact-two-panel .attachments-compact .compact-file-list,
+.compact-two-panel .attachments-compact .attachment-list,
+.compact-two-panel .attachments-compact .file-list {
+  width: 100%;
+  box-sizing: border-box;
+}
+.compact-two-panel .compact-box .compact-label,
+.compact-two-panel .compact-box h4 {
+  font-size: 16px;
+  font-weight: 800;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+}
+.compact-two-panel .compact-box .compact-label::before,
+.compact-two-panel .compact-box h4::before {
+  content: '○';
+  display: inline-block;
+  margin-right: 8px;
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+/* 기타요청사항 텍스트 영역 - 둥근 흰 박스 */
+.compact-two-panel .other-requests-compact textarea,
+.compact-two-panel .other-requests-compact #customer-requirement {
+  width: 100%;
+  min-height: 70px;           /* 기본 최소 높이 */
+  height: auto;               /* 내용에 따라 확장 */
+  overflow: visible;          /* 내부 스크롤 제거 */
+  margin-top: 6px;            /* 제목과 박스 사이 간격 */
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 12px;
+  font-size: 14px;
+  color: #111827;
+  outline: none;
+}
+.compact-two-panel .other-requests-compact textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.12);
+}
+
+/* 첨부파일 리스트 박스 - 둥근 흰 박스 */
+.compact-two-panel .attachments-compact .file-upload-container.compact,
+.compact-two-panel .attachments-compact .compact-file-list,
+.compact-two-panel .attachments-compact .attachment-list,
+.compact-two-panel .attachments-compact .file-list { }
+
+/* 하나의 기본 컨테이너 안에 파일이 들어가도록 */
+.attachments-box {
+  position: relative;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 16px 16px 12px 16px;
+  min-height: 70px;
+  margin-top: 6px;
+}
+.attachments-box.has-files { border: 1px solid #e5e7eb; padding-top: 0; }
+.attachments-box .attachment-list { margin-top: 8px; }
+.attachment-placeholder { color:#9ca3af; font-size: 14px; }
+
+/* 첨부파일 인라인 칩 스타일 (아이콘 + 파일명 + 삭제 X) */
+.attachment-list.inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 8px;
+}
+.attachment-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid transparent; /* 파일 칩 외곽선 제거(투명) */
+  border-radius: 10px;
+  background: #fff;
+}
+.attachment-chip .file-icon { color: #6b7280; }
+.attachment-chip .file-name-text { max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.attachment-chip .file-remove {
+  background: transparent;
+  border: none;
+  color: #111827;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.attachment-chip .file-remove:hover { color: #ef4444; }
+.compact-two-panel .attachments-compact .file-upload-container.compact {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.compact-two-panel .attachments-compact .file-count { color:#6b7280; font-size:12px; }
+.compact-two-panel .attachments-compact .compact-file-list { max-height: 120px; overflow: auto; }
+.compact-two-panel .attachments-compact .compact-file-list li { font-size: 12px; }
 
 /* 요약 카드 내부 그리드: 다른 페이지의 .summary-grid 규칙보다 우선 적용 */
 .estimate-summary .summary-grid {
@@ -278,22 +541,28 @@
 
 
 .step-section {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  border: 1px solid #e0e0e0;      /* 얇은 선 */
+  border-radius: 12px;             /* 둥근 직사각 */
   overflow: hidden;
 }
 
 .step-header {
-  background: #f8f9fa;
-  padding: 20px;
-  border-bottom: 1px solid #e0e0e0;
+  background: transparent;
+  padding: 16px 20px 8px 20px;
+  border-bottom: 1px solid #e0e0e0; /* 상단과 단계 구분선 */
 }
 
 .step-header h3 {
-  margin: 0;
-  color: #495057;
-  font-size: 1.5rem;
+  margin: 0 0 2px 0;          /* Step 굵은 제목 */
+  color: #111827;
+  font-size: 22px;
+  font-weight: 800;
+}
+.step-header .subtitle {       /* 다음 줄 작은 부제 */
+  margin-left: 16px;           /* 스페이스 약 2칸 느낌 */
+  color: #6b7280;
+  font-size: 14px;
   font-weight: 600;
 }
 
@@ -301,6 +570,8 @@
   padding: 20px;
   border-bottom: 1px solid #e0e0e0;
   position: relative;
+  overflow-x: auto;             /* 내용이 가로로 길어지면 수평 스크롤 */
+  -webkit-overflow-scrolling: touch;
 }
 
 .step-subsection:last-child {
@@ -395,40 +666,29 @@
   display: flex;
   gap: 10px;
   align-items: center;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 6px;
-  border: 1px solid #e0e0e0;
+  padding: 12px 16px;
+  background: #e9e9eb;                 /* 기본 회색 배경 */
+  border-radius: 10px;                  /* 둥근 모서리 */
+  border: 1px solid #e5e7eb;
   position: relative;
   transition: all 0.2s ease;
 }
 
-.type-item.selected {
-  border: 2px solid #007bff !important;
-  background: #e3f2fd !important;
-  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2) !important;
+.type-item.selected {                     /* 선택 시 꽉 찬 파란색 바 */
+  background: #2639ff !important;
+  color: #ffffff !important;
+  border: 1px solid #2639ff !important;
+  box-shadow: none !important;
 }
 
 /* 더 구체적인 선택자로 강제 적용 */
-.step-subsection .type-item.selected {
-  border: 2px solid #007bff !important;
-  background: #e3f2fd !important;
-  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2) !important;
-}
+.step-subsection .type-item.selected { background: #2639ff !important; color:#fff !important; border:1px solid #2639ff !important; box-shadow:none !important; }
 
 /* 최고 우선순위로 강제 적용 */
-div.type-item.selected {
-  border: 2px solid #007bff !important;
-  background: #e3f2fd !important;
-  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2) !important;
-}
+div.type-item.selected { background:#2639ff !important; color:#fff !important; border:1px solid #2639ff !important; box-shadow:none !important; }
 
 /* 인라인 스타일보다 우선 적용 */
-.type-item.selected[class*="selected"] {
-  border: 2px solid #007bff !important;
-  background: #e3f2fd !important;
-  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2) !important;
-}
+.type-item.selected[class*="selected"] { background:#2639ff !important; color:#fff !important; border:1px solid #2639ff !important; box-shadow:none !important; }
 
 .type-select {
   flex: 1;
@@ -668,6 +928,7 @@ div.type-item.selected {
   row-gap: 8px !important;
   column-gap: 16px !important;
   max-height: 220px !important;
+  min-width: 1200px;                      /* 넓어지면 부모에서 가로 스크롤 */
   
 }
 
@@ -1181,19 +1442,20 @@ div.type-item.selected {
   display: flex;
   gap: 10px;
   align-items: center;
-  padding: 12px;
-  background: #f8f9fa;
-  border-radius: 6px;
-  border: 1px solid #e0e0e0;
+  padding: 12px 16px;
+  background: #e9e9eb;                 /* 기본 회색 배경 */
+  border-radius: 10px;                  /* 둥근 모서리 */
+  border: 1px solid #e5e7eb;
   margin-bottom: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.valve-item.selected {
-  border: 2px solid #007bff !important;
-  background: #e3f2fd !important;
-  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2) !important;
+.valve-item.selected {                    /* 선택 시 꽉 찬 파란색 바 */
+  background: #2639ff !important;
+  color: #ffffff !important;
+  border: 1px solid #2639ff !important;
+  box-shadow: none !important;
 }
 
 /* Step 3: 상세사양 입력 */
@@ -1206,13 +1468,13 @@ div.type-item.selected {
 }
 
 .spec-section h3 {
-  background: #f8f9fa;
-  margin: 0;
-  padding: 0px;
-  color: #495057;
-  font-size: 1.2rem;
-  font-weight: 600;
-  border-bottom: 1px solid #e0e0e0;
+  background: transparent;            /* 레퍼런스처럼 헤더 배경 제거 */
+  margin: 0 0 12px 0;                 /* 제목 아래 여백 */
+  padding: 0;
+  color: #111827;
+  font-size: 16px;                    /* 제목 크기 */
+  font-weight: 700;
+  border: none;                       /* 구분선 제거 */
 }
 
 .spec-content {
@@ -1221,6 +1483,53 @@ div.type-item.selected {
   grid-template-columns: repeat(1, 1fr);
   gap: 0px;
 }
+
+/* === 레퍼런스 UI: 입력 요소 공통 높이/테두리 === */
+.body-section select,
+.body-section input,
+.actuator-section select,
+.actuator-section input,
+.accessory-section select,
+.accessory-section input,
+.fluid-section select,
+.fluid-section input {
+  height: 32px;
+  min-height: 32px;
+  font-size: 14px;
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+.body-section label,
+.actuator-section label,
+.accessory-section label,
+.fluid-section label {
+  font-size: 13px;
+  color: #555;
+  font-weight: 500;
+}
+
+/* === 레퍼런스 UI: 유체 테이블 === */
+.fluid-conditions-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  font-size: 13px !important;
+}
+.fluid-conditions-table th,
+.fluid-conditions-table td {
+  border: 1px solid #e0e0e0 !important;
+  padding: 8px !important;
+  text-align: center !important;
+}
+.fluid-conditions-table th { background-color: #f2f2f2 !important; font-weight: 500 !important; }
+.fluid-conditions-table td:first-child { text-align: left !important; background-color: #f9f9f9 !important; }
+.fluid-conditions-table input {
+  width: 100% !important;
+  border: none !important;
+  background: transparent !important;
+  text-align: center !important;
+}
+.fluid-conditions-table input:focus { outline: 1px solid #0052ff !important; }
 
 .spec-header {
   display: flex;

@@ -135,7 +135,7 @@ const EstimateManagementPage: React.FC = () => {
   };
 
   const handleRowClick = (item: DraftItem) => {
-    navigate(`/estimate-detail/${item.tempEstimateNo}`);
+    navigate(`/estimate-detail/${item.tempEstimateNo}`, { state: { from: 'management' } });
   };
 
   return (
@@ -145,7 +145,7 @@ const EstimateManagementPage: React.FC = () => {
         <button className="text-xl text-black p-1" onClick={() => navigate(-1)}>
           <IoIosArrowBack />
         </button>
-        <h1 className="text-2xl font-bold text-black">전체 견적 관리</h1>
+        <h1 className="text-2xl font-bold text-black">견적요청 관리</h1>
       </div>
 
       {/* 검색/필터 */}

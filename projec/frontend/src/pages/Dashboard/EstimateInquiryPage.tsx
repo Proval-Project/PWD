@@ -127,17 +127,7 @@ const EstimateInquiryPage: React.FC = () => {
   };
 
   const handleRowClick = (item: EstimateInquiryItem) => {
-    let user = currentUser;
-    if (!user) {
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        user = JSON.parse(userStr);
-        setCurrentUser(user);
-      }
-    }
-    const canEdit = (item.status === 1 || item.status === 2) && user && item.writerID === user.userId;
-    const readonly = canEdit ? 'false' : 'true';
-    navigate(`/estimate-request/new?load=${item.tempEstimateNo}&readonly=${readonly}`);
+    navigate(`/estimate-detail/${item.tempEstimateNo}`, { state: { from: 'inquiry' } });
   };
 
   return (
@@ -150,7 +140,7 @@ const EstimateInquiryPage: React.FC = () => {
         >
           <IoIosArrowBack />
         </button>
-        <h1 className="text-2xl font-bold text-black">견적요청 목록</h1>
+        <h1 className="text-2xl font-bold text-black">견적요청 조회</h1>
       </div>
 
       <div className="search-section">

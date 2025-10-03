@@ -23,6 +23,8 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import './DashboardPages.css';
 import './NewEstimateRequest.css';
+import { IoIosArrowBack } from "react-icons/io";
+import { FaFilePdf, FaFileExcel, FaFileWord, FaFileImage, FaFileAlt } from 'react-icons/fa';
 
 // 크로스플랫폼 경로 처리를 위한 유틸리티 함수
 const isManagerFile = (filePath: string): boolean => {
@@ -3376,27 +3378,44 @@ const NewEstimateRequestPage: React.FC = () => {
   return (
     <div className="new-estimate-request-page dashboard-page">
       {/* 헤더 */}
-      <div className="page-header">
-        <button className="back-button" onClick={() => navigate(-1)}>
-          ← {isReadOnly ? '견적요청 조회' : '견적요청'}
+      <div className="flex items-center mb-1 gap-3 mt-7">
+        <button
+          className="text-xl text-black p-1"
+          onClick={() => navigate(-1)}
+        >
+          <IoIosArrowBack />
         </button>
-        <h1>{isReadOnly ? '견적 상세 조회' : '견적 요청'}</h1>
-
+        <h1 className="text-2xl font-bold text-black">{isReadOnly ? '견적요청 조회' : '견적요청'}</h1>
       </div>
 
-      {/* 프로젝트 정보 */}
-      <div className="status-section">
-        <div className="project-group">
-          <label>프로젝트명:</label>
-          <input 
-            type="text" 
-            value={projectName} 
-            onChange={(e) => setProjectName(e.target.value)}
-            placeholder="프로젝트명을 입력하세요"
-            className="project-input" 
-            disabled={isReadOnly}
-          />
+      {/* 상단 카드: 프로젝트명 표 + 우측 액션 버튼 (임시저장/견적요청) */}
+      <div className="request-card">
+        <div className="request-header">
+          <div className="info-table">
+            <div className="row">
+              <div className="cell label">프로젝트명</div>
+              <div className="cell value">
+                <input
+                  type="text"
+                  value={projectName}
+                  onChange={(e) => setProjectName(e.target.value)}
+                  placeholder="프로젝트명을 입력하세요"
+                  className="project-input-lg"
+                  disabled={isReadOnly}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="project-bar-actions">
+            {!isReadOnly ? (
+              <>
+                <button className="btn-lg btn-draft" onClick={handleSaveDraft}>임시저장</button>
+                <button className="btn-lg btn-request" onClick={handleSubmitEstimate}>견적요청</button>
+              </>
+            ) : null}
+          </div>
         </div>
+        {/* 구분선 제거 */}
       </div>
 
       {/* 메인 콘텐츠 */}
@@ -3467,6 +3486,7 @@ const NewEstimateRequestPage: React.FC = () => {
           </div>
         </div>
       </div>
+      
 
       <div className="main-content-detail">
         <div className="steps-container">
@@ -3579,13 +3599,22 @@ const NewEstimateRequestPage: React.FC = () => {
           </div>
 
             <div className="compact-box attachments-compact">
-              <span className="compact-label">첨부파일</span>
-              <div className="file-upload-container compact">
+              <div className="attachments-header">
+                <span className="compact-label">첨부파일</span>
+                <button
+                  className="upload-btn header"
+                  onClick={() => document.getElementById('file-upload')?.click()}
+                  disabled={uploadingFiles}
+                >
+                  {uploadingFiles ? '업로드 중...' : '파일 업로드'}
+                </button>
+              </div>
+              <div className={`attachments-box ${attachments && attachments.length > 0 ? 'has-files' : ''}`}>
                 <input
                   id="file-upload"
                   name="fileUpload"
                   type="file"
-                  multiple 
+                  multiple
                   onChange={(e) => {
                     if (e.target.files) {
                       handleFileUpload(e.target.files);
@@ -3594,28 +3623,29 @@ const NewEstimateRequestPage: React.FC = () => {
                   accept=".pdf,.xls,.xlsx,.doc,.docx,.hwp,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.webp,.txt,.zip,.rar,.7z"
                   style={{ display: 'none' }}
                 />
-                <button 
-                  className="upload-btn compact"
-                  onClick={() => document.getElementById('file-upload')?.click()}
-                  disabled={uploadingFiles}
-                >
-                  {uploadingFiles ? '업로드 중...' : '파일 선택'}
-                </button>
-                <span className="file-count">{attachments?.length || 0}개</span>
-              </div>
-              {/* 상단 요약 영역에서도 파일명 간단 표시 */}
-              {attachments && attachments.length > 0 && (
-                <ul className="compact-file-list">
-                  {attachments.slice(0, 5).map((f: any, idx: number) => (
-                    <li key={(f.id || f.uniqueId || f.attachmentId || idx) + '-compact'} title={f.name}>
-                      {f.isPending ? '⏳ ' : ''}{f.name}
-                    </li>
-                  ))}
-                  {attachments.length > 5 && (
-                    <li className="more">외 {attachments.length - 5}개…</li>
+                <div className="attachment-list inline">
+                  {attachments && attachments.length > 0 ? (
+                    attachments.map((f: any, idx: number) => {
+                      const name: string = f.name || '';
+                      const lower = name.toLowerCase();
+                      const Icon = lower.endsWith('.pdf') ? FaFilePdf
+                        : (lower.endsWith('.xls') || lower.endsWith('.xlsx')) ? FaFileExcel
+                        : (lower.endsWith('.doc') || lower.endsWith('.docx') || lower.endsWith('.hwp')) ? FaFileWord
+                        : (lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.gif') || lower.endsWith('.bmp') || lower.endsWith('.webp') || lower.endsWith('.tiff')) ? FaFileImage
+                        : FaFileAlt;
+                      return (
+                        <div key={(f.id || f.uniqueId || f.attachmentId || idx) + '-item'} className="attachment-chip" title={name}>
+                          <Icon className="file-icon" />
+                          <span className="file-name-text">{name}</span>
+                          <button className="file-remove" onClick={() => handleRemoveFile(idx)} aria-label="remove">×</button>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <span className="attachment-placeholder">파일을 업로드 해주세요.</span>
                   )}
-                </ul>
-              )}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -3623,46 +3653,7 @@ const NewEstimateRequestPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 하단 액션 버튼들 */}
-      {!isReadOnly ? (
-        <div className="bottom-actions">
-          <div className="action-buttons">
-            <button 
-              type="button" 
-              className="btn btn-secondary"
-              onClick={() => navigate('/dashboard/estimate-requests')}
-            >
-              목록으로
-            </button>
-            <button 
-              type="button" 
-              className="btn btn-secondary"
-              onClick={handleSaveDraft}
-            >
-              임시저장
-            </button>
-            <button 
-              type="button" 
-              className="btn btn-primary"
-              onClick={handleSubmitEstimate}
-            >
-              견적요청
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="bottom-actions">
-          <div className="action-buttons">
-            <button 
-              type="button" 
-              className="btn btn-secondary"
-              onClick={() => navigate('/dashboard/estimate-inquiry')}
-            >
-              목록으로
-            </button>
-          </div>
-        </div>
-      )}
+      {/* 하단 액션 버튼 제거: 상단 카드의 버튼만 사용 */}
     </div>
   );
 };
