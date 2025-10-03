@@ -1,69 +1,100 @@
 .new-accessory-management-page {
     padding: 24px;
-    background-color: #f4f7f9;
+    background-color: #EFEFEF; /* 임시저장함과 동일한 배경 */
 }
 
+/* 상단 브레드크럼 */
+.page-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    color: #111827;
+    font-weight: 800;
+}
+.page-breadcrumb .chevron { font-weight: 900; }
+
 .main-tabs-container {
-    background-color: white;
-    padding: 16px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    background-color: #fff;
+    padding: 16px 20px;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
     margin-bottom: 24px;
 }
 
 .main-tabs-container h3 {
     margin-top: 0;
     margin-bottom: 16px;
-    font-size: 16px;
-    color: #333;
+    font-size: 18px;
+    color: #111827;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.main-tabs-container h3::before,
+.section-selector h3::before,
+.table-header h3::before {
+    content: "";
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid #111827;
+    border-radius: 9999px;
 }
 
 .main-tabs {
     display: flex;
-    border-bottom: 2px solid #dee2e6;
+    gap: 10px;
 }
 
 .main-tab-button {
-    padding: 10px 20px;
-    border: none;
-    background-color: transparent;
+    padding: 10px 18px;
+    border: 1px solid #E5E7EB;
+    background-color: #fff;
     cursor: pointer;
-    font-size: 16px;
-    font-weight: 500;
-    color: #6c757d;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -2px; 
-    transition: all 0.2s ease-in-out;
+    font-size: 15px;
+    font-weight: 600;
+    color: #6B7280;
+    border-radius: 9999px;
+    transition: all 0.15s ease-in-out;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
 
 .main-tab-button.active {
-    color: #007bff;
-    border-bottom-color: #007bff;
+    background-color: #3B82F6;
+    color: #fff;
+    border-color: #3B82F6;
+    box-shadow: 0 2px 10px rgba(59,130,246,0.25);
 }
 
-.main-tab-button:hover {
-    color: #0056b3;
-}
+.main-tab-button:hover { opacity: 0.9; }
 
 .content-wrapper {
-    background-color: white;
-    padding: 24px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    background-color: transparent; /* 불필요한 하단 흰 영역 제거 */
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
 }
 
 .section-selector {
     padding: 16px;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
+    border: none; /* 섹션 선택 테두리 제거 */
+    border-radius: 14px;
     margin-bottom: 24px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06); /* 아래 메이커/모델 카드와 시각적 구분 */
 }
 
 .section-selector h3 {
     margin-top: 0;
     margin-bottom: 16px;
-    font-size: 16px;
-    color: #333;
+    font-size: 18px;
+    color: #111827;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .section-buttons {
@@ -74,17 +105,20 @@
 
 .section-button {
     padding: 8px 16px;
-    border: 1px solid #ced4da;
+    border: 1px solid #E5E7EB;
     background-color: #fff;
-    border-radius: 20px;
+    border-radius: 9999px;
     cursor: pointer;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.15s ease-in-out;
+    font-weight: 600;
+    color: #374151;
 }
 
 .section-button.active {
-    background-color: #007bff;
-    color: white;
-    border-color: #007bff;
+    background-color: #3B82F6;
+    color: #fff;
+    border-color: #3B82F6;
+    box-shadow: 0 2px 10px rgba(59,130,246,0.25);
 }
 
 .section-button:hover {
@@ -97,7 +131,17 @@
 
 .table-area {
     margin-top: 24px;
+    background: #fff; /* 각 영역을 흰 배경 카드로 구분 */
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    overflow-x: auto; /* 내용이 넓을 때 카드 내부에서 스크롤 */
+    overflow-y: visible;
+    min-width: 0; /* grid 수축 허용 */
 }
+
+/* 악세서리 섹션 카드가 그리드에서 수축될 수 있도록 보장 */
+.accessory-grid > .table-area { min-width: 0; }
 
 .table-header {
     display: flex;
@@ -109,6 +153,11 @@
 .table-header h3 {
     margin: 0;
     font-size: 18px;
+    font-weight: 900;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .controls {
@@ -118,61 +167,127 @@
 
 .search-input {
     padding: 8px 12px;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    background: #fff;
 }
 
 .control-btn {
     padding: 8px 16px;
-    border-radius: 4px;
+    height: 36px;
+    border-radius: 9999px;
     cursor: pointer;
-    border: 1px solid #ced4da;
-    background-color: #f8f9fa;
+    border: 1px solid #E5E7EB;
+    background-color: #fff;
+    font-weight: 700;
 }
 
 .add-btn {
-    background-color: #28a745;
-    color: white;
-    border-color: #28a745;
+    background-color: #22C55E;
+    color: #fff;
+    border-color: #22C55E;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed; /* 셀 폭 균등 분배로 줄바꿈/스크롤 유도 */
 }
 
 th, td {
     padding: 12px;
-    border: 1px solid #dee2e6;
+    border: 1px solid #E5E7EB;
     text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* 긴 텍스트 말줄임 처리 */
+}
+
+/* 메이커 NAME 컬럼은 줄바꿈 허용하여 잘리지 않게 */
+.accessory-grid > .table-area:first-child table td:nth-child(2),
+.accessory-grid > .table-area:first-child table th:nth-child(2) {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
 }
 
 thead {
-    background-color: #f8f9fa;
+    background-color: #E5E7EB;
 }
 
 .action-btn {
     padding: 6px 12px;
-    border-radius: 4px;
+    border-radius: 9999px;
     cursor: pointer;
     margin-right: 5px;
     border: 1px solid transparent;
+    font-weight: 700;
 }
 
-.edit-btn {
-    background-color: #007bff;
-    color: white;
-}
+.edit-btn { background-color: #22C55E; color: #fff; }
 
-.delete-btn {
-    background-color: #dc3545;
-    color: white;
-}
+.delete-btn { background-color: #EF4444; color: #fff; }
 
 .accessory-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    width: 100%; /* 섹션 선택과 동일한 가로 영역 사용 */
+    grid-template-columns: 1fr 1fr; /* 메이커/모델이 영역을 반반 사용 */
     gap: 24px;
+}
+
+/* 악세서리 페이지 모든 표 모서리 둥글게 */
+.accessory-grid .table-area table {
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    overflow: hidden;
+}
+/* 헤더/바디 모서리 라운드 강조 */
+.accessory-grid .table-area table thead th:first-child { border-top-left-radius: 12px; }
+.accessory-grid .table-area table thead th:last-child { border-top-right-radius: 12px; }
+.accessory-grid .table-area table tbody tr:last-child td:first-child { border-bottom-left-radius: 12px; }
+.accessory-grid .table-area table tbody tr:last-child td:last-child { border-bottom-right-radius: 12px; }
+
+/* 공통: Body/Trim/Act 등 모든 섹션의 표도 동일한 둥근 모서리 적용 */
+.table-area table {
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.table-area table thead th:first-child { border-top-left-radius: 12px; }
+.table-area table thead th:last-child { border-top-right-radius: 12px; }
+.table-area table tbody tr:last-child td:first-child { border-bottom-left-radius: 12px; }
+.table-area table tbody tr:last-child td:last-child { border-bottom-right-radius: 12px; }
+
+/* 모델 표: 작업 열 공간 확보 및 줄바꿈 방지 */
+.accessory-grid > .table-area:last-child table {
+    table-layout: auto; /* 내용에 맞게 열 너비 계산 */
+}
+.accessory-grid > .table-area:last-child table th:last-child,
+.accessory-grid > .table-area:last-child table td:last-child { /* 작업 */
+    width: 140px; /* 버튼 두 개가 들어갈 수 있도록 충분한 폭 */
+    white-space: nowrap;
+}
+.accessory-grid > .table-area:last-child table th:nth-child(1),
+.accessory-grid > .table-area:last-child table td:nth-child(1) { /* Code* */
+    width: 70px;
+}
+.accessory-grid > .table-area:last-child table th:nth-child(4),
+.accessory-grid > .table-area:last-child table td:nth-child(4) { /* 상태 */
+    width: 100px;
+}
+
+@media (max-width: 1280px) {
+  .accessory-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 1024px) {
+  .accessory-grid {
+    grid-template-columns: 1fr; /* 작은 화면에서는 단일 컬럼 */
+  }
 }
 
 /* 2레벨(유닛/사이즈) 레이아웃을 좌우 2열로 배치 */
@@ -203,17 +318,111 @@ table tbody tr.selected {
 .status-chip {
     padding: 4px 10px;
     border-radius: 14px;
-    border: 1px solid #ccc;
-    background: #f4f4f6;
-    color: #666;
     cursor: pointer;
+    font-weight: 600;
 }
+/* on = 현재 미사용(회색 배경, 테두리 없음) */
 .status-chip.on {
-    background: #e7f7ee;
-    color: #0a7a3b;
-    border-color: #0a7a3b33;
+    background: #E5E7EB;
+    color: #374151;
+    border: none;
 }
+/* off = 현재 사용(흰 배경 + 검정 테두리) */
 .status-chip.off {
-    background: #f4f4f6;
-    color: #666;
+    background: #ffffff;
+    color: #111827;
+    border: 1px solid #111827;
+}
+
+/* === Modal (추가/수정) 디자인 - 사진 스타일 === */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal {
+    width: min(920px, 92vw);
+    background: #F5F5F5;
+    border: 1px solid #DFDFDF;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    padding: 16px 20px 24px 20px;
+}
+
+.modal h3 {
+    margin: 0 0 12px 0;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.modal-body {
+    background: transparent; /* 표를 감싸는 흰 배경 제거 */
+    border: none; /* 외곽 테두리 제거 */
+    border-radius: 12px; /* 표 모서리 둥글게 보이도록 클리핑 */
+    overflow: hidden; /* 내부 셀을 둥근 모서리에 맞춰 자름 */
+}
+
+/* 행 별 모서리 처리: CODE(상단 좌), NAME(하단 좌), 입력칸은 우측만 둥글게 */
+.modal-body .form-group:first-child label { border-top-left-radius: 12px; }
+.modal-body .form-group:first-child input { border-top-right-radius: 12px; border-top-left-radius: 0; }
+.modal-body .form-group:last-child label { border-bottom-left-radius: 12px; }
+.modal-body .form-group:last-child input { border-bottom-right-radius: 12px; border-bottom-left-radius: 0; }
+
+/* 고객 상세 정보 표와 유사한 행 스타일 */
+.modal-body .form-group {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    border-bottom: 1px solid #E5E7EB;
+    align-items: stretch; /* 좌/우 셀 높이 동일 */
+}
+.modal-body .form-group:last-child { border-bottom: none; }
+.modal-body .form-group label {
+    background: #E5E5E5; /* 좌측 셀 회색 */
+    padding: 14px 16px;
+    font-weight: 700;
+    margin: 0; /* 간격 제거 */
+    display: flex; align-items: center; /* 텍스트 수직 중앙 */
+}
+.modal-body .form-group input {
+    padding: 14px 16px;
+    border: none;
+    outline: none;
+    border-left: 1px solid #E5E7EB; /* 가운데 구분선 */
+    background: #fff;
+    height: 100%;
+    box-sizing: border-box; /* 패딩 포함 높이 계산 */
+    border-top-left-radius: 0; /* 입력칸의 왼쪽 모서리는 항상 직각 */
+    border-bottom-left-radius: 0;
+}
+
+.modal-footer {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.modal-footer .control-btn,
+.modal-footer .add-btn {
+    width: 270px;
+    height: 56px;
+    border-radius: 12px;
+    font-size: 20px;
+    font-weight: 800;
+}
+
+/* 저장/추가 버튼 = 초록색, 취소 버튼 = 빨강색 */
+.modal-footer .add-btn {
+    background: #22C55E;
+    color: #fff;
+    border-color: #22C55E;
+}
+.modal-footer .control-btn:not(.add-btn) {
+    background: #F44336;
+    color: #fff;
+    border-color: #F44336;
 }

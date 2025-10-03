@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './NewAccessoryManagementPage.css';
 import { buildApiUrl } from '../../config/api';
+import { useNavigate } from 'react-router-dom';
+import { IoIosArrowBack } from 'react-icons/io';
 
 interface MasterDataItem {
   code: string;
@@ -12,6 +14,7 @@ const API_BASE_URL = buildApiUrl('/masterdata');
 
 const NewAccessoryManagementPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'body' | 'trim' | 'act' | 'accessory'>('body');
+  const navigate = useNavigate();
   const [selectedBodySection, setSelectedBodySection] = useState<string>('bodyBonnet');
   const [selectedAccessorySection, setSelectedAccessorySection] = useState<string>('positioner');
   const [selectedMakerCode, setSelectedMakerCode] = useState<string | null>(null);
@@ -1034,31 +1037,32 @@ const NewAccessoryManagementPage: React.FC = () => {
     if (!isModalOpen) return null;
 
     const title = (() => {
-        if (modalType === 'unit') {
-            return `${modalMode === 'add' ? 'Add' : 'Edit'} Rating Unit`;
-        } else if (modalType === 'rating') {
-            return `${modalMode === 'add' ? 'Add' : 'Edit'} Body Rating`;
-        } else if (modalType === 'bodySize') {
-            return `${modalMode === 'add' ? 'Add' : 'Edit'} Body Size`;
-        } else {
-            return `${modalMode === 'add' ? 'Add' : 'Edit'} ${modalType}`;
-        }
+        // 제목은 간결하게 섹션명만 사용하거나 숨김
+        if (modalType === 'unit') return 'Rating Unit';
+        if (modalType === 'rating') return 'Body Rating';
+        if (modalType === 'bodySize') return 'Body Size';
+        if (!modalType) return '';
+        return String(modalType);
     })();
 
     return (
         <div className="modal-overlay">
             <div className="modal">
-                <h3>{title}</h3>
+                {title && <h3>{title}</h3>}
                 <div className="modal-body">
                     {modalType !== 'bodySize' && (
                         <>
                             <div className="form-group">
-                                <label>모델 코드</label>
-                                <input name="code" value={formData.code || ''} onChange={handleFormChange} disabled={modalMode === 'edit'}/>
+                                <label>CODE</label>
+                                <div className="field">
+                                    <input name="code" value={formData.code || ''} onChange={handleFormChange} disabled={modalMode === 'edit'} />
+                                </div>
                             </div>
                             <div className="form-group">
-                                <label>모델 이름</label>
-                                <input name="name" value={formData.name || ''} onChange={handleFormChange} />
+                                <label>NAME</label>
+                                <div className="field">
+                                    <input name="name" value={formData.name || ''} onChange={handleFormChange} />
+                                </div>
                             </div>
                         </>
                     )}
@@ -1066,15 +1070,15 @@ const NewAccessoryManagementPage: React.FC = () => {
                         <>
                             <div className="form-group">
                                 <label>메이커 코드</label>
-                                <input name="accMakerCode" value={formData.accMakerCode || ''} disabled readOnly />
+                                <div className="field"><input name="accMakerCode" value={formData.accMakerCode || ''} disabled readOnly /></div>
                             </div>
                             <div className="form-group">
                                 <label>메이커 이름</label>
-                                <input name="accMakerName" value={formData.accMakerName || ''} disabled readOnly />
+                                <div className="field"><input name="accMakerName" value={formData.accMakerName || ''} disabled readOnly /></div>
                             </div>
                             <div className="form-group">
                                 <label>규격 (Spec)</label>
-                                <input name="spec" value={formData.spec || ''} onChange={handleFormChange} />
+                                <div className="field"><input name="spec" value={formData.spec || ''} onChange={handleFormChange} /></div>
                             </div>
                         </>
                     )}
@@ -1098,8 +1102,8 @@ const NewAccessoryManagementPage: React.FC = () => {
                     )}
                 </div>
                 <div className="modal-footer">
-                    <button onClick={closeModal} className="control-btn">Cancel</button>
-                    <button onClick={handleSave} className="control-btn add-btn">Save</button>
+                    <button onClick={handleSave} className="control-btn add-btn">{modalMode === 'add' ? '추가' : '수정'}</button>
+                    <button onClick={closeModal} className="control-btn">취소</button>
                 </div>
             </div>
         </div>
@@ -1139,7 +1143,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                 <div className="controls">
                                     <input type="text" placeholder="검색..." className="search-input"/>
                                     <button className="control-btn" onClick={fetchData}>새로고침</button>
-                                    <button className="control-btn add-btn" onClick={() => openModal('unit', 'add')}>+ 추가</button>
+                                    <button className="control-btn add-btn" onClick={() => openModal('unit', 'add')}>추가</button>
                                 </div>
                             </div>
                             <table>
@@ -1175,7 +1179,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                     <div className="controls">
                                         <input type="text" placeholder="검색..." className="search-input"/>
                                         <button className="control-btn" onClick={fetchData}>새로고침</button>
-                                        <button className="control-btn add-btn" onClick={() => openModal('rating', 'add')}>+ 추가</button>
+                                        <button className="control-btn add-btn" onClick={() => openModal('rating', 'add')}>추가</button>
                                     </div>
                                 </div>
                                 <table>
@@ -1230,7 +1234,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                 <div className="controls">
                                     <input type="text" placeholder="검색..." className="search-input"/>
                                     <button className="control-btn" onClick={fetchData}>새로고침</button>
-                                    <button className="control-btn add-btn" onClick={() => openModal('bodySizeUnit', 'add')}>+ 추가</button>
+                                    <button className="control-btn add-btn" onClick={() => openModal('bodySizeUnit', 'add')}>추가</button>
                                 </div>
                             </div>
                             <table>
@@ -1266,7 +1270,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                     <div className="controls">
                                         <input type="text" placeholder="검색..." className="search-input"/>
                                         <button className="control-btn" onClick={fetchData}>새로고침</button>
-                                        <button className="control-btn add-btn" onClick={() => openModal('bodySize', 'add')}>+ 추가</button>
+                                        <button className="control-btn add-btn" onClick={() => openModal('bodySize', 'add')}>추가</button>
                                     </div>
                                 </div>
                                 <table>
@@ -1321,7 +1325,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                     <div className="controls">
                         <input type="text" placeholder="검색..." className="search-input"/>
                         <button className="control-btn" onClick={fetchData}>새로고침</button>
-                        <button className="control-btn add-btn" onClick={() => openModal(currentBodySection.id as 'bodyBonnet' | 'bodyValve' | 'bodyMaterial' | 'bodySize' | 'bodyConnection', 'add')}>+ 추가</button>
+                        <button className="control-btn add-btn" onClick={() => openModal(currentBodySection.id as 'bodyBonnet' | 'bodyValve' | 'bodyMaterial' | 'bodySize' | 'bodyConnection', 'add')}>추가</button>
                     </div>
                 </div>
                 <table>
@@ -1372,7 +1376,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                             <div className="controls">
                                 <input type="text" placeholder="검색..." className="search-input"/>
                                 <button className="control-btn" onClick={fetchData}>새로고침</button>
-                                <button className="control-btn add-btn" onClick={() => openModal('maker', 'add')}>+ 추가</button>
+                                <button className="control-btn add-btn" onClick={() => openModal('maker', 'add')}>추가</button>
                             </div>
                         </div>
                         <table>
@@ -1417,7 +1421,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                             <div className="controls">
                                 <input type="text" placeholder="검색..." className="search-input"/>
                                 <button className="control-btn" onClick={() => selectedMakerCode && fetchModelsForMaker(selectedMakerCode)}>새로고침</button>
-                                <button className="control-btn add-btn" onClick={() => openModal('model', 'add')} disabled={!selectedMakerCode}>+ 추가</button>
+                                <button className="control-btn add-btn" onClick={() => openModal('model', 'add')} disabled={!selectedMakerCode}>추가</button>
                             </div>
                         </div>
                         <table>
@@ -1485,7 +1489,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                 <div className="controls">
                                     <input type="text" placeholder="검색..." className="search-input"/>
                                     <button className="control-btn" onClick={fetchData}>새로고침</button>
-                                    <button className="control-btn add-btn" onClick={() => openModal('trimPortSizeUnit', 'add')}>+ 추가</button>
+                                    <button className="control-btn add-btn" onClick={() => openModal('trimPortSizeUnit', 'add')}>추가</button>
                                 </div>
                             </div>
                             <table>
@@ -1521,7 +1525,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                     <div className="controls">
                                         <input type="text" placeholder="검색..." className="search-input"/>
                                         <button className="control-btn" onClick={fetchData}>새로고침</button>
-                                        <button className="control-btn add-btn" onClick={() => openModal('trimPortSize', 'add')}>+ 추가</button>
+                                        <button className="control-btn add-btn" onClick={() => openModal('trimPortSize', 'add')}>추가</button>
                                     </div>
                                 </div>
                                 <table>
@@ -1575,7 +1579,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                         <div className="controls">
                             <input type="text" placeholder="검색..." className="search-input"/>
                             <button className="control-btn" onClick={fetchData}>새로고침</button>
-                            <button className="control-btn add-btn" onClick={() => openModal(currentTrimSection.id as 'trimType' | 'trimSeries' | 'trimPortSize' | 'trimForm' | 'trimMaterial' | 'trimOption', 'add')}>+ 추가</button>
+                            <button className="control-btn add-btn" onClick={() => openModal(currentTrimSection.id as 'trimType' | 'trimSeries' | 'trimPortSize' | 'trimForm' | 'trimMaterial' | 'trimOption', 'add')}>추가</button>
                         </div>
                     </div>
                     <table>
@@ -1633,7 +1637,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                 <div className="controls">
                                     <input type="text" placeholder="검색..." className="search-input"/>
                                     <button className="control-btn" onClick={fetchData}>새로고침</button>
-                                    <button className="control-btn add-btn" onClick={() => openModal('actSeries', 'add')}>+ 추가</button>
+                                    <button className="control-btn add-btn" onClick={() => openModal('actSeries', 'add')}>추가</button>
                                 </div>
                             </div>
                             <table>
@@ -1669,7 +1673,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                     <div className="controls">
                                         <input type="text" placeholder="검색..." className="search-input"/>
                                         <button className="control-btn" onClick={() => selectedActSeriesCode && fetchData()}>새로고침</button>
-                                        <button className="control-btn add-btn" onClick={() => openModal('actSize', 'add')} disabled={!selectedActSeriesCode}>+ 추가</button>
+                                        <button className="control-btn add-btn" onClick={() => openModal('actSize', 'add')} disabled={!selectedActSeriesCode}>추가</button>
                                     </div>
                                 </div>
                                 <table>
@@ -1705,7 +1709,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                             <div className="controls">
                                 <input type="text" placeholder="검색..." className="search-input"/>
                                 <button className="control-btn" onClick={fetchData}>새로고침</button>
-                                <button className="control-btn add-btn" onClick={() => openModal(currentActSection.id === 'actType' ? 'actType' : 'actHW', 'add')}>+ 추가</button>
+                                <button className="control-btn add-btn" onClick={() => openModal(currentActSection.id === 'actType' ? 'actType' : 'actHW', 'add')}>추가</button>
                             </div>
                         </div>
                         <table>
@@ -1739,6 +1743,15 @@ const NewAccessoryManagementPage: React.FC = () => {
 
   return (
     <div className="new-accessory-management-page">
+      <div className="flex items-center mb-4 gap-3 mt-2">
+        <button
+          className="text-xl text-black p-1"
+          onClick={() => navigate(-1)}
+        >
+          <IoIosArrowBack />
+        </button>
+        <h1 className="text-2xl font-bold text-black">코드 관리</h1>
+      </div>
       <div className="main-tabs-container">
         <h3>대분류 선택</h3>
         <div className="main-tabs">
