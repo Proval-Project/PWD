@@ -1750,7 +1750,7 @@ const NewAccessoryManagementPage: React.FC = () => {
         >
           <IoIosArrowBack />
         </button>
-        <h1 className="text-2xl font-bold text-black">코드 관리</h1>
+        <h1 className="text-2xl font-bold text-black">제품코드 관리</h1>
       </div>
       <div className="main-tabs-container">
         <h3>대분류 선택</h3>
