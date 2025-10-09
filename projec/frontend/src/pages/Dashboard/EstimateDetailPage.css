@@ -2141,26 +2141,47 @@
   margin: 0 !important; 
   padding: 0px !important; 
 }
-.mini-tools-panel .estimate-summary-card .summary-row { font-size: 10px !important; line-height: 1.2; }
+.mini-tools-panel .estimate-summary-card .summary-row { font-size: 14px !important; line-height: 1.2; }
 .mini-tools-panel .doc-issue-list { gap: 0px !important; padding: 0px !important; overflow: auto; }
 .mini-tools-panel .doc-issue-list .doc-label { font-size: 14px !important; }
 .mini-tools-panel .icon-download { font-size: 16px !important; padding: 2px 4px !important; }
 .mini-tools-panel .customer-uploader .uploader-header { margin-bottom: 4px !important; }
 
-/* 견적 세부정보 컴포넌트 왼쪽 간격 */
-.mini-tools-panel .estimate-summary-card {
-  margin-left: 10px !important;
+/* 미니 툴 패널 레이아웃 고정 */
+.mini-tools-panel {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  gap: 0 !important;
+  position: relative !important;
 }
 
-/* 견적 서류발급 컴포넌트 왼쪽 간격 */
+/* 각 컴포넌트 위치 고정 */
+.mini-tools-panel .estimate-summary-card {
+  margin-left: 20px !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  flex: 0 0 auto !important;
+  order: 1 !important;
+}
+
 .mini-tools-panel .step-section-detail:has(.doc-issue-list) {
   margin-left: 5px !important;
+  flex: 0 0 auto !important;
+  order: 2 !important;
 }
 
-/* 고객 제출 문서 업로드 컴포넌트와 견적 서류발급 간격 */
 .mini-tools-panel .customer-uploader {
   margin-left: 33px !important;
-  margin-top: -7px !important;
+  margin-top: -5px !important;
+  flex: 0 0 auto !important;
+  order: 3 !important;
+}
+
+.mini-tools-panel .quote-actions {
+  margin-left: 20px !important;
+  flex: 0 0 auto !important;
+  order: 4 !important;
 }
 /* 기존 12px 규칙 제거 - 위의 16px 규칙이 우선 적용되도록 */
 .mini-tools-panel .customer-uploader .uploader-list { max-height: 130px !important; padding: 4px 6px !important; overflow: auto; }
@@ -2307,7 +2328,7 @@
 }
 
 /* 페이지 타이틀(예: 견적요청관리) 위아래 여백 - New 페이지와 유사하게 */
-.estimate-detail-page > .page-header-detail { margin-top: 20px !important; margin-bottom: 48px !important; }
+.estimate-detail-page > .page-header-detail { margin-top: 20px !important; margin-bottom: 80px !important; }
 
 /* 강제 타이포 고정: 다른 CSS가 뒤에서 덮어써도 유지되도록 파일 하단에 한 번 더 */
 .mini-tools-panel .estimate-summary-card .summary-row .k,
