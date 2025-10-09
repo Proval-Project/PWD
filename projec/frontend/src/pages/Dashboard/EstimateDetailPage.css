@@ -1949,7 +1949,13 @@
 .mini-tools-panel .estimate-summary-card { flex: 3 1 0 !important; }
 .mini-tools-panel .step-section-detail:has(.doc-issue-list) { flex: 1 1 0 !important; }
 .mini-tools-panel .customer-uploader { flex: 1 1 0 !important; }
-.mini-tools-panel .quote-actions { flex: 0.5 1 0 !important; display:flex; flex-direction:column; justify-content:space-between; gap:12px; }
+.mini-tools-panel .quote-actions { 
+  flex: 0.5 1 0 !important; 
+  display:flex; 
+  flex-direction:column; 
+  justify-content:flex-start; 
+  gap:12px; 
+}
 .start-btn { background:#28a745; color:#fff; border:none; border-radius:16px; height:84px; font-weight:700; }
 .end-btn { background:#8f8f8f; color:#fff; border:none; border-radius:16px; height:84px; font-weight:700; }
 .start-btn.done { background:#3c29ff; color:#fff; }
@@ -2021,7 +2027,7 @@
 .quote-actions .button-column {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 12px;
 }
 
 /* 미니 패널이 본문을 가리지 않도록 우측 여백 확보 */
@@ -2207,7 +2213,7 @@
 .detail-header-status-and-buttons .quote-actions .button-column {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 12px;
 }
 
 .detail-header-status-and-buttons .quote-actions button {

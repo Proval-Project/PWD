@@ -23,7 +23,8 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import './DashboardPages.css';
 import './NewEstimateRequest.css';
-import { IoIosArrowBack } from "react-icons/io";
+import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
+import { MdArrowForward } from "react-icons/md";
 import { FaFilePdf, FaFileExcel, FaFileWord, FaFileImage, FaFileAlt } from 'react-icons/fa';
 
 // 크로스플랫폼 경로 처리를 위한 유틸리티 함수
@@ -2312,8 +2313,8 @@ const NewEstimateRequestPage: React.FC = () => {
         })
       : [];
 
-  return (
-      <div className="valve-section">
+    return (
+      <>
         <div className="valve-header">
           <div className="valve-actions">
             <button 
@@ -2321,15 +2322,15 @@ const NewEstimateRequestPage: React.FC = () => {
               disabled={!selectedType || isReadOnly}
             >
               추가
-          </button>
+            </button>
             <button 
               onClick={() => currentValve && handleDeleteValve(currentValve.id)}
               disabled={!currentValve || isReadOnly}
             >
               삭제
             </button>
+          </div>
         </div>
-      </div>
 
         {!selectedType ? (
           <div style={{ 
@@ -2341,7 +2342,7 @@ const NewEstimateRequestPage: React.FC = () => {
             margin: '10px 0'
           }}>
             Step 1에서 Type을 선택하면 해당 Type의 TagNo를 추가할 수 있습니다.
-        </div>
+          </div>
         ) : (
           <DndContext
             sensors={sensors}
@@ -2380,7 +2381,7 @@ const NewEstimateRequestPage: React.FC = () => {
         
         {/* Step 3 영역에 ref 추가 */}
         <div ref={specSectionRef} style={{ height: '1px', marginTop: '20px' }}></div>
-      </div>
+      </>
     );
   };
 
@@ -2394,133 +2395,191 @@ const NewEstimateRequestPage: React.FC = () => {
 
     return (
       <div className="spec-section">
-        <h3>Step 3: 상세사양 입력</h3>
-        <p className="step-description-req">선택된 TagNo의 상세 사양을 입력합니다.</p>
         {currentValve ? (
           <div className="spec-content">
             <div className="spec-header">
               <div className="tag-info">
-                <label htmlFor="tag-no">Tag No</label>
-                  <input
-                  id="tag-no"
-                  name="tagNo"
-                    type="text"
-                  value={currentValve.tagNo} 
-                  onChange={(e) => {
-                    if (!currentValve) return;
-                    const newTagNo = e.target.value;
-                    setValves(prevValves => 
-                      prevValves.map(valve => 
-                        valve.id === currentValve.id 
-                          ? { ...valve, tagNo: newTagNo }
-                          : valve
-                      )
-                    );
-                    // currentValve도 함께 업데이트
-                    setCurrentValve(prev => prev ? { ...prev, tagNo: newTagNo } : null);
-                  }}
-                  ref={tagNoRef} 
-                  onClick={handleTagNoClick} 
-                  />
+                <div className="input-field-container">
+                  <div className="field-label">Tag No</div>
+                  <div className="field-value">
+                    <input
+                      id="tag-no"
+                      name="tagNo"
+                      type="text"
+                      value={currentValve.tagNo} 
+                      onChange={(e) => {
+                        if (!currentValve) return;
+                        const newTagNo = e.target.value;
+                        setValves(prevValves => 
+                          prevValves.map(valve => 
+                            valve.id === currentValve.id 
+                              ? { ...valve, tagNo: newTagNo }
+                              : valve
+                          )
+                        );
+                        // currentValve도 함께 업데이트
+                        setCurrentValve(prev => prev ? { ...prev, tagNo: newTagNo } : null);
+                      }}
+                      ref={tagNoRef} 
+                      onClick={handleTagNoClick} 
+                    />
+                  </div>
                 </div>
+              </div>
               <div className="quantity-info">
-                <label htmlFor="quantity">Q'ty</label>
-                <input 
-                  id="quantity"
-                  name="quantity"
-                  type="number" 
-                  value={currentValve.qty === 0 ? '' : currentValve.qty} 
-                  min="1"
-                  onChange={(e) => {
-                    if (!currentValve) return;
-                    const value = parseInt(e.target.value);
-                    const newQty = isNaN(value) ? 0 : Math.max(1, value);
-                    
-                    setValves(prevValves => 
-                      prevValves.map(valve => 
-                        valve.id === currentValve.id 
-                          ? { ...valve, qty: newQty }
-                          : valve
-                      )
-                    );
-                    
-                    // currentValve도 함께 업데이트
-                    setCurrentValve(prev => prev ? { ...prev, qty: newQty } : null);
-                  }}
-                  />
+                <div className="input-field-container">
+                  <div className="field-label">Q'ty</div>
+                  <div className="field-value">
+                    <input 
+                      id="quantity"
+                      name="quantity"
+                      type="number" 
+                      value={currentValve.qty === 0 ? '' : currentValve.qty} 
+                      min="1"
+                      onChange={(e) => {
+                        if (!currentValve) return;
+                        const value = parseInt(e.target.value);
+                        const newQty = isNaN(value) ? 0 : Math.max(1, value);
+                        
+                        setValves(prevValves => 
+                          prevValves.map(valve => 
+                            valve.id === currentValve.id 
+                              ? { ...valve, qty: newQty }
+                              : valve
+                          )
+                        );
+                        
+                        // currentValve도 함께 업데이트
+                        setCurrentValve(prev => prev ? { ...prev, qty: newQty } : null);
+                      }}
+                    />
+                  </div>
+                  <div className="field-spinner">
+                    <button 
+                      type="button" 
+                      className="spinner-up"
+                      onClick={() => {
+                        if (!currentValve) return;
+                        const newQty = currentValve.qty + 1;
+                        setValves(prevValves => 
+                          prevValves.map(valve => 
+                            valve.id === currentValve.id 
+                              ? { ...valve, qty: newQty }
+                              : valve
+                          )
+                        );
+                        setCurrentValve(prev => prev ? { ...prev, qty: newQty } : null);
+                      }}
+                    >▲</button>
+                    <button 
+                      type="button" 
+                      className="spinner-down"
+                      onClick={() => {
+                        if (!currentValve) return;
+                        const newQty = Math.max(1, currentValve.qty - 1);
+                        setValves(prevValves => 
+                          prevValves.map(valve => 
+                            valve.id === currentValve.id 
+                              ? { ...valve, qty: newQty }
+                              : valve
+                          )
+                        );
+                        setCurrentValve(prev => prev ? { ...prev, qty: newQty } : null);
+                      }}
+                    >▼</button>
+                  </div>
                 </div>
+              </div>
               </div>
               
             <div className="spec-grid">
               <div className="fluid-section">
-                  <div className="fluid-row">
-                  <h4>Fluid</h4>
-                    <label>Medium:</label>
-                    <input
-                      id="fluid-medium" 
-                      name="fluidMedium" 
-                      type="text"
-                      value={currentValve.fluid.medium}
-                      onChange={(e) => handleFluidFieldChange('medium', e.target.value)}
-                      disabled={isReadOnly}
-                    />
-                  </div>
-                  
-                  <div className="fluid-row">
-                    <label>Fluid:</label>
-                    <select 
-                      id="fluid-type" 
-                      name="fluidType"
-                      value={currentValve.fluid.fluid}
-                      onChange={(e) => handleFluidFieldChange('fluid', e.target.value)}
-                      disabled={isReadOnly}
-                    >
-                      <option value="">선택하세요</option>
-                      {fluidOptions.map(option => (
-                        <option key={option} value={option}>{option}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div className="fluid-row">
-                    <div className="radio-group">
-                      <div className="radio-label">
-                        <label><input type="radio" name="densityType" value="Density" checked={currentValve.isDensity} onChange={(e) => handleRadioChange('isDensity', e.target.checked)} disabled={isReadOnly} /></label>
-                </div>
-                      <label>Density:</label>
-                      <input 
-                        id="fluid-density" 
-                        name="fluidDensity" 
-                        type="text" 
-                        value={currentValve.fluid.density}
-                        onChange={(e) => handleFluidFieldChange('density', e.target.value)}
-                        placeholder={!currentValve.isDensity ? 'Molecular 선택 시 사용 불가' : ''}
-                        disabled={!currentValve.isDensity || isReadOnly}
-                        className={!currentValve.isDensity ? 'disabled-input' : ''}
-                      />
-              </div>
-            </div>
-
-                  <div className="fluid-row">
-                    <div className="radio-group">
-                      <div className="radio-label">
-                        <label><input type="radio" name="densityType" value="Molecular" checked={!currentValve.isDensity} onChange={(e) => handleRadioChange('isDensity', !e.target.checked)} disabled={isReadOnly} /></label>
-              </div>
-                      <label>Molecular:</label>
-                                <input
-                        id="fluid-molecular" 
-                        name="fluidMolecular" 
-                                  type="text"
-                        value={currentValve.fluid.molecular}
-                        onChange={(e) => handleFluidFieldChange('molecular', e.target.value)}
-                        placeholder={currentValve.isDensity ? 'Density 선택 시 사용 불가' : ''}
-                        disabled={currentValve.isDensity || isReadOnly}
-                        className={currentValve.isDensity ? 'disabled-input' : ''}
-                                />
-                              </div>
-                  </div>
-                  
-                  <h4>Fluid Conditions</h4>
+                <h4>Fluid</h4>
+                
+                {/* Fluid 기본 속성 테이블 */}
+                <table className="fluid-properties-table">
+                  <tbody>
+                    <tr>
+                      <td>Medium</td>
+                      <td>
+                        <input
+                          id="fluid-medium" 
+                          name="fluidMedium" 
+                          type="text"
+                          value={currentValve.fluid.medium}
+                          onChange={(e) => handleFluidFieldChange('medium', e.target.value)}
+                          disabled={isReadOnly}
+                        />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Fluid</td>
+                      <td>
+                        <select 
+                          id="fluid-type" 
+                          name="fluidType"
+                          value={currentValve.fluid.fluid}
+                          onChange={(e) => handleFluidFieldChange('fluid', e.target.value)}
+                          disabled={isReadOnly}
+                        >
+                          <option value="">선택하세요</option>
+                          {fluidOptions.map(option => (
+                            <option key={option} value={option}>{option}</option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <input type="checkbox" checked={currentValve.isDensity} onChange={(e) => handleRadioChange('isDensity', e.target.checked)} disabled={isReadOnly} />
+                        Density
+                      </td>
+                      <td>
+                        <div className="size-selection-group">
+                          <input 
+                            id="fluid-density" 
+                            name="fluidDensity" 
+                            type="text" 
+                            value={currentValve.fluid.density}
+                            onChange={(e) => handleFluidFieldChange('density', e.target.value)}
+                            placeholder={!currentValve.isDensity ? 'Molecular 선택 시 사용 불가' : ''}
+                            disabled={!currentValve.isDensity || isReadOnly}
+                            className={!currentValve.isDensity ? 'disabled-input' : ''}
+                          />
+                          <select disabled>
+                            <option value="kg/m3">kg/m3</option>
+                          </select>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <input type="checkbox" checked={!currentValve.isDensity} onChange={(e) => handleRadioChange('isDensity', !e.target.checked)} disabled={isReadOnly} />
+                        Molecular
+                      </td>
+                      <td>
+                        <div className="size-selection-group">
+                          <input
+                            id="fluid-molecular" 
+                            name="fluidMolecular" 
+                            type="text"
+                            value={currentValve.fluid.molecular}
+                            onChange={(e) => handleFluidFieldChange('molecular', e.target.value)}
+                            placeholder={currentValve.isDensity ? 'Density 선택 시 사용 불가' : ''}
+                            disabled={currentValve.isDensity || isReadOnly}
+                            className={currentValve.isDensity ? 'disabled-input' : ''}
+                          />
+                          <select disabled>
+                            <option value="kg.lmol">kg.lmol</option>
+                          </select>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                
+                {/* Fluid Conditions 테이블 */}
+                <h4>Fluid Conditions</h4>
                   <table className="fluid-conditions-table">
                     <thead>
                       <tr>
@@ -2609,12 +2668,8 @@ const NewEstimateRequestPage: React.FC = () => {
                       </tr>
                       <tr>
                         <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <div style={{ fontSize: '10px' }}>
-                              <label><input type="radio" name="p2Type" value="P2" checked={currentValve.isP2} onChange={(e) => handleRadioChange('isP2', e.target.checked)} disabled={isReadOnly} /></label>
-                            </div>
-                            p2
-                    </div>
+                          <input type="checkbox" checked={currentValve.isP2} onChange={(e) => handleRadioChange('isP2', e.target.checked)} disabled={isReadOnly} />
+                          p2
                         </td>
                         <td><input id="p2-max" name="p2Max" type="number" value={currentValve.fluid.p2.max === 0 ? '' : currentValve.fluid.p2.max} onChange={(e) => handleFluidConditionChange('p2', 'max', parseFloat(e.target.value) || 0)} disabled={!currentValve.isP2 || isReadOnly} className={!currentValve.isP2 ? 'disabled-input' : ''} /></td>
                         <td><input id="p2-normal" name="p2Normal" type="number" value={currentValve.fluid.p2.normal === 0 ? '' : currentValve.fluid.p2.normal} onChange={(e) => handleFluidConditionChange('p2', 'normal', parseFloat(e.target.value) || 0)} disabled={!currentValve.isP2 || isReadOnly} className={!currentValve.isP2 ? 'disabled-input' : ''} /></td>
@@ -2671,12 +2726,8 @@ const NewEstimateRequestPage: React.FC = () => {
                       </tr>
                       <tr>
                         <td>
-                          <div className="radio-group">
-                            <div className="radio-label">
-                              <label><input type="radio" name="dpType" value="DP" checked={!currentValve.isP2} onChange={(e) => handleRadioChange('isP2', !e.target.checked)} disabled={isReadOnly} /></label>
-                            </div>
-                            Δp
-          </div>
+                          <input type="checkbox" checked={!currentValve.isP2} onChange={(e) => handleRadioChange('isP2', !e.target.checked)} disabled={isReadOnly} />
+                          Δp
                         </td>
                         <td><input id="dp-max" name="dpMax" type="number" value={currentValve.fluid.dp.max === 0 ? '' : currentValve.fluid.dp.max} onChange={(e) => handleFluidConditionChange('dp', 'max', parseFloat(e.target.value) || 0)} disabled={currentValve.isP2 || isReadOnly} className={currentValve.isP2 ? 'disabled-input' : ''} /></td>
                         <td><input id="dp-normal" name="dpNormal" type="number" value={currentValve.fluid.dp.normal === 0 ? '' : currentValve.fluid.dp.normal} onChange={(e) => handleFluidConditionChange('dp', 'normal', parseFloat(e.target.value) || 0)} disabled={currentValve.isP2 || isReadOnly} className={currentValve.isP2 ? 'disabled-input' : ''} /></td>
@@ -2733,12 +2784,8 @@ const NewEstimateRequestPage: React.FC = () => {
                       </tr>
                       <tr>
                         <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <div style={{ fontSize: '10px' }}>
-                              <label><input type="radio" name="qmType" value="Qm" checked={currentValve.isQM} onChange={(e) => handleRadioChange('isQM', e.target.checked)} disabled={isReadOnly} /></label>
-                            </div>
-                            qm
-                          </div>
+                          <input type="checkbox" checked={currentValve.isQM} onChange={(e) => handleRadioChange('isQM', e.target.checked)} disabled={isReadOnly} />
+                          qm
                         </td>
                         <td><input id="qm-max" name="qmMax" type="number" value={currentValve.fluid.qm.max === 0 ? '' : currentValve.fluid.qm.max} onChange={(e) => handleFluidConditionChange('qm', 'max', parseFloat(e.target.value) || 0)} disabled={!currentValve.isQM || isReadOnly} className={!currentValve.isQM ? 'disabled-input' : ''} /></td>
                         <td><input id="qm-normal" name="qmNormal" type="number" value={currentValve.fluid.qm.normal === 0 ? '' : currentValve.fluid.qm.normal} onChange={(e) => handleFluidConditionChange('qm', 'normal', parseFloat(e.target.value) || 0)} disabled={!currentValve.isQM || isReadOnly} className={!currentValve.isQM ? 'disabled-input' : ''} /></td>
@@ -2771,12 +2818,8 @@ const NewEstimateRequestPage: React.FC = () => {
                       </tr>
                       <tr>
                         <td>
-                          <div className="radio-group">
-                            <div className="radio-label">
-                              <label><input type="radio" name="qnType" value="Qn" checked={!currentValve.isQM} onChange={(e) => handleRadioChange('isQM', !e.target.checked)} disabled={isReadOnly} /></label>
-                            </div>
-                            qn
-                          </div>
+                          <input type="checkbox" checked={!currentValve.isQM} onChange={(e) => handleRadioChange('isQM', !e.target.checked)} disabled={isReadOnly} />
+                          qn
                         </td>
                         <td><input id="qn-max" name="qnMax" type="number" value={currentValve.fluid.qn.max === 0 ? '' : currentValve.fluid.qn.max} onChange={(e) => handleFluidConditionChange('qn', 'max', parseFloat(e.target.value) || 0)} disabled={currentValve.isQM || isReadOnly} className={currentValve.isQM ? 'disabled-input' : ''} /></td>
                         <td><input id="qn-normal" name="qnNormal" type="number" value={currentValve.fluid.qn.normal === 0 ? '' : currentValve.fluid.qn.normal} onChange={(e) => handleFluidConditionChange('qn', 'normal', parseFloat(e.target.value) || 0)} disabled={currentValve.isQM || isReadOnly} className={currentValve.isQM ? 'disabled-input' : ''} /></td>
@@ -2829,55 +2872,59 @@ const NewEstimateRequestPage: React.FC = () => {
                   </div>
                   
                 <div className="specification-grid">
-                  <div className="spec-section">
+                  <div className="body-section">
                     <h4>BODY</h4>
-                    <div className="body-spec-grid">
-                      <div className="body-spec-item">
-                        <label>Type</label>
-                        <input
-                          id="body-type"
-                          name="bodyType"
-                          type="text"
-                          value={currentValve.body.type}
-                          readOnly
-                        />
-                      </div>
-                      <div className="spec-item">
-                        <label>Size</label>
-                        <div className="size-selection-group">
-                          <select 
-                            id="body-size-unit"
-                            name="bodySizeUnit"
-                            value={currentValve.body.sizeUnit}
-                            onChange={(e) => {
-                              handleBodyChange('sizeUnit', e.target.value);
-                              // 단위가 변경되면 size 초기화
-                              handleBodyChange('size', '');
-                            }}
-                            disabled={isReadOnly}
-                          >
-                            <option value="">단위</option>
-                            {bodySizeUnits && bodySizeUnits.length > 0 ? bodySizeUnits.map(unit => {
-                              // Unit 코드를 사용자 친화적인 이름으로 변환
-                              let displayName = unit.name;
-                              if (unit.code === 'A') displayName = 'DN';
-                              if (unit.code === 'I') displayName = 'inch';
-                              if (unit.code === 'N') displayName = 'None';
-                              if (unit.code === 'Z') displayName = 'SPECIAL';
-                              
-                              return (
-                                <option key={unit.code} value={unit.code}>
-                                  {displayName}
-                                </option>
-                              );
-                            }) : (
-                              <option value="" disabled>로딩 중...</option>
-                            )}
-                          </select>
-                          <select 
-                            id="body-size"
-                            name="bodySize"
-                            value={currentValve.body.size}
+                    <table className="body-properties-table">
+                      <tbody>
+                        <tr>
+                          <td>Type</td>
+                          <td>
+                            <input
+                              id="body-type"
+                              name="bodyType"
+                              type="text"
+                              value={currentValve.body.type}
+                              readOnly
+                            />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Size</td>
+                          <td>
+                            <div className="size-selection-group">
+                              <select 
+                                id="body-size-unit"
+                                name="bodySizeUnit"
+                                value={currentValve.body.sizeUnit}
+                                onChange={(e) => {
+                                  handleBodyChange('sizeUnit', e.target.value);
+                                  // 단위가 변경되면 size 초기화
+                                  handleBodyChange('size', '');
+                                }}
+                                disabled={isReadOnly}
+                              >
+                                <option value="">단위</option>
+                                {bodySizeUnits && bodySizeUnits.length > 0 ? bodySizeUnits.map(unit => {
+                                  // Unit 코드를 사용자 친화적인 이름으로 변환
+                                  let displayName = unit.name;
+                                  if (unit.code === 'A') displayName = 'DN';
+                                  if (unit.code === 'I') displayName = 'inch';
+                                  if (unit.code === 'N') displayName = 'None';
+                                  if (unit.code === 'Z') displayName = 'SPECIAL';
+                                  
+                                  return (
+                                    <option key={unit.code} value={unit.code}>
+                                      {displayName}
+                                    </option>
+                                  );
+                                }) : (
+                                  <option value="" disabled>로딩 중...</option>
+                                )}
+                              </select>
+                              <select 
+                                id="body-size"
+                                name="bodySize"
+                                value={currentValve.body.size}
                             onChange={(e) => handleBodyChange('size', e.target.value)}
                             disabled={!currentValve.body.sizeUnit || isReadOnly}
                           >
@@ -2890,146 +2937,200 @@ const NewEstimateRequestPage: React.FC = () => {
                               <option value="" disabled>Size Unit을 먼저 선택하세요</option>
                             )}
                           </select>
-                        </div>
-                      </div>
-                      <div className="body-spec-item">
-                        <label>Material Body</label>
-                        <select 
-                          id="body-material-body"
-                          name="bodyMaterialBody"
-                          value={currentValve.body.materialBody}
-                          onChange={(e) => handleBodyChange('materialBody', e.target.value)}
-                          disabled={isReadOnly}
-                        >
-                          <option value="">선택하세요</option>
-                          {bodyMatList.map(item => (
-                            <option key={item.bodyMatCode} value={item.bodyMatCode}>
-                              {item.bodyMat}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="spec-item">
-                        <label>Rating</label>
-                        <div className="rating-selection-group">
-                          <select 
-                            id="body-rating-unit"
-                            name="bodyRatingUnit"
-                            value={currentValve.body.ratingUnit}
-                            onChange={(e) => {
-                              handleBodyChange('ratingUnit', e.target.value);
-                              handleBodyChange('rating', '');
-                            }}
-                            disabled={isReadOnly}
-                          >
-                            <option value="">단위</option>
-                            {uniqueRatingUnits.map(unit => (
-                              <option key={unit.code} value={unit.code}>
-                                {unit.name}
-                              </option>
-                            ))}
-                          </select>
-                          <select 
-                            id="body-rating"
-                            name="bodyRating"
-                            value={currentValve.body.rating}
-                            onChange={(e) => handleBodyChange('rating', e.target.value)}
-                            disabled={!currentValve.body.ratingUnit || isReadOnly}
-                          >
-                            <option value="">등급</option>
-                            {filteredRatingList.map(item => (
-                              <option key={item.id} value={item.ratingCode}>
-                                {item.ratingName}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    </div>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Material Body</td>
+                          <td>
+                            <select 
+                              id="body-material-body"
+                              name="bodyMaterialBody"
+                              value={currentValve.body.materialBody}
+                              onChange={(e) => handleBodyChange('materialBody', e.target.value)}
+                              disabled={isReadOnly}
+                            >
+                              <option value="">선택하세요</option>
+                              {bodyMatList.map(item => (
+                                <option key={item.bodyMatCode} value={item.bodyMatCode}>
+                                  {item.bodyMat}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Material Trim</td>
+                          <td>
+                            <select 
+                              id="trim-material-trim"
+                              name="trimMaterialTrim"
+                              value={currentValve.body.materialTrim}
+                              onChange={(e) => handleBodyChange('materialTrim', e.target.value)}
+                              disabled={isReadOnly}
+                            >
+                              <option value="">선택하세요</option>
+                              {trimMatList.map(item => (
+                                <option key={item.trimMatCode} value={item.trimMatCode}>
+                                  {item.trimMat}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Option</td>
+                          <td>
+                            <select 
+                              id="trim-option"
+                              name="trimOption"
+                              value={currentValve.body.option}
+                              onChange={(e) => handleBodyChange('option', e.target.value)}
+                              disabled={isReadOnly}
+                            >
+                              <option value="">선택하세요</option>
+                              {trimOptionList.map((item: any) => (
+                                <option key={item.trimOptionCode} value={item.trimOptionCode}>
+                                  {item.trimOption}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Rating</td>
+                          <td>
+                            <div className="rating-selection-group">
+                              <select 
+                                id="body-rating-unit"
+                                name="bodyRatingUnit"
+                                value={currentValve.body.ratingUnit}
+                                onChange={(e) => {
+                                  handleBodyChange('ratingUnit', e.target.value);
+                                  handleBodyChange('rating', '');
+                                }}
+                                disabled={isReadOnly}
+                              >
+                                <option value="">단위</option>
+                                {uniqueRatingUnits.map(unit => (
+                                  <option key={unit.code} value={unit.code}>
+                                    {unit.name}
+                                  </option>
+                                ))}
+                              </select>
+                              <select 
+                                id="body-rating"
+                                name="bodyRating"
+                                value={currentValve.body.rating}
+                                onChange={(e) => handleBodyChange('rating', e.target.value)}
+                                disabled={!currentValve.body.ratingUnit || isReadOnly}
+                              >
+                                <option value="">등급</option>
+                                {filteredRatingList.map(item => (
+                                  <option key={item.id} value={item.ratingCode}>
+                                    {item.ratingName}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
 
-                  <div className="spec-section">
+                  <div className="trim-section">
                     <h4>Trim</h4>
-                    <div className="spec-grid">
-                      <div className="spec-item">
-                        <label>Material Trim</label>
-                        <select 
-                          id="trim-material-trim"
-                          name="trimMaterialTrim"
-                          value={currentValve.body.materialTrim}
-                          onChange={(e) => handleBodyChange('materialTrim', e.target.value)}
-                          disabled={isReadOnly}
-                        >
-                          <option value="">선택하세요</option>
-                          {trimMatList.map(item => (
-                            <option key={item.trimMatCode} value={item.trimMatCode}>
-                              {item.trimMat}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="spec-item">
-                        <label>Option</label>
-                        <select 
-                          id="trim-option"
-                          name="trimOption"
-                          value={currentValve.body.option}
-                          onChange={(e) => handleBodyChange('option', e.target.value)}
-                          disabled={isReadOnly}
-                        >
-                          <option value="">선택하세요</option>
-                          {trimOptionList.map(item => (
-                            <option key={item.trimOptionCode} value={item.trimOptionCode}>
-                              {item.trimOption}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
+                    <table className="trim-properties-table">
+                      <tbody>
+                        <tr>
+                          <td>Material Trim</td>
+                          <td>
+                            <select 
+                              id="trim-material-trim"
+                              name="trimMaterialTrim"
+                              value={currentValve.body.materialTrim}
+                              onChange={(e) => handleBodyChange('materialTrim', e.target.value)}
+                              disabled={isReadOnly}
+                            >
+                              <option value="">선택하세요</option>
+                              {trimMatList.map((item: any) => (
+                                <option key={item.trimMatCode} value={item.trimMatCode}>
+                                  {item.trimMat}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Option</td>
+                          <td>
+                            <select 
+                              id="trim-option"
+                              name="trimOption"
+                              value={currentValve.body.option}
+                              onChange={(e) => handleBodyChange('option', e.target.value)}
+                              disabled={isReadOnly}
+                            >
+                              <option value="">선택하세요</option>
+                              {trimOptionList.map((item: any) => (
+                                <option key={item.trimOptionCode} value={item.trimOptionCode}>
+                                  {item.trimOption}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
 
-                  <div className="spec-section">
+                  <div className="actuator-section">
                     <h4>ACT</h4>
-                    <div className="spec-grid">
-                      <div className="spec-item">
-                        <label>Type</label>
-                        <select 
-                          id="actuator-type"
-                          name="actuatorType"
-                          value={currentValve.actuator.type}
-                          onChange={(e) => handleActuatorChange('type', e.target.value)}
-                          disabled={isReadOnly}
-                        >
-                          <option value="">선택하세요</option>
-                          {actuatorTypeOptions.map(option => (
-                            <option key={option} value={option}>{option}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="spec-item">
-                        <label>H/W</label>
-                        <select 
-                          id="actuator-hw"
-                          name="actuatorHw"
-                          value={currentValve.actuator.hw}
-                          onChange={(e) => handleActuatorChange('hw', e.target.value)}
-                          disabled={isReadOnly}
-                        >
-                          <option value="">선택하세요</option>
-                          {hwOptions.map(option => (
-                            <option key={option} value={option}>{option}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
+                    <table className="actuator-properties-table">
+                      <tbody>
+                        <tr>
+                          <td>Type</td>
+                          <td>
+                            <select 
+                              id="actuator-type"
+                              name="actuatorType"
+                              value={currentValve.actuator.type}
+                              onChange={(e) => handleActuatorChange('type', e.target.value)}
+                              disabled={isReadOnly}
+                            >
+                              <option value="">선택하세요</option>
+                              {actuatorTypeOptions.map(option => (
+                                <option key={option} value={option}>{option}</option>
+                              ))}
+                            </select>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>H/W</td>
+                          <td>
+                            <select 
+                              id="actuator-hw"
+                              name="actuatorHw"
+                              value={currentValve.actuator.hw}
+                              onChange={(e) => handleActuatorChange('hw', e.target.value)}
+                              disabled={isReadOnly}
+                            >
+                              <option value="">선택하세요</option>
+                              {hwOptions.map(option => (
+                                <option key={option} value={option}>{option}</option>
+                              ))}
+                            </select>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               
               <div className="accessory-section">
                 <h4>Accessory</h4>
-                <table>
+                <table className="accessory-properties-table">
                   <tbody>
                     <tr>
                       <td>Positioner</td>
@@ -3037,14 +3138,28 @@ const NewEstimateRequestPage: React.FC = () => {
                         <select 
                           id="accessory-positioner"
                           name="accessoryPositioner"
-                          value={currentValve.accessory.positioner.type}
+                          value={currentValve.accessory.positioner.exists ? 'Yes' : 'No'}
+                          onChange={(e) => handleAccessoryChange('positioner.exists', e.target.value === 'Yes')}
+                          disabled={isReadOnly}
+                        >
+                          <option value="No">No</option>
+                          <option value="Yes">Yes</option>
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Type</td>
+                      <td>
+                        <select 
+                          id="accessory-type"
+                          name="accessoryType"
+                          value={currentValve.accessory.positioner.type || 'P.P'}
                           onChange={(e) => handleAccessoryChange('positioner.type', e.target.value)}
                           disabled={isReadOnly}
                         >
-                          <option value="">선택하세요</option>
-                          {positionerTypeOptions.map(option => (
-                            <option key={option} value={option}>{option}</option>
-                          ))}
+                          <option value="P.P">P.P</option>
+                          <option value="I.P">I.P</option>
+                          <option value="E.P">E.P</option>
                         </select>
                       </td>
                     </tr>
@@ -3054,14 +3169,13 @@ const NewEstimateRequestPage: React.FC = () => {
                         <select 
                           id="accessory-explosion-proof"
                           name="accessoryExplosionProof"
-                          value={currentValve.accessory.explosionProof}
+                          value={currentValve.accessory.explosionProof || ''}
                           onChange={(e) => handleAccessoryChange('explosionProof', e.target.value)}
                           disabled={isReadOnly}
                         >
                           <option value="">선택하세요</option>
-                          {explosionProofOptions.map(option => (
-                            <option key={option} value={option}>{option}</option>
-                          ))}
+                          <option value="No">No</option>
+                          <option value="Yes">Yes</option>
                         </select>
                       </td>
                     </tr>
@@ -3071,14 +3185,13 @@ const NewEstimateRequestPage: React.FC = () => {
                         <select 
                           id="accessory-transmitter"
                           name="accessoryTransmitter"
-                          value={currentValve.accessory.transmitter.type}
+                          value={currentValve.accessory.transmitter.type || ''}
                           onChange={(e) => handleAccessoryChange('transmitter.type', e.target.value)}
                           disabled={isReadOnly}
                         >
                           <option value="">선택하세요</option>
-                          {transmitterTypeOptions.map(option => (
-                            <option key={option} value={option}>{option}</option>
-                          ))}
+                          <option value="General">General</option>
+                          <option value="Special">Special</option>
                         </select>
                       </td>
                     </tr>
@@ -3492,20 +3605,27 @@ const NewEstimateRequestPage: React.FC = () => {
         <div className="steps-container">
           {/* Step 1, 2, 3 통합 섹션 */}
           <div className="step-section">
-            <div className="step-header">
-              <h3>견적 상세 정보</h3>
-            </div>
             
             {/* Step 1: Type 선정 */}
             <div className="step-subsection">
-              <h4>Step 1: Type 선정</h4>
-              <p className="step-description-req">견적에 필요한 밸브 타입을 선택하고 관리합니다.</p>
-              <div className="type-header">
-                <div className="type-actions">
-                  <button onClick={handleAddType} disabled={isReadOnly}>추가</button>
-                  <button onClick={() => selectedType && handleRemoveType(types.findIndex(type => type.id === selectedType))} disabled={isReadOnly}>삭제</button>
+              <div className="step-header-container">
+                <div className="step-title-section">
+                  <h4>Step 1</h4>
+                  <span className="step-description">Type 선정</span>
+                </div>
+                <div className="step-icon">
+                  <div className="circle-arrow-icon">
+                    <MdArrowForward />
+                  </div>
                 </div>
               </div>
+              <div className="step-content-container">
+                <div className="type-header">
+                  <div className="type-actions">
+                    <button onClick={handleAddType} disabled={isReadOnly}>추가</button>
+                    <button onClick={() => selectedType && handleRemoveType(types.findIndex(type => type.id === selectedType))} disabled={isReadOnly}>삭제</button>
+                  </div>
+                </div>
               <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
@@ -3572,19 +3692,37 @@ const NewEstimateRequestPage: React.FC = () => {
                 </div>
               )}
             </div>
+              </div>
 
             {/* Step 2: TagNo 추가 */}
             <div className="step-subsection">
-              <h4>Step 2: TagNo 추가</h4>
-              <p className="step-description-req">선택된1 타입에 따라 TagNo를 추가하고 관리합니다.</p>
-              {ValveSection()}
+              <div className="step-header-container">
+                <div className="step-title-section">
+                  <h4>Step 2</h4>
+                  <span className="step-description">TagNo 추가</span>
+                </div>
+                <div className="step-icon">
+                  <div className="circle-arrow-icon">
+                    <MdArrowForward />
+                  </div>
+                </div>
+              </div>
+              <div className="step-content-container">
+                {ValveSection()}
+              </div>
             </div>
 
             {/* Step 3: 상세사양 입력 */}
             <div className="step-subsection">
-              <h4>Step 3: 상세사양 입력</h4>
-              <p className="step-description-req">BODY, Trim, ACT, Accessory의 상세 사양을 입력합니다.</p>
-              {SpecificationSection()}
+              <div className="step-header-container">
+                <div className="step-title-section">
+                  <h4>Step 3</h4>
+                  <span className="step-description">상세사양 입력</span>
+                </div>
+              </div>
+              <div className="step-content-container">
+                {SpecificationSection()}
+              </div>
             </div>
           </div>
 

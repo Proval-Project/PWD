@@ -547,31 +547,26 @@
   overflow: hidden;
 }
 
-.step-header {
-  background: transparent;
-  padding: 16px 20px 8px 20px;
-  border-bottom: 1px solid #e0e0e0; /* 상단과 단계 구분선 */
-}
 
-.step-header h3 {
-  margin: 0 0 2px 0;          /* Step 굵은 제목 */
-  color: #111827;
-  font-size: 22px;
-  font-weight: 800;
-}
-.step-header .subtitle {       /* 다음 줄 작은 부제 */
-  margin-left: 16px;           /* 스페이스 약 2칸 느낌 */
-  color: #6b7280;
-  font-size: 14px;
-  font-weight: 600;
-}
+
 
 .step-subsection {
-  padding: 20px;
-  border-bottom: 1px solid #e0e0e0;
+  padding: 4px; /* 패딩 대폭 감소 */
+  border-bottom: none; /* 하단 선 제거 */
   position: relative;
   overflow-x: auto;             /* 내용이 가로로 길어지면 수평 스크롤 */
   -webkit-overflow-scrolling: touch;
+  margin-top: 10px; /* Step 컴포넌트들을 아래로 내림 */
+}
+
+/* Step 본문 컨테이너 - 둥근 모서리 사각형으로 감싸기 */
+.step-content-container {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 8px 12px; /* 패딩 대폭 감소 */
+  margin-bottom: 8px; /* 마진도 감소 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .step-subsection:last-child {
@@ -634,25 +629,44 @@
   margin-bottom: 15px;
 }
 
-.type-actions {
+/* 모든 Step의 버튼 액션 스타일 통일 */
+.type-actions,
+.valve-actions {
   display: flex;
+  justify-content: space-between; /* 왼쪽 끝과 오른쪽 끝에 배치 */
   gap: 10px;
+  width: 100%; /* 전체 너비 사용 */
+  margin-bottom: 16px; /* 추가삭제 버튼 아래 마진 추가 */
 }
 
-.type-actions button {
-  padding: 6px 8px;
+.type-actions button,
+.valve-actions button {
+  padding: 8px 20px; /* 패딩 증가로 버튼 길이 늘림 */
   border: none;
   border-radius: 3px;
   cursor: pointer;
-  font-size: 10px !important;
+  font-size: 14px !important; /* 글씨 크기 더 증가 */
+  font-weight: 700 !important; /* 글씨 더 굵게 */
   background: #007bff;
   color: white;
-  height: 28px !important;
-  min-height: 28px !important;
+  height: 32px !important; /* 높이도 약간 증가 */
+  min-height: 32px !important;
   line-height: 1.2 !important;
+  min-width: 60px; /* 최소 너비 설정 */
 }
 
-.type-actions button:hover {
+.type-actions button:first-child,
+.valve-actions button:first-child {
+  margin-right: auto; /* 첫 번째 버튼(추가)을 왼쪽 끝에 */
+}
+
+.type-actions button:last-child,
+.valve-actions button:last-child {
+  margin-left: auto; /* 마지막 버튼(삭제)을 오른쪽 끝에 */
+}
+
+.type-actions button:hover,
+.valve-actions button:hover {
   background: #0056b3;
 }
 
@@ -666,12 +680,15 @@
   display: flex;
   gap: 10px;
   align-items: center;
-  padding: 12px 16px;
+  padding: 20px 24px; /* 패딩 증가로 크기 확대 */
   background: #e9e9eb;                 /* 기본 회색 배경 */
-  border-radius: 10px;                  /* 둥근 모서리 */
+  border-radius: 12px;                  /* 더 둥근 모서리 */
   border: 1px solid #e5e7eb;
   position: relative;
   transition: all 0.2s ease;
+  min-height: 60px; /* 최소 높이 설정 */
+  font-size: 16px !important; /* 글씨 크기 조금 작게 */
+  font-weight: 700 !important; /* 글씨 더 굵게 */
 }
 
 .type-item.selected {                     /* 선택 시 꽉 찬 파란색 바 */
@@ -702,12 +719,13 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
 
 .type-count {
   width: 80px;
-  padding: 4px 6px;
+  padding: 6px 8px; /* 패딩 증가 */
   border: 1px solid #ced4da;
   border-radius: 3px;
-  font-size: 8px !important;
-  height: 20px !important;
-  min-height: 20px !important;
+  font-size: 14px !important; /* 글씨 크기 조금 작게 */
+  font-weight: 700 !important; /* 글씨 더 굵게 */
+  height: 32px !important; /* 높이 증가 */
+  min-height: 32px !important;
 }
 
 .remove-type-btn {
@@ -928,7 +946,7 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
   row-gap: 8px !important;
   column-gap: 16px !important;
   max-height: 220px !important;
-  min-width: 1200px;                      /* 넓어지면 부모에서 가로 스크롤 */
+  min-width: 500px;                      /* 넓어지면 부모에서 가로 스크롤 */
   
 }
 
@@ -1325,9 +1343,10 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
 }
 
 .type-header {
-  background: #f8f9fa;
-  padding: 15px;
-  border-bottom: 1px solid #e0e0e0;
+  background: transparent; /* 배경 제거 */
+  padding: 0; /* 패딩 제거 */
+  border-bottom: none; /* 하단 선 제거 */
+  margin-bottom: 0; /* 하단 여백 제거 */
 }
 
 .type-header h3 {
@@ -1337,11 +1356,65 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
   font-weight: 600;
 }
 
-.step-description-req {
-  margin: 0px 0 0px 0;
-  font-size: 8px;
-  color: #666;
-  font-weight: normal;
+/* Step 헤더 컨테이너 스타일 */
+.step-header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 8px 12px; /* 패딩 대폭 감소 */
+  margin-bottom: 8px; /* 마진도 감소 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  min-height: 50px; /* 높이도 약간 감소 */
+}
+
+.step-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.step-title-section h4 {
+  margin: 0;
+  color: #111827;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.step-description {
+  color: #6b7280;
+  font-size: 18px;
+  font-weight: 700; /* 굵게 변경 */
+  margin-left: 16px; /* 스페이스 2번 정도 들여쓰기 */
+}
+
+/* 동그라미 + 화살표 아이콘 */
+.step-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.circle-arrow-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  border: 2px solid #d1d5db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 18px;
+  transition: all 0.2s ease;
+}
+
+.circle-arrow-icon:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+  color: #374151;
 }
 
 .type-actions {
@@ -1371,13 +1444,16 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
   display: flex;
   gap: 10px;
   align-items: center;
-  padding: 12px;
+  padding: 20px 24px; /* 패딩 증가로 크기 확대 */
   background: #f8f9fa;
-  border-radius: 6px;
+  border-radius: 12px; /* 더 둥근 모서리 */
   border: 1px solid #e0e0e0;
   margin-bottom: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
+  min-height: 60px; /* 최소 높이 설정 */
+  font-size: 16px !important; /* 글씨 크기 조금 작게 */
+  font-weight: 700 !important; /* 글씨 더 굵게 */
 }
 
 .type-item.selected {
@@ -1395,9 +1471,10 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
 }
 
 .valve-header {
-  background: #f8f9fa;
-  padding: 10px;
-  border-bottom: 1px solid #e0e0e0;
+  background: transparent; /* 배경 제거 */
+  padding: 0; /* 패딩 제거 */
+  border-bottom: none; /* 하단 선 제거 */
+  margin-bottom: 22px; /* 하단 여백 증가 */
 }
 
 .valve-header h3 {
@@ -1407,27 +1484,7 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
   font-weight: 600;
 }
 
-.valve-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.valve-actions button {
-  padding: 6px 8px;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 10px !important;
-  background: #007bff;
-  color: white;
-  height: 28px !important;
-  min-height: 28px !important;
-  line-height: 1.2 !important;
-}
-
-.valve-actions button:hover {
-  background: #0056b3;
-}
+/* 중복된 valve-actions 스타일 제거 - 위쪽 통합 스타일 사용 */
 
 .valve-actions button:disabled {
   background: #6c757d;
@@ -1442,13 +1499,16 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
   display: flex;
   gap: 10px;
   align-items: center;
-  padding: 12px 16px;
+  padding: 20px 24px; /* 패딩 증가로 크기 확대 */
   background: #e9e9eb;                 /* 기본 회색 배경 */
-  border-radius: 10px;                  /* 둥근 모서리 */
+  border-radius: 12px;                  /* 더 둥근 모서리 */
   border: 1px solid #e5e7eb;
   margin-bottom: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
+  min-height: 60px; /* 최소 높이 설정 */
+  font-size: 16px !important; /* 글씨 크기 적용 */
+  font-weight: 700 !important; /* 글씨 굵게 */
 }
 
 .valve-item.selected {                    /* 선택 시 꽉 찬 파란색 바 */
@@ -1557,10 +1617,6 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
 }
 
 
-.type-header {
-  height: 50px;
-
-}
 
 /* Fluid 섹션 */
 .fluid-section {
@@ -1777,14 +1833,15 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
 .accessory-item label {
   font-weight: 500;
   color: #555;
-  font-size: 8px;
+  font-size: 14px;
 }
 
 .accessory-item input, .accessory-item select {
-  padding: 0px 0px;
-  border: 1px solid #ddd;
+  padding: 6px 10px; /* BODY와 동일한 패딩 */
+  border: 1px solid #d1d5db; /* BODY와 동일한 테두리 */
   border-radius: 4px;
-  font-size: 8px;
+  font-size: 13px; /* BODY와 동일한 폰트 크기 */
+  height: 28px; /* BODY와 동일한 높이 */
 }
 .accessory-section table tr {
   height: 12px !important; /* 행 높이 더 줄이기 */
@@ -1792,22 +1849,22 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
 
 .accessory-section table th,
 .accessory-section table td {
-  height: 12px !important; /* 셀 높이 더 줄이기 */
-  padding: 1px 2px !important; /* 패딩 더 줄이기 */
-  line-height: 1.0 !important; /* 줄 간격 최소화 */
-  font-size: 8px !important; /* 폰트 크기 줄이기 */
+  height: 36px !important; /* 셀 높이 적당하게 */
+  padding: 8px 12px !important; /* 패딩 적당하게 */
+  line-height: 1.2 !important; /* 줄 간격 적당하게 */
+  font-size: 14px !important; /* 폰트 크기 14px로 */
   vertical-align: middle !important; /* 세로 정렬 */
 }
 
 /* Accessory 테이블 내부 select 요소 */
 .accessory-section table select {
-  height: 10px !important; /* select 높이 줄이기 */
-  min-height: 10px !important;
-  padding: 0px 2px !important; /* select 패딩 줄이기 */
-  font-size: 7px !important; /* select 폰트 크기 줄이기 */
-  border: 1px solid #ddd;
-  border-radius: 2px;
-  line-height: 1.0 !important;
+  height: 28px !important; /* BODY와 동일한 높이 */
+  min-height: 28px !important;
+  font-size: 13px !important; /* BODY와 동일한 폰트 크기 */
+  padding: 6px 10px !important; /* BODY와 동일한 패딩 */
+  border: 1px solid #d1d5db; /* BODY와 동일한 테두리 */
+  border-radius: 4px; /* BODY와 동일한 모서리 */
+  line-height: 1.2 !important;
 }
 
 /* 반응형 디자인 */
@@ -1878,8 +1935,32 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
   font-size: 14px !important;
 }
 
-/* 카드 내부 그리드 간격 축소 */
-.new-estimate-request-page .spec-grid { gap: 6px !important; }
+/* Step 3 전체 컨테이너 - 가로 스크롤 가능 */
+.new-estimate-request-page .spec-grid { 
+  display: flex !important;
+  gap: 12px !important;
+  overflow-x: auto !important; /* 가로 스크롤 활성화 */
+  padding-bottom: 10px !important; /* 스크롤바 공간 확보 */
+  flex-wrap: nowrap !important; /* 줄바꿈 방지 */
+}
+
+.spec-grid::-webkit-scrollbar {
+  height: 8px;
+}
+
+.spec-grid::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.spec-grid::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.spec-grid::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
 
 /* Fluid/ACC 등 섹션 내부 행 간격 축소 */
 .specification-grid .fluid-section { padding: 6px !important; }
@@ -1925,3 +2006,638 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
 
 /* TagNo 줄 다음 카드 묶음과 최소 간격 */
 .spec-header + .specification-grid { margin-top: 6px !important; }
+
+/* Step 3 Tag No와 Q'ty 입력 필드 디자인 */
+.input-field-container {
+  display: flex;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  height: 30px; /* 높이 약간 증가 */
+}
+
+.field-label {
+  background: #f3f4f6;
+  padding: 4px 12px; /* 좌우 패딩 줄임 */
+  font-weight: 700;
+  font-size: 14px;
+  color: #111827;
+  border-radius: 8px 0 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px; /* 최소 너비 줄임 */
+  height: 100%; /* 전체 높이 사용 */
+}
+
+.field-value {
+  flex: 1;
+  padding: 0;
+  max-width: 120px; /* 최대 너비 제한 */
+}
+
+.field-value input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  padding: 4px 12px; /* 좌우 패딩 줄임 */
+  font-weight: 700;
+  font-size: 14px;
+  color: #111827;
+  background: white;
+}
+
+/* 기본 스피너 버튼 숨기기 */
+.field-value input[type="number"]::-webkit-inner-spin-button,
+.field-value input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.field-value input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.field-spinner {
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 0 8px 8px 0;
+  height: 100%; /* 전체 높이 사용 */
+  width: 24px; /* 고정 너비로 더 작게 */
+}
+
+.spinner-up,
+.spinner-down {
+  background: white;
+  border: none;
+  padding: 2px 6px; /* 좌우 패딩 줄임 */
+  font-size: 10px; /* 폰트 크기 줄임 */
+  font-weight: bold;
+  color: #111827;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  flex: 1; /* 각각 절반씩 차지 */
+  height: 50%; /* 각각 절반 높이 */
+}
+
+.spinner-up:hover,
+.spinner-down:hover {
+  background: #f3f4f6;
+}
+
+.spinner-up {
+  border-radius: 0 8px 0 0;
+}
+
+.spinner-down {
+  border-radius: 0 0 8px 0;
+}
+
+/* Tag No와 Q'ty 컨테이너 간격 */
+.tag-info,
+.quantity-info {
+  margin-bottom: 24px; /* 아래 간격 증가 */
+}
+
+.tag-info {
+  margin-right: 16px;
+}
+
+/* spec-header와 아래 컴포넌트 간격 */
+.spec-header {
+  margin-bottom: 40px; /* Tag No/Q'ty 컴포넌트를 아래로 옮기기 */
+}
+
+/* Step 3 내 세부 컴포넌트들 간 세로 간격 */
+.specification-grid {
+  margin-top: 20px; /* Fluid 섹션과의 간격 */
+}
+
+.fluid-section,
+.body-section,
+.actuator-section,
+.accessory-section {
+  margin-bottom: 24px; /* 각 섹션 간 세로 간격 */
+}
+
+.fluid-section:last-child,
+.body-section:last-child,
+.actuator-section:last-child,
+.accessory-section:last-child {
+  margin-bottom: 0; /* 마지막 섹션은 하단 마진 제거 */
+}
+
+/* Fluid 섹션 적당한 크기로 조정 */
+.fluid-section {
+  background: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 12px;
+  width: 100%;
+  max-width: 600px; /* 최대 너비 더 증가 */
+  min-width: 600px; /* 최소 너비 설정 */
+}
+
+/* Fluid 기본 속성 테이블 - 적당한 크기 */
+.fluid-properties-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  border: none;
+  table-layout: fixed; /* 테이블 레이아웃 고정 */
+}
+
+.fluid-properties-table td {
+  padding: 8px 12px !important; /* 사진처럼 적당한 패딩 */
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
+  min-height: 36px !important; /* 사진처럼 적당한 높이 */
+  height: 36px !important; /* 강제 높이 설정 */
+}
+
+.fluid-properties-table td:first-child {
+  background: #f3f4f6;
+  font-weight: 600;
+  font-size: 14px; /* 폰트 크기 증가 */
+  color: #374151;
+  width: 25%; /* 라벨 컬럼 너비 줄임 */
+  white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+}
+
+.fluid-properties-table td:last-child {
+  background: white;
+  padding: 0;
+  width: 75%; /* 입력 컬럼 너비 증가 */
+}
+
+.fluid-properties-table input,
+.fluid-properties-table select {
+  width: 100%;
+  padding: 6px 10px; /* BODY와 동일한 패딩 */
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 13px; /* BODY와 동일한 폰트 크기 */
+  background: white;
+  max-width: 100%;
+  box-sizing: border-box;
+  height: 28px; /* BODY와 동일한 높이 */
+}
+
+
+.fluid-properties-table select {
+  cursor: pointer;
+  padding-right: 24px; /* 아이콘 공간 확보 */
+}
+
+
+.fluid-properties-table input:focus,
+.fluid-properties-table select:focus {
+  background: #f9fafb;
+}
+
+/* Fluid 테이블의 size-selection-group 스타일 */
+.fluid-properties-table .size-selection-group {
+  display: flex;
+  gap: 4px;
+}
+
+.fluid-properties-table .size-selection-group input,
+.fluid-properties-table .size-selection-group select {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+}
+
+/* 체크박스 스타일 */
+.fluid-properties-table input[type="checkbox"] {
+  width: 12px;
+  height: 12px;
+  margin-right: 4px;
+}
+
+/* Fluid Conditions 테이블 - 적당한 크기 */
+.fluid-conditions-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 4px;
+  overflow: hidden;
+  border: none;
+  table-layout: fixed; /* 테이블 레이아웃 고정 */
+}
+
+.fluid-conditions-table th,
+.fluid-conditions-table td {
+  padding: 8px 6px !important; /* 사진처럼 적당한 패딩 */
+  text-align: center;
+  border-right: none;
+  vertical-align: middle;
+  min-height: 36px !important; /* 사진처럼 적당한 높이 */
+  height: 36px !important; /* 강제 높이 설정 */
+}
+
+/* Fluid Conditions 표의 첫 번째 컬럼 색깔 통일 */
+.fluid-conditions-table th:first-child,
+.fluid-conditions-table td:first-child {
+  background: #f3f4f6 !important; /* BODY와 동일한 회색 배경 */
+  font-weight: 600 !important;
+  font-size: 14px !important; /* BODY와 동일한 폰트 크기 */
+  color: #374151 !important;
+  text-align: left !important; /* 왼쪽 정렬로 체크박스와 글자 정렬 */
+  vertical-align: middle !important; /* 세로 중앙 정렬 */
+}
+
+/* Fluid Conditions 표의 나머지 컬럼들 색깔 통일 */
+.fluid-conditions-table th:not(:first-child),
+.fluid-conditions-table td:not(:first-child) {
+  background: white !important; /* BODY와 동일한 흰색 배경 */
+}
+
+/* 각 컬럼 너비 조정 */
+.fluid-conditions-table th:nth-child(1),
+.fluid-conditions-table td:nth-child(1) {
+  width: 25%; /* 첫 번째 컬럼 (라벨) - 체크박스와 글자를 위해 늘림 */
+}
+
+.fluid-conditions-table th:nth-child(2),
+.fluid-conditions-table td:nth-child(2) {
+  width: 18%; /* Max 컬럼 */
+}
+
+.fluid-conditions-table th:nth-child(3),
+.fluid-conditions-table td:nth-child(3) {
+  width: 18%; /* Normal 컬럼 */
+}
+
+.fluid-conditions-table th:nth-child(4),
+.fluid-conditions-table td:nth-child(4) {
+  width: 18%; /* Min 컬럼 */
+}
+
+.fluid-conditions-table th:nth-child(5),
+.fluid-conditions-table td:nth-child(5) {
+  width: 21%; /* Unit 컬럼 */
+}
+
+.fluid-conditions-table th {
+  background: #f3f4f6;
+  font-weight: 600;
+  font-size: 13px; /* 폰트 크기 증가 */
+  color: #374151;
+  white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+  min-width: 60px; /* 최소 너비 설정 */
+}
+
+.fluid-conditions-table td {
+  background: white;
+  padding: 6px; /* 패딩 증가 */
+}
+
+.fluid-conditions-table td:first-child {
+  background: #f9fafb;
+  font-weight: 600;
+  font-size: 13px; /* 폰트 크기 증가 */
+  color: #374151;
+  text-align: left;
+  padding-left: 8px; /* 패딩 증가 */
+  white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+  min-width: 80px; /* 최소 너비 설정 */
+}
+
+.fluid-conditions-table td:last-child {
+  border-right: none;
+}
+
+.fluid-conditions-table input {
+  width: 100%;
+  padding: 6px 10px; /* BODY와 동일한 패딩 */
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 13px; /* BODY와 동일한 폰트 크기 */
+  background: white;
+  text-align: center;
+  height: 28px; /* BODY와 동일한 높이 */
+  box-sizing: border-box;
+  font-weight: 500; /* 글씨 굵기 추가 */
+}
+
+.fluid-conditions-table select {
+  width: 100%;
+  padding: 6px 10px; /* BODY와 동일한 패딩 */
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 13px; /* BODY와 동일한 폰트 크기 */
+  background: white;
+  cursor: pointer;
+  height: 28px; /* BODY와 동일한 높이 */
+  max-width: 100%;
+  box-sizing: border-box;
+  font-weight: 500; /* 글씨 굵기 추가 */
+}
+
+.fluid-conditions-table input:focus,
+.fluid-conditions-table select:focus {
+  background: #f9fafb;
+}
+
+/* 체크박스가 있는 행의 첫 번째 셀 */
+.fluid-conditions-table td:first-child input[type="checkbox"] {
+  width: 12px;
+  height: 12px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* 다른 섹션들도 같은 크기로 설정 */
+.body-section,
+.trim-section,
+.actuator-section {
+  min-width: 500px; /* Fluid와 동일한 최소 너비 */
+  max-width: 500px; /* Fluid와 동일한 최대 너비 */
+  flex-shrink: 0; /* 축소 방지 */
+  background: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 12px;
+  margin-top: -15px; /* 위로 올리기 */
+  width: 100%;
+}
+
+/* Accessory 섹션만 별도로 위치 조정 */
+.accessory-section {
+  min-width: 500px; /* Fluid와 동일한 최소 너비 */
+  max-width: 500px; /* Fluid와 동일한 최대 너비 */
+  flex-shrink: 0; /* 축소 방지 */
+  background: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 12px;
+  margin-top: 0; /* 위로 올리지 않음 */
+  width: 100%;
+}
+
+/* 각 섹션의 h4 제목 스타일 통일 */
+.body-section h4,
+.trim-section h4,
+.actuator-section h4,
+.accessory-section h4,
+.fluid-section h4 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* Accessory 섹션 테이블 디자인 */
+.accessory-properties-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  border: none;
+  table-layout: fixed; /* 테이블 레이아웃 고정 */
+}
+
+/* Accessory 테이블 헤더 스타일 추가 */
+.accessory-properties-table th {
+  background: #f8f9fa;
+  font-weight: 600;
+  font-size: 14px; /* BODY와 동일한 폰트 크기 */
+  color: #495057;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 8px 12px;
+  text-align: center;
+}
+
+.accessory-properties-table td {
+  padding: 8px 12px !important; /* 사진처럼 적당한 패딩 */
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
+  min-height: 36px !important; /* 사진처럼 적당한 높이 */
+  height: 36px !important; /* 강제 높이 설정 */
+}
+
+/* 더 구체적인 선택자로 강제 적용 */
+.new-estimate-request-page .accessory-properties-table td {
+  padding: 8px 12px !important;
+  min-height: 36px !important;
+  height: 36px !important;
+  vertical-align: middle !important;
+}
+
+.accessory-properties-table td:first-child {
+  background: #f3f4f6;
+  font-weight: 600;
+  font-size: 15px; /* BODY보다 조금 더 큰 폰트 크기 */
+  color: #374151;
+  width: 50%; /* 회색칸(라벨) 가로길이 더 늘리기 */
+  white-space: nowrap;
+}
+
+.accessory-properties-table td:last-child {
+  background: white;
+  width: 50%; /* 입력칸(하얀부분) 가로길이 더 줄이기 */
+}
+
+.accessory-properties-table input,
+.accessory-properties-table select {
+  width: 100%;
+  padding: 6px 10px; /* BODY와 동일한 패딩 */
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 13px; /* BODY와 동일한 폰트 크기 */
+  background: white;
+  max-width: 100%;
+  box-sizing: border-box;
+  height: 28px; /* BODY와 동일한 높이 */
+}
+
+.accessory-properties-table select {
+  cursor: pointer;
+  padding-right: 24px;
+}
+
+/* BODY Properties 테이블 - Accessory와 동일한 스타일 */
+.body-properties-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  border: none;
+  table-layout: fixed; /* 테이블 레이아웃 고정 */
+}
+
+.body-properties-table td {
+  padding: 8px 12px !important; /* 사진처럼 적당한 패딩 */
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
+  min-height: 36px !important; /* 사진처럼 적당한 높이 */
+  height: 36px !important; /* 강제 높이 설정 */
+}
+
+.body-properties-table td:first-child {
+  background: #f3f4f6;
+  font-weight: 600;
+  font-size: 14px; /* 폰트 크기 증가 */
+  color: #374151;
+  width: 25%; /* 라벨 컬럼 너비 */
+  white-space: nowrap;
+}
+
+.body-properties-table td:last-child {
+  background: white;
+  width: 75%; /* 입력 컬럼 너비 */
+}
+
+.body-properties-table input,
+.body-properties-table select {
+  width: 100%;
+  padding: 6px 10px; /* 사진처럼 적당한 패딩 */
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 13px; /* 사진처럼 적당한 폰트 크기 */
+  background: white;
+  max-width: 100%;
+  box-sizing: border-box;
+  height: 28px; /* 사진처럼 적당한 높이 */
+}
+
+.body-properties-table select {
+  cursor: pointer;
+  padding-right: 24px;
+}
+
+/* Size와 Rating의 2개 드롭다운을 더 작게 */
+.body-properties-table .size-selection-group,
+.body-properties-table .rating-selection-group {
+  display: flex;
+  gap: 4px;
+}
+
+.body-properties-table .size-selection-group select,
+.body-properties-table .rating-selection-group select {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Trim Properties 테이블 - BODY와 동일한 스타일 */
+.trim-properties-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  border: none;
+  table-layout: fixed; /* 테이블 레이아웃 고정 */
+}
+
+.trim-properties-table td {
+  padding: 8px 12px !important; /* 사진처럼 적당한 패딩 */
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
+  min-height: 36px !important; /* 사진처럼 적당한 높이 */
+  height: 36px !important; /* 강제 높이 설정 */
+}
+
+.trim-properties-table td:first-child {
+  background: #f3f4f6;
+  font-weight: 600;
+  font-size: 14px; /* 폰트 크기 증가 */
+  color: #374151;
+  width: 25%; /* 라벨 컬럼 너비 */
+  white-space: nowrap;
+}
+
+.trim-properties-table td:last-child {
+  background: white;
+  width: 75%; /* 입력 컬럼 너비 */
+}
+
+.trim-properties-table input,
+.trim-properties-table select {
+  width: 100%;
+  padding: 6px 10px; /* 사진처럼 적당한 패딩 */
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 13px; /* 사진처럼 적당한 폰트 크기 */
+  background: white;
+  max-width: 100%;
+  box-sizing: border-box;
+  height: 28px; /* 사진처럼 적당한 높이 */
+}
+
+.trim-properties-table select {
+  cursor: pointer;
+  padding-right: 24px;
+}
+
+/* Actuator Properties 테이블 - BODY와 동일한 스타일 */
+.actuator-properties-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  border: none;
+  table-layout: fixed; /* 테이블 레이아웃 고정 */
+}
+
+.actuator-properties-table td {
+  padding: 8px 12px !important; /* 사진처럼 적당한 패딩 */
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
+  min-height: 36px !important; /* 사진처럼 적당한 높이 */
+  height: 36px !important; /* 강제 높이 설정 */
+}
+
+.actuator-properties-table td:first-child {
+  background: #f3f4f6;
+  font-weight: 600;
+  font-size: 14px; /* 폰트 크기 증가 */
+  color: #374151;
+  width: 25%; /* 라벨 컬럼 너비 */
+  white-space: nowrap;
+}
+
+.actuator-properties-table td:last-child {
+  background: white;
+  width: 75%; /* 입력 컬럼 너비 */
+}
+
+.actuator-properties-table input,
+.actuator-properties-table select {
+  width: 100%;
+  padding: 6px 10px; /* 사진처럼 적당한 패딩 */
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 13px; /* 사진처럼 적당한 폰트 크기 */
+  background: white;
+  max-width: 100%;
+  box-sizing: border-box;
+  height: 28px; /* 사진처럼 적당한 높이 */
+}
+
+.actuator-properties-table select {
+  cursor: pointer;
+  padding-right: 24px;
+}
+
+.accessory-properties-table input:focus,
+.accessory-properties-table select:focus {
+  background: #f9fafb;
+}
