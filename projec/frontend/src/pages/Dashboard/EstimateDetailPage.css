@@ -184,13 +184,25 @@
 
 .status-section-detail {
   display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
-  padding: 4px 8px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  height: 50px;
+  gap: 0;                      /* 간격 제거 */
+  margin-bottom: 12px;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  height: auto;
   align-items: center;
+}
+.status-section-detail > * { margin: 0 !important; }
+
+/* 상위 컨테이너 규칙(.estimate-detail-page > .status-section-detail) 덮어쓰기 */
+.estimate-detail-page > .status-section-detail {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+.estimate-detail-page .status-section-detail {
+  padding: 0 !important;
+  background: transparent !important;
+  border-radius: 0 !important;
 }
 
 .status-group, .project-group-detail { display: flex; flex-direction: column; gap: 4px; }
@@ -219,7 +231,10 @@
   border-color: #007bff;
 }
 
-.project-group-detail { flex: 9; justify-content: center; }
+.project-group-detail { flex: 0 1 1100px; justify-content: center; }
+/* 프로젝트명 카드 주변 여백 제거 -> 버튼 영역 확보 */
+.status-section-detail .request-card { margin: 0; }
+.status-section-detail .request-header { padding: 0; }
 .project-input-detail { width: 100%; height: 28px; padding: 2px 6px; font-size: 12px; }
 
 .main-content-detail {
@@ -229,7 +244,7 @@
 .steps-container-detail {
   display: flex;
   flex-direction: column;
-  gap: 0px;
+  gap: 24px; /* 상하 간격 확대 */
 }
 
 /* 새로운 가로 배치 컨테이너 */
@@ -766,21 +781,19 @@
 }
 
 /* 고객 요청사항 섹션 */
-.estimate-detail-page .customer-requirement-content-detail {
-  padding: 20px;
-}
+.estimate-detail-page .customer-requirement-content-detail { padding: 0 !important; }
 
 .estimate-detail-page .customer-requirement-textarea-detail {
-  width: 100%;
-  min-height: 30px;
-  padding: 0px;
-  border: 1px solid #ced4da;
-  border-radius: 6px;
-  font-size: 8px;
-  line-height: 1.5;
-  resize: none;
-  background-color: #f8f9fa;
-  color: #495057;
+  width: 100% !important;
+  min-height: 140px !important;
+  padding: 12px !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 12px !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+  resize: vertical !important;
+  background-color: #ffffff !important;
+  color: #111827 !important;
 }
 
 .estimate-detail-page .customer-requirement-textarea-detail:focus {
@@ -795,28 +808,38 @@
   cursor: not-allowed;
 }
 
-/* 관리자 코멘트 섹션 */
-.estimate-detail-page .staff-comment-content-detail {
-  padding: 20px;
-}
-
+/* 관리자 코멘트 섹션 - 고객요청사항과 동일 디자인, 가로폭 유지, 세로 기본 더 낮게 */
+.estimate-detail-page .staff-comment-content-detail { padding: 0 !important; }
 .estimate-detail-page .staff-comment-textarea-detail {
-  width: 100%;
-  min-height: 120px;
-  padding: 15px;
-  border: 1px solid #ced4da;
-  border-radius: 6px;
-  font-size: 14px;
-  line-height: 1.5;
-  resize: vertical;
-  background-color: #f8f9fa;
-  color: #495057;
+  width: 100% !important;
+  min-height: 100px !important; /* 기본 높이 더 낮게 */
+  height: 100px !important;
+  overflow-y: auto !important; /* 넘치면 내부 스크롤 */
+  resize: none !important;
+  padding: 12px !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 12px !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+  background-color: #ffffff !important;
+  color: #111827 !important;
+}
+.estimate-detail-page .staff-comment-textarea-detail:focus {
+  outline: none !important;
+  border-color: #007bff !important;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
 }
 
-.estimate-detail-page .staff-comment-textarea-detail:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+/* 관리자 코멘트 카드 자체 높이 축소 (부모 섹션 기본 높이 덮어쓰기) */
+.estimate-detail-page .step-section-detail:has(.staff-comment-content-detail) {
+  padding: 12px !important;           /* 내부 여백만 가볍게 */
+  height: auto !important;            /* 고정/계산 높이 제거 */
+  min-height: 0 !important;
+  overflow: visible !important;       /* 내용 잘림 방지 */
+}
+.estimate-detail-page .step-section-detail:has(.staff-comment-content-detail) .step-header-detail {
+  margin: 0 0 8px 0 !important;
+  padding: 0 !important;
 }
 
 
@@ -1079,31 +1102,28 @@
 }
 
 /* 저장 버튼 스타일 */
-.save-section { display: flex; justify-content: flex-end; margin: 0; padding: 0; border: 0; }
+.save-section { display: flex; justify-content: center; align-items: center; margin: 0; padding: 0; border: 0; flex: 0 0 auto; }
 .content-card-detail .status-section-detail .save-section { flex: 1; }
-.save-specification-btn { height: 32px; padding: 0 10px; font-size: 12px; border-radius: 8px; }
-
 .save-specification-btn {
-  background: #28a745;
-  color: white;
-  padding: 5px 10px;
-  font-size: 16px;
-  font-weight: 600;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /* NewEstimateRequest의 임시저장과 동일한 스펙 강제 */
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 40px !important;
+  min-width: 120px !important;
+  padding: 0 18px !important;
+  border: none !important;
+  border-radius: 10px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
 }
 
-.save-specification-btn:hover {
-  background: #218838;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
+.save-specification-btn { background:#22c55e !important; color:#fff !important; transition: background .2s ease; box-shadow:none; }
 
-.save-specification-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
+.save-specification-btn:hover { background:#16a34a; }
+
+.save-specification-btn:active { background:#16a34a; }
 
 /* Step1, Step2 계층 구조 스타일 */
 .type-header {
@@ -1303,13 +1323,8 @@
 }
 
 /* 품번 생성 섹션 - 한 줄 모눈종이 */
-.part-number-section {
-  background: white;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  margin-top: 30px;
+.part-number-section h3 {
+  margin-bottom: 8px !important;
 }
 
 .part-number-single-line {
@@ -1336,15 +1351,15 @@
 }
 
 .filled-char {
-  background: #007bff;
-  color: white;
-  border-color: #0056b3;
+  background: #ffffff;
+  color: #000000;
+  border-color: #dee2e6;
 }
 
 .empty-char {
-  background: #007bff;
-  color: white;
-  border-color: #0056b3;
+  background: #ffffff;
+  color: #000000;
+  border-color: #dee2e6;
 }
 
 .char-box:hover {
@@ -1361,9 +1376,9 @@
   width: calc(100% - 220px); /* 전체 너비에서 사이드바 너비 제외 */
   z-index: 1000;
   background: white;
-  border-top: 3px solid #007bff;
+  border-top: 3px solid #dee2e6;
   box-shadow: 0 -4px 12px rgba(0,0,0,0.15);
-  padding: 20px 24px; /* 내부 패딩을 steps-container-detail와 동일하게 맞춤 */
+  padding: 12px 24px; /* 내부 패딩을 steps-container-detail와 동일하게 맞춤 */
   box-sizing: border-box; /* 패딩을 너비 계산에 포함 */
 }
 
@@ -1795,20 +1810,11 @@
 }
 
 /* 첨부파일 섹션 */
-.estimate-detail-page .attachments-content {
-  margin-top: 0px;
-  margin-bottom: 0px;
-  margin-left: 0px;
-  margin-right: 0px;
-  height: 40px; /* 기준 높이 */
-  padding: 0px;
-  overflow-y: auto; /* 고정 높이에서 세로 스크롤 */
-  overflow-x: hidden; /* 가로 스크롤 숨김 */
-}
+.estimate-detail-page .attachments-content { margin: 0; padding: 12px !important; height: auto !important; overflow-y: auto !important; overflow-x: hidden !important; background:#fff !important; border:1px solid #e5e7eb !important; border-radius:12px !important; }
 
 /* 고객 요청 첨부파일 하위 요소 크기 맞춤 */
-.attachment-list-detail { max-height: 40px; overflow-y: auto; }
-.attachment-item-detail { height: 20px; padding: 0 6px; font-size: 10px; }
+.attachment-list-detail { display:flex !important; flex-wrap:wrap !important; gap:8px 12px !important; max-height: none !important; overflow: visible !important; }
+.attachment-item-detail { display:inline-flex !important; align-items:center !important; gap:8px !important; padding:8px 10px !important; font-size: 14px !important; height:auto !important; border:1px solid transparent !important; border-radius:10px !important; background:#fff !important; }
 .attachment-item-detail .file-name-detail { font-size: 10px; }
 .attachment-item-detail .file-size-detail { font-size: 10px; margin: 0 6px; }
 .attachment-item-detail .btn.btn-sm { height: 18px; padding: 0 6px; font-size: 10px; }
@@ -1886,8 +1892,21 @@
 .uploader-list { border:1px solid #e9ecef; border-radius:10px; background:#fff; padding:6px 8px; max-height:180px; overflow:auto; }
 .uploader-item { display:flex; align-items:center; gap:8px; padding:6px 4px; border-bottom:1px solid #f1f3f5; }
 .uploader-item:last-child { border-bottom:0; }
-.file-icon { width:16px; height:16px; display:inline-block; }
-.file-name-detail { flex:1; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.file-icon { 
+  width: 16px; 
+  height: 16px; 
+  display: inline-block; 
+  color: #6b7280;
+  flex-shrink: 0;
+}
+.file-name-detail { 
+  flex: 1; 
+  font-size: 12px; 
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+  max-width: 200px;
+}
 .remove-btn { background:none; border:none; font-size:14px; cursor:pointer; color:#6c757d; }
 .remove-btn:hover { color:#dc3545; }
 
@@ -1913,20 +1932,26 @@
   position: static;
   width: 100%;
   display: flex;
-  gap: 8px;
-  align-items: stretch;
-  margin-bottom: 8px;
-  height: 120px; /* 고정 높이 */
+  gap: 12px;                         /* 요소 간격 확장 */
+  align-items: flex-start;            /* 높이 강제 동일화 제거 */
+  margin-top: 6px;                    /* 타이틀과 추가 간격 */
+  margin-bottom: 16px;                /* 아래 간격 */
+  padding: 12px;                      /* 내부 여백 */
+  height: auto;                       /* 컨텐츠에 맞게 */
+  background: #ffffff;                /* 연속 흰 배경 */
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
-.mini-tools-panel .step-section-detail { padding: 8px; border: 1px solid #e9ecef; border-radius: 10px; background:#fff; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.mini-tools-panel .step-section-detail { padding: 10px; border: none; border-radius: 10px; background: transparent; box-shadow: none; }
 .mini-tools-panel .doc-issue-list { gap: 6px; }
-.mini-tools-panel .uploader-list { max-height: 120px; }
+.mini-tools-panel .uploader-list { max-height: 140px; }
 .mini-tools-panel .estimate-summary-card { flex: 3 1 0 !important; }
 .mini-tools-panel .step-section-detail:has(.doc-issue-list) { flex: 1 1 0 !important; }
 .mini-tools-panel .customer-uploader { flex: 1 1 0 !important; }
-.mini-tools-panel .quote-actions { flex: 0.5 1 0 !important; display:flex; flex-direction:column; justify-content:space-between; gap:8px; }
-.start-btn { background:#28a745; color:#fff; border:none; border-radius:16px; height:72px; font-weight:700; }
-.end-btn { background:#8f8f8f; color:#fff; border:none; border-radius:16px; height:72px; font-weight:700; }
+.mini-tools-panel .quote-actions { flex: 0.5 1 0 !important; display:flex; flex-direction:column; justify-content:space-between; gap:12px; }
+.start-btn { background:#28a745; color:#fff; border:none; border-radius:16px; height:84px; font-weight:700; }
+.end-btn { background:#8f8f8f; color:#fff; border:none; border-radius:16px; height:84px; font-weight:700; }
 .start-btn.done { background:#3c29ff; color:#fff; }
 
 /* 완료취소 / 주문확정 / 견적마감 스타일 가이드에 가깝게 */
@@ -1940,11 +1965,11 @@
 .main-content-detail { padding-right: 0; }
 
 /* 견적 세부 정보 미니 카드 */
-.estimate-summary-card { padding:6px; height: 100%; overflow: auto; }
-.summary-grid { display:flex; flex-direction:column; gap:4px; max-height: 100%; overflow:auto; }
-.summary-row { display:flex; justify-content:space-between; font-size:10px; line-height: 1.2; }
-.summary-row .k { color:#6c757d; }
-.summary-row .v { font-weight:600; }
+.estimate-summary-card { padding:16px; height: 100%; overflow: auto; }
+.summary-grid { display:grid; grid-auto-rows: minmax(0, auto); gap:10px 24px !important; max-height: 100%; overflow:auto; }
+.summary-row { display:grid; grid-template-columns: 80px 1fr 80px 1fr; column-gap:24px !important; align-items:center; font-size:14px !important; line-height: 1.35 !important; padding:2px 0 !important; }
+.summary-row .k { color:#6b7280 !important; font-weight: 600 !important; text-align:left !important; }
+.summary-row .v { color:#111827 !important; font-weight:800 !important; text-align:left !important; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
 /* 견적시작 버튼 강제 표시 */
 .quote-actions {
@@ -1959,34 +1984,192 @@
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
-  background: #28a745 !important;
-  color: white !important;
-  padding: 10px 20px !important;
+  padding: 12px 24px !important;
   border: none !important;
   border-radius: 5px !important;
   cursor: pointer !important;
-  font-size: 14px !important;
+  font-size: 16px !important;
   font-weight: bold !important;
+  min-width: 140px !important;
+  height: 80px !important;
+  text-align: center !important;
+}
+
+/* 버튼이 1개만 있을 때 더 길게 */
+.quote-actions .btn:only-child {
+  height: 160px !important;
+}
+
+/* 견적시작, 견적완료, 주문확정 버튼 - 초록색 */
+.quote-actions .btn-success {
+  background: #28a745 !important;
+  color: white !important;
+}
+
+.quote-actions .btn-primary {
+  background: #28a745 !important;
+  color: white !important;
+}
+
+/* 시작취소, 완료취소, 주문취소 버튼 - 빨간색 */
+.quote-actions .btn-danger {
+  background: #dc3545 !important;
+  color: white !important;
+}
+
+/* 버튼 간격 조정 */
+.quote-actions .button-column {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
 }
 
 /* 미니 패널이 본문을 가리지 않도록 우측 여백 확보 */
 .main-content-detail { padding-right: 360px; }
 
 /* --- mini tools hard compact overrides --- */
-.mini-tools-panel .step-section-detail { height: 120px !important; padding: 4px 6px !important; display: flex; flex-direction: column; overflow: hidden; }
+.mini-tools-panel .step-section-detail { min-height: 0 !important; height: auto !important; padding: 6px 8px !important; display: flex; flex-direction: column; overflow: visible !important; flex: 0 0 auto !important; align-self: flex-start !important; }
+/* 견적 서류 발급 카드 여백/사이즈를 견적 세부 정보 카드와 일치 */
+.mini-tools-panel .step-section-detail:has(.doc-issue-list) { 
+  margin: 4px 0 0 0 !important;
+  padding: 6px 8px !important;
+  height: auto !important;         /* 고정 높이 제거 → 보라 영역 제거 */
+  min-height: 0 !important;        /* 남은 min-height 제거 */
+  flex: 0 0 auto !important;       /* 가로 flex 확장 금지 → 내용만큼 높이 */
+  align-self: flex-start !important;
+  font-size: inherit !important;   /* 8px 강제 규칙 무효화 */
+}
+
+/* 요약 카드가 부모 높이를 따라 커지는 현상 방지 */
+.mini-tools-panel .estimate-summary-card { height: auto !important; }
+
+/* 업로드/발급 섹션 버튼을 현재 높이에 맞게 크게 보이도록 */
+.mini-tools-panel .customer-uploader .uploader-header { align-items: center !important; }
+.mini-tools-panel .customer-uploader .uploader-header h3 { font-size: 16px !important; font-weight: 800 !important; margin: 0 !important; }
+.mini-tools-panel .customer-uploader .uploader-header .btn,
+.mini-tools-panel .customer-uploader .uploader-header .btn-xs {
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 16px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  border-radius: 10px !important;
+}
+
+/* 발급 버튼(다운로드 아이콘)도 터치 타겟 확대 */
+.mini-tools-panel .doc-issue-list .icon-download {
+  width: 40px !important;
+  height: 40px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 22px !important;
+  border-radius: 10px !important;
+}
+
+/* 발급 리스트 행 간격/패딩 확대로 높이 매칭 */
+.mini-tools-panel .doc-issue-list .doc-item { 
+  padding: 4px 0 !important; 
+  margin: 0px !important; 
+  height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  line-height: 1.2 !important;
+}
+
+/* 발급 리스트 타이포를 New 페이지와 동일하게 */
+.mini-tools-panel .doc-issue-list .doc-label { font-size: 14px !important; font-weight: 800 !important; color:#111827 !important; }
+
+/* 고객 제출 문서 업로드 제목 스타일 - 견적서류발급과 동일하게 */
+.estimate-detail-page .customer-uploader .uploader-header h3 {
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  color: #111827 !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.estimate-detail-page .customer-uploader .uploader-header h3::before {
+  content: '\25CB' !important;
+  display: inline-block !important;
+  margin-right: 8px !important;
+  color: #9ca3af !important;
+  font-weight: 400 !important;
+}
+
+/* mini-tools-panel 내부의 고객 제출 문서 업로드도 동일하게 */
+.mini-tools-panel .customer-uploader .uploader-header h3 {
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  color: #111827 !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* 고객 제출 문서 업로드 헤더 간격 조정 */
+.estimate-detail-page .customer-uploader .uploader-header {
+  gap: 52px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.mini-tools-panel .customer-uploader .uploader-header {
+  gap: 52px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+.mini-tools-panel .customer-uploader .uploader-header h3::before {
+  content: '\25CB' !important;
+  display: inline-block !important;
+  margin-right: 8px !important;
+  color: #9ca3af !important;
+  font-weight: 400 !important;
+}
+.mini-tools-panel .step-section-detail:has(.doc-issue-list) .step-header-detail { 
+  margin: 0 0 8px 0 !important; 
+  padding: 0 !important; 
+  height: 28px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+.mini-tools-panel .step-section-detail:has(.doc-issue-list) .doc-issue-list { 
+  margin: 0 !important; 
+  padding: 0px !important; 
+}
 .mini-tools-panel .estimate-summary-card .summary-row { font-size: 10px !important; line-height: 1.2; }
-.mini-tools-panel .doc-issue-list { gap: 4px !important; padding: 2px 4px !important; overflow: auto; }
-.mini-tools-panel .doc-issue-list .doc-label { font-size: 11px !important; }
+.mini-tools-panel .doc-issue-list { gap: 0px !important; padding: 0px !important; overflow: auto; }
+.mini-tools-panel .doc-issue-list .doc-label { font-size: 14px !important; }
 .mini-tools-panel .icon-download { font-size: 16px !important; padding: 2px 4px !important; }
 .mini-tools-panel .customer-uploader .uploader-header { margin-bottom: 4px !important; }
-.mini-tools-panel .customer-uploader .uploader-header h3 { font-size: 12px !important; }
-.mini-tools-panel .customer-uploader .uploader-list { max-height: 84px !important; padding: 4px 6px !important; overflow: auto; }
+
+/* 견적 세부정보 컴포넌트 왼쪽 간격 */
+.mini-tools-panel .estimate-summary-card {
+  margin-left: 10px !important;
+}
+
+/* 견적 서류발급 컴포넌트 왼쪽 간격 */
+.mini-tools-panel .step-section-detail:has(.doc-issue-list) {
+  margin-left: 5px !important;
+}
+
+/* 고객 제출 문서 업로드 컴포넌트와 견적 서류발급 간격 */
+.mini-tools-panel .customer-uploader {
+  margin-left: 33px !important;
+  margin-top: -7px !important;
+}
+/* 기존 12px 규칙 제거 - 위의 16px 규칙이 우선 적용되도록 */
+.mini-tools-panel .customer-uploader .uploader-list { max-height: 130px !important; padding: 4px 6px !important; overflow: auto; }
 .mini-tools-panel .customer-uploader .uploader-item { padding: 3px 2px !important; gap: 6px !important; }
 .mini-tools-panel .customer-uploader .file-name-detail { font-size: 11px !important; }
-.mini-tools-panel .step-section-detail:has(.doc-issue-list) { font-size: 8px !important; padding: 0 !important; }
+.mini-tools-panel .step-section-detail:has(.doc-issue-list) { font-size: inherit !important; padding: 0 !important; }
 .mini-tools-panel .step-section-detail:has(.doc-issue-list) .step-header-detail { margin: 0 !important; padding: 0 !important; }
-.mini-tools-panel .step-section-detail:has(.doc-issue-list) .step-header-detail h3 { font-size: 11px !important; margin: 0 !important; font-weight: 600; }
-.mini-tools-panel .step-section-detail:has(.doc-issue-list) .doc-issue-list { padding: 0 !important; gap: 2px !important; }
+.mini-tools-panel .step-section-detail:has(.doc-issue-list) .step-header-detail h3 { font-size: 16px !important; margin: 0 !important; font-weight: 800 !important; color: #111827 !important; }
+.mini-tools-panel .step-section-detail:has(.doc-issue-list) .doc-issue-list { padding: 0 !important; gap: 0px !important; }
 
 .step-subsection-detail:nth-child(1),
 .step-subsection-detail:nth-child(2) {
@@ -2003,18 +2186,36 @@
 .detail-header-status-and-buttons .quote-actions .button-column {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
 }
 
 .detail-header-status-and-buttons .quote-actions button {
-  padding: 10px 20px;
+  padding: 12px 24px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
   font-size: 14px;
-  min-width: 120px;
+  min-width: 140px;
+  height: 44px;
   text-align: center;
+}
+
+/* 견적시작, 견적완료, 주문확정 버튼 - 초록색 */
+.detail-header-status-and-buttons .quote-actions .btn-success {
+  background: #28a745 !important;
+  color: #fff !important;
+}
+
+.detail-header-status-and-buttons .quote-actions .btn-primary {
+  background: #28a745 !important;
+  color: #fff !important;
+}
+
+/* 시작취소, 완료취소, 주문취소 버튼 - 빨간색 */
+.detail-header-status-and-buttons .quote-actions .btn-danger {
+  background: #dc3545 !important;
+  color: #fff !important;
 }
 
 .detail-header-status-and-buttons .quote-actions .start-btn,
@@ -2043,3 +2244,71 @@
 .detail-header-status-and-buttons .quote-actions button:hover {
   opacity: 0.9;
 }
+
+/* ====== Final overrides to match NewEstimateRequest UI ====== */
+.estimate-detail-page .step-section-detail .step-header-detail h3 { font-size: 16px !important; font-weight: 800 !important; color:#111827 !important; margin:0 0 8px 0 !important; padding:0 !important; }
+.estimate-detail-page .step-section-detail .step-header-detail h3::before { content:'\25CB'; display:inline-block; margin-right:8px; color:#9ca3af; font-weight:400; }
+.estimate-detail-page .step-header-detail h3::before { content:'\25CB'; display:inline-block; margin-right:8px; color:#9ca3af; font-weight:400; }
+.estimate-detail-page .customer-requirement-content-detail { padding:0 !important; }
+.estimate-detail-page .customer-requirement-textarea-detail { width:100% !important; min-height:140px !important; padding:12px !important; border:1px solid #e5e7eb !important; border-radius:12px !important; background:#fff !important; font-size:14px !important; color:#111827 !important; resize:vertical !important; }
+.estimate-detail-page .attachments-content { padding:12px !important; height:auto !important; overflow-y:auto !important; overflow-x:hidden !important; background:#fff !important; border:1px solid #e5e7eb !important; border-radius:12px !important; }
+.estimate-detail-page .attachment-list-detail { display:flex !important; flex-wrap:wrap !important; gap:8px 12px !important; }
+.estimate-detail-page .attachment-item-detail { display:inline-flex !important; align-items:center !important; gap:8px !important; padding:8px 10px !important; border:1px solid transparent !important; border-radius:10px !important; background:#fff !important; cursor:pointer !important; }
+.estimate-detail-page .attachment-item-detail .file-size-detail { display:none !important; }
+.estimate-detail-page .attachment-item-detail .btn { display:none !important; }
+.estimate-detail-page .attachment-item-detail .file-name-detail { font-size:14px !important; color:#111827 !important; }
+.estimate-detail-page .file-icon::before { content:'\1F4C4'; font-size:16px; color:#6b7280; display:inline-block; width:16px; }
+.estimate-detail-page .file-icon.ext-pdf::before { content:'\1F4D1'; color:#e11d48; }
+.estimate-detail-page .file-icon.ext-xls::before, .estimate-detail-page .file-icon.ext-xlsx::before { content:'\1F4C8'; color:#16a34a; }
+.estimate-detail-page .file-icon.ext-doc::before, .estimate-detail-page .file-icon.ext-docx::before { content:'\1F4C3'; color:#2563eb; }
+
+/* === 요청: 기타요청사항 + 첨부파일을 하나의 흰 바탕으로 연결 === */
+.customer-request-block-detail {
+  display: flex;
+  gap: 12px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 16px 16px;            /* 내부 상하 여백 */
+  align-items: stretch;
+  margin-bottom: 16px;            /* 아래 컴포넌트와 간격 확보 */
+}
+.customer-request-block-detail, .customer-request-block-detail * { box-sizing: border-box; }
+.customer-request-block-detail > .step-section-detail { flex:1 1 0; min-width:0; height:auto !important; }
+.customer-request-block-detail > .step-section-detail * { max-width: 100%; }
+.customer-request-block-detail .step-section-detail { /* 내부 카드는 투명 처리 */
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+/* 좌/우 컬럼 균등 폭 */
+.customer-request-block-detail > .step-section-detail { flex: 1 1 0; min-width: 0; }
+
+/* textarea 기본 높이(요청 페이지와 동일) + 내용에 따라 증가 */
+.estimate-detail-page .customer-requirement-textarea-detail { min-height: 140px !important; height: 140px !important; overflow-y: auto !important; resize: none !important; }
+
+/* 첨부파일 영역 기본 높이 확보 */
+.estimate-detail-page .attachments-content { min-height: 140px !important; height:auto !important; overflow: visible !important; }
+
+/* 첨부파일 섹션 하단 간격 확보 */
+.estimate-detail-page .step-section-detail:has(.attachments-content) { margin-bottom: 20px !important; }
+
+/* 첨부파일 제목 폰트/정렬 강제 통일 */
+.estimate-detail-page .customer-attachments-section .step-header-detail h3 {
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  color: #111827 !important;
+  margin: 0 0 8px 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* 페이지 타이틀(예: 견적요청관리) 위아래 여백 - New 페이지와 유사하게 */
+.estimate-detail-page > .page-header-detail { margin-top: 20px !important; margin-bottom: 48px !important; }
+
+/* 강제 타이포 고정: 다른 CSS가 뒤에서 덮어써도 유지되도록 파일 하단에 한 번 더 */
+.mini-tools-panel .estimate-summary-card .summary-row .k,
+.mini-tools-panel .estimate-summary-card .summary-row .v { font-size: 14px !important; }

@@ -5,6 +5,8 @@ import { buildApiUrl, buildClientAppUrl } from '../../config/api';
 import './DashboardPages.css';
 import './EstimateDetailPage.css';
 import { IoIosArrowBack } from "react-icons/io";
+import { FaDownload } from 'react-icons/fa';
+import { FaFilePdf, FaFileExcel, FaFileWord, FaFileImage, FaFileAlt } from 'react-icons/fa';
 
 // 단위/사이즈 마스터 데이터 타입
 interface BodySizeListDto {
@@ -3237,24 +3239,31 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
   const CustomerAttachmentsSection = () => (
     <div className="step-section-detail">
       <div className="step-header-detail">
-        <h3>고객 요청 첨부파일</h3>
+        <h3>첨부파일</h3>
       </div>
       <div className="attachments-content">
         {customerAttachments.length > 0 ? (
           <div className="attachment-list-detail">
-            {customerAttachments.map((file, index) => (
-              <div key={index} className="attachment-item-detail">
-                <span className="file-name-detail">{file.fileName}</span>
-                <span className="file-size-detail">({(file.fileSize / 1024).toFixed(2)} KB)</span>
-                <button 
-                  className="btn btn-primary btn-sm"
+            {customerAttachments.map((file, index) => {
+              const name = file.fileName || '';
+              const lower = name.toLowerCase();
+              const Icon = lower.endsWith('.pdf') ? FaFilePdf
+                : (lower.endsWith('.xls') || lower.endsWith('.xlsx')) ? FaFileExcel
+                : (lower.endsWith('.doc') || lower.endsWith('.docx') || lower.endsWith('.hwp')) ? FaFileWord
+                : (lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.gif') || lower.endsWith('.bmp') || lower.endsWith('.webp') || lower.endsWith('.tiff')) ? FaFileImage
+                : FaFileAlt;
+              return (
+                <div
+                  key={index}
+                  className="attachment-item-detail"
+                  title={name}
                   onClick={() => handleDownloadFile(file, 'customer')}
-                  disabled={!file.fileName.toLowerCase().endsWith('.pdf')}
                 >
-                  PDF 다운로드
-                </button>
-              </div>
-            ))}
+                  <Icon className="file-icon" />
+                  <span className="file-name-detail">{name}</span>
+                </div>
+              );
+            })}
           </div>
         ) : (
           <div className="no-attachments">
@@ -3279,7 +3288,7 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
             title="생성 후 다운로드"
             onClick={() => generateAndDownload('cvlist', 'generate-cv')}
             disabled={!!docGenerating['cvlist']}
-          >{docGenerating['cvlist'] ? '⏳' : '⬇️'}</button>
+          >{docGenerating['cvlist'] ? '⏳' : <FaDownload />}</button>
         </div>
         <div className="doc-item">
           <span className="doc-label">VALVE LIST</span>
@@ -3288,7 +3297,7 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
             title="생성 후 다운로드"
             onClick={() => generateAndDownload('vllist', 'generate-vl')}
             disabled={!!docGenerating['vllist']}
-          >{docGenerating['vllist'] ? '⏳' : '⬇️'}</button>
+          >{docGenerating['vllist'] ? '⏳' : <FaDownload />}</button>
         </div>
         <div className="doc-item">
           <span className="doc-label">DATA SHEET</span>
@@ -3297,7 +3306,7 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
             title="생성 후 다운로드"
             onClick={() => generateAndDownload('datasheet', 'generate-datasheet')}
             disabled={!!docGenerating['datasheet']}
-          >{docGenerating['datasheet'] ? '⏳' : '⬇️'}</button>
+          >{docGenerating['datasheet'] ? '⏳' : <FaDownload />}</button>
         </div>
         <div className="doc-item">
           <span className="doc-label">견적서</span>
@@ -3306,7 +3315,7 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
             title="생성 후 다운로드"
             onClick={() => generateAndDownload('singlequote', 'generate-single-quote')}
             disabled={!!docGenerating['singlequote']}
-          >{docGenerating['singlequote'] ? '⏳' : '⬇️'}</button>
+          >{docGenerating['singlequote'] ? '⏳' : <FaDownload />}</button>
         </div>
       </div>
     </div>
@@ -3471,10 +3480,15 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
             ) : (
               customerFiles.map(file => {
                 const name = file.fileName || '';
-                const ext = (name.split('.').pop() || '').toLowerCase();
+                const lower = name.toLowerCase();
+                const Icon = lower.endsWith('.pdf') ? FaFilePdf
+                  : (lower.endsWith('.xls') || lower.endsWith('.xlsx')) ? FaFileExcel
+                  : (lower.endsWith('.doc') || lower.endsWith('.docx') || lower.endsWith('.hwp')) ? FaFileWord
+                  : (lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.gif') || lower.endsWith('.bmp') || lower.endsWith('.webp') || lower.endsWith('.tiff')) ? FaFileImage
+                  : FaFileAlt;
                 return (
                   <div key={file.attachmentID} className="uploader-item">
-                    <span className={`file-icon ext-${ext}`} aria-hidden />
+                    <Icon className="file-icon" />
                     <span className="file-name-detail" title={name}>{name}</span>
                     <button className="remove-btn" onClick={() => deleteAttachmentById(file.attachmentID)}>✕</button>
                   </div>
@@ -3544,9 +3558,25 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
           </select>
         </div>
         */}
-        <div className="project-group-detail">
-          <label>프로젝트명:</label>
-          <input type="text" value={projectName} readOnly={isReadOnly} className="project-input-detail" />
+        <div className="project-group-detail" style={{ width: '100%' }}>
+          <div className="request-card" style={{ marginTop: 0 }}>
+            <div className="request-header">
+              <div className="info-table">
+                <div className="row">
+                  <div className="cell label">프로젝트명</div>
+                  <div className="cell value">
+                    <input
+                      type="text"
+                      value={projectName}
+                      onChange={(e)=>setProjectName(e.target.value)}
+                      className="project-input-lg"
+                      disabled={isReadOnly}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         
         {/* 저장 버튼 */}
