@@ -5,6 +5,7 @@ import { buildApiUrl, buildClientAppUrl } from '../../config/api';
 import './DashboardPages.css';
 import './EstimateDetailPage.css';
 import { IoIosArrowBack } from "react-icons/io";
+import { MdArrowForward } from 'react-icons/md';
 import { FaDownload } from 'react-icons/fa';
 import { FaFilePdf, FaFileExcel, FaFileWord, FaFileImage, FaFileAlt } from 'react-icons/fa';
 
@@ -1078,6 +1079,17 @@ const EstimateDetailPage: React.FC = () => {
       return false; // 실패
     }
   };
+
+  // 악세사리 재로딩 핸들러
+  const handleAccReload = useCallback(async () => {
+    console.log('악세사리 재로딩...');
+    try {
+      await fetchAccessoryData();
+      console.log('악세사리 데이터 재로딩 완료');
+    } catch (error) {
+      console.error('악세사리 데이터 재로딩 실패:', error);
+    }
+  }, []);
 
   // 마스터 데이터 가져오기
   const fetchMasterData = async () => {
@@ -2711,26 +2723,33 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
   // Step 1, 2, 3 통합 섹션
   const StepsSection = () => (
     <div className="step-section-detail">
-      <div className="step-header-detail">
-        <h3>견적 상세 정보</h3>
-      </div>
-
       <div className="steps-horizontal-container">
         <div className="step-col-detail">
           {/* Step 1: Type 선정 */}
           <div className="step-subsection-detail">
-            <h4>Step 1: Type 선정</h4>
-            <div className="type-list-detail">
+            <div className="step-header-container">
+              <div className="step-title-section">
+                <h4>Step 1</h4>
+                <span className="step-description">Type 선정</span>
+              </div>
+              <div className="step-icon">
+                <div className="circle-arrow-icon">
+                  <MdArrowForward />
+                </div>
+              </div>
+            </div>
+            <div className="step-content-container">
+              <div className="type-list-detail">
               {types.map((type) => (
                 <div
                   key={type.id}
                   className={`type-item-detail ${selectedType === type.id ? 'selected' : ''}`}
                   onClick={() => handleTypeSelection(type)}
                 >
-                  <span className="type-name-detail">{(bodyValveList.find((v: any) => v.valveSeriesCode === type.id)?.valveSeries) || type.name}</span>
-                  <span className="type-count">({type.count})</span>
+                  <span>{(bodyValveList.find((v: any) => v.valveSeriesCode === type.id)?.valveSeries) || type.name} ({type.count})</span>
                 </div>
               ))}
+              </div>
             </div>
           </div>
         </div>
@@ -2738,7 +2757,18 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
         <div className="step-col-detail">
           {/* Step 2: TagNo 선택 */}
           <div className="step-subsection-detail">
-            <h4>Step 2: TagNo 선택</h4>
+            <div className="step-header-container">
+              <div className="step-title-section">
+                <h4>Step 2</h4>
+                <span className="step-description">TagNo 선택</span>
+              </div>
+              <div className="step-icon">
+                <div className="circle-arrow-icon">
+                  <MdArrowForward />
+                </div>
+              </div>
+            </div>
+            <div className="step-content-container">
             {selectedType ? (
               <div className="valve-list-detail">
               {valves
@@ -2751,8 +2781,7 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                       className={`valve-item-detail ${selectedValve?.id === valve.id ? 'selected' : ''}`}
                       onClick={() => handleValveSelection(valve)}
                     >
-                      <span className="valve-tag-detail">{valve.tagNo}</span>
-                      <span className="valve-qty-detail">({valve.qty})</span>
+                      <span>{valve.tagNo} ({valve.qty})</span>
                       <button 
                         className="btn btn-primary btn-sm ms-2"
                         onClick={(e) => {
@@ -2771,443 +2800,463 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
             ) : (
               <div className="no-type-selected">Step 1에서 Type을 선택하세요.</div>
             )}
+            </div>
           </div>
         </div>
         
         {selectedValve && <div className="step-col-detail">
           {/* Step 3: 상세사양 입력 */}
           <div className="step-subsection-detail">
-            <h4>Step 3: 상세사양 입력</h4>
-            <div className="specification-grid-detail">
+            <div className="step-header-container">
+              <div className="step-title-section">
+                <h4>Step 3</h4>
+                <span className="step-description">상세사양 입력</span>
+              </div>
+            </div>
+            <div className="step-content-container">
+              <div className="specification-grid-detail">
               {/* BODY 섹션 */}
               <div className="spec-section-detail">
                 <h4>BODY</h4>
-                <div className="spec-grid-detail">
-                  <div className="spec-item-detail">
-                    <label>Bonnet Type:</label>
-                    <select value={bodySelections.bonnetType} onChange={(e) => handleBodyChange('bonnetType', e.target.value)} disabled={isReadOnly}>
-                      <option value="">선택하세요</option>
-                      {bodyBonnetList && bodyBonnetList.length > 0 && bodyBonnetList.map((item: any) => (
-                        <option key={item.bonnetCode} value={item.bonnetCode}>
-                          {item.bonnet}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="spec-item-detail">
-                    <label>Material Body:</label>
-                    <select value={bodySelections.materialBody} onChange={(e) => handleBodyChange('materialBody', e.target.value)} disabled={isReadOnly}>
-                      <option value="">선택하세요</option>
-                      {bodyMatList && bodyMatList.length > 0 && bodyMatList.map((item: any) => (
-                        <option key={item.bodyMatCode} value={item.bodyMatCode}>
-                          {item.bodyMat}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="spec-item-detail">
-                    <label>Size Body:</label>
-                    <div className="size-input-group-detail">
-                      <select value={bodySelections.sizeBodyUnitCode} onChange={(e) => {
-                        handleBodyChange('sizeBodyUnit', e.target.value);
-                        handleBodyChange('sizeBodyUnitCode', e.target.value);
-                      }} disabled={isReadOnly}>
-                        <option value="">Unit 선택</option>
-                        {bodySizeUnits && bodySizeUnits.length > 0 && 
-                          bodySizeUnits.map((unit: any) => (
-                            <option key={unit.unitCode} value={unit.unitCode}>
-                              {unit.unitName}
+                <table className="body-properties-table">
+                  <tbody>
+                    <tr>
+                      <td>Bonnet Type</td>
+                      <td>
+                        <select value={bodySelections.bonnetType} onChange={(e) => handleBodyChange('bonnetType', e.target.value)} disabled={isReadOnly}>
+                          <option value="">선택하세요</option>
+                          {bodyBonnetList && bodyBonnetList.length > 0 && bodyBonnetList.map((item: any) => (
+                            <option key={item.bonnetCode} value={item.bonnetCode}>
+                              {item.bonnet}
                             </option>
-                          ))
-                        }
-                      </select>
-                      <select value={bodySelections.sizeBodyCode} onChange={(e) => {
-                        const selectedItem = bodySizeList.find(item => item.bodySizeCode === e.target.value);
-                        if (selectedItem) {
-                          handleBodyChange('sizeBody', selectedItem.bodySize);
-                          handleBodyChange('sizeBodyCode', selectedItem.bodySizeCode);
-                        }
-                      }} disabled={!bodySelections.sizeBodyUnit || isReadOnly}>
-                        <option value="">값 선택</option>
-                        {bodySelections.sizeBodyUnit && bodySizeList && bodySizeList.length > 0 && 
-                          bodySizeList
-                            .filter(item => item.sizeUnitCode === bodySelections.sizeBodyUnit)
-                            .map((item: any) => (
-                              <option key={item.bodySizeCode} value={item.bodySizeCode}>
-                                {item.bodySize} ({item.sizeUnit})
-                              </option>
-                            ))
-                        }
-                      </select>
-                    </div>
-                  </div>
-                  <div className="spec-item-detail">
-                    <label>Rating:</label>
-                    <div className="rating-input-group-detail">
-                      <select value={bodySelections.ratingUnit} onChange={(e) => {
-                        const selectedUnit = bodyRatingList.find(item => item.ratingUnit === e.target.value);
-                        if (selectedUnit) {
-                          handleBodyChange('ratingUnit', selectedUnit.ratingUnit);
-                          handleBodyChange('ratingUnitCode', selectedUnit.ratingUnitCode);
-                        }
-                      }} disabled={isReadOnly}>
-                        <option value="">Unit 선택</option>
-                        {bodyRatingList && bodyRatingList.length > 0 && 
-                          bodyRatingList
-                            .map(item => item.ratingUnit)
-                            .filter((unit, index, arr) => arr.indexOf(unit) === index)
-                            .map((unit: string) => (
-                              <option key={unit} value={unit}>
-                                {unit}
-                              </option>
-                            ))
-                        }
-                      </select>
-                      <select value={bodySelections.ratingCode} onChange={(e) => {
-                        const selectedItem = bodyRatingList.find(item => item.ratingCode === e.target.value);
-                        if (selectedItem) {
-                          handleBodyChange('rating', selectedItem.ratingName);
-                          handleBodyChange('ratingCode', selectedItem.ratingCode);
-                        }
-                      }} disabled={!bodySelections.ratingUnitCode || isReadOnly}>
-                        <option value="">값 선택</option>
-                        {bodySelections.ratingUnit && bodyRatingList && bodyRatingList.length > 0 && 
-                          bodyRatingList
-                            .filter(item => item.ratingUnit === bodySelections.ratingUnit)
-                            .map((item: any) => (
-                              <option key={item.ratingCode} value={item.ratingCode}>
-                                {item.ratingName}
-                              </option>
-                            ))
-                        }
-                      </select>
-                    </div>
-                  </div>
-                  <div className="spec-item-detail">
-                    <label>Connection:</label>
-                    <select value={bodySelections.connection} onChange={(e) => handleBodyChange('connection', e.target.value)} disabled={isReadOnly}>
-                      <option value="">선택하세요</option>
-                      {bodyConnectionList && bodyConnectionList.length > 0 && bodyConnectionList.map((item: any) => (
-                        <option key={item.connectionCode} value={item.connectionCode}>
-                          {item.connection}
-                        </option>
-                      ))}
-                    </select>
-                    </div>
-                </div>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Material Body</td>
+                      <td>
+                        <select value={bodySelections.materialBody} onChange={(e) => handleBodyChange('materialBody', e.target.value)} disabled={isReadOnly}>
+                          <option value="">선택하세요</option>
+                          {bodyMatList && bodyMatList.length > 0 && bodyMatList.map((item: any) => (
+                            <option key={item.bodyMatCode} value={item.bodyMatCode}>
+                              {item.bodyMat}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Size Body</td>
+                      <td>
+                        <div className="size-selection-group">
+                          <select value={bodySelections.sizeBodyUnitCode} onChange={(e) => {
+                            handleBodyChange('sizeBodyUnit', e.target.value);
+                            handleBodyChange('sizeBodyUnitCode', e.target.value);
+                          }} disabled={isReadOnly}>
+                            <option value="">Unit 선택</option>
+                            {bodySizeUnits && bodySizeUnits.length > 0 && 
+                              bodySizeUnits.map((unit: any) => (
+                                <option key={unit.unitCode} value={unit.unitCode}>
+                                  {unit.unitName}
+                                </option>
+                              ))
+                            }
+                          </select>
+                          <select value={bodySelections.sizeBodyCode} onChange={(e) => {
+                            const selectedItem = bodySizeList.find(item => item.bodySizeCode === e.target.value);
+                            if (selectedItem) {
+                              handleBodyChange('sizeBody', selectedItem.bodySize);
+                              handleBodyChange('sizeBodyCode', selectedItem.bodySizeCode);
+                            }
+                          }} disabled={!bodySelections.sizeBodyUnit || isReadOnly}>
+                            <option value="">값 선택</option>
+                            {bodySelections.sizeBodyUnit && bodySizeList && bodySizeList.length > 0 && 
+                              bodySizeList
+                                .filter(item => item.sizeUnitCode === bodySelections.sizeBodyUnit)
+                                .map((item: any) => (
+                                  <option key={item.bodySizeCode} value={item.bodySizeCode}>
+                                    {item.bodySize} ({item.sizeUnit})
+                                  </option>
+                                ))
+                            }
+                          </select>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Rating</td>
+                      <td>
+                        <div className="rating-selection-group">
+                          <select value={bodySelections.ratingUnit} onChange={(e) => {
+                            const selectedUnit = bodyRatingList.find(item => item.ratingUnit === e.target.value);
+                            if (selectedUnit) {
+                              handleBodyChange('ratingUnit', selectedUnit.ratingUnit);
+                              handleBodyChange('ratingUnitCode', selectedUnit.ratingUnitCode);
+                            }
+                          }} disabled={isReadOnly}>
+                            <option value="">Unit 선택</option>
+                            {bodyRatingList && bodyRatingList.length > 0 && 
+                              bodyRatingList
+                                .map(item => item.ratingUnit)
+                                .filter((unit, index, arr) => arr.indexOf(unit) === index)
+                                .map((unit: string) => (
+                                  <option key={unit} value={unit}>
+                                    {unit}
+                                  </option>
+                                ))
+                            }
+                          </select>
+                          <select value={bodySelections.ratingCode} onChange={(e) => {
+                            const selectedItem = bodyRatingList.find(item => item.ratingCode === e.target.value);
+                            if (selectedItem) {
+                              handleBodyChange('rating', selectedItem.ratingName);
+                              handleBodyChange('ratingCode', selectedItem.ratingCode);
+                            }
+                          }} disabled={!bodySelections.ratingUnitCode || isReadOnly}>
+                            <option value="">값 선택</option>
+                            {bodySelections.ratingUnit && bodyRatingList && bodyRatingList.length > 0 && 
+                              bodyRatingList
+                                .filter(item => item.ratingUnit === bodySelections.ratingUnit)
+                                .map((item: any) => (
+                                  <option key={item.ratingCode} value={item.ratingCode}>
+                                    {item.ratingName}
+                                  </option>
+                                ))
+                            }
+                          </select>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Connection</td>
+                      <td>
+                        <select value={bodySelections.connection} onChange={(e) => handleBodyChange('connection', e.target.value)} disabled={isReadOnly}>
+                          <option value="">선택하세요</option>
+                          {bodyConnectionList && bodyConnectionList.length > 0 && bodyConnectionList.map((item: any) => (
+                            <option key={item.connectionCode} value={item.connectionCode}>
+                              {item.connection}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
 
               {/* Trim 섹션 */}
               <div className="spec-section-detail">
                 <h4>Trim</h4>
-                <div className="spec-grid-detail">
-                  <div className="spec-item-detail">
-                    <label>Trim Type:</label>
-                    <select value={trimSelections.trimType} onChange={(e) => handleTrimChange('trimType', e.target.value)} disabled={isReadOnly}>
-                      <option value="">선택하세요</option>
-                      {trimTypeList && trimTypeList.length > 0 && trimTypeList.map((item: any) => (
-                        <option key={item.trimTypeCode} value={item.trimTypeCode}>
-                          {item.trimType}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="spec-item-detail">
-                    <label>Trim Series:</label>
-                    <select value={trimSelections.trimSeries} onChange={(e) => handleTrimChange('trimSeries', e.target.value)} disabled={isReadOnly}>
-                      <option value="">선택하세요</option>
-                      {trimSeriesList && trimSeriesList.length > 0 && trimSeriesList.map((item: any) => (
-                        <option key={item.trimSeriesCode} value={item.trimSeriesCode}>
-                          {item.trimSeries}
-                        </option>
-                        ))}
-                      </select>
-                  </div>
-                  <div className="spec-item-detail">
-                    <label>Material Trim:</label>
-                    <select value={trimSelections.materialTrim} onChange={(e) => handleTrimChange('materialTrim', e.target.value)} disabled={isReadOnly}>
-                      <option value="">선택하세요</option>
-                      {trimMatList && trimMatList.length > 0 && trimMatList.map((item: any) => (
-                        <option key={item.trimMatCode} value={item.trimMatCode}>
-                          {item.trimMat}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="spec-item-detail">
-                    <label>Option:</label>
-                    <select value={trimSelections.option} onChange={(e) => handleTrimChange('option', e.target.value)} disabled={isReadOnly}>
-                      <option value="">선택하세요</option>
-                      {trimOptionList && trimOptionList.length > 0 && trimOptionList.map((item: any) => (
-                        <option key={item.trimOptionCode} value={item.trimOptionCode}>
-                          {item.trimOption}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="spec-item-detail">
-                    <label>Size Port:</label>
-                    <div className="size-input-group-detail">
-                      <select value={trimSelections.sizePortUnitCode} onChange={(e) => {
-                        handleTrimChange('sizePortUnit', e.target.value);
-                        handleTrimChange('sizePortUnitCode', e.target.value);
-                      }} disabled={isReadOnly}>
-                        <option value="">Unit 선택</option>
-                        {trimPortSizeList && trimPortSizeList.length > 0 && 
-                          trimPortSizeList
-                            .map(item => ({ unitCode: item.unitCode, unitName: item.unitName }))
-                            .filter((item, index, arr) => arr.findIndex(x => x.unitCode === item.unitCode) === index)
-                            .map((item: any) => (
-                              <option key={item.unitCode} value={item.unitCode}>
-                                {item.unitName}
-                              </option>
-                            ))
-                        }
-                      </select>
-                      <select value={trimSelections.sizePortCode} onChange={(e) => {
-                        const selectedItem = trimPortSizeList.find(item => item.portSizeCode === e.target.value);
-                        if (selectedItem) {
-                          handleTrimChange('sizePort', selectedItem.portSize);
-                          handleTrimChange('sizePortCode', selectedItem.portSizeCode);
-                        }
-                      }} disabled={!trimSelections.sizePortUnit || isReadOnly}>
-                        <option value="">값 선택</option>
-                        {trimSelections.sizePortUnit && trimPortSizeList && trimPortSizeList.length > 0 && 
-                          trimPortSizeList
-                            .filter(item => item.unitCode === trimSelections.sizePortUnit)
-                            .map((item: any) => (
-                                                              <option key={item.portSizeCode} value={item.portSizeCode}>
-                                  {item.portSize} ({item.unitName})
-                                </option>
-                            ))
-                        }
-                      </select>
-                    </div>
-                  </div>
-                  <div className="spec-item-detail">
-                    <label>Form:</label>
-                    <select value={trimSelections.form} onChange={(e) => handleTrimChange('form', e.target.value)} disabled={isReadOnly}>
-                      <option value="">선택하세요</option>
-                      {trimFormList && trimFormList.length > 0 && trimFormList.map((item: any) => (
-                        <option key={item.trimFormCode} value={item.trimFormCode}>
-                          {item.trimForm}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+                <table className="trim-properties-table">
+                  <tbody>
+                    <tr>
+                      <td>Trim Type</td>
+                      <td>
+                        <select value={trimSelections.trimType} onChange={(e) => handleTrimChange('trimType', e.target.value)} disabled={isReadOnly}>
+                          <option value="">선택하세요</option>
+                          {trimTypeList && trimTypeList.length > 0 && trimTypeList.map((item: any) => (
+                            <option key={item.trimTypeCode} value={item.trimTypeCode}>
+                              {item.trimType}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Trim Series</td>
+                      <td>
+                        <select value={trimSelections.trimSeries} onChange={(e) => handleTrimChange('trimSeries', e.target.value)} disabled={isReadOnly}>
+                          <option value="">선택하세요</option>
+                          {trimSeriesList && trimSeriesList.length > 0 && trimSeriesList.map((item: any) => (
+                            <option key={item.trimSeriesCode} value={item.trimSeriesCode}>
+                              {item.trimSeries}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Material Trim</td>
+                      <td>
+                        <select value={trimSelections.materialTrim} onChange={(e) => handleTrimChange('materialTrim', e.target.value)} disabled={isReadOnly}>
+                          <option value="">선택하세요</option>
+                          {trimMatList && trimMatList.length > 0 && trimMatList.map((item: any) => (
+                            <option key={item.trimMatCode} value={item.trimMatCode}>
+                              {item.trimMat}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Option</td>
+                      <td>
+                        <select value={trimSelections.option} onChange={(e) => handleTrimChange('option', e.target.value)} disabled={isReadOnly}>
+                          <option value="">선택하세요</option>
+                          {trimOptionList && trimOptionList.length > 0 && trimOptionList.map((item: any) => (
+                            <option key={item.trimOptionCode} value={item.trimOptionCode}>
+                              {item.trimOption}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Size Port</td>
+                      <td>
+                        <div className="size-selection-group">
+                          <select value={trimSelections.sizePortUnitCode} onChange={(e) => {
+                            handleTrimChange('sizePortUnit', e.target.value);
+                            handleTrimChange('sizePortUnitCode', e.target.value);
+                          }} disabled={isReadOnly}>
+                            <option value="">Unit 선택</option>
+                            {trimPortSizeList && trimPortSizeList.length > 0 && 
+                              trimPortSizeList
+                                .map(item => ({ unitCode: item.unitCode, unitName: item.unitName }))
+                                .filter((item, index, arr) => arr.findIndex(x => x.unitCode === item.unitCode) === index)
+                                .map((item: any) => (
+                                  <option key={item.unitCode} value={item.unitCode}>
+                                    {item.unitName}
+                                  </option>
+                                ))
+                            }
+                          </select>
+                          <select value={trimSelections.sizePortCode} onChange={(e) => {
+                            const selectedItem = trimPortSizeList.find(item => item.portSizeCode === e.target.value);
+                            if (selectedItem) {
+                              handleTrimChange('sizePort', selectedItem.portSize);
+                              handleTrimChange('sizePortCode', selectedItem.portSizeCode);
+                            }
+                          }} disabled={!trimSelections.sizePortUnit || isReadOnly}>
+                            <option value="">값 선택</option>
+                            {trimSelections.sizePortUnit && trimPortSizeList && trimPortSizeList.length > 0 && 
+                              trimPortSizeList
+                                .filter(item => item.unitCode === trimSelections.sizePortUnit)
+                                .map((item: any) => (
+                                  <option key={item.portSizeCode} value={item.portSizeCode}>
+                                    {item.portSize} ({item.unitName})
+                                  </option>
+                                ))
+                            }
+                          </select>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Form</td>
+                      <td>
+                        <select value={trimSelections.form} onChange={(e) => handleTrimChange('form', e.target.value)} disabled={isReadOnly}>
+                          <option value="">선택하세요</option>
+                          {trimFormList && trimFormList.length > 0 && trimFormList.map((item: any) => (
+                            <option key={item.trimFormCode} value={item.trimFormCode}>
+                              {item.trimForm}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
 
               {/* ACT 섹션 */}
               <div className="spec-section-detail">
                 <h4>ACT</h4>
-                <div className="spec-grid-detail">
-                  <div className="spec-item-detail">
-                    <label>Action Type:</label>
-                    <select value={actSelections.actionType} onChange={(e) => handleActChange('actionType', e.target.value)} disabled={isReadOnly}>
-                      <option value="">선택하세요</option>
-                      {actTypeList && actTypeList.length > 0 && actTypeList.map((item: any) => (
-                        <option key={item.actTypeCode} value={item.actTypeCode}>
-                          {item.actType}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="spec-item-detail">
-                    <label>Series:</label>
-                    <select value={actSelections.series} onChange={(e) => handleActChange('series', e.target.value)} disabled={isReadOnly}>
-                      <option value="">선택하세요</option>
-                      {actSeriesList && actSeriesList.length > 0 && actSeriesList.map((item: any) => (
-                        <option key={item.actSeriesCode} value={item.actSeriesCode}>
-                          {item.actSeries}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="spec-item-detail">
-                    <label>Size:</label>
-                    <select value={actSelections.size} onChange={(e) => handleActChange('size', e.target.value)} disabled={!actSelections.series || isReadOnly}>
-                      <option value="">선택하세요</option>
-                      {actSizeList && actSizeList.length > 0 && 
-                        actSizeList.map((item: any) => (
-                          <option key={item.actSizeCode} value={item.actSizeCode}>
-                            {item.actSize} {/* actSizeName -> actSize로 변경 */}
-                          </option>
-                        ))
-                      }
-                    </select>
-                  </div>
-                  <div className="spec-item-detail">
-                    <label>H.W:</label>
-                    <select value={actSelections.hw} onChange={(e) => handleActChange('hw', e.target.value)} disabled={isReadOnly}>
-                      <option value="">선택하세요</option>
-                      {actHWList && actHWList.length > 0 && actHWList.map((item: any) => (
-                        <option key={item.hwCode} value={item.hwCode}>
-                          {item.hw}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* ACC 섹션 - 사진과 동일한 3열 구조로 변경 */}
-            <div className="acc-section-detail">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <h4>ACC</h4>
-                <button 
-                  onClick={async () => {
-                    console.log('악세사리 데이터 강제 리로드 시작...');
-                    const success = await fetchAccessoryData();
-                    if (success) {
-                      alert('악세사리 데이터가 성공적으로 로드되었습니다!');
-                    } else {
-                      alert('악세사리 데이터 로드에 실패했습니다. 다시 시도해주세요.');
-                    }
-                  }}
-                  style={{
-                    padding: '8px 16px',
-                    backgroundColor: '#007bff',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '12px'
-                  }}
-                  title="악세사리 데이터 강제 리로드"
-                >
-                  🔄 악세사리 리로드
-                </button>
-                <span style={{ fontSize: '11px', color: '#666', marginLeft: '10px' }}>
-                  메이커: {accMakerList.length}개, 모델: {accModelList.length}개
-                </span>
-              </div>
-              <div className="acc-table-detail">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>선택목록</th>
-                      <th>메이커</th>
-                      <th>모델명</th>
-                      <th>규격</th>
-                    </tr>
-                  </thead>
+                <table className="act-properties-table">
                   <tbody>
-                  <tr>
-                            <td>Positioner</td>
-                            <td className="acc-options-group-detail" colSpan={3}>
-                              <AccessorySelector
-                                accTypeKey="positioner"
-                                typeCode="Positioner"
-                                currentAcc={accSelections.positioner}
-                                accMakerList={accMakerListByType.Positioner || []}
-                                accModelList={accModelListByType.Positioner || []}
-                                onAccessoryChange={(accessory) => handleAccessoryChange('positioner', accessory)}
-                                isReadOnly={isReadOnly}
-                              />
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>Solenoid Valve</td>
-                            <td className="acc-options-group-detail" colSpan={3}>
-                              <AccessorySelector
-                                accTypeKey="solenoid"
-                                typeCode="Solenoid"
-                                currentAcc={accSelections.solenoid}
-                                accMakerList={accMakerListByType.Solenoid || []}
-                                accModelList={accModelListByType.Solenoid || []}
-                                onAccessoryChange={(accessory) => handleAccessoryChange('solenoid', accessory)}
-                                isReadOnly={isReadOnly}
-                              />
-                            </td>
-                          </tr>
                     <tr>
-                    <td>Limit Switch</td>
-                            <td className="acc-options-group-detail" colSpan={3}>
-                              <AccessorySelector
-                                accTypeKey="limiter"
-                                typeCode="Limit"
-                                currentAcc={accSelections.limiter}
-                                accMakerList={accMakerListByType.Limit || []}
-                                accModelList={accModelListByType.Limit || []}
-                                onAccessoryChange={(accessory) => handleAccessoryChange('limiter', accessory)}
-                                isReadOnly={isReadOnly}
-                              />
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>Air Set</td>
-                            <td className="acc-options-group-detail" colSpan={3}>
-                              <AccessorySelector
-                                accTypeKey="airSupply"
-                                typeCode="Airset"
-                                currentAcc={accSelections.airSupply}
-                                accMakerList={accMakerListByType.Airset || []}
-                                accModelList={accModelListByType.Airset || []}
-                                onAccessoryChange={(accessory) => handleAccessoryChange('airSupply', accessory)}
-                                isReadOnly={isReadOnly}
-                              />
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>Volume Booster</td>
-                            <td className="acc-options-group-detail" colSpan={3}>
-                              <AccessorySelector
-                                accTypeKey="volumeBooster"
-                                typeCode="Volume"
-                                currentAcc={accSelections.volumeBooster}
-                                accMakerList={accMakerListByType.Volume || []}
-                                accModelList={accModelListByType.Volume || []}
-                                onAccessoryChange={(accessory) => handleAccessoryChange('volumeBooster', accessory)}
-                                isReadOnly={isReadOnly}
-                              />
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>Air Operated Valve</td>
-                            <td className="acc-options-group-detail" colSpan={3}>
-                              <AccessorySelector
-                                accTypeKey="airOperator"
-                                typeCode="Airoperate"
-                                currentAcc={accSelections.airOperator}
-                                accMakerList={accMakerListByType.Airoperate || []}
-                                accModelList={accModelListByType.Airoperate || []}
-                                onAccessoryChange={(accessory) => handleAccessoryChange('airOperator', accessory)}
-                                isReadOnly={isReadOnly}
-                              />
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>Lock-Up Valve</td>
-                            <td className="acc-options-group-detail" colSpan={3}>
-                              <AccessorySelector
-                                accTypeKey="lockUp"
-                                typeCode="Lockup"
-                                currentAcc={accSelections.lockUp}
-                                accMakerList={accMakerListByType.Lockup || []}
-                                accModelList={accModelListByType.Lockup || []}
-                                onAccessoryChange={(accessory) => handleAccessoryChange('lockUp', accessory)}
-                                isReadOnly={isReadOnly}
-                              />
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>Snap Acting Relay</td>
-                            <td className="acc-options-group-detail" colSpan={3}>
-                              <AccessorySelector
-                                accTypeKey="snapActingRelay"
-                                typeCode="Snapacting"
-                                currentAcc={accSelections.snapActingRelay}
-                                accMakerList={accMakerListByType.Snapacting || []}
-                                accModelList={accModelListByType.Snapacting || []}
-                                onAccessoryChange={(accessory) => handleAccessoryChange('snapActingRelay', accessory)}
-                                isReadOnly={isReadOnly}
-                              />
-                            </td>
-                          </tr>
+                      <td>Action Type</td>
+                      <td>
+                        <select value={actSelections.actionType} onChange={(e) => handleActChange('actionType', e.target.value)} disabled={isReadOnly}>
+                          <option value="">선택하세요</option>
+                          {actTypeList && actTypeList.length > 0 && actTypeList.map((item: any) => (
+                            <option key={item.actTypeCode} value={item.actTypeCode}>
+                              {item.actType}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Series</td>
+                      <td>
+                        <select value={actSelections.series} onChange={(e) => handleActChange('series', e.target.value)} disabled={isReadOnly}>
+                          <option value="">선택하세요</option>
+                          {actSeriesList && actSeriesList.length > 0 && actSeriesList.map((item: any) => (
+                            <option key={item.actSeriesCode} value={item.actSeriesCode}>
+                              {item.actSeries}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Size</td>
+                      <td>
+                        <select value={actSelections.size} onChange={(e) => handleActChange('size', e.target.value)} disabled={!actSelections.series || isReadOnly}>
+                          <option value="">선택하세요</option>
+                          {actSizeList && actSizeList.length > 0 && 
+                            actSizeList.map((item: any) => (
+                              <option key={item.actSizeCode} value={item.actSizeCode}>
+                                {item.actSize}
+                              </option>
+                            ))
+                          }
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>H.W</td>
+                      <td>
+                        <select value={actSelections.hw} onChange={(e) => handleActChange('hw', e.target.value)} disabled={isReadOnly}>
+                          <option value="">선택하세요</option>
+                          {actHWList && actHWList.length > 0 && actHWList.map((item: any) => (
+                            <option key={item.hwCode} value={item.hwCode}>
+                              {item.hw}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
+              </div>
+
+              {/* ACC 섹션 */}
+              <div className="spec-section-detail acc-section-detail">
+                  <h4>ACC</h4>
+                  <table className="acc-properties-table">
+                    <tbody>
+                      <tr>
+                        <td>Positioner</td>
+                        <td>
+                          <AccessorySelector
+                            accTypeKey="positioner"
+                            typeCode="Positioner"
+                            currentAcc={accSelections.positioner}
+                            accMakerList={accMakerListByType.Positioner || []}
+                            accModelList={accModelListByType.Positioner || []}
+                            onAccessoryChange={(accessory) => handleAccessoryChange('positioner', accessory)}
+                            isReadOnly={isReadOnly}
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Solenoid Valve</td>
+                        <td>
+                          <AccessorySelector
+                            accTypeKey="solenoid"
+                            typeCode="Solenoid"
+                            currentAcc={accSelections.solenoid}
+                            accMakerList={accMakerListByType.Solenoid || []}
+                            accModelList={accModelListByType.Solenoid || []}
+                            onAccessoryChange={(accessory) => handleAccessoryChange('solenoid', accessory)}
+                            isReadOnly={isReadOnly}
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Limit Switch</td>
+                        <td>
+                          <AccessorySelector
+                            accTypeKey="limiter"
+                            typeCode="Limit"
+                            currentAcc={accSelections.limiter}
+                            accMakerList={accMakerListByType.Limit || []}
+                            accModelList={accModelListByType.Limit || []}
+                            onAccessoryChange={(accessory) => handleAccessoryChange('limiter', accessory)}
+                            isReadOnly={isReadOnly}
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Air Set</td>
+                        <td>
+                          <AccessorySelector
+                            accTypeKey="airSupply"
+                            typeCode="Airset"
+                            currentAcc={accSelections.airSupply}
+                            accMakerList={accMakerListByType.Airset || []}
+                            accModelList={accModelListByType.Airset || []}
+                            onAccessoryChange={(accessory) => handleAccessoryChange('airSupply', accessory)}
+                            isReadOnly={isReadOnly}
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Volume Booster</td>
+                        <td>
+                          <AccessorySelector
+                            accTypeKey="volumeBooster"
+                            typeCode="Volume"
+                            currentAcc={accSelections.volumeBooster}
+                            accMakerList={accMakerListByType.Volume || []}
+                            accModelList={accModelListByType.Volume || []}
+                            onAccessoryChange={(accessory) => handleAccessoryChange('volumeBooster', accessory)}
+                            isReadOnly={isReadOnly}
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Air Operated Valve</td>
+                        <td>
+                          <AccessorySelector
+                            accTypeKey="airOperator"
+                            typeCode="Airoperate"
+                            currentAcc={accSelections.airOperator}
+                            accMakerList={accMakerListByType.Airoperate || []}
+                            accModelList={accModelListByType.Airoperate || []}
+                            onAccessoryChange={(accessory) => handleAccessoryChange('airOperator', accessory)}
+                            isReadOnly={isReadOnly}
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Lock-Up Valve</td>
+                        <td>
+                          <AccessorySelector
+                            accTypeKey="lockUp"
+                            typeCode="Lockup"
+                            currentAcc={accSelections.lockUp}
+                            accMakerList={accMakerListByType.Lockup || []}
+                            accModelList={accModelListByType.Lockup || []}
+                            onAccessoryChange={(accessory) => handleAccessoryChange('lockUp', accessory)}
+                            isReadOnly={isReadOnly}
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>Snap Acting Relay</td>
+                        <td>
+                          <AccessorySelector
+                            accTypeKey="snapActingRelay"
+                            typeCode="Snapacting"
+                            currentAcc={accSelections.snapActingRelay}
+                            accMakerList={accMakerListByType.Snapacting || []}
+                            accModelList={accModelListByType.Snapacting || []}
+                            onAccessoryChange={(accessory) => handleAccessoryChange('snapActingRelay', accessory)}
+                            isReadOnly={isReadOnly}
+                          />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  
+                  {/* 악세사리 재로딩 버튼 */}
+                  <div className="acc-reload-section">
+                    <button 
+                      type="button" 
+                      className="btn btn-primary acc-reload-btn"
+                      onClick={handleAccReload}
+                      disabled={isReadOnly}
+                    >
+                      <span className="refresh-icon">🔄</span>
+                      악세사리
+                    </button>
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>

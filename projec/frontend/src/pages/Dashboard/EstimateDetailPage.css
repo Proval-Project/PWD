@@ -482,9 +482,35 @@
   margin-right: 10px;
 }
 
-.estimate-detail-page .type-count-detail, 
-.estimate-detail-page .valve-qty-detail {
+/* 숫자 표시 스타일 - NewEstimateRequestPage와 동일 */
+.estimate-detail-page .type-count-detail {
+  width: 80px;
+  padding: 6px 8px; /* 패딩 증가 */
+  border: 1px solid #ced4da;
+  border-radius: 3px;
+  font-size: 14px !important; /* 글씨 크기 조금 작게 */
+  font-weight: 700 !important; /* 글씨 더 굵게 */
+  height: 32px !important; /* 높이 증가 */
+  min-height: 32px !important;
   color: #6c757d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.estimate-detail-page .valve-qty-detail {
+  width: 60px;
+  padding: 6px 8px;
+  border: 1px solid #ced4da;
+  border-radius: 3px;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .estimate-detail-page .specification-content-detail {
@@ -511,7 +537,7 @@
 }
 
 .estimate-detail-page .spec-section-detail {
-  background: #f8f9fa;
+  background: white !important;
   padding: 0px;
   border-radius: 6px;
   border: 1px solid #dee2e6;
@@ -574,11 +600,12 @@
 }
 
 .estimate-detail-page .spec-section-detail h4 {
-  margin: 0 0 0px 0;
-  color: #495057;
-  border-bottom: 1px solid #007bff;
-  padding-bottom: 0px;
-  font-size: 8px;
+  margin: 0 0 10px 0 !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: #111827 !important;
+  border-bottom: none !important;
+  padding-bottom: 0px !important;
 }
 
 .estimate-detail-page .acc-section-detail {
@@ -590,12 +617,12 @@
 }
 
 .estimate-detail-page .acc-section-detail h4 {
-  margin: 0 0 0px 0;
-  color: #495057;
-  font-size: 8px;
-  font-weight: bold;
-  border-bottom: 1px solid #007bff;
-  padding-bottom: 0px;
+  margin: 0 0 10px 0 !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: #111827 !important;
+  border-bottom: none !important;
+  padding-bottom: 0px !important;
 }
 
 .estimate-detail-page .acc-grid-detail {
@@ -1138,15 +1165,65 @@
 
 .type-item-detail {
   display: flex;
-  justify-content: space-between;
+  gap: 10px;
   align-items: center;
-  padding: 12px 16px;
-  margin: 8px 0;
-  background: #f8f9fa;
-  border: 2px solid transparent;
-  border-radius: 6px;
-  cursor: pointer;
+  padding: 20px 24px 20px 32px; /* 패딩 증가로 크기 확대, 왼쪽 패딩 더 늘림 */
+  background: #e9e9eb;                 /* 기본 회색 배경 */
+  border-radius: 30px;                  /* 더 둥근 모서리 */
+  border: 1px solid #e5e7eb;
+  position: relative;
   transition: all 0.2s ease;
+  min-height: 60px; /* 최소 높이 설정 */
+  font-size: 18px !important; /* 글씨 크기 더 크게 */
+  font-weight: 700 !important; /* 글씨 더 굵게 */
+  margin: 8px 0;
+  cursor: pointer;
+}
+
+/* 더 구체적인 선택자로 강제 적용 */
+.estimate-detail-page .type-item-detail {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+  padding: 20px 24px 20px 20px !important;
+}
+
+.estimate-detail-page .type-item-detail span {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+}
+
+/* 최고 우선순위로 강제 적용 */
+div.type-item-detail {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  border-radius: 30px !important;
+  padding: 20px 24px 20px 32px !important;
+}
+
+div.type-item-detail span {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+}
+
+/* 인라인 스타일보다 우선 적용 */
+.type-item-detail[class*="type-item-detail"] {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+}
+
+.type-item-detail[class*="type-item-detail"] span {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+}
+
+/* 모든 가능한 선택자로 강제 적용 */
+.estimate-detail-page .step-subsection .type-item-detail,
+.estimate-detail-page .step-subsection .type-item-detail span,
+.estimate-detail-page .type-list-detail .type-item-detail,
+.estimate-detail-page .type-list-detail .type-item-detail span {
+  font-size: 18px !important;
+  font-weight: 700 !important;
 }
 
 .type-item-detail:hover {
@@ -1154,14 +1231,15 @@
   border-color: #dee2e6;
 }
 
-.type-item-detail.selected {
-  background: #007bff;
-  color: white;
-  border-color: #0056b3;
+.type-item-detail.selected {                     /* 선택 시 꽉 찬 파란색 바 */
+  background: #2639ff !important;
+  color: #ffffff !important;
+  border: 1px solid #2639ff !important;
+  box-shadow: none !important;
 }
 
 .type-item-detail.selected:hover {
-  background: #0056b3;
+  background: #2639ff !important;
 }
 
 .no-type-selected {
@@ -1180,15 +1258,18 @@
 
 .valve-item-detail {
   display: flex;
-  justify-content: space-between;
+  gap: 10px;
   align-items: center;
-  padding: 10px 14px;
-  margin: 6px 0;
-  background: #f8f9fa;
-  border: 2px solid transparent;
-  border-radius: 6px;
+  padding: 20px 24px 20px 32px; /* 패딩 증가로 크기 확대, 왼쪽 패딩 더 늘림 */
+  background: #e9e9eb;                 /* 기본 회색 배경 */
+  border-radius: 16px;                  /* 더 둥근 모서리 */
+  border: 1px solid #e5e7eb;
+  margin-bottom: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
+  min-height: 60px; /* 최소 높이 설정 */
+  font-size: 18px !important; /* 글씨 크기 더 크게 */
+  font-weight: 700 !important; /* 글씨 더 굵게 */
 }
 
 .valve-item-detail:hover {
@@ -1196,14 +1277,61 @@
   border-color: #dee2e6;
 }
 
-.valve-item-detail.selected {
-  background: #28a745;
-  color: white;
-  border-color: #218838;
+.valve-item-detail.selected {                    /* 선택 시 꽉 찬 파란색 바 */
+  background: #2639ff !important;
+  color: #ffffff !important;
+  border: 1px solid #2639ff !important;
+  box-shadow: none !important;
 }
 
 .valve-item-detail.selected:hover {
-  background: #218838;
+  background: #2639ff !important;
+}
+
+/* 더 구체적인 선택자로 강제 적용 */
+.estimate-detail-page .valve-item-detail {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+  padding: 20px 24px 20px 20px !important;
+}
+
+.estimate-detail-page .valve-item-detail span {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+}
+
+/* 최고 우선순위로 강제 적용 */
+div.valve-item-detail {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  border-radius: 30px !important;
+  padding: 20px 24px 20px 32px !important;
+}
+
+div.valve-item-detail span {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+}
+
+/* 인라인 스타일보다 우선 적용 */
+.valve-item-detail[class*="valve-item-detail"] {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+}
+
+.valve-item-detail[class*="valve-item-detail"] span {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+}
+
+/* 모든 가능한 선택자로 강제 적용 */
+.estimate-detail-page .step-subsection .valve-item-detail,
+.estimate-detail-page .step-subsection .valve-item-detail span,
+.estimate-detail-page .valve-list-detail .valve-item-detail,
+.estimate-detail-page .valve-list-detail .valve-item-detail span {
+  font-size: 18px !important;
+  font-weight: 700 !important;
 }
 
 /* AccessorySelector 컴포넌트 스타일 */
@@ -1932,7 +2060,7 @@
   position: static;
   width: 100%;
   display: flex;
-  gap: 12px;                         /* 요소 간격 확장 */
+  gap: 20px;                         /* 요소 간격 확장 */
   align-items: flex-start;            /* 높이 강제 동일화 제거 */
   margin-top: 6px;                    /* 타이틀과 추가 간격 */
   margin-bottom: 16px;                /* 아래 간격 */
@@ -2339,3 +2467,491 @@
 /* 강제 타이포 고정: 다른 CSS가 뒤에서 덮어써도 유지되도록 파일 하단에 한 번 더 */
 .mini-tools-panel .estimate-summary-card .summary-row .k,
 .mini-tools-panel .estimate-summary-card .summary-row .v { font-size: 14px !important; }
+
+/* EstimateDetailPage 전용 Step 헤더 디자인 - NewEstimateRequestPage와 동일 */
+.estimate-detail-page .step-header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  min-height: 50px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Step 1 컨테이너 배경 제거 */
+.estimate-detail-page .step-subsection-detail {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 8px !important;
+}
+
+/* step-section-detail 패딩 제거 */
+.estimate-detail-page .step-section-detail {
+  padding: 0 !important;
+}
+
+/* Step 컨테이너들을 가로로 배치 */
+.estimate-detail-page .steps-horizontal-container {
+  display: flex !important;
+  gap: 3px !important;
+  align-items: flex-start !important;
+}
+
+/* Step 3 specification-grid 가로 스크롤 - NewEstimateRequestPage와 동일 */
+.estimate-detail-page .specification-grid-detail {
+  display: flex !important;
+  gap: 12px !important;
+  overflow-x: auto !important;
+  flex-wrap: nowrap !important;
+  padding-bottom: 10px !important;
+  width: 100% !important;
+}
+
+/* BODY 표 디자인 - NewEstimateRequestPage와 완전히 동일 (높은 우선순위) */
+.estimate-detail-page .spec-section-detail .body-properties-table {
+  width: 100% !important;
+  max-width: 500px !important; /* 최대 너비 제한 */
+  border-collapse: collapse !important;
+  border-radius: 4px !important;
+  overflow: hidden !important;
+  margin-bottom: 10px !important;
+  border: none !important;
+  table-layout: fixed !important; /* 테이블 레이아웃 고정 */
+}
+
+.estimate-detail-page .spec-section-detail .body-properties-table td {
+  padding: 8px 12px !important; /* 사진처럼 적당한 패딩 */
+  border-bottom: 1px solid #e5e7eb !important;
+  vertical-align: middle !important;
+  min-height: 36px !important; /* 사진처럼 적당한 높이 */
+  height: 36px !important; /* 강제 높이 설정 */
+}
+
+.estimate-detail-page .spec-section-detail .body-properties-table td:first-child {
+  background: #f3f4f5 !important;
+  font-weight: 600 !important;
+  font-size: 14px !important; /* 폰트 크기 증가 */
+  color: #374151 !important;
+  width: 120px !important; /* 라벨 컬럼 고정 너비 */
+  white-space: nowrap !important;
+}
+
+.estimate-detail-page .spec-section-detail .body-properties-table td:last-child {
+  background: white !important;
+  width: auto !important; /* 입력 컬럼 자동 너비 */
+}
+
+.estimate-detail-page .spec-section-detail .body-properties-table input,
+.estimate-detail-page .spec-section-detail .body-properties-table select {
+  width: 100% !important;
+  padding: 6px 10px !important; /* 사진처럼 적당한 패딩 */
+  border: 1px solid #d1d5db !important;
+  border-radius: 4px !important;
+  font-size: 13px !important; /* 사진처럼 적당한 폰트 크기 */
+  background: white !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  height: 28px !important; /* 사진처럼 적당한 높이 */
+}
+
+.estimate-detail-page .spec-section-detail .body-properties-table select {
+  cursor: pointer !important;
+  padding-right: 24px !important;
+}
+
+/* Size와 Rating의 2개 드롭다운을 더 작게 */
+.estimate-detail-page .spec-section-detail .body-properties-table .size-selection-group,
+.estimate-detail-page .spec-section-detail .body-properties-table .rating-selection-group {
+  display: flex !important;
+  gap: 4px !important;
+}
+
+.estimate-detail-page .spec-section-detail .body-properties-table .size-selection-group select,
+.estimate-detail-page .spec-section-detail .body-properties-table .rating-selection-group select {
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+/* TRIM 표 디자인 - BODY와 동일한 스타일 */
+.estimate-detail-page .spec-section-detail .trim-properties-table {
+  width: 100% !important;
+  max-width: 500px !important; /* 최대 너비 제한 */
+  border-collapse: collapse !important;
+  border-radius: 4px !important;
+  overflow: hidden !important;
+  margin-bottom: 10px !important;
+  border: none !important;
+  table-layout: fixed !important; /* 테이블 레이아웃 고정 */
+}
+
+.estimate-detail-page .spec-section-detail .trim-properties-table td {
+  padding: 8px 12px !important; /* 사진처럼 적당한 패딩 */
+  border-bottom: 1px solid #e5e7eb !important;
+  vertical-align: middle !important;
+  min-height: 36px !important; /* 사진처럼 적당한 높이 */
+  height: 36px !important; /* 강제 높이 설정 */
+}
+
+.estimate-detail-page .spec-section-detail .trim-properties-table td:first-child {
+  background: #f3f4f6 !important;
+  font-weight: 600 !important;
+  font-size: 14px !important; /* 폰트 크기 증가 */
+  color: #374151 !important;
+  width: 120px !important; /* 라벨 컬럼 고정 너비 */
+  white-space: nowrap !important;
+}
+
+.estimate-detail-page .spec-section-detail .trim-properties-table td:last-child {
+  background: white !important;
+  width: auto !important; /* 입력 컬럼 자동 너비 */
+}
+
+.estimate-detail-page .spec-section-detail .trim-properties-table input,
+.estimate-detail-page .spec-section-detail .trim-properties-table select {
+  width: 100% !important;
+  padding: 6px 10px !important; /* 사진처럼 적당한 패딩 */
+  border: 1px solid #d1d5db !important;
+  border-radius: 4px !important;
+  font-size: 13px !important; /* 사진처럼 적당한 폰트 크기 */
+  background: white !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  height: 28px !important; /* 사진처럼 적당한 높이 */
+}
+
+.estimate-detail-page .spec-section-detail .trim-properties-table select {
+  cursor: pointer !important;
+  padding-right: 24px !important;
+}
+
+/* Size Port의 2개 드롭다운을 더 작게 */
+.estimate-detail-page .spec-section-detail .trim-properties-table .size-selection-group {
+  display: flex !important;
+  gap: 4px !important;
+}
+
+.estimate-detail-page .spec-section-detail .trim-properties-table .size-selection-group select {
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+/* ACT 표 디자인 - BODY와 동일한 스타일 */
+.estimate-detail-page .spec-section-detail .act-properties-table {
+  width: 100% !important;
+  max-width: 500px !important; /* 최대 너비 제한 */
+  border-collapse: collapse !important;
+  border-radius: 4px !important;
+  overflow: hidden !important;
+  margin-bottom: 10px !important;
+  border: none !important;
+  table-layout: fixed !important; /* 테이블 레이아웃 고정 */
+}
+
+.estimate-detail-page .spec-section-detail .act-properties-table td {
+  padding: 8px 12px !important; /* 사진처럼 적당한 패딩 */
+  border-bottom: 1px solid #e5e7eb !important;
+  vertical-align: middle !important;
+  min-height: 36px !important; /* 사진처럼 적당한 높이 */
+  height: 36px !important; /* 강제 높이 설정 */
+}
+
+.estimate-detail-page .spec-section-detail .act-properties-table td:first-child {
+  background: #f3f4f6 !important;
+  font-weight: 600 !important;
+  font-size: 14px !important; /* 폰트 크기 증가 */
+  color: #374151 !important;
+  width: 120px !important; /* 라벨 컬럼 고정 너비 */
+  white-space: nowrap !important;
+}
+
+.estimate-detail-page .spec-section-detail .act-properties-table td:last-child {
+  background: white !important;
+  width: auto !important; /* 입력 컬럼 자동 너비 */
+}
+
+.estimate-detail-page .spec-section-detail .act-properties-table input,
+.estimate-detail-page .spec-section-detail .act-properties-table select {
+  width: 100% !important;
+  padding: 6px 10px !important; /* 사진처럼 적당한 패딩 */
+  border: 1px solid #d1d5db !important;
+  border-radius: 4px !important;
+  font-size: 13px !important; /* 사진처럼 적당한 폰트 크기 */
+  background: white !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  height: 28px !important; /* 사진처럼 적당한 높이 */
+}
+
+.estimate-detail-page .spec-section-detail .act-properties-table select {
+  cursor: pointer !important;
+  padding-right: 24px !important;
+}
+
+/* ACC 표 디자인 - BODY와 동일한 스타일 */
+.estimate-detail-page .spec-section-detail .acc-properties-table {
+  width: 100% !important;
+  max-width: 500px !important; /* 최대 너비 제한 */
+  border-collapse: collapse !important;
+  border-radius: 4px !important;
+  overflow: hidden !important;
+  margin-bottom: 10px !important;
+  border: none !important;
+  table-layout: fixed !important; /* 테이블 레이아웃 고정 */
+}
+
+.estimate-detail-page .spec-section-detail .acc-properties-table td {
+  padding: 8px 12px !important; /* 사진처럼 적당한 패딩 */
+  border-bottom: 1px solid #e5e7eb !important;
+  vertical-align: middle !important;
+  min-height: 36px !important; /* 사진처럼 적당한 높이 */
+  height: 36px !important; /* 강제 높이 설정 */
+}
+
+.estimate-detail-page .spec-section-detail .acc-properties-table td:first-child {
+  background: #f3f4f6 !important;
+  font-weight: 600 !important;
+  font-size: 14px !important; /* 폰트 크기 증가 */
+  color: #374151 !important;
+  width: 120px !important; /* 라벨 컬럼 고정 너비 */
+  white-space: nowrap !important;
+}
+
+.estimate-detail-page .spec-section-detail .acc-properties-table td:last-child {
+  background: white !important;
+  width: auto !important; /* 입력 컬럼 자동 너비 */
+}
+
+.estimate-detail-page .acc-section-detail {
+  min-width: 500px !important;
+  max-width: 500px !important; /* 최대 너비 제한 */
+  flex-shrink: 0 !important;
+  display: block !important;
+  width: auto !important;
+}
+
+/* 악세사리 재로딩 버튼 스타일 */
+.estimate-detail-page .acc-reload-section {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.estimate-detail-page .acc-reload-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 auto;
+}
+
+.estimate-detail-page .acc-reload-btn:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.estimate-detail-page .acc-reload-btn:disabled {
+  background: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+.estimate-detail-page .refresh-icon {
+  font-size: 16px;
+}
+
+/* Step 3도 Step 1, 2와 동일한 컨테이너 구조 */
+.estimate-detail-page .step-col-detail {
+  flex: 1;
+  margin-right: 3px;
+}
+
+.estimate-detail-page .step-col-detail:last-child {
+  margin-right: 0;
+  flex: 2; /* Step 3은 더 넓게 */
+}
+
+/* Step 3만 헤더를 위로 올리기 */
+.estimate-detail-page .step-col-detail:last-child .step-subsection-detail .step-header-container {
+  margin-top: -10px !important;
+}
+
+/* 가로 스크롤바 스타일링 */
+.estimate-detail-page .specification-grid-detail::-webkit-scrollbar {
+  height: 8px;
+}
+
+.estimate-detail-page .specification-grid-detail::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.estimate-detail-page .specification-grid-detail::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.estimate-detail-page .specification-grid-detail::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Step 3 각 섹션 최소 너비 설정 - 모든 섹션이 가로로 배치 */
+.estimate-detail-page .spec-section-detail {
+  min-width: 300px !important;
+  max-width: 500px !important; /* 최대 너비 제한 */
+  flex-shrink: 0 !important;
+  display: block !important;
+  width: auto !important;
+}
+
+/* ACC 섹션도 가로 스크롤에 포함 */
+.estimate-detail-page .acc-section-detail {
+  min-width: 400px !important;
+  flex-shrink: 0 !important;
+  display: block !important;
+  width: auto !important;
+}
+
+/* Step 1, 2 헤더 액션 버튼 - NewEstimateRequestPage와 동일 */
+.estimate-detail-page .type-header,
+.estimate-detail-page .valve-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.estimate-detail-page .type-actions,
+.estimate-detail-page .valve-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.estimate-detail-page .type-actions button,
+.estimate-detail-page .valve-actions button {
+  padding: 6px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: white;
+  color: #374151;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.estimate-detail-page .type-actions button:hover:not(:disabled),
+.estimate-detail-page .valve-actions button:hover:not(:disabled) {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.estimate-detail-page .type-actions button:disabled,
+.estimate-detail-page .valve-actions button:disabled {
+  background: #f9fafb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* 선택된 아이템 스타일 - NewEstimateRequestPage와 동일 */
+.estimate-detail-page .type-item-detail.selected {
+  background: #2639ff !important;
+  color: #ffffff !important;
+  border: 1px solid #2639ff !important;
+  box-shadow: none !important;
+}
+
+.estimate-detail-page .valve-item-detail.selected {
+  background: #2639ff !important;
+  color: #ffffff !important;
+  border: 1px solid #2639ff !important;
+  box-shadow: none !important;
+}
+
+.estimate-detail-page .step-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.estimate-detail-page .step-title-section h4 {
+  margin: 0 !important;
+  color: #111827 !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  border-bottom: none !important;
+}
+
+.estimate-detail-page .step-description {
+  color: #6b7280 !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  margin-left: 16px !important;
+}
+
+/* 더 구체적인 선택자로 강제 적용 */
+.estimate-detail-page .step-header-container .step-title-section h4 {
+  font-size: 22px !important;
+  font-weight: 700 !important;
+}
+
+.estimate-detail-page .step-header-container .step-description {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+}
+
+/* 최고 우선순위로 강제 적용 */
+.estimate-detail-page .step-subsection-detail .step-header-container .step-title-section h4 {
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  color: #111827 !important;
+}
+
+.estimate-detail-page .step-subsection-detail .step-header-container .step-description {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: #6b7280 !important;
+}
+
+.estimate-detail-page .step-content-container {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  min-height: 800px !important; /* 최소 높이 설정 */
+}
+
+.estimate-detail-page .step-icon {
+  display: flex;
+  align-items: center;
+}
+
+.estimate-detail-page .circle-arrow-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  border: 2px solid #d1d5db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 18px;
+}
+
+.estimate-detail-page .circle-arrow-icon:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+  color: #374151;
+}
