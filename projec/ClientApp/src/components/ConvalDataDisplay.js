@@ -171,7 +171,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                     />
                     <Form.Select
                       size="sm"
-                      value={formData.DensityUnit || ''}
+                      value={formData.DensityUnit || 'kg/m³'}
                       onChange={(e) => setFormData({ ...formData, DensityUnit: e.target.value })}
                       style={{ maxWidth: 140 }}
                       disabled={massType !== 'density'}
@@ -214,7 +214,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                     />
                     <Form.Select
                       size="sm"
-                      value={formData.MolecularWeightUnit || ''}
+                      value={formData.MolecularWeightUnit || 'kg/kmol'}
                       onChange={(e) => setFormData({ ...formData, MolecularWeightUnit: e.target.value })}
                       style={{ maxWidth: 140 }}
                       disabled={massType !== 'molecular'}
@@ -271,7 +271,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                                  <td>
                   <Form.Select
                     size="sm"
-                    value={formData.t1Unit || ''}
+                    value={formData.t1Unit || '°C'}
                     onChange={(e) => setFormData({ ...formData, t1Unit: e.target.value })}
                   >
                     <option value="">단위 선택</option>
@@ -309,7 +309,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                 <td>
                   <Form.Select
                     size="sm"
-                    value={formData.PressureUnit || ''}
+                    value={formData.PressureUnit || 'bar(a)'}
                     onChange={(e) => setFormData({ ...formData, PressureUnit: e.target.value })}
                   >
                     <option value="">단위 선택</option>
@@ -411,7 +411,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                 <td>
                   <Form.Select
                     size="sm"
-                    value={formData.PressureUnit || ''}
+                    value={formData.PressureUnit || 'bar(a)'}
                     onChange={(e) => setFormData({ ...formData, PressureUnit: e.target.value })}
                   >
                     <option value="">단위 선택</option>
@@ -487,7 +487,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                 <td>
                   <Form.Select
                     size="sm"
-                    value={formData.PressureUnit || ''}
+                    value={formData.PressureUnit || 'bar(a)'}
                     onChange={(e) => setFormData({ ...formData, PressureUnit: e.target.value })}
                   >
                     <option value="">단위 선택</option>
@@ -561,7 +561,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                 <td>
                   <Form.Select
                     size="sm"
-                    value={formData.CVUnit || ''}
+                    value={formData.CVUnit || 'm³/h'}
                     onChange={(e) => setFormData({ ...formData, CVUnit: e.target.value })}
                   >
                     <option value="">단위 선택</option>
@@ -627,7 +627,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                 <td>
                   <Form.Select
                     size="sm"
-                    value={formData.qmUnit || ''}
+                    value={formData.qmUnit || 'kg/h'}
                     onChange={(e) => setFormData({ ...formData, qmUnit: e.target.value })}
                   >
                     <option value="">단위 선택</option>
@@ -678,7 +678,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                 <td>
                   <Form.Select
                     size="sm"
-                    value={formData.qnUnit || ''}
+                    value={formData.qnUnit || 'm³/h'}
                     onChange={(e) => setFormData({ ...formData, qnUnit: e.target.value })}
                     disabled={flowType !== 'qn'}
                   >
@@ -913,7 +913,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                   />
                   <Form.Select
                     size="sm"
-                    value={formData.FluidPUnit || ''}
+                    value={formData.FluidPUnit || 'kg/m³'}
                     onChange={(e) => setFormData({ ...formData, FluidPUnit: e.target.value })}
                     style={{ maxWidth: 140 }}
                   >
@@ -969,7 +969,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                   />
                   <Form.Select
                     size="sm"
-                    value={formData.FluidPUnit || ''}
+                    value={formData.FluidPUnit || 'kg/m³'}
                     onChange={(e) => setFormData({ ...formData, FluidPUnit: e.target.value })}
                     style={{ maxWidth: 140 }}
                   >
@@ -1056,7 +1056,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                   />
                   <Form.Select
                     size="sm"
-                    value={formData.FluidN1Unit || ''}
+                    value={formData.FluidN1Unit || 'mPa s'}
                     onChange={(e) => setFormData({ ...formData, FluidN1Unit: e.target.value })}
                     style={{ maxWidth: 140 }}
                   >
@@ -1113,7 +1113,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                   />
                   <Form.Select
                     size="sm"
-                    value={formData.FluidV1Unit || ''}
+                    value={formData.FluidV1Unit || 'mm²/s'}
                     onChange={(e) => setFormData({ ...formData, FluidV1Unit: e.target.value })}
                     style={{ maxWidth: 140 }}
                   >
@@ -1155,7 +1155,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                   />
                   <Form.Select
                     size="sm"
-                    value={formData.FluidPV1Unit || ''}
+                    value={formData.FluidPV1Unit || 'bar(a)'}
                     onChange={(e) => setFormData({ ...formData, FluidPV1Unit: e.target.value })}
                     style={{ maxWidth: 140 }}
                   >
@@ -1229,7 +1229,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                   />
                   <Form.Select
                     size="sm"
-                    value={formData.FluidTV1Unit || ''}
+                    value={formData.FluidTV1Unit || '°C'}
                     onChange={(e) => setFormData({ ...formData, FluidTV1Unit: e.target.value })}
                     style={{ maxWidth: 140 }}
                   >
@@ -1270,7 +1270,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                   />
                   <Form.Select
                     size="sm"
-                    value={formData.FluidCF1Unit || ''}
+                    value={formData.FluidCF1Unit || 'm/s'}
                     onChange={(e) => setFormData({ ...formData, FluidCF1Unit: e.target.value })}
                     style={{ maxWidth: 140 }}
                   >
@@ -1538,7 +1538,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                   />
                   <Form.Select
                     size="sm"
-                    value={formData.FlowCoeffUnit || ''}
+                    value={formData.FlowCoeffUnit || 'm³/h'}
                     onChange={(e) => setFormData({ ...formData, FlowCoeffUnit: e.target.value })}
                     style={{ maxWidth: 140 }}
                   >
@@ -1560,7 +1560,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                   />
                   <Form.Select
                     size="sm"
-                    value={formData.FlowCoeffUnit || ''}
+                    value={formData.FlowCoeffUnit || 'm³/h'}
                     onChange={(e) => setFormData({ ...formData, FlowCoeffUnit: e.target.value })}
                     style={{ maxWidth: 140 }}
                   >
@@ -1718,7 +1718,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                   />
                   <Form.Select
                     size="sm"
-                    value={formData.U1Unit || ''}
+                    value={formData.U1Unit || 'm/s'}
                     onChange={(e) => setFormData({ ...formData, U1Unit: e.target.value })}
                     style={{ maxWidth: 120 }}
                   >
@@ -1764,7 +1764,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                   />
                   <Form.Select
                     size="sm"
-                    value={formData.U1Unit || ''}
+                    value={formData.U1Unit || 'm/s'}
                     onChange={(e) => setFormData({ ...formData, U1Unit: e.target.value })}
                     style={{ maxWidth: 120 }}
                   >
