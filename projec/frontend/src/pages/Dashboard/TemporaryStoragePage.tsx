@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getDraftEstimates } from '../../api/estimateRequest';
+import { getDraftEstimates, deleteEstimateSheet } from '../../api/estimateRequest';
 import './DashboardPages.css';
 import './EstimateInquiry.css';
 import { IoIosArrowBack, IoIosSearch, IoIosCalendar } from "react-icons/io";
@@ -153,6 +153,20 @@ const TemporaryStoragePage: React.FC = () => {
 
   const handleCancel = () => setIsModalOpen(false);
 
+  const handleDelete = async (e: React.MouseEvent, tempEstimateNo: string) => {
+    e.stopPropagation();
+    if (!tempEstimateNo) return;
+    if (!window.confirm('해당 임시저장 견적을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+    try {
+      await deleteEstimateSheet(tempEstimateNo);
+      // 현재 페이지 새로고침
+      await fetchData(currentPage);
+    } catch (err) {
+      console.error('임시저장 견적 삭제 실패:', err);
+      alert('삭제에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    }
+  };
+
   return (
     <div className="p-5 max-w-[1200px] mx-auto">
       <div className="flex items-center mb-1 gap-3 mt-7">
@@ -232,6 +246,7 @@ const TemporaryStoragePage: React.FC = () => {
               <th>상태</th>
               <th>프로젝트명</th>
               <th>담당자</th>
+              <th>작업</th>
             </tr>
           </thead>
           <tbody>
@@ -261,6 +276,14 @@ const TemporaryStoragePage: React.FC = () => {
                   </td>
                   <td>{item.project || '-'}</td>
                   <td>{item.managerName || '미지정'}</td>
+                  <td>
+                    <button
+                      className="action-btn delete-btn"
+                      onClick={(e) => handleDelete(e, item.tempEstimateNo)}
+                    >
+                      삭제
+                    </button>
+                  </td>
                 </tr>
               ))
             )}

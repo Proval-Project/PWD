@@ -699,6 +699,42 @@ namespace EstimateRequestSystem.Services
             var estimateSheet = await _context.EstimateSheetLv1.FindAsync(tempEstimateNo);
             if (estimateSheet == null) return false;
 
+            // 1) 첨부파일: 파일 삭제 + 레코드 삭제 (FK는 CASCADE지만 파일 정리 필요)
+            var attachments = await _context.EstimateAttachment
+                .Where(a => a.TempEstimateNo == tempEstimateNo)
+                .ToListAsync();
+            if (attachments.Any())
+            {
+                foreach (var att in attachments)
+                {
+                    if (!string.IsNullOrEmpty(att.FilePath) && File.Exists(att.FilePath))
+                    {
+                        try { File.Delete(att.FilePath); } catch { /* ignore IO errors */ }
+                    }
+                }
+                _context.EstimateAttachment.RemoveRange(attachments);
+                await _context.SaveChangesAsync();
+            }
+
+            // 2) EstimateRequest 및 연결된 DataSheetLv3 선삭제 (FK: RESTRICT)
+            var requests = await _context.EstimateRequest
+                .Where(er => er.TempEstimateNo == tempEstimateNo)
+                .ToListAsync();
+            if (requests.Any())
+            {
+                var sheetIds = requests.Select(r => r.SheetID).ToList();
+                var dataSheets = await _context.DataSheetLv3
+                    .Where(ds => ds.TempEstimateNo == tempEstimateNo && sheetIds.Contains(ds.SheetID))
+                    .ToListAsync();
+                if (dataSheets.Any())
+                {
+                    _context.DataSheetLv3.RemoveRange(dataSheets);
+                }
+                _context.EstimateRequest.RemoveRange(requests);
+                await _context.SaveChangesAsync();
+            }
+
+            // 3) 최상위 시트 삭제
             _context.EstimateSheetLv1.Remove(estimateSheet);
             await _context.SaveChangesAsync();
             return true;

@@ -133,6 +133,20 @@ export const createEstimateSheet = async (data: CreateEstimateSheetDto): Promise
   return response.data;
 };
 
+// 기존 견적에서 새로운 견적 생성 (재문의)
+export const createEstimateSheetFromExisting = async (
+  data: CreateEstimateSheetDto,
+  currentUserId: string,
+  existingEstimateNo: string
+): Promise<string> => {
+  const response = await axios.post(
+    `${ESTIMATE_API_BASE_URL}/estimate/sheets/reinquiry`,
+    data,
+    { params: { currentUserId, existingEstimateNo } }
+  );
+  return response.data;
+};
+
 export const getEstimateSheet = async (tempEstimateNo: string): Promise<EstimateSheetResponseDto> => {
   const response = await axios.get(`${ESTIMATE_API_BASE_URL}/estimate/sheets/${tempEstimateNo}`);
   return response.data;

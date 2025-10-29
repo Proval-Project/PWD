@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getEstimateInquiry, EstimateInquiryRequest, EstimateInquiryItem, statusOptions } from '../../api/estimateInquiry';
+import { createEstimateSheetFromExisting, CreateEstimateSheetDto } from '../../api/estimateRequest';
 import { buildApiUrl } from '../../config/api';
 import { getEstimateDetail } from '../../api/estimateRequest';
 import './DashboardPages.css';
 import './EstimateInquiry.css';
 import CustomerSearchModal from '../../components/CustomerSearchModal';
+import { IoIosArrowBack, IoIosSearch, IoIosCalendar } from 'react-icons/io';
+import { AiOutlineDoubleLeft, AiOutlineLeft, AiOutlineRight, AiOutlineDoubleRight } from 'react-icons/ai';
 
 const ExistingEstimateReInquiryPage: React.FC = () => {
   const navigate = useNavigate();
@@ -66,8 +69,8 @@ const ExistingEstimateReInquiryPage: React.FC = () => {
           console.log('고객 권한으로 조회 - CustomerID(UserID):', user.userId);
         } else {
           // 관리자/직원은 고객 선택이 있어야 함
-          if (selectedCustomer?.userID) {
-            params.customerID = selectedCustomer.userID;
+          if (selectedCustomer?.userID || selectedCustomer?.userId) {
+            params.customerID = (selectedCustomer as any).userID || (selectedCustomer as any).userId;
           } else {
             // 고객 미선택 시 빈 결과 강제
             setItems([]);
@@ -80,14 +83,19 @@ const ExistingEstimateReInquiryPage: React.FC = () => {
       }
 
       console.log('API 요청 파라미터(기본):', params); // 디버깅용
-      // 상태 4, 5를 각각 조회하여 병합
+      // 상태 3(처리중), 4(완료), 5(주문) 조회하여 병합
       const MAX_PAGE = 1000;
-      const [resp4, resp5] = await Promise.all([
+      const [resp3, resp4, resp5] = await Promise.all([
+        getEstimateInquiry({ ...params, status: 3, page: 1, pageSize: MAX_PAGE }),
         getEstimateInquiry({ ...params, status: 4, page: 1, pageSize: MAX_PAGE }),
         getEstimateInquiry({ ...params, status: 5, page: 1, pageSize: MAX_PAGE })
       ]);
 
-      const combined = [...(resp4.items || []), ...(resp5.items || [])];
+      const combined = [
+        ...(resp3.items || []),
+        ...(resp4.items || []),
+        ...(resp5.items || [])
+      ];
       // 정렬: 요청일자 우선, 없으면 TempEstimateNo 날짜로 대체
       const toDateKey = (it: any) => {
         if (it.requestDate) return new Date(it.requestDate).getTime();
@@ -210,8 +218,16 @@ const ExistingEstimateReInquiryPage: React.FC = () => {
       }
 
       console.log('기존 견적 복제 준비:', item.tempEstimateNo);
-      // 상세를 즉시 조회하지 않고, 대상 TempEstimateNo만 전달 → 신규 페이지에서 기존 로딩 로직 사용
-      navigate(`/estimate-request/new?readonly=false`, { state: { cloned: true, loadTempEstimateNo: item.tempEstimateNo } });
+      // 백엔드 재문의 API를 호출하여 새 견적을 생성(PrevEstimateNo 자동 설정)
+      const dto: CreateEstimateSheetDto = {
+        project: (item as any).project || '',
+        customerRequirement: '',
+        customerID: user.userId,
+        writerID: user.userId,
+      };
+      const newTempEstimateNo = await createEstimateSheetFromExisting(dto, user.userId, item.tempEstimateNo);
+      // 새로 생성된 견적으로 이동
+      navigate(`/estimate-request/${newTempEstimateNo}`);
 
     } catch (error) {
       console.error('기존 견적에서 새로운 견적 생성 실패:', error);
@@ -229,64 +245,75 @@ const ExistingEstimateReInquiryPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="dashboard-page">
-      <div className="page-header">
-        <button className="back-btn" onClick={() => navigate(-1)}>
-          ← 기존견적재문의
+    <div className="p-5 max-w-[1200px] mx-auto">
+      {/* 헤더 */}
+      <div className="flex items-center mb-1 gap-3 mt-7">
+        <button
+          className="text-xl text-black p-1"
+          onClick={() => navigate(-1)}
+        >
+          <IoIosArrowBack />
         </button>
-        <h1>기존견적재문의</h1>
-        <p className="page-description">기존 견적을 클릭하면 새로운 견적 요청이 생성됩니다.</p>
+        <h1 className="text-2xl font-bold text-black">기존견적 재문의</h1>
       </div>
 
-      {/* 검색 필터 영역 */}
       <div className="search-section">
         <div className="search-row">
+          <div className="search-field">
+            <div className="search-bar">
+              <IoIosSearch className="search-icon" />
+              <input
+                type="text"
+                placeholder="검색"
+                value={searchKeyword}
+                onChange={(e) => {
+                  const newKeyword = e.target.value;
+                  setSearchKeyword(newKeyword);
+                  if (searchTimeout.current) clearTimeout(searchTimeout.current);
+                  searchTimeout.current = setTimeout(() => {
+                    setCurrentPage(1);
+                    fetchData(1, { searchKeyword: newKeyword || undefined });
+                  }, 500);
+                }}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              />
+            </div>
+          </div>
           <div className="date-range">
-            <span>등록기간</span>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => {
-                const newStartDate = e.target.value;
-                setStartDate(newStartDate);
-                setCurrentPage(1);
-                // 즉시 검색 (날짜 하나만 입력해도 검색)
-                setTimeout(() => {
-                  fetchData(1, { 
-                    startDate: newStartDate || undefined 
-                  });
-                }, 100);
-              }}
-            />
+            <div className="date-picker">
+              <IoIosCalendar
+                className="calendar-icon"
+                onClick={() => (document.getElementById("startDate") as HTMLInputElement)?.showPicker?.()}
+              />
+              <input
+                type="date"
+                id="startDate"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
             <span>~</span>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => {
-                const newEndDate = e.target.value;
-                setEndDate(newEndDate);
-                setCurrentPage(1);
-                // 즉시 검색 (날짜 하나만 입력해도 검색)
-                setTimeout(() => {
-                  fetchData(1, { 
-                    endDate: newEndDate || undefined 
-                  });
-                }, 100);
-              }}
-            />
+            <div className="date-picker">
+              <IoIosCalendar
+                className="calendar-icon"
+                onClick={() => (document.getElementById("endDate") as HTMLInputElement)?.showPicker?.()}
+              />
+              <input
+                type="date"
+                id="endDate"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
           </div>
 
           <div className="status-filter">
-            <span>진행상태</span>
             <select
               value={statusFilter}
               onChange={(e) => {
-                const newValue = e.target.value;
-                setStatusFilter(newValue);
+                setStatusFilter(e.target.value);
                 setCurrentPage(1);
-                setTimeout(() => {
-                  fetchData(1, { status: newValue ? Number(newValue) : undefined });
-                }, 100);
+                fetchData(1, { status: e.target.value ? Number(e.target.value) : undefined });
               }}
             >
               {statusOptions.map((opt) => (
@@ -295,45 +322,20 @@ const ExistingEstimateReInquiryPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="search-field" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            {/* 관리자/직원: 고객 선택 강제 */}
-            {currentUser?.roleId !== 3 && (
-              <>
-                <button className="btn-search" onClick={() => setShowCustomerSearch(true)}>고객 검색</button>
-                {selectedCustomer && (
-                  <span className="selected-customer">{selectedCustomer.companyName} / {selectedCustomer.name}</span>
-                )}
-                {selectedCustomer && (
-                  <button className="btn-clear" onClick={() => setSelectedCustomer(null)}>선택 해제</button>
-                )}
-              </>
-            )}
-            <input
-              type="text"
-              placeholder="검색 (견적번호, 회사명, 프로젝트명)"
-              value={searchKeyword}
-              onChange={(e) => {
-                const newKeyword = e.target.value;
-                setSearchKeyword(newKeyword);
-                // 입력 후 500ms 후 자동 검색 (디바운싱)
-                if (searchTimeout.current) {
-                  clearTimeout(searchTimeout.current);
-                }
-                searchTimeout.current = setTimeout(() => {
-                  setCurrentPage(1);
-                  fetchData(1, { searchKeyword: newKeyword || undefined });
-                }, 500);
-              }}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  if (searchTimeout.current) {
-                    clearTimeout(searchTimeout.current);
-                  }
-                  handleSearch();
-                }
-              }}
-            />
-          </div>
+          {/* 관리자/직원 전용 고객선택 보조 */}
+          {currentUser?.roleId !== 3 && (
+            <div className="search-field" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button className="btn-search" onClick={() => setShowCustomerSearch(true)}>고객 검색</button>
+              {selectedCustomer && (
+                <span className="selected-customer">{selectedCustomer.companyName} / {selectedCustomer.name}</span>
+              )}
+              {selectedCustomer && (
+                <button className="btn-clear" onClick={() => setSelectedCustomer(null)}>선택 해제</button>
+              )}
+            </div>
+          )}
+
+          <button className="search-btn" onClick={handleSearch}>검색</button>
         </div>
       </div>
 
@@ -351,24 +353,12 @@ const ExistingEstimateReInquiryPage: React.FC = () => {
         />
       )}
 
-      {/* 결과 정보 및 정렬 */}
+      {/* 결과 헤더 */}
       <div className="results-header">
-        <div className="results-info">
-          총 {totalCount}건
-        </div>
-        <div className="sort-controls">
-          <label>
-            <input
-              type="checkbox"
-              checked={isDescending}
-              onChange={handleSortToggle}
-            />
-            역순 정렬
-          </label>
-        </div>
+        <div className="results-info">총 {totalCount}건</div>
       </div>
 
-      {/* 테이블 */}
+      {/* 테이블 - 견적요청 조회와 동일 구성 */}
       <div className="table-container">
         <table className="inquiry-table">
           <thead>
@@ -376,10 +366,10 @@ const ExistingEstimateReInquiryPage: React.FC = () => {
               <th>견적번호</th>
               <th>회사명</th>
               <th>요청자</th>
+              <th>작성자</th>
               <th>요청일자</th>
               <th>상태</th>
               <th>프로젝트명</th>
-              <th>담당자</th>
             </tr>
           </thead>
           <tbody>
@@ -400,15 +390,21 @@ const ExistingEstimateReInquiryPage: React.FC = () => {
                 >
                   <td>{item.estimateNo}</td>
                   <td>{item.companyName}</td>
-                  <td>{(item as any).writerName || item.writerID || '-'}</td>
+                  <td>{`${(item as any).customerName || (item as any).writerName || item.writerID || '-'}`}{(item as any).customerPosition ? `  ${(item as any).customerPosition}` : ((item as any).writerPosition ? ` / ${(item as any).writerPosition}` : '')}</td>
+                  <td>{
+                    (item as any).writerRoleId === 1
+                      ? '관리자'
+                      : (item as any).writerRoleId === 3
+                        ? '고객'
+                        : `${(item as any).writerName || item.writerID || '-'}` + ((item as any).writerPosition ? ` ${(item as any).writerPosition}` : '')
+                  }</td>
                   <td>{item.requestDate ? formatDateYmd(item.requestDate) : extractDateFromTempEstimateNo(item.tempEstimateNo)}</td>
                   <td>
-                    <span className={`status-badge status-${item.status}`}>
+                    <span className={`status-${item.status}`}>
                       {item.statusText}
                     </span>
                   </td>
                   <td>{item.project}</td>
-                  <td>{item.managerName || '미지정'}</td>
                 </tr>
               ))
             )}
@@ -416,41 +412,55 @@ const ExistingEstimateReInquiryPage: React.FC = () => {
         </table>
       </div>
 
-      {/* 페이징 */}
-      {totalPages > 1 && (
-        <div className="pagination">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            ‹
-          </button>
-          
-          {Array.from({ length: Math.min(10, totalPages) }, (_, i) => {
-            const startPage = Math.max(1, Math.min(currentPage - 5, totalPages - 9));
-            const pageNum = startPage + i;
-            
-            if (pageNum > totalPages) return null;
-            
-            return (
-              <button
-                key={pageNum}
-                onClick={() => handlePageChange(pageNum)}
-                className={currentPage === pageNum ? 'active' : ''}
-              >
-                {pageNum}
-              </button>
-            );
-          })}
-          
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            ›
-          </button>
-        </div>
-      )}
+      {/* 페이지네이션 - 견적요청 조회와 동일 구성 */}
+      <div className="flex items-center justify-center gap-2 mt-7">
+        <button
+          onClick={() => handlePageChange(1)}
+          disabled={currentPage === 1}
+          className="w-8 h-8 flex items-center justify-center bg-white border rounded disabled:opacity-50"
+        >
+          <AiOutlineDoubleLeft />
+        </button>
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="w-8 h-8 flex items-center justify-center bg-white border rounded disabled:opacity-50"
+        >
+          <AiOutlineLeft />
+        </button>
+
+        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+          const page = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+          return (
+            <button
+              key={page}
+              onClick={() => handlePageChange(page)}
+              className={`w-8 h-8 flex items-center justify-center rounded font-semibold ${
+                currentPage === page
+                  ? 'bg-blue-600 text-white'
+                  : 'text-black'
+              }`}
+            >
+              {page}
+            </button>
+          );
+        })}
+
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="w-8 h-8 flex items-center justify-center bg-white border rounded disabled:opacity-50"
+        >
+          <AiOutlineRight />
+        </button>
+        <button
+          onClick={() => handlePageChange(totalPages)}
+          disabled={currentPage === totalPages}
+          className="w-8 h-8 flex items-center justify-center bg-white border rounded disabled:opacity-50"
+        >
+          <AiOutlineDoubleRight />
+        </button>
+      </div>
     </div>
   );
 };

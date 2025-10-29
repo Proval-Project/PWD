@@ -127,7 +127,8 @@ const EstimateInquiryPage: React.FC = () => {
   };
 
   const handleRowClick = (item: EstimateInquiryItem) => {
-    navigate(`/estimate-detail/${item.tempEstimateNo}`, { state: { from: 'inquiry' } });
+    const url = `/estimate-request/new?load=${encodeURIComponent(item.tempEstimateNo)}&readonly=false`;
+    navigate(url);
   };
 
   return (

@@ -43,7 +43,14 @@ const EstimateRequestPage: React.FC = () => {
 
 
   const handleReInquiry = () => {
-    navigate('/estimate-inquiry');
+    if (!isCustomer && !selectedCustomer) {
+      alert('고객을 먼저 선택해주세요.');
+      return;
+    }
+    if (!isCustomer && selectedCustomer) {
+      localStorage.setItem('selectedCustomerForReInquiry', JSON.stringify(selectedCustomer));
+    }
+    navigate('/existing-estimate-reinquiry');
   };
 
   const handleCustomerSelect = (user: any) => {

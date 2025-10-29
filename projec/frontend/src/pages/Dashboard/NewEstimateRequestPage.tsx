@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation, useParams } from 'react-router-dom';
+import { deleteEstimateSheet } from '../../api/estimateRequest';
 import axios from 'axios';
 import { buildApiUrl } from '../../config/api';
 import {
@@ -241,6 +242,7 @@ const CustomerRequirementComponent = React.memo(({
 
 const NewEstimateRequestPage: React.FC = () => {
   const navigate = useNavigate();
+  const { tempEstimateNo: routeTempEstimateNo } = useParams();
   const [searchParams] = useSearchParams();
   const [tempEstimateNo, setTempEstimateNo] = useState<string>('');
   const isDataLoaded = useRef<boolean>(false); // 데이터 로딩 상태 추적
@@ -266,6 +268,32 @@ const NewEstimateRequestPage: React.FC = () => {
     setPrevEstimateNo(loadParam);
     // 첫 Type/첫 Valve 자동 선택은 loadExistingData 내 정렬/생성 로직에 따름
   }, [location.state]);
+
+  // 경로 파라미터로 진입한 경우 처리 (/estimate-request/:tempEstimateNo)
+  useEffect(() => {
+    if (!routeTempEstimateNo) return;
+    if (isDataLoaded.current && tempEstimateNo === routeTempEstimateNo) return;
+    loadExistingData(routeTempEstimateNo);
+    setPrevEstimateNo(routeTempEstimateNo);
+    isDataLoaded.current = true;
+  }, [routeTempEstimateNo]);
+
+  const handleDeleteEstimate = useCallback(async () => {
+    const targetNo = tempEstimateNo || routeTempEstimateNo || '';
+    if (!targetNo) {
+      alert('삭제할 견적번호를 확인할 수 없습니다.');
+      return;
+    }
+    if (!window.confirm('해당 견적을 완전히 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+    try {
+      await deleteEstimateSheet(targetNo);
+      alert('견적이 삭제되었습니다.');
+      navigate('/estimate-inquiry');
+    } catch (e: any) {
+      console.error('견적 삭제 실패:', e);
+      alert('견적 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    }
+  }, [tempEstimateNo, routeTempEstimateNo, navigate]);
   const [curEstimateNo, setCurEstimateNo] = useState<string | null>(null);   // 최종 견적번호 (있으면 Temp 대신 표시)
   const [managerName, setManagerName] = useState<string | null>(null);       // 담당자 이름
   const [managerId, setManagerId] = useState<string | null>(null);           // 담당자 ID
@@ -3524,6 +3552,7 @@ const NewEstimateRequestPage: React.FC = () => {
               <>
                 <button className="btn-lg btn-draft" onClick={handleSaveDraft}>임시저장</button>
                 <button className="btn-lg btn-request" onClick={handleSubmitEstimate}>견적요청</button>
+              <button className="btn-lg btn-danger" onClick={handleDeleteEstimate}>삭제</button>
               </>
             ) : null}
           </div>

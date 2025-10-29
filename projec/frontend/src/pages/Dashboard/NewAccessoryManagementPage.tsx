@@ -37,6 +37,27 @@ const NewAccessoryManagementPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 검색어 상태
+  const [search, setSearch] = useState<Record<string, string>>({});
+  const handleSearchChange = (key: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(prev => ({ ...prev, [key]: e.target.value }));
+  };
+  const applyFilter = (items: MasterDataItem[], key: string) => {
+    const q = (search[key] || '').trim().toLowerCase();
+    if (!q) return items;
+    return items.filter(it =>
+      String(it.code || '').toLowerCase().includes(q) ||
+      String(it.name || '').toLowerCase().includes(q) ||
+      String(it.unit || '').toLowerCase().includes(q) ||
+      String(it.spec || '').toLowerCase().includes(q)
+    );
+  };
+
+  // 섹션/탭 이동 시 검색어 초기화
+  useEffect(() => {
+    setSearch({});
+  }, [activeTab, selectedBodySection, selectedTrimSection, selectedActSection, selectedAccessorySection]);
+
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
@@ -1141,7 +1162,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                             <div className="table-header">
                                 <h3>Unit</h3>
                                 <div className="controls">
-                                    <input type="text" placeholder="검색..." className="search-input"/>
+                                    <input type="text" placeholder="검색..." className="search-input" value={search.bodyRatingUnit || ''} onChange={handleSearchChange('bodyRatingUnit')}/>
                                     <button className="control-btn" onClick={fetchData}>새로고침</button>
                                     <button className="control-btn add-btn" onClick={() => openModal('unit', 'add')}>추가</button>
                                 </div>
@@ -1155,7 +1176,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {unitData.map(item => (
+                                    {applyFilter(unitData, 'bodyRatingUnit').map(item => (
                                         <tr 
                                             key={item.code} 
                                             onClick={() => handleUnitSelect(item.code)} // Add onClick event
@@ -1177,7 +1198,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                 <div className="table-header">
                                     <h3>Rating</h3>
                                     <div className="controls">
-                                        <input type="text" placeholder="검색..." className="search-input"/>
+                                        <input type="text" placeholder="검색..." className="search-input" value={search.bodyRating || ''} onChange={handleSearchChange('bodyRating')}/>
                                         <button className="control-btn" onClick={fetchData}>새로고침</button>
                                         <button className="control-btn add-btn" onClick={() => openModal('rating', 'add')}>추가</button>
                                     </div>
@@ -1192,7 +1213,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {bodyData.map(item => (
+                                        {applyFilter(bodyData, 'bodyRating').map(item => (
                                             <tr key={item.code}>
                                                 <td>{item.code}</td>
                                                 <td>{item.name}</td>
@@ -1232,7 +1253,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                             <div className="table-header">
                                 <h3>Unit</h3>
                                 <div className="controls">
-                                    <input type="text" placeholder="검색..." className="search-input"/>
+                                    <input type="text" placeholder="검색..." className="search-input" value={search.bodySizeUnit || ''} onChange={handleSearchChange('bodySizeUnit')}/>
                                     <button className="control-btn" onClick={fetchData}>새로고침</button>
                                     <button className="control-btn add-btn" onClick={() => openModal('bodySizeUnit', 'add')}>추가</button>
                                 </div>
@@ -1246,7 +1267,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {unitData.map(item => (
+                                    {applyFilter(unitData, 'bodySizeUnit').map(item => (
                                         <tr 
                                             key={item.code} 
                                             onClick={() => handleBodySizeUnitSelect(item.code)} // Add onClick event
@@ -1268,7 +1289,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                 <div className="table-header">
                                     <h3>Body Size</h3>
                                     <div className="controls">
-                                        <input type="text" placeholder="검색..." className="search-input"/>
+                                        <input type="text" placeholder="검색..." className="search-input" value={search.bodySize || ''} onChange={handleSearchChange('bodySize')}/>
                                         <button className="control-btn" onClick={fetchData}>새로고침</button>
                                         <button className="control-btn add-btn" onClick={() => openModal('bodySize', 'add')}>추가</button>
                                     </div>
@@ -1283,7 +1304,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                     </tr>
                                     </thead>
                                     <tbody>
-                                        {bodyData.map(item => (
+                                        {applyFilter(bodyData, 'bodySize').map(item => (
                                             <tr key={item.code}>
                                                 <td>{item.code}</td>
                                                 <td>{item.name}</td>
@@ -1323,7 +1344,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                 <div className="table-header">
                     <h3>{currentBodySection?.name}</h3>
                     <div className="controls">
-                        <input type="text" placeholder="검색..." className="search-input"/>
+                        <input type="text" placeholder="검색..." className="search-input" value={search.bodyGeneric || ''} onChange={handleSearchChange('bodyGeneric')}/>
                         <button className="control-btn" onClick={fetchData}>새로고침</button>
                         <button className="control-btn add-btn" onClick={() => openModal(currentBodySection.id as 'bodyBonnet' | 'bodyValve' | 'bodyMaterial' | 'bodySize' | 'bodyConnection', 'add')}>추가</button>
                     </div>
@@ -1336,7 +1357,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {bodyData.map((item, index) => (
+                        {applyFilter(bodyData, 'bodyGeneric').map((item, index) => (
                             <tr key={currentBodySection?.id === 'bodySize' ? `${item.unit}-${item.code}-${index}` : `${item.code}-${index}`}>
                                 <td>{item.code}</td>
                                 <td>{item.name}</td>
@@ -1374,7 +1395,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                         <div className="table-header">
                             <h3>Maker</h3>
                             <div className="controls">
-                                <input type="text" placeholder="검색..." className="search-input"/>
+                                <input type="text" placeholder="검색..." className="search-input" value={search.maker || ''} onChange={handleSearchChange('maker')}/>
                                 <button className="control-btn" onClick={fetchData}>새로고침</button>
                                 <button className="control-btn add-btn" onClick={() => openModal('maker', 'add')}>추가</button>
                             </div>
@@ -1389,7 +1410,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {makerData.map(item => (
+                                {applyFilter(makerData, 'maker').map(item => (
                                     <tr 
                                         key={item.code} 
                                         onClick={() => handleMakerSelect(item.code)}
@@ -1419,7 +1440,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                          <div className="table-header">
                             <h3>Model</h3>
                             <div className="controls">
-                                <input type="text" placeholder="검색..." className="search-input"/>
+                                <input type="text" placeholder="검색..." className="search-input" value={search.model || ''} onChange={handleSearchChange('model')}/>
                                 <button className="control-btn" onClick={() => selectedMakerCode && fetchModelsForMaker(selectedMakerCode)}>새로고침</button>
                                 <button className="control-btn add-btn" onClick={() => openModal('model', 'add')} disabled={!selectedMakerCode}>추가</button>
                             </div>
@@ -1435,7 +1456,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {modelData.map(item => (
+                                {applyFilter(modelData, 'model').map(item => (
                                     <tr key={item.code}>
                                         <td>{item.code}</td>
                                         <td>{item.name}</td>
@@ -1487,7 +1508,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                             <div className="table-header">
                                 <h3>Unit</h3>
                                 <div className="controls">
-                                    <input type="text" placeholder="검색..." className="search-input"/>
+                                    <input type="text" placeholder="검색..." className="search-input" value={search.trimPortSizeUnit || ''} onChange={handleSearchChange('trimPortSizeUnit')}/>
                                     <button className="control-btn" onClick={fetchData}>새로고침</button>
                                     <button className="control-btn add-btn" onClick={() => openModal('trimPortSizeUnit', 'add')}>추가</button>
                                 </div>
@@ -1501,7 +1522,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {unitData.map(item => (
+                                    {applyFilter(unitData, 'trimPortSizeUnit').map(item => (
                                         <tr 
                                             key={item.code} 
                                             onClick={() => handleTrimPortSizeUnitSelect(item.code)} // Add onClick event
@@ -1523,7 +1544,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                 <div className="table-header">
                                     <h3>Trim Port Size</h3>
                                     <div className="controls">
-                                        <input type="text" placeholder="검색..." className="search-input"/>
+                                        <input type="text" placeholder="검색..." className="search-input" value={search.trimPortSize || ''} onChange={handleSearchChange('trimPortSize')}/>
                                         <button className="control-btn" onClick={fetchData}>새로고침</button>
                                         <button className="control-btn add-btn" onClick={() => openModal('trimPortSize', 'add')}>추가</button>
                                     </div>
@@ -1538,7 +1559,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                     </tr>
                                     </thead>
                                     <tbody>
-                                        {trimData.map(item => (
+                                        {applyFilter(trimData, 'trimPortSize').map(item => (
                                             <tr key={item.code}>
                                                 <td>{item.code}</td>
                                                 <td>{item.name}</td>
@@ -1577,7 +1598,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                     <div className="table-header">
                         <h3>{currentTrimSection?.name}</h3>
                         <div className="controls">
-                            <input type="text" placeholder="검색..." className="search-input"/>
+                            <input type="text" placeholder="검색..." className="search-input" value={search.trimGeneric || ''} onChange={handleSearchChange('trimGeneric')}/>
                             <button className="control-btn" onClick={fetchData}>새로고침</button>
                             <button className="control-btn add-btn" onClick={() => openModal(currentTrimSection.id as 'trimType' | 'trimSeries' | 'trimPortSize' | 'trimForm' | 'trimMaterial' | 'trimOption', 'add')}>추가</button>
                         </div>
@@ -1590,7 +1611,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {trimData.map((item, index) => (
+                            {applyFilter(trimData, 'trimGeneric').map((item, index) => (
                                 <tr key={currentTrimSection.id === 'trimPortSize' ? `${item.code}-${item.unit}-${index}` : `${item.code}-${index}`}>
                                     <td>{item.code}</td>
                                     <td>{item.name}</td>
@@ -1635,7 +1656,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                             <div className="table-header">
                                 <h3>Series</h3>
                                 <div className="controls">
-                                    <input type="text" placeholder="검색..." className="search-input"/>
+                                    <input type="text" placeholder="검색..." className="search-input" value={search.actSeries || ''} onChange={handleSearchChange('actSeries')}/>
                                     <button className="control-btn" onClick={fetchData}>새로고침</button>
                                     <button className="control-btn add-btn" onClick={() => openModal('actSeries', 'add')}>추가</button>
                                 </div>
@@ -1649,7 +1670,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {actSeriesData.map(item => (
+                                    {applyFilter(actSeriesData, 'actSeries').map(item => (
                                         <tr 
                                             key={item.code} 
                                             onClick={() => handleActSeriesSelect(item.code)}
@@ -1671,7 +1692,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                 <div className="table-header">
                                     <h3>Size</h3>
                                     <div className="controls">
-                                        <input type="text" placeholder="검색..." className="search-input"/>
+                                        <input type="text" placeholder="검색..." className="search-input" value={search.actSize || ''} onChange={handleSearchChange('actSize')}/>
                                         <button className="control-btn" onClick={() => selectedActSeriesCode && fetchData()}>새로고침</button>
                                         <button className="control-btn add-btn" onClick={() => openModal('actSize', 'add')} disabled={!selectedActSeriesCode}>추가</button>
                                     </div>
@@ -1685,7 +1706,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {actSizeData
+                                        {applyFilter(actSizeData, 'actSize')
                                             .filter(item => item.seriesCode === selectedActSeriesCode) // Filter sizes by selected series
                                             .map(item => (
                                                 <tr key={item.code}>
@@ -1707,7 +1728,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                         <div className="table-header">
                             <h3>{currentActSection?.name}</h3>
                             <div className="controls">
-                                <input type="text" placeholder="검색..." className="search-input"/>
+                                <input type="text" placeholder="검색..." className="search-input" value={search.actGeneric || ''} onChange={handleSearchChange('actGeneric')}/>
                                 <button className="control-btn" onClick={fetchData}>새로고침</button>
                                 <button className="control-btn add-btn" onClick={() => openModal(currentActSection.id === 'actType' ? 'actType' : 'actHW', 'add')}>추가</button>
                             </div>
@@ -1720,7 +1741,7 @@ const NewAccessoryManagementPage: React.FC = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {(selectedActSection === 'actType' ? actTypeData : actHWData).map(item => (
+                                {applyFilter(selectedActSection === 'actType' ? actTypeData : actHWData, 'actGeneric').map(item => (
                                     <tr key={item.code}>
                                         <td>{item.code}</td>
                                         <td>{item.name}</td>
