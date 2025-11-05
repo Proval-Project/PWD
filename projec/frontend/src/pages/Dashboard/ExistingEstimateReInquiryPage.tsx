@@ -83,16 +83,14 @@ const ExistingEstimateReInquiryPage: React.FC = () => {
       }
 
       console.log('API 요청 파라미터(기본):', params); // 디버깅용
-      // 상태 3(처리중), 4(완료), 5(주문) 조회하여 병합
+      // 상태 4(견적완료), 5(주문)만 조회하여 병합 (상태 3 제외)
       const MAX_PAGE = 1000;
-      const [resp3, resp4, resp5] = await Promise.all([
-        getEstimateInquiry({ ...params, status: 3, page: 1, pageSize: MAX_PAGE }),
+      const [resp4, resp5] = await Promise.all([
         getEstimateInquiry({ ...params, status: 4, page: 1, pageSize: MAX_PAGE }),
         getEstimateInquiry({ ...params, status: 5, page: 1, pageSize: MAX_PAGE })
       ]);
 
       const combined = [
-        ...(resp3.items || []),
         ...(resp4.items || []),
         ...(resp5.items || [])
       ];

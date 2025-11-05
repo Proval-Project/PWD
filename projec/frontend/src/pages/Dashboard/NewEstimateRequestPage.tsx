@@ -3645,8 +3645,11 @@ const NewEstimateRequestPage: React.FC = () => {
           </div>
           <div className="project-bar-actions">
             {(() => {
-              // 상태가 1(임시저장) 또는 2(견적요청)이면 임시저장/견적요청 버튼
-              if ((backendStatus === 1 || backendStatus === 2) && !isReadOnly) {
+              // 피그마 로직: 상태 1(견적요청), 3(견적처리중), 4(견적완료), 5(주문)일 때 수정/삭제 버튼 표시
+              // 상태가 1(임시저장) 또는 2(견적요청)이고 새로 작성 중일 때만 임시저장/견적요청 버튼
+              // 조회 모드(이미 등록된 견적)에서는 임시저장/견적요청 버튼 표시 안 함
+              if (backendStatus === null || backendStatus === undefined) {
+                // 새로 작성 중인 경우 (아직 저장되지 않음)
                 return (
                   <>
                     <button className="btn-lg btn-draft" onClick={handleSaveDraft}>임시저장</button>
@@ -3655,11 +3658,15 @@ const NewEstimateRequestPage: React.FC = () => {
                   </>
                 );
               }
-              // 상태가 3(견적처리중) 이상이면 수정/삭제 버튼 (담당자 또는 관리자만)
-              if (backendStatus !== null && backendStatus >= 3) {
+              
+              // 상태 1, 3, 4, 5일 때 수정/삭제 버튼 표시 (피그마 로직)
+              if (backendStatus === 1 || backendStatus === 2 || backendStatus === 3 || backendStatus === 4 || backendStatus === 5) {
                 const isManager = currentUser?.userId === managerId;
                 const isAdmin = currentUser?.roleId === 1;
-                if (isManager || isAdmin) {
+                
+                // 상태 1, 2일 때는 담당자 체크 없이 표시 (작성자가 수정 가능)
+                // 상태 3 이상일 때는 담당자 또는 관리자만 표시
+                if (backendStatus === 1 || backendStatus === 2 || isManager || isAdmin) {
                   // 편집 모드일 때는 저장/취소 버튼 표시
                   if (!isReadOnly) {
                     return (

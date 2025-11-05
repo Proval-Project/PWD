@@ -1869,14 +1869,18 @@ namespace EstimateRequestSystem.Services
             // 전체 개수 계산
             var totalCount = processedData.Count();
 
-            // 정렬
+            // 정렬: 요청일자 먼저 정렬, 그 다음 견적번호 정렬 (요청일자 내림차순일 때 견적번호도 내림차순)
             if (request.IsDescending)
             {
-                processedData = processedData.OrderByDescending(x => x.RequestDate);
+                processedData = processedData
+                    .OrderByDescending(x => x.RequestDate)
+                    .ThenByDescending(x => !string.IsNullOrEmpty(x.CurEstimateNo) ? x.CurEstimateNo : x.TempEstimateNo);
             }
             else
             {
-                processedData = processedData.OrderBy(x => x.RequestDate);
+                processedData = processedData
+                    .OrderBy(x => x.RequestDate)
+                    .ThenBy(x => !string.IsNullOrEmpty(x.CurEstimateNo) ? x.CurEstimateNo : x.TempEstimateNo);
             }
 
             // 페이징
@@ -2008,30 +2012,7 @@ namespace EstimateRequestSystem.Services
             var sheet = await _context.EstimateSheetLv1.FirstOrDefaultAsync(x => x.TempEstimateNo == tempEstimateNo);
             if (sheet == null) return null;
 
-            // 견적 완료 시점에 CurEstimateNo를 오늘 날짜로 재생성 (완료일자와 견적번호 날짜 일치)
-            var today = DateTime.Now;
-            var datePrefix = today.ToString("yyyyMMdd");
-            var prefix = $"YA{datePrefix}-";
-
-            // 오늘 날짜로 생성된 CurEstimateNo 중 가장 큰 번호 찾기
-            var existingNumbers = await _context.EstimateSheetLv1
-                .Where(es => es.CurEstimateNo != null && es.CurEstimateNo.StartsWith(prefix))
-                .Select(es => es.CurEstimateNo!)
-                .ToListAsync();
-
-            var maxSeq = 0;
-            foreach (var no in existingNumbers)
-            {
-                var parts = no.Split('-');
-                if (parts.Length == 2 && int.TryParse(parts[1], out int seq))
-                    maxSeq = Math.Max(maxSeq, seq);
-            }
-
-            var next = maxSeq + 1;
-            var newCurEstimateNo = $"{prefix}{next:D3}";
-            
-            // CurEstimateNo를 완료일자 기준으로 재생성
-            sheet.CurEstimateNo = newCurEstimateNo;
+            // 견적 완료 시 상태만 변경 (CurEstimateNo는 견적 요청 시 생성된 번호 그대로 유지)
             sheet.Status = (int)EstimateStatus.Completed; // 견적완료(4)
             await _context.SaveChangesAsync();
             return sheet.CurEstimateNo;

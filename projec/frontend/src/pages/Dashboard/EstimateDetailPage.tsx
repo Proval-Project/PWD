@@ -240,6 +240,7 @@ const EstimateDetailPage: React.FC = () => {
   // 기타 데이터
   const [customerRequirement, setCustomerRequirement] = useState(''); // 고객 요청사항
   const [staffComment, setStaffComment] = useState(''); // 관리자 코멘트
+  const [estimateData, setEstimateData] = useState<any>(null); // 견적 상세 데이터 (권한 체크용)
 
   // useCallback을 사용하여 함수가 불필요하게 재생성되는 것을 방지
   const handleStaffCommentChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -1368,6 +1369,7 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
       // currentUserId는 임시로 'admin' 사용 (실제로는 로그인된 사용자 ID를 사용해야 함)
       const response = await getEstimateDetail(tempEstimateNo, currentUser?.userId || 'admin'); // 실제 사용자 ID 사용
       const data = response;
+      setEstimateData(data); // 견적 데이터 저장 (권한 체크용)
       
       //console.log('견적 상세 데이터:', data);
       
@@ -3575,18 +3577,32 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
               );
             }
             if (currentStatus === '견적처리중') {
+              // 권한 체크: 담당자 또는 관리자만 상태 변경 가능
+              const userStr = localStorage.getItem('user');
+              const currentUser = userStr ? JSON.parse(userStr) : null;
+              const isManager = currentUser?.userId === estimateData?.estimateSheet?.managerID;
+              const isAdmin = currentUser?.roleId === 1;
+              const canChangeStatus = isManager || isAdmin;
+              
               return (
                 <div className="button-column">
-                  <button className="btn btn-primary" onClick={handleCompleteQuote}>견적완료</button>
-                  <button className="btn btn-danger" onClick={handleCancelStart}>시작취소</button>
+                  <button className="btn btn-primary" onClick={handleCompleteQuote} disabled={!canChangeStatus}>견적완료</button>
+                  <button className="btn btn-danger" onClick={handleCancelStart} disabled={!canChangeStatus}>시작취소</button>
                 </div>
               );
             }
             if (currentStatus === '견적완료') {
+              // 권한 체크: 담당자 또는 관리자만 상태 변경 가능
+              const userStr = localStorage.getItem('user');
+              const currentUser = userStr ? JSON.parse(userStr) : null;
+              const isManager = currentUser?.userId === estimateData?.estimateSheet?.managerID;
+              const isAdmin = currentUser?.roleId === 1;
+              const canChangeStatus = isManager || isAdmin;
+              
               return (
                 <div className="button-column">
-                  <button className="btn btn-success" onClick={handleConfirmOrder}>주문확정</button>
-                  <button className="btn btn-danger" onClick={handleCancelComplete}>완료취소</button>
+                  <button className="btn btn-success" onClick={handleConfirmOrder} disabled={!canChangeStatus}>주문확정</button>
+                  <button className="btn btn-danger" onClick={handleCancelComplete} disabled={!canChangeStatus}>완료취소</button>
                 </div>
               );
             }
