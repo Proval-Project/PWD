@@ -52,5 +52,7 @@ namespace FullAuthSystem.Models
         public string PhoneNumber { get; set; }
         
         public bool IsApproved { get; set; } = false;
+        
+        public bool IsActive { get; set; } = true;
     }
 } 

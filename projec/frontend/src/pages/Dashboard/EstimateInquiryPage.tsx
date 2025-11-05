@@ -229,17 +229,18 @@ const EstimateInquiryPage: React.FC = () => {
               <th>작성자</th>
               <th>요청일자</th>
               <th>상태</th>
+              <th>완료일자</th>
               <th>프로젝트명</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} className="loading">로딩 중...</td>
+                <td colSpan={8} className="loading">로딩 중...</td>
               </tr>
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={7} className="no-data">조회된 데이터가 없습니다.</td>
+                <td colSpan={8} className="no-data">조회된 데이터가 없습니다.</td>
               </tr>
             ) : (
               items.map((item) => (
@@ -264,6 +265,21 @@ const EstimateInquiryPage: React.FC = () => {
                       {item.statusText}
                     </span>
                   </td>
+                  <td>{(() => {
+                    // 상태가 1(견적요청) 또는 2(견적처리중)이면 완료일자 표시 안 함
+                    if (item.status === 1 || item.status === 2) {
+                      return '-';
+                    }
+                    // curEstimateNo에서 날짜 추출 (YA20250103-001 형식)
+                    const curNo = (item as any).curEstimateNo || item.estimateNo;
+                    if (curNo && curNo.startsWith('YA')) {
+                      const match = curNo.match(/YA(\d{4})(\d{2})(\d{2})/);
+                      if (match) {
+                        return `${match[1]}.${match[2]}.${match[3]}`;
+                      }
+                    }
+                    return '-';
+                  })()}</td>
                   <td>{item.project}</td>
                 </tr>
               ))

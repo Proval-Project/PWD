@@ -258,6 +258,14 @@ const NewEstimateRequestPage: React.FC = () => {
   const [backendStatusText, setBackendStatusText] = useState<string>(''); // 백엔드 상태 텍스트
   const [backendStatus, setBackendStatus] = useState<number | null>(null);   // 백엔드 상태 코드 (1~5)
   const [prevEstimateNo, setPrevEstimateNo] = useState<string | null>(null);  // 재문의 원본 번호
+  const [customerUserName, setCustomerUserName] = useState<string | null>(null); // 요청자 이름
+  // 편집 모드용 원본 데이터 백업
+  const [backupData, setBackupData] = useState<{
+    projectName: string;
+    types: TypeData[];
+    valves: ValveData[];
+    customerRequirement: string;
+  } | null>(null);
   // 기존견적 복제: 라우팅 state에 loadTempEstimateNo가 오면 기존 로딩 함수로 전체 복원
   const location = useLocation() as any;
   useEffect(() => {
@@ -668,7 +676,7 @@ const NewEstimateRequestPage: React.FC = () => {
     const newValve: ValveData = {
       id: `valve-${Date.now()}`,
       tagNo: `Tag-${String(getNextTagNo()).padStart(4, '0')}`, // 기본값이지만 사용자가 수정 가능
-      qty: 0,
+      qty: 1, // 기본값을 1로 변경
       order: nextOrder,
       sheetID: newSheetID, // 고유 ID, 절대 변하지 않음
       typeId: selectedType,
@@ -1243,10 +1251,16 @@ const NewEstimateRequestPage: React.FC = () => {
     }
   }, []);
 
-  // 🔑 관리 첨부파일 다운로드 함수 (고객용 - PDF만)
+  // 🔑 관리 첨부파일 다운로드 함수 (고객용 - PDF만, 관리자용 - 모든 파일)
   const handleDownloadManagerFile = useCallback(async (file: any) => {
     try {
-      if (!file.fileName.toLowerCase().endsWith('.pdf')) {
+      // 현재 사용자 역할 확인
+      const userStr = localStorage.getItem('user');
+      const currentUserInfo = userStr ? JSON.parse(userStr) : null;
+      const isAdminOrStaff = currentUserInfo?.roleId === 1 || currentUserInfo?.roleId === 2;
+      
+      // 고객은 PDF만, 관리자/직원은 모든 파일 다운로드 가능
+      if (!isAdminOrStaff && !file.fileName.toLowerCase().endsWith('.pdf')) {
         alert('PDF 파일만 다운로드할 수 있습니다.');
         return;
       }
@@ -1318,16 +1332,22 @@ const NewEstimateRequestPage: React.FC = () => {
       // 상태 텍스트/코드 저장 (최상위 또는 estimateSheet 내부 모두 대응)
       const statusTextServer = existingData?.statusText ?? existingData?.estimateSheet?.statusText ?? '';
       const statusCodeServer = existingData?.status ?? existingData?.estimateSheet?.status;
-      // curEstimateNo, manager 정보 세팅
+      // curEstimateNo, manager, customerUserName 정보 세팅
       const curNo = existingData?.curEstimateNo ?? existingData?.estimateSheet?.curEstimateNo ?? null;
       const mgrName = existingData?.managerName ?? existingData?.estimateSheet?.managerName ?? null;
       const mgrId = existingData?.managerID ?? existingData?.estimateSheet?.managerID ?? null;
+      const custUserName = existingData?.customerUserName ?? existingData?.estimateSheet?.customerUserName ?? null;
       setCurEstimateNo(curNo);
       setManagerName(mgrName);
       setManagerId(mgrId);
+      setCustomerUserName(custUserName);
       if (statusTextServer) setBackendStatusText(statusTextServer);
       if (typeof statusCodeServer === 'number') {
         setBackendStatus(statusCodeServer);
+        // 상태가 3 이상이면 기본적으로 읽기 전용 모드로 설정
+        if (statusCodeServer >= 3) {
+          setIsReadOnly(true);
+        }
       } else if (statusTextServer) {
         const map: Record<string, number> = {
           '임시저장': 1,
@@ -1337,7 +1357,13 @@ const NewEstimateRequestPage: React.FC = () => {
           '주문': 5,
         };
         const code = map[statusTextServer.trim()];
-        if (code) setBackendStatus(code);
+        if (code) {
+          setBackendStatus(code);
+          // 상태가 3 이상이면 기본적으로 읽기 전용 모드로 설정
+          if (code >= 3) {
+            setIsReadOnly(true);
+          }
+        }
       }
       setCustomerRequirement(existingData.customerRequirement || '');
       
@@ -1919,8 +1945,71 @@ const NewEstimateRequestPage: React.FC = () => {
     };
   }, [types, valves, projectName, customerRequirement, selectedCustomer, currentUser, bodySizeList, bodyMatList, trimMatList, trimOptionList, bodyRatingList]);
 
+  // 수정 버튼 클릭 핸들러 - 편집 모드로 전환
+  const handleEdit = useCallback(() => {
+    // 현재 데이터 백업
+    setBackupData({
+      projectName: projectName,
+      types: JSON.parse(JSON.stringify(types)), // deep copy
+      valves: JSON.parse(JSON.stringify(valves)), // deep copy
+      customerRequirement: customerRequirement
+    });
+    setIsReadOnly(false);
+  }, [projectName, types, valves, customerRequirement]);
+
+  // 취소 버튼 클릭 핸들러 - 원본 데이터로 복원
+  const handleCancelEdit = useCallback(() => {
+    if (backupData) {
+      setProjectName(backupData.projectName);
+      setTypes(backupData.types);
+      setValves(backupData.valves);
+      setCustomerRequirement(backupData.customerRequirement);
+      setBackupData(null);
+    }
+    setIsReadOnly(true);
+  }, [backupData]);
+
+  // 편집 모드에서 저장 핸들러
+  const handleSaveEdit = useCallback(async () => {
+    if (!tempEstimateNo) {
+      alert('견적번호를 찾을 수 없습니다.');
+      return;
+    }
+
+    // 프로젝트명 필수 검증
+    if (!projectName || projectName.trim() === '') {
+      alert('프로젝트명을 입력해주세요.');
+      return;
+    }
+
+    try {
+      // 1. 첨부파일 먼저 업로드
+      if (pendingFiles.length > 0) {
+        await uploadPendingFiles(tempEstimateNo);
+      }
+
+      // 2. 견적 데이터 저장
+      const submitData = createSavePayload();
+      await axios.post(buildApiUrl(`/estimate/sheets/${tempEstimateNo}/save-draft`), submitData);
+      
+      // 성공 시 백업 데이터 제거하고 읽기 전용 모드로 전환
+      setBackupData(null);
+      setIsReadOnly(true);
+      alert('수정 내용이 저장되었습니다.');
+    } catch (error) {
+      console.error('수정 저장 실패:', error);
+      alert('수정 내용 저장에 실패했습니다.');
+    }
+  }, [tempEstimateNo, projectName, pendingFiles, createSavePayload, uploadPendingFiles]);
+
   // 임시저장 기능
   const handleSaveDraft = async () => {
+    // 프로젝트명 필수 검증
+    if (!projectName || projectName.trim() === '') {
+      alert('프로젝트명을 입력해주세요.');
+      return;
+    }
+    
     // TempEstimateNo가 없으면 먼저 생성
     let currentTempEstimateNo = tempEstimateNo;
     // 재문의 케이스: 기존 번호로 덮어쓰지 않도록 항상 새 번호 발급
@@ -1988,6 +2077,12 @@ const NewEstimateRequestPage: React.FC = () => {
 
   // 견적요청 기능
   const handleSubmitEstimate = async () => {
+    // 프로젝트명 필수 검증
+    if (!projectName || projectName.trim() === '') {
+      alert('프로젝트명을 입력해주세요.');
+      return;
+    }
+    
     // TempEstimateNo가 없으면 먼저 생성
     let currentTempEstimateNo = tempEstimateNo;
     // 재문의 케이스: 기존 번호로 덮어쓰지 않도록 항상 새 번호 발급
@@ -3534,7 +3629,7 @@ const NewEstimateRequestPage: React.FC = () => {
         <div className="request-header">
           <div className="info-table">
             <div className="row">
-              <div className="cell label">프로젝트명</div>
+              <div className="cell label">프로젝트명 <span style={{color: 'red'}}>*</span></div>
               <div className="cell value">
                 <input
                   type="text"
@@ -3543,18 +3638,49 @@ const NewEstimateRequestPage: React.FC = () => {
                   placeholder="프로젝트명을 입력하세요"
                   className="project-input-lg"
                   disabled={isReadOnly}
+                  required
                 />
               </div>
             </div>
           </div>
           <div className="project-bar-actions">
-            {!isReadOnly ? (
-              <>
-                <button className="btn-lg btn-draft" onClick={handleSaveDraft}>임시저장</button>
-                <button className="btn-lg btn-request" onClick={handleSubmitEstimate}>견적요청</button>
-              <button className="btn-lg btn-danger" onClick={handleDeleteEstimate}>삭제</button>
-              </>
-            ) : null}
+            {(() => {
+              // 상태가 1(임시저장) 또는 2(견적요청)이면 임시저장/견적요청 버튼
+              if ((backendStatus === 1 || backendStatus === 2) && !isReadOnly) {
+                return (
+                  <>
+                    <button className="btn-lg btn-draft" onClick={handleSaveDraft}>임시저장</button>
+                    <button className="btn-lg btn-request" onClick={handleSubmitEstimate}>견적요청</button>
+                    <button className="btn-lg btn-danger" onClick={handleDeleteEstimate}>삭제</button>
+                  </>
+                );
+              }
+              // 상태가 3(견적처리중) 이상이면 수정/삭제 버튼 (담당자 또는 관리자만)
+              if (backendStatus !== null && backendStatus >= 3) {
+                const isManager = currentUser?.userId === managerId;
+                const isAdmin = currentUser?.roleId === 1;
+                if (isManager || isAdmin) {
+                  // 편집 모드일 때는 저장/취소 버튼 표시
+                  if (!isReadOnly) {
+                    return (
+                      <>
+                        <button className="btn-lg btn-request" onClick={handleSaveEdit}>저장</button>
+                        <button className="btn-lg btn-draft" onClick={handleCancelEdit}>취소</button>
+                        <button className="btn-lg btn-danger" onClick={handleDeleteEstimate}>삭제</button>
+                      </>
+                    );
+                  }
+                  // 읽기 전용 모드일 때는 수정/삭제 버튼 표시
+                  return (
+                    <>
+                      <button className="btn-lg btn-draft" onClick={handleEdit}>수정</button>
+                      <button className="btn-lg btn-danger" onClick={handleDeleteEstimate}>삭제</button>
+                    </>
+                  );
+                }
+              }
+              return null;
+            })()}
           </div>
         </div>
         {/* 구분선 제거 */}
@@ -3577,7 +3703,7 @@ const NewEstimateRequestPage: React.FC = () => {
             <div className="summary-item"><span className="label">상태</span><strong className="value">{backendStatus === 1 ? '임시저장' : backendStatus === 2 ? '견적요청' : backendStatus === 3 ? '견적처리중' : backendStatus === 4 ? '견적완료' : backendStatus === 5 ? '주문' : (uiStatusText || '-')}</strong></div>
             <div className="summary-item"><span className="label">회사명</span><strong className="value">{selectedCustomer?.companyName || selectedCustomer?.name || '-'}</strong></div>
             <div className="summary-item"><span className="label">수량</span><strong className="value">{totalQty}</strong></div>
-            <div className="summary-item"><span className="label">요청자</span><strong className="value">{selectedCustomer?.name || selectedCustomer?.userName || '-'}</strong></div>
+            <div className="summary-item"><span className="label">요청자</span><strong className="value">{customerUserName || selectedCustomer?.name || selectedCustomer?.userName || currentUser?.name || currentUser?.userName || '-'}</strong></div>
             <div className="summary-item"><span className="label">요청일자</span><strong className="value">{(() => {
               // 재문의로 들어와 아직 요청(제출) 전이면 표시하지 않음
               if (prevEstimateNo && (!curEstimateNo || tempEstimateNo === prevEstimateNo) && (!backendStatus || backendStatus < 2)) {
@@ -3588,7 +3714,12 @@ const NewEstimateRequestPage: React.FC = () => {
               return m ? `${m[1]}.${m[2]}.${m[3]}` : '-';
             })()}</strong></div>
             <div className="summary-item"><span className="label">담당자</span><strong className="value">{managerName || '-'}</strong></div>
-            <div className="summary-item"><span className="label">완료일자</span><strong className="value">{(() => { if (!curEstimateNo) return '-'; const m = /YA(\d{4})(\d{2})(\d{2})-(\d{3})/.exec(curEstimateNo); return m ? `${m[1]}.${m[2]}.${m[3]}` : '-'; })()}</strong></div>
+            <div className="summary-item"><span className="label">완료일자</span><strong className="value">{(() => { 
+              // 견적요청 상태(2) 이하일 때는 완료일자 표시하지 않음
+              if (!curEstimateNo || !backendStatus || backendStatus <= 2) return '-'; 
+              const m = /YA(\d{4})(\d{2})(\d{2})-(\d{3})/.exec(curEstimateNo); 
+              return m ? `${m[1]}.${m[2]}.${m[3]}` : '-'; 
+            })()}</strong></div>
           </div>
         </div>
 

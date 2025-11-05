@@ -27,7 +27,8 @@ namespace EstimateRequestSystem.DTOs
         public string? Project { get; set; }
         public string? CustomerRequirement { get; set; }
         public string? StaffComment { get; set; }
-        public string? CustomerName { get; set; }
+        public string? CustomerName { get; set; } // 회사명 (CompanyName)
+        public string? CustomerUserName { get; set; } // 고객 사용자 이름 (Name, 요청자)
         public string? ManagerName { get; set; }
         public string? WriterName { get; set; }
         public List<EstimateRequestResponseDto> EstimateRequests { get; set; } = new List<EstimateRequestResponseDto>();

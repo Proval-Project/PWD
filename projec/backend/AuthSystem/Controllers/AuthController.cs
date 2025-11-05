@@ -51,6 +51,9 @@ namespace FullAuthSystem.Controllers
             if (!user.IsApproved)
                 return Unauthorized(new { message = "관리자 승인이 필요한 계정입니다." });
 
+            if (!user.IsActive)
+                return Unauthorized(new { message = "탈퇴한 계정입니다." });
+
             if (HashPassword(model.Password) != user.Password)
                 return BadRequest(new { message = "아이디 또는 비밀번호가 잘못되었습니다." });
 

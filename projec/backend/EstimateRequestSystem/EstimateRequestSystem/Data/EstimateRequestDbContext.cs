@@ -73,6 +73,7 @@ namespace EstimateRequestSystem.Data
                 entity.Property(e => e.Project).HasMaxLength(255);
                 entity.Property(e => e.CustomerRequirement).HasColumnType("TEXT");
                 entity.Property(e => e.StaffComment).HasColumnType("TEXT");
+                entity.Property(e => e.RequestDate).HasColumnType("datetime");
 
                 // Foreign keys
                 entity.HasOne(e => e.Customer)

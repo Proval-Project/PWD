@@ -2,10 +2,10 @@ import React, { useEffect, useState } from "react";
 import { IoIosArrowBack } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 import Modal from "../../components/common/Modal";
+import { deleteCustomer, getCustomerById, UserResponseDto } from "../../api/userManagement";
 
 interface UserInfo {
   userID: string;
-  password: string;
   email: string;
   name: string;
   phoneNumber: string;
@@ -15,21 +15,84 @@ interface UserInfo {
   businessNumber: string;
   address: string;
   companyPhone: string;
+  roleID?: number;
+  roleName?: string;
+  isApproved?: boolean;
 }
 
 const ClientInfoPage: React.FC = () => {
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useEffect(() => {
-    const userStr = localStorage.getItem("user");
-    if (userStr) {
-      setUserInfo(JSON.parse(userStr));
-    }
-  }, []);
+    const loadUserInfo = async () => {
+      try {
+        const userStr = localStorage.getItem("user");
+        if (!userStr) {
+          alert("로그인 정보를 찾을 수 없습니다.");
+          navigate("/login");
+          return;
+        }
+
+        const localUser = JSON.parse(userStr);
+        const userID = localUser.userID || localUser.userId;
+        
+        if (!userID) {
+          alert("사용자 ID를 찾을 수 없습니다.");
+          navigate("/login");
+          return;
+        }
+
+        // API에서 최신 사용자 정보 가져오기
+        const userData = await getCustomerById(userID);
+        
+        // UserResponseDto를 UserInfo로 변환
+        setUserInfo({
+          userID: userData.userID,
+          email: userData.email,
+          name: userData.name,
+          phoneNumber: userData.phoneNumber || '',
+          department: userData.department || '',
+          position: userData.position || '',
+          companyName: userData.companyName || '',
+          businessNumber: userData.businessNumber || '',
+          address: userData.address || '',
+          companyPhone: userData.companyPhone || '',
+          roleID: userData.roleID,
+          roleName: (userData as any).roleName || '',
+          isApproved: userData.isApproved,
+        });
+      } catch (error) {
+        console.error("사용자 정보를 불러오는 중 오류가 발생했습니다:", error);
+        alert("사용자 정보를 불러오는데 실패했습니다.");
+        // 에러 발생 시에도 localStorage의 정보를 사용 (fallback)
+        const userStr = localStorage.getItem("user");
+        if (userStr) {
+          const localUser = JSON.parse(userStr);
+          setUserInfo({
+            userID: localUser.userID || localUser.userId || '',
+            email: localUser.email || '',
+            name: localUser.name || localUser.userName || '',
+            phoneNumber: localUser.phoneNumber || '',
+            department: localUser.department || '',
+            position: localUser.position || '',
+            companyName: localUser.companyName || '',
+            businessNumber: localUser.businessNumber || '',
+            address: localUser.address || '',
+            companyPhone: localUser.companyPhone || '',
+          });
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUserInfo();
+  }, [navigate]);
 
   const handleEdit = () => {
     setIsEditModalOpen(true);
@@ -39,16 +102,24 @@ const ClientInfoPage: React.FC = () => {
     setIsDeleteModalOpen(true);
   };
 
-  const confirmDelete = () => {
-    // ✅ 회원탈퇴 로직 추가
-    console.log("회원탈퇴 처리");
-    setIsDeleteModalOpen(false);
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    navigate("/login");
+  const confirmDelete = async () => {
+    try {
+      if (!userInfo?.userID) {
+        alert("사용자 정보를 찾을 수 없습니다.");
+        return;
+      }
+      await deleteCustomer(userInfo.userID);
+      setIsDeleteModalOpen(false);
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      navigate("/login");
+    } catch (error) {
+      console.error("회원탈퇴 처리 실패:", error);
+      alert("회원탈퇴 처리에 실패했습니다.");
+    }
   };
 
-  if (!userInfo) {
+  if (loading || !userInfo) {
     return <div className="p-5">회원 정보를 불러오는 중...</div>;
   }
 
@@ -68,48 +139,56 @@ const ClientInfoPage: React.FC = () => {
         <tbody>
           <tr>
             <th className="w-1/3 bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">아이디</th>
-            <td className="p-3 font-semibold">{userInfo.userID}</td>
-          </tr>
-          <tr>
-            <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">비밀번호</th>
-            <td className="p-3 font-semibold">{userInfo.password}</td>
+            <td className="p-3 font-semibold">{userInfo.userID || '-'}</td>
           </tr>
           <tr>
             <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">이메일</th>
-            <td className="p-3 font-semibold">{userInfo.email}</td>
+            <td className="p-3 font-semibold">{userInfo.email || '-'}</td>
           </tr>
           <tr>
             <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">담당자 성함</th>
-            <td className="p-3 font-semibold">{userInfo.name}</td>
+            <td className="p-3 font-semibold">{userInfo.name || '-'}</td>
           </tr>
           <tr>
             <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">담당자 연락처</th>
-            <td className="p-3 font-semibold">{userInfo.phoneNumber}</td>
+            <td className="p-3 font-semibold">{userInfo.phoneNumber || '-'}</td>
           </tr>
           <tr>
             <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">부서</th>
-            <td className="p-3 font-semibold">{userInfo.department}</td>
+            <td className="p-3 font-semibold">{userInfo.department || '-'}</td>
           </tr>
           <tr>
             <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">직책</th>
-            <td className="p-3 font-semibold">{userInfo.position}</td>
+            <td className="p-3 font-semibold">{userInfo.position || '-'}</td>
           </tr>
           <tr>
             <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">회사명</th>
-            <td className="p-3 font-semibold">{userInfo.companyName}</td>
+            <td className="p-3 font-semibold">{userInfo.companyName || '-'}</td>
           </tr>
           <tr>
             <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">사업자등록번호</th>
-            <td className="p-3 font-semibold">{userInfo.businessNumber}</td>
+            <td className="p-3 font-semibold">{userInfo.businessNumber || '-'}</td>
           </tr>
           <tr>
             <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">주소</th>
-            <td className="p-3 font-semibold">{userInfo.address}</td>
+            <td className="p-3 font-semibold">{userInfo.address || '-'}</td>
           </tr>
           <tr>
             <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">회사 연락처</th>
-            <td className="p-3 font-semibold">{userInfo.companyPhone}</td>
+            <td className="p-3 font-semibold">{userInfo.companyPhone || '-'}</td>
           </tr>
+          {userInfo.roleName && (
+            <tr>
+              <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">역할</th>
+              <td className="p-3 font-semibold">{userInfo.roleName || '-'}</td>
+            </tr>
+          )}
+          {userInfo.isApproved !== undefined && (
+            <tr>
+              <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">승인 상태</th>
+              <td className="p-3 font-semibold">{userInfo.isApproved ? '승인됨' : '대기중'}</td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>

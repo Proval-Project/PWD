@@ -176,7 +176,8 @@ namespace UserManagementSystem.Services
             var user = await _context.Users.FindAsync(userID);
             if (user == null) return false;
 
-            _context.Users.Remove(user);
+            // 실제 삭제 대신 IsActive를 false로 설정하여 비활성화
+            user.IsActive = false;
             await _context.SaveChangesAsync();
             return true;
         }
@@ -205,7 +206,7 @@ namespace UserManagementSystem.Services
         {
             return await _context.Users
                 .Include(u => u.Role)
-                .Where(u => u.RoleID == roleId && u.IsApproved)
+                .Where(u => u.RoleID == roleId && u.IsApproved && u.IsActive)
                 .Select(u => new UserListResponseDto
                 {
                     UserID = u.UserID,

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import './CustomerDetail.css'; // 고객/담당자 상세 CSS 재활용
 import { IoIosArrowBack } from "react-icons/io";
 import Modal from "../../components/common/Modal";
-import { getPendingApprovals, approveUser } from '../../api/userManagement';
+import { getPendingApprovals, approveUser, rejectUser } from '../../api/userManagement';
 
 interface MembershipRequestDetail {
   userID: string;
@@ -52,9 +52,14 @@ const MembershipRequestDetailPage: React.FC = () => {
   };
 
   const confirmReject = async () => {
-    console.log("거절 처리 (API 필요)");
-    setIsRejectModalOpen(false);
-    navigate("/membership-requests");
+    try {
+      await rejectUser(detail.userID);
+      setIsRejectModalOpen(false);
+      navigate("/membership-requests");
+    } catch (error) {
+      console.error("거절 처리 실패:", error);
+      alert("거절 처리에 실패했습니다.");
+    }
   };
 
   return (

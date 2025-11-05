@@ -367,7 +367,8 @@ namespace EstimateRequestSystem.Services
                     Status = (int)EstimateStatus.Requested, // 견적요청 상태
                     Project = dto.Project ?? "",
                     CustomerRequirement = dto.CustomerRequirement ?? "",
-                    StaffComment = dto.StaffComment ?? ""
+                    StaffComment = dto.StaffComment ?? "",
+                    RequestDate = DateTime.Now // 견적요청 시 현재 날짜로 설정
                 };
                 _context.EstimateSheetLv1.Add(estimateSheet);
             }
@@ -384,6 +385,7 @@ namespace EstimateRequestSystem.Services
                 estimateSheet.CustomerRequirement = dto.CustomerRequirement ?? "";
                 estimateSheet.StaffComment = dto.StaffComment ?? "";
                 estimateSheet.Status = (int)EstimateStatus.Requested; // 견적요청 상태
+                estimateSheet.RequestDate = DateTime.Now; // 견적요청 시 현재 날짜로 업데이트
             }
 
             // 2. 기존 EstimateRequest 및 DataSheetLv3 삭제
@@ -563,7 +565,8 @@ namespace EstimateRequestSystem.Services
                 Project = estimateSheet.Project,
                 CustomerRequirement = estimateSheet.CustomerRequirement,
                 StaffComment = estimateSheet.StaffComment,
-                CustomerName = estimateSheet.Customer?.Name,
+                CustomerName = estimateSheet.Customer?.CompanyName ?? estimateSheet.CustomerID,
+                CustomerUserName = estimateSheet.Customer?.Name ?? estimateSheet.CustomerID,
                 ManagerName = estimateSheet.Manager?.Name,
                 WriterName = estimateSheet.Writer?.Name,
                 EstimateRequests = estimateSheet.EstimateRequests.Select(er => new EstimateRequestResponseDto
@@ -1788,6 +1791,7 @@ namespace EstimateRequestSystem.Services
                                sheet.ManagerID,
                                sheet.Status,
                                sheet.Project,
+                               sheet.RequestDate,
                                CustomerName = c != null ? c.CompanyName : sheet.CustomerID,
                                ManagerName = m != null ? (m.Name ?? m.UserID) : sheet.ManagerID, // 담당자명
                                WriterName = w != null ? w.Name : null, // 작성자명
@@ -1820,7 +1824,7 @@ namespace EstimateRequestSystem.Services
                 x.CustomerContactName,
                 x.CustomerPosition,
                 x.EstimateRequestCount,
-                RequestDate = ParseDateFromTempEstimateNo(x.TempEstimateNo)
+                RequestDate = x.RequestDate ?? ParseDateFromTempEstimateNo(x.TempEstimateNo)
             }).AsQueryable();
 
             // 검색어 필터
@@ -2004,11 +2008,33 @@ namespace EstimateRequestSystem.Services
             var sheet = await _context.EstimateSheetLv1.FirstOrDefaultAsync(x => x.TempEstimateNo == tempEstimateNo);
             if (sheet == null) return null;
 
-            // CurEstimateNo가 이미 있으면 그대로 사용, 없으면 생성하지 않음
-            // 견적번호는 견적요청 시점에만 생성되고 이후 변경되지 않음
-            sheet.Status = (int)EstimateStatus.Completed; // 견적완료(가정: 4)
+            // 견적 완료 시점에 CurEstimateNo를 오늘 날짜로 재생성 (완료일자와 견적번호 날짜 일치)
+            var today = DateTime.Now;
+            var datePrefix = today.ToString("yyyyMMdd");
+            var prefix = $"YA{datePrefix}-";
+
+            // 오늘 날짜로 생성된 CurEstimateNo 중 가장 큰 번호 찾기
+            var existingNumbers = await _context.EstimateSheetLv1
+                .Where(es => es.CurEstimateNo != null && es.CurEstimateNo.StartsWith(prefix))
+                .Select(es => es.CurEstimateNo!)
+                .ToListAsync();
+
+            var maxSeq = 0;
+            foreach (var no in existingNumbers)
+            {
+                var parts = no.Split('-');
+                if (parts.Length == 2 && int.TryParse(parts[1], out int seq))
+                    maxSeq = Math.Max(maxSeq, seq);
+            }
+
+            var next = maxSeq + 1;
+            var newCurEstimateNo = $"{prefix}{next:D3}";
+            
+            // CurEstimateNo를 완료일자 기준으로 재생성
+            sheet.CurEstimateNo = newCurEstimateNo;
+            sheet.Status = (int)EstimateStatus.Completed; // 견적완료(4)
             await _context.SaveChangesAsync();
-            return sheet.CurEstimateNo; // 기존 CurEstimateNo 반환 (없으면 null)
+            return sheet.CurEstimateNo;
         }
 
         public async Task<bool> CancelCompletionAsync(string tempEstimateNo)
@@ -2089,6 +2115,7 @@ namespace EstimateRequestSystem.Services
                                sheet.ManagerID,
                                sheet.Status,
                                sheet.Project,
+                               sheet.RequestDate,
                                CustomerName = c != null ? c.CompanyName : sheet.CustomerID,
                                WriterName = w != null ? w.Name : null,
                                ManagerName = m != null ? m.Name : null,
@@ -2113,7 +2140,7 @@ namespace EstimateRequestSystem.Services
                 x.WriterName,
                 x.ManagerName,
                 x.EstimateRequestCount,
-                RequestDate = ParseDateFromTempEstimateNo(x.TempEstimateNo)
+                RequestDate = x.RequestDate ?? ParseDateFromTempEstimateNo(x.TempEstimateNo)
             }).AsQueryable();
 
             // 상태 필터 - 임시저장 페이지에서는 임시저장 상태만 조회
@@ -2235,6 +2262,7 @@ namespace EstimateRequestSystem.Services
                        sheet.ManagerID,
                        sheet.Status,
                        sheet.Project,
+                       sheet.RequestDate,
                        CustomerName = c != null ? c.CompanyName : sheet.CustomerID,
                        CustomerContactName = c != null ? c.Name : null,
                        CustomerPosition = c != null ? c.Position : null,
@@ -2271,7 +2299,7 @@ namespace EstimateRequestSystem.Services
         x.ManagerPosition,
         x.ManagerRoleId,
         x.EstimateRequestCount,
-        RequestDate = ParseDateFromTempEstimateNo(x.TempEstimateNo)
+        RequestDate = x.RequestDate ?? ParseDateFromTempEstimateNo(x.TempEstimateNo)
     }).AsQueryable();
 
     // 상태 필터 - 견적관리에서는 임시저장 제외한 상태만 조회

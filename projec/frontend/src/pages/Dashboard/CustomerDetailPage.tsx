@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import './CustomerDetail.css';
 import { IoIosArrowBack } from "react-icons/io";
 import Modal from "../../components/common/Modal";
+import { getCustomerById, deleteCustomer, UserResponseDto } from "../../api/userManagement";
 
 interface User {
   userID: string;
@@ -13,11 +14,14 @@ interface User {
   department: string;
   position: string;
   phoneNumber: string;
+  businessNumber: string;
+  address: string;
+  companyPhone: string;
   isApproved: boolean;
 }
 
 const CustomerDetailPage: React.FC = () => {
-  const { userID } = useParams<{ userID: string }>();
+  const { customerId } = useParams<{ customerId: string }>();
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -26,20 +30,40 @@ const CustomerDetailPage: React.FC = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useEffect(() => {
-    const mockUser: User = {
-      userID: userID || '',
-      name: '김고객',
-      email: 'customer@example.com',
-      roleId: 3, // Customer
-      companyName: '테스트고객사',
-      department: '구매팀',
-      position: '과장',
-      phoneNumber: '010-2345-6789',
-      isApproved: true
+    const fetchCustomer = async () => {
+      try {
+        if (!customerId) {
+          alert("사용자 ID가 없습니다.");
+          navigate("/customer-management");
+          return;
+        }
+        
+        const data = await getCustomerById(customerId);
+        setUser({
+          userID: data.userID,
+          name: data.name,
+          email: data.email,
+          roleId: data.roleID,
+          companyName: data.companyName || '',
+          department: data.department || '',
+          position: data.position || '',
+          phoneNumber: data.phoneNumber || '',
+          businessNumber: data.businessNumber || '',
+          address: data.address || '',
+          companyPhone: data.companyPhone || '',
+          isApproved: data.isApproved,
+        });
+      } catch (err) {
+        console.error("고객 정보 로드 실패:", err);
+        alert("고객 정보를 불러오는데 실패했습니다.");
+        navigate("/customer-management");
+      } finally {
+        setLoading(false);
+      }
     };
-    setUser(mockUser);
-    setLoading(false);
-  }, [userID]);
+    
+    fetchCustomer();
+  }, [customerId, navigate]);
 
   if (loading) {
     return <div>로딩 중...</div>;
@@ -49,10 +73,20 @@ const CustomerDetailPage: React.FC = () => {
     return <div>사용자를 찾을 수 없습니다.</div>;
   }
 
-  const confirmDelete = () => {
-    console.log("회원탈퇴 처리 실행");
-    setIsDeleteModalOpen(false);
-    navigate("/customer-management");
+  const confirmDelete = async () => {
+    try {
+      if (!user?.userID) {
+        alert("사용자 정보를 찾을 수 없습니다.");
+        return;
+      }
+      await deleteCustomer(user.userID);
+      setIsDeleteModalOpen(false);
+      alert("고객이 삭제되었습니다.");
+      navigate("/customer-management");
+    } catch (err) {
+      console.error("삭제 실패:", err);
+      alert("고객 삭제에 실패했습니다.");
+    }
   };
 
   return (
@@ -72,43 +106,47 @@ const CustomerDetailPage: React.FC = () => {
           <tbody>
             <tr>
               <th className="w-1/3 bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">아이디</th>
-              <td className="p-3 font-semibold">{user.userID}</td>
+              <td className="p-3 font-semibold">{user.userID || '-'}</td>
+            </tr>
+            <tr>
+              <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">이메일</th>
+              <td className="p-3 font-semibold">{user.email || '-'}</td>
             </tr>
             <tr>
               <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">회사명</th>
-              <td className="p-3 font-semibold">{user.companyName}</td>
+              <td className="p-3 font-semibold">{user.companyName || '-'}</td>
             </tr>
             <tr>
               <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">사업자등록번호</th>
-              <td className="p-3 font-semibold">123-45-67890</td> {/* 더미 */}
+              <td className="p-3 font-semibold">{user.businessNumber || '-'}</td>
             </tr>
             <tr>
               <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">주소</th>
-              <td className="p-3 font-semibold">서울시 강남구 테헤란로 123</td> {/* 더미 */}
+              <td className="p-3 font-semibold">{user.address || '-'}</td>
             </tr>
             <tr>
-              <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">대표번호</th>
-              <td className="p-3 font-semibold">{user.phoneNumber}</td>
+              <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">회사 연락처</th>
+              <td className="p-3 font-semibold">{user.companyPhone || '-'}</td>
             </tr>
             <tr>
               <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">담당자 성함</th>
-              <td className="p-3 font-semibold">{user.name}</td>
+              <td className="p-3 font-semibold">{user.name || '-'}</td>
             </tr>
             <tr>
               <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">담당자 부서</th>
-              <td className="p-3 font-semibold">{user.department}</td>
+              <td className="p-3 font-semibold">{user.department || '-'}</td>
             </tr>
             <tr>
               <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">담당자 직급</th>
-              <td className="p-3 font-semibold">{user.position}</td>
+              <td className="p-3 font-semibold">{user.position || '-'}</td>
             </tr>
             <tr>
               <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">담당자 연락처</th>
-              <td className="p-3 font-semibold">010-1111-2222</td> {/* 더미 */}
+              <td className="p-3 font-semibold">{user.phoneNumber || '-'}</td>
             </tr>
             <tr>
-              <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">담당자 이메일</th>
-              <td className="p-3 font-semibold">{user.email}</td>
+              <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">승인 상태</th>
+              <td className="p-3 font-semibold">{user.isApproved ? '승인됨' : '대기중'}</td>
             </tr>
           </tbody>
         </table>

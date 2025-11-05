@@ -1626,6 +1626,15 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
       const estimateResponse = await getEstimateDetail(tempEstimateNo, currentUser?.userId || 'admin');
       const estimateData = estimateResponse;
 
+      // 권한 체크: 담당자 또는 관리자만 상태 변경 가능
+      const isManager = currentUser?.userId === estimateData.estimateSheet?.managerID;
+      const isAdmin = currentUser?.roleId === 1;
+      
+      if (!isManager && !isAdmin) {
+        alert('담당자 또는 관리자만 상태를 변경할 수 있습니다.');
+        return;
+      }
+
       // 견적요청 상태(2)에서만 견적처리중(3)으로 변경 가능
       // if (currentStatusCode === 2 && newStatusCode === 3) {
         // 상태 변경 API 호출
@@ -1666,10 +1675,12 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
   // 첨부파일 관련 함수들
   const handleDownloadFile = async (file: any, type: 'customer' | 'manager') => {
     try {
+      // 고객은 PDF만, 관리자는 모든 파일 다운로드 가능
       if (type === 'customer' && !file.fileName.toLowerCase().endsWith('.pdf')) {
         alert('고객은 PDF 파일만 다운로드할 수 있습니다.');
         return;
       }
+      // type === 'manager'인 경우 모든 파일 다운로드 가능 (제한 없음)
       
       // 파일 다운로드 API 호출
               const response = await fetch(`/api/estimate/attachments/${file.attachmentID}/download`);
@@ -2334,17 +2345,22 @@ const handleSaveSpecification = async () => {
 
     // 악세사리 선택 핸들러
     const handleSelectAccessory = (selectedModel: any) => {
+      // 메이커 이름 찾기
+      const selectedMakerName = accMakerList.find(maker => 
+        maker.accMakerCode === selectedModel.accMakerCode && maker.accTypeCode === selectedModel.accTypeCode
+      )?.accMakerName || '';
+      
+      // onAccessoryChange에 makerName과 modelName 포함하여 전달
       onAccessoryChange({
         ...selectedModel,
         typeCode: selectedModel.accTypeCode,
         makerCode: selectedModel.accMakerCode,
         modelCode: selectedModel.accModelCode,
         specification: selectedModel.accSize || '',
+        makerName: selectedMakerName,
+        modelName: selectedModel.accModelName || '',
       });
       // 선택 시 세 입력 필드를 선택된 값으로 채우기
-      const selectedMakerName = accMakerList.find(maker => 
-        maker.accMakerCode === selectedModel.accMakerCode && maker.accTypeCode === selectedModel.accTypeCode
-      )?.accMakerName || '';
       setMakerSearchTerm(selectedMakerName);
       setModelSearchTerm(selectedModel.accModelName || '');
       setSpecSearchTerm(selectedModel.accSize || '');
