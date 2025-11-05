@@ -72,3 +72,40 @@ obj/
 # Visual Studio
 .vs/
 *.sln.docstates
+
+# .NET build artifacts (more specific)
+**/bin/Debug/
+**/bin/Release/
+**/obj/Debug/
+**/obj/Release/
+**/*.dll
+**/*.pdb
+**/*.exe
+**/obj/**/*
+**/bin/**/*
+
+# NuGet
+**/packages/
+**/*.nupkg
+**/project.lock.json
+**/project.fragment.lock.json
+**/artifacts/
+**/*.nuget.props
+**/*.nuget.targets
+**/obj/**/*.cache
+**/obj/**/*.dgspec.json
+**/obj/**/*.sourcelink.json
+**/obj/**/*.AssemblyInfo.cs
+**/obj/**/*.assets.cache
+**/obj/**/*.FileListAbsolute.txt
+**/obj/**/*.GeneratedMSBuildEditorConfig.editorconfig
+**/obj/**/*.AssemblyInfoInputs.cache
+**/obj/**/*.genruntimeconfig.cache
+**/obj/**/*.csproj.nuget.dgspec.json
+**/obj/**/*.nuget.dgspec.json
+**/obj/**/project.assets.json
+**/obj/**/project.nuget.cache
+
+# ClientApp build files
+**/package-lock.json
+!projec/ClientApp/package-lock.json
