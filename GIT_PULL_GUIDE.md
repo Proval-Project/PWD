@@ -43,7 +43,44 @@ git pull origin main
 git stash pop
 ```
 
-### 방법 4: 완전히 깨끗하게 업데이트 (최후의 수단)
+### 방법 4: 빌드 파일 충돌 해결 (다른 컴퓨터에서 빌드 파일이 Git에 추적 중일 때)
+**이 에러가 나는 경우:** "Your local changes to the following files would be overwritten by merge"
+
+**해결 방법:**
+
+**옵션 A: 빌드 파일 정리 스크립트 사용 (권장)**
+```bash
+# Windows Git Bash
+./clean-build-files.sh
+
+# 또는 Windows 명령 프롬프트
+clean-build-files.bat
+
+# 그 다음 pull
+git pull origin main
+```
+
+**옵션 B: 수동으로 빌드 파일 제거**
+```bash
+# Git 추적에서 빌드 파일 제거 (로컬 파일은 유지)
+git rm --cached -r projec/**/bin/ projec/**/obj/
+
+# 또는 모든 빌드 파일 제거
+git ls-files | grep -E "(bin/|obj/|\.dll$|\.pdb$|\.exe$)" | xargs git rm --cached
+
+# 그 다음 pull
+git pull origin main
+```
+
+**옵션 C: 완전히 깨끗하게 업데이트 (로컬 변경사항 모두 삭제)**
+```bash
+# 주의: 로컬 변경사항이 모두 사라집니다!
+git fetch origin
+git reset --hard origin/main
+git clean -fd
+```
+
+### 방법 5: 완전히 깨끗하게 업데이트 (최후의 수단)
 다른 컴퓨터의 모든 로컬 변경사항을 버리고 최신 코드로 덮어쓰기:
 
 ```bash
@@ -75,17 +112,33 @@ rm .git/index.lock
 git pull origin main
 ```
 
-**Windows:**
-```cmd
-del .git\index.lock
+**Windows (Git Bash에서):**
+```bash
+# 방법 1: 일반 삭제 시도
+rm .git/index.lock
+
+# 방법 2: "Device or resource busy" 에러가 나면
+# 1단계: 모든 Git 관련 프로세스 종료 (VS Code, Git GUI 등)
+# 2단계: 파일 탐색기에서 직접 삭제 시도
+# 3단계: 또는 관리자 권한으로 삭제
+
+# 방법 3: 강제 삭제 (Windows)
+# 파일 탐색기에서 .git/index.lock 파일을 찾아서 직접 삭제
+# 또는 명령 프롬프트(관리자 권한)에서:
+#   del /f .git\index.lock
+
+# 방법 4: Git 프로세스 확인 후 삭제
+# 작업 관리자에서 git.exe, gitk.exe 등 Git 관련 프로세스 종료 후
+# 다시 삭제 시도
+
 git pull origin main
 ```
 
-또는 Git Bash에서:
-```bash
-rm .git/index.lock
-git pull origin main
-```
+**Windows에서 "Device or resource busy" 에러가 나는 경우:**
+1. **VS Code나 다른 에디터 종료** - Git 관련 프로세스가 lock 파일을 잠글 수 있습니다
+2. **파일 탐색기에서 직접 삭제** - `.git/index.lock` 파일을 찾아서 삭제
+3. **관리자 권한으로 삭제** - 명령 프롬프트를 관리자 권한으로 실행 후 삭제
+4. **Git 프로세스 종료** - 작업 관리자에서 `git.exe` 프로세스 확인 및 종료
 
 ## 자주 묻는 질문
 
