@@ -62,15 +62,45 @@ git clean -fd
 - NuGet 캐시 파일
 - package-lock.json (ClientApp 제외)
 
+## 자주 발생하는 에러 해결
+
+### 에러: "Unable to create '.git/index.lock': File exists"
+이 에러는 Git의 lock 파일이 남아있을 때 발생합니다.
+
+**해결 방법:**
+
+**Mac/Linux:**
+```bash
+rm .git/index.lock
+git pull origin main
+```
+
+**Windows:**
+```cmd
+del .git\index.lock
+git pull origin main
+```
+
+또는 Git Bash에서:
+```bash
+rm .git/index.lock
+git pull origin main
+```
+
 ## 자주 묻는 질문
 
 **Q: git pull이 안 되는데 왜 그런가요?**
 A: 보통 로컬에 수정된 파일이 있거나, Git이 추적하는 파일이 변경되었을 때 발생합니다.
    빌드 파일은 `.gitignore`에 있어서 일반적으로 문제가 되지 않습니다.
+   또는 `.git/index.lock` 파일이 남아있을 수 있습니다.
 
 **Q: npm install이나 dotnet build를 했는데 괜찮나요?**
 A: 네, 괜찮습니다. 빌드 파일은 `.gitignore`에 포함되어 있어서 Git이 추적하지 않습니다.
 
 **Q: 다른 컴퓨터에서 빌드 파일을 정리해야 하나요?**
 A: 일반적으로는 필요 없습니다. 하지만 git pull이 안 될 때만 정리 스크립트를 실행하세요.
+
+**Q: "index.lock: File exists" 에러가 나요?**
+A: `.git/index.lock` 파일을 삭제하고 다시 시도하세요. 다른 Git 프로세스가 실행 중이거나
+   이전 작업이 비정상 종료되어 lock 파일이 남아있는 경우입니다.
 
