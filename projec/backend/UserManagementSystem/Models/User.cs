@@ -53,6 +53,8 @@ namespace UserManagementSystem.Models
         
         public bool IsApproved { get; set; } = false;
         
+        public bool IsActive { get; set; } = true;
+        
         // Navigation property
         public virtual Role? Role { get; set; }
     }
