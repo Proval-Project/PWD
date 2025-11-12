@@ -31,6 +31,7 @@ export interface EstimateInquiryItem {
   companyName: string;
   contactPerson: string;
   requestDate: string;
+  completeDate?: string;
   quantity: number;
   statusText: string;
   status: number;

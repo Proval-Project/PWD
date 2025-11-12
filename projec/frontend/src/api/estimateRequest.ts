@@ -329,6 +329,7 @@ export interface EstimateSheetInfoDto {
   customerRequirement?: string;
   staffComment?: string;
   createdDate: string;
+  completeDate?: string;
 }
 
 export interface EstimateRequestDetailDto {

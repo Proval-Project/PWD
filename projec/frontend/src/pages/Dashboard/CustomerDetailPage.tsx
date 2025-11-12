@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import './CustomerDetail.css';
 import { IoIosArrowBack } from "react-icons/io";
 import Modal from "../../components/common/Modal";
-import { getCustomerById, deleteCustomer, UserResponseDto } from "../../api/userManagement";
+import { getCustomerById, deleteCustomer, updateCustomer, UserResponseDto } from "../../api/userManagement";
 
 interface User {
   userID: string;
@@ -25,6 +25,8 @@ const CustomerDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedUser, setEditedUser] = useState<User | null>(null);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -89,6 +91,42 @@ const CustomerDetailPage: React.FC = () => {
     }
   };
 
+  const handleEdit = () => {
+    setEditedUser({ ...user! });
+    setIsEditMode(true);
+    setIsEditModalOpen(false);
+  };
+
+  const handleSave = async () => {
+    if (!editedUser || !user) return;
+    
+    try {
+      await updateCustomer(user.userID, {
+        name: editedUser.name,
+        email: editedUser.email,
+        companyName: editedUser.companyName,
+        businessNumber: editedUser.businessNumber,
+        address: editedUser.address,
+        companyPhone: editedUser.companyPhone,
+        department: editedUser.department,
+        position: editedUser.position,
+        phoneNumber: editedUser.phoneNumber,
+      });
+      
+      setUser(editedUser);
+      setIsEditMode(false);
+      alert("수정이 완료되었습니다.");
+    } catch (err: any) {
+      console.error("수정 실패:", err);
+      alert(err.response?.data?.message || "수정에 실패했습니다.");
+    }
+  };
+
+  const handleCancel = () => {
+    setEditedUser(null);
+    setIsEditMode(false);
+  };
+
   return (
     <div className="p-5 max-w-[1200px] mx-auto">
       <div className="flex items-center mb-1 gap-3 mt-7">
@@ -110,39 +148,138 @@ const CustomerDetailPage: React.FC = () => {
             </tr>
             <tr>
               <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">이메일</th>
-              <td className="p-3 font-semibold">{user.email || '-'}</td>
+              <td className="p-3 font-semibold">
+                {isEditMode ? (
+                  <input
+                    type="email"
+                    value={editedUser?.email || ''}
+                    onChange={(e) => setEditedUser({ ...editedUser!, email: e.target.value })}
+                    className="w-full px-2 py-1 border rounded"
+                  />
+                ) : (
+                  user.email || '-'
+                )}
+              </td>
             </tr>
             <tr>
               <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">회사명</th>
-              <td className="p-3 font-semibold">{user.companyName || '-'}</td>
+              <td className="p-3 font-semibold">
+                {isEditMode ? (
+                  <input
+                    type="text"
+                    value={editedUser?.companyName || ''}
+                    onChange={(e) => setEditedUser({ ...editedUser!, companyName: e.target.value })}
+                    className="w-full px-2 py-1 border rounded"
+                  />
+                ) : (
+                  user.companyName || '-'
+                )}
+              </td>
             </tr>
             <tr>
               <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">사업자등록번호</th>
-              <td className="p-3 font-semibold">{user.businessNumber || '-'}</td>
+              <td className="p-3 font-semibold">
+                {isEditMode ? (
+                  <input
+                    type="text"
+                    value={editedUser?.businessNumber || ''}
+                    onChange={(e) => setEditedUser({ ...editedUser!, businessNumber: e.target.value })}
+                    className="w-full px-2 py-1 border rounded"
+                  />
+                ) : (
+                  user.businessNumber || '-'
+                )}
+              </td>
             </tr>
             <tr>
               <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">주소</th>
-              <td className="p-3 font-semibold">{user.address || '-'}</td>
+              <td className="p-3 font-semibold">
+                {isEditMode ? (
+                  <input
+                    type="text"
+                    value={editedUser?.address || ''}
+                    onChange={(e) => setEditedUser({ ...editedUser!, address: e.target.value })}
+                    className="w-full px-2 py-1 border rounded"
+                  />
+                ) : (
+                  user.address || '-'
+                )}
+              </td>
             </tr>
             <tr>
               <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">회사 연락처</th>
-              <td className="p-3 font-semibold">{user.companyPhone || '-'}</td>
+              <td className="p-3 font-semibold">
+                {isEditMode ? (
+                  <input
+                    type="text"
+                    value={editedUser?.companyPhone || ''}
+                    onChange={(e) => setEditedUser({ ...editedUser!, companyPhone: e.target.value })}
+                    className="w-full px-2 py-1 border rounded"
+                  />
+                ) : (
+                  user.companyPhone || '-'
+                )}
+              </td>
             </tr>
             <tr>
               <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">담당자 성함</th>
-              <td className="p-3 font-semibold">{user.name || '-'}</td>
+              <td className="p-3 font-semibold">
+                {isEditMode ? (
+                  <input
+                    type="text"
+                    value={editedUser?.name || ''}
+                    onChange={(e) => setEditedUser({ ...editedUser!, name: e.target.value })}
+                    className="w-full px-2 py-1 border rounded"
+                  />
+                ) : (
+                  user.name || '-'
+                )}
+              </td>
             </tr>
             <tr>
               <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">담당자 부서</th>
-              <td className="p-3 font-semibold">{user.department || '-'}</td>
+              <td className="p-3 font-semibold">
+                {isEditMode ? (
+                  <input
+                    type="text"
+                    value={editedUser?.department || ''}
+                    onChange={(e) => setEditedUser({ ...editedUser!, department: e.target.value })}
+                    className="w-full px-2 py-1 border rounded"
+                  />
+                ) : (
+                  user.department || '-'
+                )}
+              </td>
             </tr>
             <tr>
               <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">담당자 직급</th>
-              <td className="p-3 font-semibold">{user.position || '-'}</td>
+              <td className="p-3 font-semibold">
+                {isEditMode ? (
+                  <input
+                    type="text"
+                    value={editedUser?.position || ''}
+                    onChange={(e) => setEditedUser({ ...editedUser!, position: e.target.value })}
+                    className="w-full px-2 py-1 border rounded"
+                  />
+                ) : (
+                  user.position || '-'
+                )}
+              </td>
             </tr>
             <tr>
               <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">담당자 연락처</th>
-              <td className="p-3 font-semibold">{user.phoneNumber || '-'}</td>
+              <td className="p-3 font-semibold">
+                {isEditMode ? (
+                  <input
+                    type="text"
+                    value={editedUser?.phoneNumber || ''}
+                    onChange={(e) => setEditedUser({ ...editedUser!, phoneNumber: e.target.value })}
+                    className="w-full px-2 py-1 border rounded"
+                  />
+                ) : (
+                  user.phoneNumber || '-'
+                )}
+              </td>
             </tr>
             <tr>
               <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">승인 상태</th>
@@ -153,18 +290,37 @@ const CustomerDetailPage: React.FC = () => {
       </div>
 
       <div className="flex justify-center gap-20 mt-10">
-        <button
-          onClick={() => setIsEditModalOpen(true)}
-          className="px-20 py-2 rounded bg-green-600 text-white font-semibold hover:bg-green-700"
-        >
-          수정
-        </button>
-        <button
-          onClick={() => setIsDeleteModalOpen(true)}
-          className="px-20 py-2 rounded bg-red-600 text-white font-semibold hover:bg-red-700"
-        >
-          삭제
-        </button>
+        {isEditMode ? (
+          <>
+            <button
+              onClick={handleSave}
+              className="px-20 py-2 rounded bg-green-600 text-white font-semibold hover:bg-green-700"
+            >
+              저장
+            </button>
+            <button
+              onClick={handleCancel}
+              className="px-20 py-2 rounded bg-gray-600 text-white font-semibold hover:bg-gray-700"
+            >
+              취소
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={() => setIsEditModalOpen(true)}
+              className="px-20 py-2 rounded bg-green-600 text-white font-semibold hover:bg-green-700"
+            >
+              수정
+            </button>
+            <button
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="px-20 py-2 rounded bg-red-600 text-white font-semibold hover:bg-red-700"
+            >
+              삭제
+            </button>
+          </>
+        )}
       </div>
 
       <Modal
@@ -174,10 +330,7 @@ const CustomerDetailPage: React.FC = () => {
         confirmText="수정"
         cancelText="취소"
         confirmColor="green"
-        onConfirm={() => {
-          setIsEditModalOpen(false);
-          console.log("수정 페이지 이동 or 수정 로직 실행");
-        }}
+        onConfirm={handleEdit}
         onCancel={() => setIsEditModalOpen(false)}
       />
 

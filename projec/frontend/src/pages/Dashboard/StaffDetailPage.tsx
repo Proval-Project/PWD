@@ -19,6 +19,8 @@ const StaffDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const [staff, setStaff] = useState<Staff | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedStaff, setEditedStaff] = useState<Staff | null>(null);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -61,7 +63,40 @@ const StaffDetailPage: React.FC = () => {
       navigate("/staff-management");
     } catch (err) {
       console.error("삭제 실패:", err);
+      alert("삭제에 실패했습니다.");
     }
+  };
+
+  const handleEdit = () => {
+    setEditedStaff({ ...staff! });
+    setIsEditMode(true);
+    setIsEditModalOpen(false);
+  };
+
+  const handleSave = async () => {
+    if (!editedStaff || !staff) return;
+    
+    try {
+      await updateStaff(staff.userID, {
+        name: editedStaff.name,
+        email: editedStaff.email,
+        department: editedStaff.department,
+        position: editedStaff.position,
+        phoneNumber: editedStaff.phoneNumber,
+      });
+      
+      setStaff(editedStaff);
+      setIsEditMode(false);
+      alert("수정이 완료되었습니다.");
+    } catch (err: any) {
+      console.error("수정 실패:", err);
+      alert(err.response?.data?.message || "수정에 실패했습니다.");
+    }
+  };
+
+  const handleCancel = () => {
+    setEditedStaff(null);
+    setIsEditMode(false);
   };
 
   return (
@@ -87,23 +122,78 @@ const StaffDetailPage: React.FC = () => {
             </tr>
             <tr>
               <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">담당자 성함</th>
-              <td className="p-3 font-semibold">{staff.name}</td>
+              <td className="p-3 font-semibold">
+                {isEditMode ? (
+                  <input
+                    type="text"
+                    value={editedStaff?.name || ''}
+                    onChange={(e) => setEditedStaff({ ...editedStaff!, name: e.target.value })}
+                    className="w-full px-2 py-1 border rounded"
+                  />
+                ) : (
+                  staff.name
+                )}
+              </td>
             </tr>
             <tr>
               <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">담당자 부서</th>
-              <td className="p-3 font-semibold">{staff.department}</td>
+              <td className="p-3 font-semibold">
+                {isEditMode ? (
+                  <input
+                    type="text"
+                    value={editedStaff?.department || ''}
+                    onChange={(e) => setEditedStaff({ ...editedStaff!, department: e.target.value })}
+                    className="w-full px-2 py-1 border rounded"
+                  />
+                ) : (
+                  staff.department
+                )}
+              </td>
             </tr>
             <tr>
               <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">담당자 직급</th>
-              <td className="p-3 font-semibold">{staff.position}</td>
+              <td className="p-3 font-semibold">
+                {isEditMode ? (
+                  <input
+                    type="text"
+                    value={editedStaff?.position || ''}
+                    onChange={(e) => setEditedStaff({ ...editedStaff!, position: e.target.value })}
+                    className="w-full px-2 py-1 border rounded"
+                  />
+                ) : (
+                  staff.position
+                )}
+              </td>
             </tr>
             <tr>
               <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">담당자 연락처</th>
-              <td className="p-3 font-semibold">{staff.phoneNumber}</td>
+              <td className="p-3 font-semibold">
+                {isEditMode ? (
+                  <input
+                    type="text"
+                    value={editedStaff?.phoneNumber || ''}
+                    onChange={(e) => setEditedStaff({ ...editedStaff!, phoneNumber: e.target.value })}
+                    className="w-full px-2 py-1 border rounded"
+                  />
+                ) : (
+                  staff.phoneNumber
+                )}
+              </td>
             </tr>
             <tr>
               <th className="bg-[#DFDFDF] border-[#CDCDCD] p-3 text-left font-semibold">담당자 이메일</th>
-              <td className="p-3 font-semibold">{staff.email}</td>
+              <td className="p-3 font-semibold">
+                {isEditMode ? (
+                  <input
+                    type="email"
+                    value={editedStaff?.email || ''}
+                    onChange={(e) => setEditedStaff({ ...editedStaff!, email: e.target.value })}
+                    className="w-full px-2 py-1 border rounded"
+                  />
+                ) : (
+                  staff.email
+                )}
+              </td>
             </tr>
           </tbody>
         </table>
@@ -111,18 +201,37 @@ const StaffDetailPage: React.FC = () => {
 
       {/* 버튼 */}
       <div className="flex justify-center gap-20 mt-10">
-        <button
-          onClick={() => setIsEditModalOpen(true)}
-          className="px-20 py-2 rounded bg-green-600 text-white font-semibold hover:bg-green-700"
-        >
-          수정
-        </button>
-        <button
-          onClick={() => setIsDeleteModalOpen(true)}
-          className="px-20 py-2 rounded bg-red-600 text-white font-semibold hover:bg-red-700"
-        >
-          삭제
-        </button>
+        {isEditMode ? (
+          <>
+            <button
+              onClick={handleSave}
+              className="px-20 py-2 rounded bg-green-600 text-white font-semibold hover:bg-green-700"
+            >
+              저장
+            </button>
+            <button
+              onClick={handleCancel}
+              className="px-20 py-2 rounded bg-gray-600 text-white font-semibold hover:bg-gray-700"
+            >
+              취소
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={() => setIsEditModalOpen(true)}
+              className="px-20 py-2 rounded bg-green-600 text-white font-semibold hover:bg-green-700"
+            >
+              수정
+            </button>
+            <button
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="px-20 py-2 rounded bg-red-600 text-white font-semibold hover:bg-red-700"
+            >
+              삭제
+            </button>
+          </>
+        )}
       </div>
 
       {/* 수정 모달 */}
@@ -133,10 +242,7 @@ const StaffDetailPage: React.FC = () => {
         confirmText="수정"
         cancelText="취소"
         confirmColor="green"
-        onConfirm={() => {
-          setIsEditModalOpen(false);
-          console.log("수정 로직 실행");
-        }}
+        onConfirm={handleEdit}
         onCancel={() => setIsEditModalOpen(false)}
       />
 

@@ -179,10 +179,18 @@ namespace EstimateRequestSystem.Services
             else
             {
                 // 기존 데이터 업데이트
+                // 기존 상태를 저장 (나중에 상태 유지 여부 판단용)
+                var existingStatus = estimateSheet.Status;
                 estimateSheet.CustomerID = dto.CustomerID;
                 estimateSheet.WriterID = dto.WriterID;
                 estimateSheet.Project = dto.Project ?? "";
                 estimateSheet.CustomerRequirement = dto.CustomerRequirement ?? "";
+                // 기존 상태가 견적요청(2) 이상이면 상태 유지, 그 외는 임시저장(1)로 설정
+                if (existingStatus < (int)EstimateStatus.Requested)
+                {
+                    estimateSheet.Status = (int)EstimateStatus.Draft; // 임시저장
+                }
+                // 견적요청(2) 이상이면 기존 상태 유지 (Status 변경하지 않음)
             }
 
             // 2. 기존 EstimateRequest 및 DataSheetLv3 삭제
@@ -332,15 +340,7 @@ namespace EstimateRequestSystem.Services
 
             }
 
-           
-
-            // EstimateSheet 업데이트
-            estimateSheet.Project = dto.Project;
-            estimateSheet.CustomerRequirement = dto.CustomerRequirement;
-            estimateSheet.CustomerID = dto.CustomerID;
-            estimateSheet.WriterID = dto.WriterID;
-            estimateSheet.Status = (int)EstimateStatus.Draft; // 임시저장
-
+            // EstimateSheet는 이미 위에서 업데이트되었으므로 여기서는 저장만 수행
             await _context.SaveChangesAsync();
             return true;
         }
@@ -1792,6 +1792,7 @@ namespace EstimateRequestSystem.Services
                                sheet.Status,
                                sheet.Project,
                                sheet.RequestDate,
+                               sheet.CompleteDate,
                                CustomerName = c != null ? c.CompanyName : sheet.CustomerID,
                                ManagerName = m != null ? (m.Name ?? m.UserID) : sheet.ManagerID, // 담당자명
                                WriterName = w != null ? w.Name : null, // 작성자명
@@ -1824,6 +1825,7 @@ namespace EstimateRequestSystem.Services
                 x.CustomerContactName,
                 x.CustomerPosition,
                 x.EstimateRequestCount,
+                x.CompleteDate,
                 RequestDate = x.RequestDate ?? ParseDateFromTempEstimateNo(x.TempEstimateNo)
             }).AsQueryable();
 
@@ -1905,7 +1907,8 @@ namespace EstimateRequestSystem.Services
                     CustomerName = x.CustomerContactName,
                     CustomerPosition = x.CustomerPosition,
                     ManagerID = x.ManagerID, // ManagerID 추가
-                    ManagerName = x.ManagerName ?? x.ManagerID ?? "미지정" // ManagerName 추가 및 fallback
+                    ManagerName = x.ManagerName ?? x.ManagerID ?? "미지정", // ManagerName 추가 및 fallback
+                    CompleteDate = x.CompleteDate
                 })
                 .ToList();
 
@@ -2014,6 +2017,7 @@ namespace EstimateRequestSystem.Services
 
             // 견적 완료 시 상태만 변경 (CurEstimateNo는 견적 요청 시 생성된 번호 그대로 유지)
             sheet.Status = (int)EstimateStatus.Completed; // 견적완료(4)
+            sheet.CompleteDate = DateTime.Now; // 완료일자를 오늘 날짜로 설정
             await _context.SaveChangesAsync();
             return sheet.CurEstimateNo;
         }
@@ -2097,6 +2101,7 @@ namespace EstimateRequestSystem.Services
                                sheet.Status,
                                sheet.Project,
                                sheet.RequestDate,
+                               sheet.CompleteDate,
                                CustomerName = c != null ? c.CompanyName : sheet.CustomerID,
                                WriterName = w != null ? w.Name : null,
                                ManagerName = m != null ? m.Name : null,
@@ -2121,6 +2126,7 @@ namespace EstimateRequestSystem.Services
                 x.WriterName,
                 x.ManagerName,
                 x.EstimateRequestCount,
+                x.CompleteDate,
                 RequestDate = x.RequestDate ?? ParseDateFromTempEstimateNo(x.TempEstimateNo)
             }).AsQueryable();
 
@@ -2180,6 +2186,7 @@ namespace EstimateRequestSystem.Services
                     WriterID = x.WriterID,
                     ManagerID = x.ManagerID,
                     ManagerName = x.ManagerName,
+                    CompleteDate = x.CompleteDate
                 })
                 .ToList();
 
@@ -2244,6 +2251,7 @@ namespace EstimateRequestSystem.Services
                        sheet.Status,
                        sheet.Project,
                        sheet.RequestDate,
+                       sheet.CompleteDate,
                        CustomerName = c != null ? c.CompanyName : sheet.CustomerID,
                        CustomerContactName = c != null ? c.Name : null,
                        CustomerPosition = c != null ? c.Position : null,
@@ -2280,6 +2288,7 @@ namespace EstimateRequestSystem.Services
         x.ManagerPosition,
         x.ManagerRoleId,
         x.EstimateRequestCount,
+        x.CompleteDate,
         RequestDate = x.RequestDate ?? ParseDateFromTempEstimateNo(x.TempEstimateNo)
     }).AsQueryable();
 
@@ -2348,6 +2357,7 @@ namespace EstimateRequestSystem.Services
             ManagerName = x.ManagerName,
             ManagerPosition = x.ManagerPosition,
             ManagerRoleId = x.ManagerRoleId,
+            CompleteDate = x.CompleteDate
         })
         .ToList();
 
@@ -2496,12 +2506,15 @@ namespace EstimateRequestSystem.Services
                     WriterName = estimateSheet.Writer?.Name ?? estimateSheet.WriterID ?? "",
                     ManagerID = estimateSheet.ManagerID,
                     ManagerName = estimateSheet.Manager?.Name ?? estimateSheet.ManagerID ?? "",
+                    ManagerPosition = estimateSheet.Manager?.Position,
+                    ManagerRoleId = estimateSheet.Manager?.RoleID,
                     Status = estimateSheet.Status,
                     StatusText = EstimateStatusExtensions.ToKoreanText(estimateSheet.Status),
                     Project = estimateSheet.Project,
                     CustomerRequirement = estimateSheet.CustomerRequirement,
                     StaffComment = estimateSheet.StaffComment,
-                    CreatedDate = ParseDateFromTempEstimateNo(estimateSheet.TempEstimateNo)
+                    CreatedDate = ParseDateFromTempEstimateNo(estimateSheet.TempEstimateNo),
+                    CompleteDate = estimateSheet.CompleteDate
                 },
                 EstimateRequests = groupedRequests,
                 Attachments = attachments,

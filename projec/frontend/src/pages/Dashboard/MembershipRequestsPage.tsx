@@ -28,6 +28,17 @@ const MembershipRequestsPage: React.FC = () => {
     loadRequests();
   }, []);
 
+  // 페이지 포커스 시 목록 새로고침 (거절/승인 후 돌아왔을 때)
+  useEffect(() => {
+    const handleFocus = () => {
+      loadRequests();
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
   const loadRequests = async () => {
     try {
       setLoading(true);

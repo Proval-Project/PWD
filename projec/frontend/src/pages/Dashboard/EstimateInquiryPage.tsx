@@ -55,8 +55,19 @@ const EstimateInquiryPage: React.FC = () => {
         ...overrideParams,
       };
 
-      if (user && user.roleId === 3) {
-        params.customerID = user.userId;
+      // 역할별 필터 적용
+      if (user) {
+        if (user.roleId === 1) {
+          // 관리자: 전체 견적 리스트 (필터 없음)
+          // 아무 필터도 추가하지 않음
+        } else if (user.roleId === 2) {
+          // 직원: 자신이 작성한 견적 리스트만
+          params.writerID = user.userId || user.userID;
+        } else if (user.roleId === 3) {
+          // 고객: 자신이 작성한 AND 자신의 견적 리스트
+          params.writerID = user.userId || user.userID;
+          params.customerID = user.userId || user.userID;
+        }
       }
 
       const response = await getEstimateInquiry(params);
@@ -113,21 +124,23 @@ const EstimateInquiryPage: React.FC = () => {
     fetchData(1, { isDescending: newIsDescending });
   };
 
-  const extractDateFromTempEstimateNo = (tempEstimateNo: string): string => {
-    const match = tempEstimateNo.match(/TEMP(\d{4})(\d{2})(\d{2})/);
+  const extractDateFromCurEstimateNo = (estimateNo: string): string => {
+    // YAyyyymmdd-xxx 형태에서 yyyy.mm.dd 추출
+    const match = estimateNo.match(/YA(\d{4})(\d{2})(\d{2})/);
     if (match) {
       return `${match[1]}.${match[2]}.${match[3]}`;
     }
-    return tempEstimateNo;
+    return '-';
   };
 
+  // 완료일자 등 YYYY.MM.DD 표기로 변환
   const formatDateYmd = (dateString?: string): string => {
-    if (!dateString) return '';
+    if (!dateString) return '-';
     return dateString.slice(0, 10).replace(/[-/]/g, '.');
   };
 
   const handleRowClick = (item: EstimateInquiryItem) => {
-    const url = `/estimate-request/new?load=${encodeURIComponent(item.tempEstimateNo)}&readonly=false`;
+    const url = `/estimate-request/new?load=${encodeURIComponent(item.tempEstimateNo)}&readonly=true`;
     navigate(url);
   };
 
@@ -252,34 +265,30 @@ const EstimateInquiryPage: React.FC = () => {
                   <td>{item.estimateNo}</td>
                   <td>{item.companyName}</td>
                   <td>{`${(item as any).customerName || (item as any).writerName || item.writerID || '-'}`}{(item as any).customerPosition ? `  ${(item as any).customerPosition}` : ((item as any).writerPosition ? ` / ${(item as any).writerPosition}` : '')}</td>
-                  <td>{
-                    (item as any).writerRoleId === 1
-                      ? '관리자'
-                      : (item as any).writerRoleId === 3
-                        ? '고객'
-                        : `${(item as any).writerName || item.writerID || '-'}` + ((item as any).writerPosition ? ` ${(item as any).writerPosition}` : '')
-                  }</td>
-                  <td>{item.requestDate ? formatDateYmd(item.requestDate) : extractDateFromTempEstimateNo(item.tempEstimateNo)}</td>
+                  <td>{(() => {
+                    const writerRoleId = (item as any).writerRoleId;
+                    // 디버깅: writerRoleId 값 확인
+                    if (writerRoleId === undefined || writerRoleId === null) {
+                      console.warn('WriterRoleId is missing for item:', item);
+                    }
+                    // 명시적 타입 변환 및 체크
+                    const roleId = writerRoleId != null ? Number(writerRoleId) : null;
+                    if (roleId === 1) {
+                      return '관리자';
+                    } else if (roleId === 3) {
+                      return '고객';
+                    } else {
+                      // roleId가 2(직원/담당자)이거나 null/undefined인 경우 이름+직급 표시
+                      return `${(item as any).writerName || item.writerID || '-'}` + ((item as any).writerPosition ? ` ${(item as any).writerPosition}` : '');
+                    }
+                  })()}</td>
+                  <td>{item.estimateNo ? extractDateFromCurEstimateNo(item.estimateNo) : '-'}</td>
                   <td>
                     <span className={`status-${item.status}`}>
                       {item.statusText}
                     </span>
                   </td>
-                  <td>{(() => {
-                    // 상태가 1(견적요청) 또는 2(견적처리중)이면 완료일자 표시 안 함
-                    if (item.status === 1 || item.status === 2) {
-                      return '-';
-                    }
-                    // curEstimateNo에서 날짜 추출 (YA20250103-001 형식)
-                    const curNo = (item as any).curEstimateNo || item.estimateNo;
-                    if (curNo && curNo.startsWith('YA')) {
-                      const match = curNo.match(/YA(\d{4})(\d{2})(\d{2})/);
-                      if (match) {
-                        return `${match[1]}.${match[2]}.${match[3]}`;
-                      }
-                    }
-                    return '-';
-                  })()}</td>
+                  <td>{item.status >= 4 && item.completeDate ? formatDateYmd(item.completeDate) : '-'}</td>
                   <td>{item.project}</td>
                 </tr>
               ))

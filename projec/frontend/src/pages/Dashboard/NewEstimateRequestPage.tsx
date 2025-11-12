@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams, useLocation, useParams } from 'react-router-dom';
-import { deleteEstimateSheet } from '../../api/estimateRequest';
+import { deleteEstimateSheet, createEstimateSheetFromExisting } from '../../api/estimateRequest';
 import axios from 'axios';
 import { buildApiUrl } from '../../config/api';
 import {
@@ -254,11 +254,12 @@ const NewEstimateRequestPage: React.FC = () => {
   const [attachments, setAttachments] = useState<any[]>([]);
   const [customerRequirement, setCustomerRequirement] = useState('');
   const [otherRequests, setOtherRequests] = useState<any[]>([]);
-  const [isReadOnly, setIsReadOnly] = useState<boolean>(false); // READONLY 모드 상태
+  const [isReadOnly, setIsReadOnly] = useState<boolean>(true); // READONLY 모드 상태 - 초기에는 편집 아님
   const [backendStatusText, setBackendStatusText] = useState<string>(''); // 백엔드 상태 텍스트
   const [backendStatus, setBackendStatus] = useState<number | null>(null);   // 백엔드 상태 코드 (1~5)
   const [prevEstimateNo, setPrevEstimateNo] = useState<string | null>(null);  // 재문의 원본 번호
   const [customerUserName, setCustomerUserName] = useState<string | null>(null); // 요청자 이름
+  const [completeDate, setCompleteDate] = useState<string | null>(null); // 완료일자
   // 편집 모드용 원본 데이터 백업
   const [backupData, setBackupData] = useState<{
     projectName: string;
@@ -305,6 +306,7 @@ const NewEstimateRequestPage: React.FC = () => {
   const [curEstimateNo, setCurEstimateNo] = useState<string | null>(null);   // 최종 견적번호 (있으면 Temp 대신 표시)
   const [managerName, setManagerName] = useState<string | null>(null);       // 담당자 이름
   const [managerId, setManagerId] = useState<string | null>(null);           // 담당자 ID
+  const [writerId, setWriterId] = useState<string | null>(null);            // 작성자 ID
   const [staffComment, setStaffComment] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -434,12 +436,13 @@ const NewEstimateRequestPage: React.FC = () => {
     console.log('NewEstimateRequestPage - readonlyParam:', readonlyParam);
     console.log('NewEstimateRequestPage - searchParams:', Object.fromEntries(searchParams.entries()));
     
-    if (readonlyParam === 'true') {
-      setIsReadOnly(true);
-      console.log('NewEstimateRequestPage - isReadOnly set to true');
-    } else {
+    // 기본은 읽기 전용(true). 오직 readonly=false일 때만 편집 모드로 전환
+    if (readonlyParam === 'false') {
       setIsReadOnly(false);
-      console.log('NewEstimateRequestPage - isReadOnly set to false');
+      console.log('NewEstimateRequestPage - isReadOnly set to false (via query)');
+    } else {
+      setIsReadOnly(true);
+      console.log('NewEstimateRequestPage - isReadOnly set to true (default)');
     }
   }, [searchParams]);
 
@@ -1231,9 +1234,14 @@ const NewEstimateRequestPage: React.FC = () => {
   }, [tempEstimateNo]);
 
   // 첨부파일 다운로드 함수
-  const handleDownloadAttachment = useCallback(async (attachmentId: number, fileName: string) => {
+  const handleDownloadAttachment = useCallback(async (attachmentId: number | string, fileName: string) => {
+    if (!attachmentId) {
+      alert('파일이 아직 업로드되지 않았습니다. 저장 후 다운로드할 수 있습니다.');
+      return;
+    }
+    
     try {
-      const response = await axios.get(`/api/estimate/attachments/${attachmentId}/download`, {
+      const response = await axios.get(buildApiUrl(`/estimate/attachments/${attachmentId}/download`), {
         responseType: 'blob'
       });
 
@@ -1334,12 +1342,16 @@ const NewEstimateRequestPage: React.FC = () => {
       const statusCodeServer = existingData?.status ?? existingData?.estimateSheet?.status;
       // curEstimateNo, manager, customerUserName 정보 세팅
       const curNo = existingData?.curEstimateNo ?? existingData?.estimateSheet?.curEstimateNo ?? null;
+      const compDate = existingData?.completeDate ?? existingData?.estimateSheet?.completeDate ?? null;
       const mgrName = existingData?.managerName ?? existingData?.estimateSheet?.managerName ?? null;
       const mgrId = existingData?.managerID ?? existingData?.estimateSheet?.managerID ?? null;
       const custUserName = existingData?.customerUserName ?? existingData?.estimateSheet?.customerUserName ?? null;
+      const wrId = existingData?.writerID ?? existingData?.estimateSheet?.writerID ?? null;
       setCurEstimateNo(curNo);
+      setCompleteDate(compDate);
       setManagerName(mgrName);
       setManagerId(mgrId);
+      setWriterId(wrId);
       setCustomerUserName(custUserName);
       if (statusTextServer) setBackendStatusText(statusTextServer);
       if (typeof statusCodeServer === 'number') {
@@ -1739,8 +1751,6 @@ const NewEstimateRequestPage: React.FC = () => {
       // 🔑 관리 첨부파일 로드
       await loadManagerAttachments();
       
-      alert('임시저장된 데이터를 불러왔습니다.');
-      
     } catch (error) {
       console.error('데이터 불러오기 실패:', error);
       alert('데이터를 불러오는데 실패했습니다.');
@@ -1947,6 +1957,17 @@ const NewEstimateRequestPage: React.FC = () => {
 
   // 수정 버튼 클릭 핸들러 - 편집 모드로 전환
   const handleEdit = useCallback(() => {
+    // 권한 체크: 작성자만 수정 가능
+    const userStr = localStorage.getItem('user');
+    const currentUser = userStr ? JSON.parse(userStr) : null;
+    const currentUserId = currentUser?.userId || currentUser?.userID;
+    const isWriter = currentUserId === writerId;
+    
+    if (!isWriter) {
+      alert('작성자만 이용할 수 있습니다.');
+      return;
+    }
+    
     // 현재 데이터 백업
     setBackupData({
       projectName: projectName,
@@ -1955,7 +1976,7 @@ const NewEstimateRequestPage: React.FC = () => {
       customerRequirement: customerRequirement
     });
     setIsReadOnly(false);
-  }, [projectName, types, valves, customerRequirement]);
+  }, [projectName, types, valves, customerRequirement, writerId]);
 
   // 취소 버튼 클릭 핸들러 - 원본 데이터로 복원
   const handleCancelEdit = useCallback(() => {
@@ -1969,10 +1990,66 @@ const NewEstimateRequestPage: React.FC = () => {
     setIsReadOnly(true);
   }, [backupData]);
 
+  // 재견적 요청 핸들러
+  const handleReInquiry = useCallback(async () => {
+    if (!tempEstimateNo || !currentUser) {
+      alert('견적번호 또는 사용자 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    // 권한 체크: 작성자만 재견적 요청 가능
+    const currentUserId = currentUser?.userId || currentUser?.userID;
+    const isWriter = currentUserId === writerId;
+    
+    if (!isWriter) {
+      alert('작성자만 이용할 수 있습니다.');
+      return;
+    }
+
+    // 확인 다이얼로그
+    if (!window.confirm('재견적을 요청하시겠습니까?\n해당 기존 견적으로 재견적을 요청하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      const existingEstimateNo = curEstimateNo || tempEstimateNo;
+      const dto = {
+        project: projectName || '',
+        customerRequirement: customerRequirement || '',
+        customerID: selectedCustomer?.userID || currentUser?.userId || '',
+        writerID: currentUser?.userId || ''
+      };
+      
+      const newTempEstimateNo = await createEstimateSheetFromExisting(
+        dto,
+        currentUser.userId,
+        existingEstimateNo
+      );
+      
+      // 새로 생성된 견적으로 이동
+      navigate(`/estimate-request/${newTempEstimateNo}`);
+      alert('재견적 요청이 완료되었습니다.');
+    } catch (error) {
+      console.error('재견적 요청 실패:', error);
+      alert('재견적 요청에 실패했습니다.');
+    }
+  }, [tempEstimateNo, currentUser, curEstimateNo, projectName, customerRequirement, selectedCustomer, navigate, writerId]);
+
   // 편집 모드에서 저장 핸들러
   const handleSaveEdit = useCallback(async () => {
     if (!tempEstimateNo) {
       alert('견적번호를 찾을 수 없습니다.');
+      return;
+    }
+
+    // 권한 체크: 작성자만 저장 가능
+    const userStr = localStorage.getItem('user');
+    const currentUser = userStr ? JSON.parse(userStr) : null;
+    const currentUserId = currentUser?.userId || currentUser?.userID;
+    const isWriter = currentUserId === writerId;
+    
+    if (!isWriter) {
+      alert('작성자만 이용할 수 있습니다.');
       return;
     }
 
@@ -2000,7 +2077,7 @@ const NewEstimateRequestPage: React.FC = () => {
       console.error('수정 저장 실패:', error);
       alert('수정 내용 저장에 실패했습니다.');
     }
-  }, [tempEstimateNo, projectName, pendingFiles, createSavePayload, uploadPendingFiles]);
+  }, [tempEstimateNo, projectName, pendingFiles, createSavePayload, uploadPendingFiles, writerId]);
 
   // 임시저장 기능
   const handleSaveDraft = async () => {
@@ -3496,6 +3573,21 @@ const NewEstimateRequestPage: React.FC = () => {
                     </div>
                     <div className="file-actions">
                       <button 
+                        className="download-btn"
+                        onClick={() => {
+                          const attachmentId = file.attachmentId || file.id;
+                          if (attachmentId) {
+                            handleDownloadAttachment(attachmentId, file.name);
+                          } else {
+                            alert('파일이 아직 업로드되지 않았습니다. 저장 후 다운로드할 수 있습니다.');
+                          }
+                        }}
+                        disabled={!file.attachmentId && !file.id}
+                        title={file.attachmentId || file.id ? '다운로드' : '업로드 후 다운로드 가능'}
+                      >
+                        다운로드
+                      </button>
+                      <button 
                         className="delete-btn"
                         onClick={() => {
                           alert('삭제 버튼 클릭됨!');
@@ -3654,26 +3746,56 @@ const NewEstimateRequestPage: React.FC = () => {
                   <>
                     <button className="btn-lg btn-draft" onClick={handleSaveDraft}>임시저장</button>
                     <button className="btn-lg btn-request" onClick={handleSubmitEstimate}>견적요청</button>
+                  </>
+                );
+              }
+              
+              // 임시저장(1) 상태일 때도 새 작성과 동일한 버튼 노출
+              if (backendStatus === 1) {
+                return (
+                  <>
+                    <button className="btn-lg btn-draft" onClick={handleSaveDraft}>임시저장</button>
+                    <button className="btn-lg btn-request" onClick={handleSubmitEstimate}>견적요청</button>
                     <button className="btn-lg btn-danger" onClick={handleDeleteEstimate}>삭제</button>
                   </>
                 );
               }
               
-              // 상태 1, 3, 4, 5일 때 수정/삭제 버튼 표시 (피그마 로직)
-              if (backendStatus === 1 || backendStatus === 2 || backendStatus === 3 || backendStatus === 4 || backendStatus === 5) {
+              // 상태 4(견적완료) 또는 5(주문)일 때 재견적 요청 버튼 표시
+              if (backendStatus === 4 || backendStatus === 5) {
+                return (
+                  <>
+                    <button className="btn-lg btn-request" onClick={handleReInquiry}>재견적 요청</button>
+                  </>
+                );
+              }
+              
+              // 상태 1, 2, 3일 때 수정/삭제 버튼 표시 (피그마 로직)
+              if (backendStatus === 1 || backendStatus === 2 || backendStatus === 3) {
                 const isManager = currentUser?.userId === managerId;
                 const isAdmin = currentUser?.roleId === 1;
                 
                 // 상태 1, 2일 때는 담당자 체크 없이 표시 (작성자가 수정 가능)
-                // 상태 3 이상일 때는 담당자 또는 관리자만 표시
+                // 상태 3일 때는 담당자 또는 관리자만 표시
                 if (backendStatus === 1 || backendStatus === 2 || isManager || isAdmin) {
+                  // 상태가 3(견적처리중)일 때는 수정/취소 버튼 모두 비활성화
+                  if (backendStatus === 3) {
+                    return (
+                      <>
+                        <button className="btn-lg btn-draft" disabled>수정</button>
+                        <button className="btn-lg btn-danger" disabled>취소</button>
+                      </>
+                    );
+                  }
                   // 편집 모드일 때는 저장/취소 버튼 표시
                   if (!isReadOnly) {
                     return (
                       <>
                         <button className="btn-lg btn-request" onClick={handleSaveEdit}>저장</button>
                         <button className="btn-lg btn-draft" onClick={handleCancelEdit}>취소</button>
-                        <button className="btn-lg btn-danger" onClick={handleDeleteEstimate}>삭제</button>
+                        {backendStatus === 1 && (
+                          <button className="btn-lg btn-danger" onClick={handleDeleteEstimate}>삭제</button>
+                        )}
                       </>
                     );
                   }
@@ -3681,7 +3803,9 @@ const NewEstimateRequestPage: React.FC = () => {
                   return (
                     <>
                       <button className="btn-lg btn-draft" onClick={handleEdit}>수정</button>
-                      <button className="btn-lg btn-danger" onClick={handleDeleteEstimate}>삭제</button>
+                      {backendStatus === 1 && (
+                        <button className="btn-lg btn-danger" onClick={handleDeleteEstimate}>삭제</button>
+                      )}
                     </>
                   );
                 }
@@ -3712,20 +3836,21 @@ const NewEstimateRequestPage: React.FC = () => {
             <div className="summary-item"><span className="label">수량</span><strong className="value">{totalQty}</strong></div>
             <div className="summary-item"><span className="label">요청자</span><strong className="value">{customerUserName || selectedCustomer?.name || selectedCustomer?.userName || currentUser?.name || currentUser?.userName || '-'}</strong></div>
             <div className="summary-item"><span className="label">요청일자</span><strong className="value">{(() => {
-              // 재문의로 들어와 아직 요청(제출) 전이면 표시하지 않음
-              if (prevEstimateNo && (!curEstimateNo || tempEstimateNo === prevEstimateNo) && (!backendStatus || backendStatus < 2)) {
-                return '-';
-              }
-              const no = tempEstimateNo;
-              const m = /TEMP(\d{4})(\d{2})(\d{2})/.exec(no || '');
+              // CurEstimateNo(YA)에서 날짜 추출
+              if (!curEstimateNo) return '-';
+              const m = /YA(\d{4})(\d{2})(\d{2})/.exec(curEstimateNo || '');
               return m ? `${m[1]}.${m[2]}.${m[3]}` : '-';
             })()}</strong></div>
             <div className="summary-item"><span className="label">담당자</span><strong className="value">{managerName || '-'}</strong></div>
             <div className="summary-item"><span className="label">완료일자</span><strong className="value">{(() => { 
-              // 견적요청 상태(2) 이하일 때는 완료일자 표시하지 않음
-              if (!curEstimateNo || !backendStatus || backendStatus <= 2) return '-'; 
-              const m = /YA(\d{4})(\d{2})(\d{2})-(\d{3})/.exec(curEstimateNo); 
-              return m ? `${m[1]}.${m[2]}.${m[3]}` : '-'; 
+              // 상태가 완료(4) 이상일 때만 표시
+              if (!backendStatus || backendStatus < 4) return '-';
+              if (!completeDate) return '-';
+              const d = new Date(completeDate);
+              if (isNaN(d.getTime())) return '-';
+              const mm = String(d.getMonth() + 1).padStart(2, '0');
+              const dd = String(d.getDate()).padStart(2, '0');
+              return `${d.getFullYear()}.${mm}.${dd}`;
             })()}</strong></div>
           </div>
         </div>
@@ -3938,11 +4063,32 @@ const NewEstimateRequestPage: React.FC = () => {
                         : (lower.endsWith('.doc') || lower.endsWith('.docx') || lower.endsWith('.hwp')) ? FaFileWord
                         : (lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.gif') || lower.endsWith('.bmp') || lower.endsWith('.webp') || lower.endsWith('.tiff')) ? FaFileImage
                         : FaFileAlt;
+                      const attachmentId = f.id || f.attachmentId;
+                      const canDownload = !!attachmentId;
+                      
                       return (
                         <div key={(f.id || f.uniqueId || f.attachmentId || idx) + '-item'} className="attachment-chip" title={name}>
                           <Icon className="file-icon" />
-                          <span className="file-name-text">{name}</span>
-                          <button className="file-remove" onClick={() => handleRemoveFile(idx)} aria-label="remove">×</button>
+                          <span 
+                            className={`file-name-text ${canDownload ? 'downloadable' : ''}`}
+                            onClick={() => {
+                              if (canDownload) {
+                                handleDownloadAttachment(attachmentId, name);
+                              } else {
+                                alert('파일이 아직 업로드되지 않았습니다. 저장 후 다운로드할 수 있습니다.');
+                              }
+                            }}
+                            style={{ cursor: canDownload ? 'pointer' : 'default', textDecoration: canDownload ? 'underline' : 'none' }}
+                          >
+                            {name}
+                          </span>
+                          <button 
+                            className="file-remove" 
+                            onClick={() => handleRemoveFile(idx)} 
+                            aria-label="remove"
+                          >
+                            ×
+                          </button>
                         </div>
                       );
                     })

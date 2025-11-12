@@ -1366,8 +1366,7 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
       const userStr = localStorage.getItem('user');
       const currentUser = userStr ? JSON.parse(userStr) : null;
 
-      // currentUserId는 임시로 'admin' 사용 (실제로는 로그인된 사용자 ID를 사용해야 함)
-      const response = await getEstimateDetail(tempEstimateNo, currentUser?.userId || 'admin'); // 실제 사용자 ID 사용
+      const response = await getEstimateDetail(tempEstimateNo, currentUser?.userId || currentUser?.userID || ''); // 실제 사용자 ID 사용
       const data = response;
       setEstimateData(data); // 견적 데이터 저장 (권한 체크용)
       
@@ -1395,7 +1394,9 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
       const customerName: string = es.customerName || es.CustomerName || '-';
       const customerUserName: string = es.customerUserName || es.CustomerUserName || customerName;
       const managerId: string = es.managerID || es.ManagerID || '-';
-      const managerName: string = es.managerName || es.ManagerName || managerId;
+      const managerName: string = es.managerName || es.ManagerName || '';
+      const managerPosition: string = es.managerPosition || es.ManagerPosition || '';
+      const managerRoleId: number | null = es.managerRoleId ?? es.ManagerRoleId ?? null;
 
       const parseFromTemp = (no: string): string => {
         const m = /TEMP(\d{4})(\d{2})(\d{2})/.exec(no || '');
@@ -1407,18 +1408,44 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
         return m ? `${m[1]}.${m[2]}.${m[3]}` : '-';
       };
 
+      // 담당자 표시 로직 (EstimateManagementPage와 동일)
+      let managerDisplayText = '미지정';
+      if (managerRoleId === 1) {
+        managerDisplayText = '관리자';
+      } else if (managerName) {
+        managerDisplayText = managerName + (managerPosition ? ` ${managerPosition}` : '');
+      }
+
       setSummaryEstimateNo(curNo || '-'); // CurEstimateNo만 표시, 없으면 '-'
       setSummaryCompanyName(customerName);
       setSummaryRequesterName(customerUserName); // 요청자 = User.Name
-      setSummaryRequestDate(parseFromTemp(tempNo));
-      setSummaryManager(managerName || managerId || '-');
-      setSummaryCompletedDate(parseFromCur(curNo));
+      // 요청일자는 CurEstimateNo(YA)에서 추출
+      setSummaryRequestDate(parseFromCur(curNo));
+      setSummaryManager(managerDisplayText);
+      
+      // 완료일자는 상태가 완료(4) 이상일 때만 CompleteDate를 사용
+      const statusCodeForComplete = data.estimateSheet?.status;
+      if (!statusCodeForComplete || statusCodeForComplete < 4) {
+        setSummaryCompletedDate('-');
+      } else {
+      const completeDate = (es as any).completeDate || (es as any).CompleteDate;
+        if (completeDate) {
+          const date = new Date(completeDate);
+          const formattedDate = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+          setSummaryCompletedDate(formattedDate);
+        } else {
+          setSummaryCompletedDate('-');
+        }
+      }
       
       // 읽기 전용 상태 설정
-      const isStatusThree = data.estimateSheet?.status === 3; // 상태가 3 (견적처리중)인지
-      const isCurrentUserManager = currentUser?.userId === data.estimateSheet?.managerID; // 현재 사용자가 담당자인지
+      // 수정 가능 조건: 담당자 AND 견적처리중(3) 이상
+      const currentStatus = data.estimateSheet?.status || 0;
+      const isStatusInProgressOrAbove = currentStatus >= 3; // 견적처리중(3) 이상
+      const isCurrentUserManager = currentUser?.userId === data.estimateSheet?.managerID || currentUser?.userID === data.estimateSheet?.managerID; // 현재 사용자가 담당자인지
       
-      const shouldBeReadOnly = !(isStatusThree && isCurrentUserManager); // 둘 다 참일 때만 false (수정 가능)
+      // 담당자이고 견적처리중 이상일 때만 수정 가능
+      const shouldBeReadOnly = !(isStatusInProgressOrAbove && isCurrentUserManager);
       setIsReadOnly(shouldBeReadOnly);
       //console.log('EstimateDetailPage isReadOnly 설정됨:', shouldBeReadOnly);
       //console.log('  status:', data.estimateSheet?.status, '(3이면 견적처리중)');
@@ -1625,7 +1652,7 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
       if (!tempEstimateNo) {
         throw new Error('tempEstimateNo가 없습니다.');
       }
-      const estimateResponse = await getEstimateDetail(tempEstimateNo, currentUser?.userId || 'admin');
+      const estimateResponse = await getEstimateDetail(tempEstimateNo, currentUser?.userId || currentUser?.userID || '');
       const estimateData = estimateResponse;
 
       // 권한 체크: 담당자 또는 관리자만 상태 변경 가능
@@ -1677,27 +1704,35 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
   // 첨부파일 관련 함수들
   const handleDownloadFile = async (file: any, type: 'customer' | 'manager') => {
     try {
-      // 고객은 PDF만, 관리자는 모든 파일 다운로드 가능
-      if (type === 'customer' && !file.fileName.toLowerCase().endsWith('.pdf')) {
-        alert('고객은 PDF 파일만 다운로드할 수 있습니다.');
-        return;
-      }
-      // type === 'manager'인 경우 모든 파일 다운로드 가능 (제한 없음)
+      // 모든 파일 타입 다운로드 허용 (PDF 제한 제거)
       
       // 파일 다운로드 API 호출
-              const response = await fetch(`/api/estimate/attachments/${file.attachmentID}/download`);
+      let response;
+      if (file.attachmentID) {
+        // attachmentID가 있는 경우
+        response = await fetch(buildApiUrl(`/estimate/attachments/${file.attachmentID}/download`));
+      } else if (file.filePath) {
+        // filePath만 있는 경우
+        response = await fetch(buildApiUrl(`/estimate/attachments/download?filePath=${encodeURIComponent(file.filePath)}`));
+      } else {
+        alert('파일 정보가 올바르지 않습니다.');
+        return;
+      }
+      
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = file.fileName;
+        a.download = file.fileName || file.name || 'download';
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       } else {
-        alert('파일 다운로드에 실패했습니다.');
+        const errorText = await response.text().catch(() => '');
+        console.error('파일 다운로드 실패:', response.status, errorText);
+        alert(`파일 다운로드에 실패했습니다. (${response.status})`);
       }
     } catch (error) {
       console.error('파일 다운로드 오류:', error);
@@ -1717,7 +1752,10 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
       formData.append('file', file);
 
       // 🔑 쿼리 파라미터로 전송하도록 수정
-      const response = await fetch(buildApiUrl(`/estimate/sheets/${tempEstimateNo}/attachments?uploadUserID=admin&fileType=manager&managerFileType=${fileType}`), {
+      const userStr = localStorage.getItem('user');
+      const currentUser = userStr ? JSON.parse(userStr) : null;
+      const uploadUserID = currentUser?.userId || currentUser?.userID || '';
+      const response = await fetch(buildApiUrl(`/estimate/sheets/${tempEstimateNo}/attachments?uploadUserID=${uploadUserID}&fileType=manager&managerFileType=${fileType}`), {
         method: 'POST',
         body: formData
       });
@@ -1779,13 +1817,28 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
       return;
     }
 
+    // 권한 체크: 담당자이고 견적처리중 이상일 때만 업로드 가능
+    const userStr = localStorage.getItem('user');
+    const currentUser = userStr ? JSON.parse(userStr) : null;
+    const currentStatus = estimateData?.estimateSheet?.status || 0;
+    const isStatusInProgressOrAbove = currentStatus >= 3;
+    const isManager = currentUser?.userId === estimateData?.estimateSheet?.managerID || currentUser?.userID === estimateData?.estimateSheet?.managerID;
+    
+    if (!isStatusInProgressOrAbove || !isManager) {
+      alert('담당자만 변경 가능합니다.');
+      return;
+    }
+
     try {
       for (const file of files) {
         const formData = new FormData();
         formData.append('file', file);
 
         // manager 업로드 + managerFileType=customer 로 업로드 → ResultFiles/customer에 저장되도록 백엔드 규약 사용
-        const response = await fetch(buildApiUrl(`/estimate/sheets/${tempEstimateNo}/attachments?uploadUserID=admin&fileType=manager&managerFileType=customer`), {
+        const userStr = localStorage.getItem('user');
+        const currentUser = userStr ? JSON.parse(userStr) : null;
+        const uploadUserID = currentUser?.userId || currentUser?.userID || '';
+        const response = await fetch(buildApiUrl(`/estimate/sheets/${tempEstimateNo}/attachments?uploadUserID=${uploadUserID}&fileType=manager&managerFileType=customer`), {
           method: 'POST',
           body: formData,
         });
@@ -1957,6 +2010,17 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
   // 견적완료: CurEstimateNo 생성 + 상태 변경
   const handleCompleteQuote = async () => {
     if (!tempEstimateNo) return;
+    
+    // 권한 체크: 담당자만 가능
+    const userStr = localStorage.getItem('user');
+    const currentUser = userStr ? JSON.parse(userStr) : null;
+    const isManager = currentUser?.userId === estimateData?.estimateSheet?.managerID || currentUser?.userID === estimateData?.estimateSheet?.managerID;
+    
+    if (!isManager) {
+      alert('담당자만 변경 가능합니다.');
+      return;
+    }
+    
     try {
       // 1. 사양 저장 먼저 실행
       await handleSaveSpecification();
@@ -1971,11 +2035,16 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
       const data = await resp.json();
       const curNo = data.curEstimateNo as string;
       setSummaryEstimateNo(curNo || '-');
-      setSummaryCompletedDate((() => {
-        const m = /YA(\d{4})(\d{2})(\d{2})-(\d{3})/.exec(curNo || '');
-        return m ? `${m[1]}.${m[2]}.${m[3]}` : '-';
-      })());
+      
+      // CompleteDate를 오늘 날짜로 설정
+      const today = new Date();
+      const formattedDate = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
+      setSummaryCompletedDate(formattedDate);
+      
       setCurrentStatus('견적완료');
+      
+      // 데이터 재로드하여 최신 정보 반영
+      await loadExistingData();
     } catch (e) {
       alert('처리 중 오류');
     }
@@ -1984,6 +2053,17 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
   // 완료 취소(진행중으로 되돌리기)
   const handleCancelComplete = async () => {
     if (!tempEstimateNo) return;
+    
+    // 권한 체크: 담당자만 가능
+    const userStr = localStorage.getItem('user');
+    const currentUser = userStr ? JSON.parse(userStr) : null;
+    const isManager = currentUser?.userId === estimateData?.estimateSheet?.managerID || currentUser?.userID === estimateData?.estimateSheet?.managerID;
+    
+    if (!isManager) {
+      alert('담당자만 변경 가능합니다.');
+      return;
+    }
+    
     try {
       const resp = await fetch(buildApiUrl(`/estimate/sheets/${tempEstimateNo}/complete/cancel`), { method: 'POST' });
       if (!resp.ok) throw new Error('완료취소 실패');
@@ -1996,6 +2076,17 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
   // 주문 확정
   const handleConfirmOrder = async () => {
     if (!tempEstimateNo) return;
+    
+    // 권한 체크: 담당자만 가능
+    const userStr = localStorage.getItem('user');
+    const currentUser = userStr ? JSON.parse(userStr) : null;
+    const isManager = currentUser?.userId === estimateData?.estimateSheet?.managerID || currentUser?.userID === estimateData?.estimateSheet?.managerID;
+    
+    if (!isManager) {
+      alert('담당자만 변경 가능합니다.');
+      return;
+    }
+    
     try {
       const resp = await fetch(buildApiUrl(`/estimate/sheets/${tempEstimateNo}/order/confirm`), { method: 'POST' });
       if (!resp.ok) throw new Error('주문확정 실패');
@@ -3408,6 +3499,17 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
   // 시작 취소 핸들러
   const handleCancelStart = async () => {
     if (!tempEstimateNo) return;
+    
+    // 권한 체크: 담당자만 가능
+    const userStr = localStorage.getItem('user');
+    const currentUser = userStr ? JSON.parse(userStr) : null;
+    const isManager = currentUser?.userId === estimateData?.estimateSheet?.managerID || currentUser?.userID === estimateData?.estimateSheet?.managerID;
+    
+    if (!isManager) {
+      alert('담당자만 변경 가능합니다.');
+      return;
+    }
+    
     if (window.confirm('견적 시작을 취소하시겠습니까? 담당자 배정이 해제되고 "견적요청" 상태로 돌아갑니다.')) {
       try {
         const response = await fetch(buildApiUrl(`/estimate/sheets/${tempEstimateNo}/cancel-start`), {
@@ -3528,15 +3630,40 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
           <div className="uploader-header">
             <h3>고객 제출 문서 업로드</h3>
             <div className="header-actions-detail">
-              <input
-                ref={customerAddInputRef}
-                type="file"
-                multiple
-                onChange={handleCustomerFileSelect}
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.hwp,.txt,.zip,.rar,.7z,.csv,.json"
-                style={{ display: 'none' }}
-              />
-              <button className="btn btn-light btn-xs" onClick={() => customerAddInputRef.current?.click()}>추가</button>
+              {(() => {
+                // 권한 체크: 담당자이고 견적처리중 이상일 때만 업로드 가능
+                const userStr = localStorage.getItem('user');
+                const currentUser = userStr ? JSON.parse(userStr) : null;
+                const currentStatus = estimateData?.estimateSheet?.status || 0;
+                const isStatusInProgressOrAbove = currentStatus >= 3;
+                const isManager = currentUser?.userId === estimateData?.estimateSheet?.managerID || currentUser?.userID === estimateData?.estimateSheet?.managerID;
+                const canUpload = isStatusInProgressOrAbove && isManager;
+                
+                return (
+                  <>
+                    <input
+                      ref={customerAddInputRef}
+                      type="file"
+                      multiple
+                      onChange={handleCustomerFileSelect}
+                      accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.hwp,.txt,.zip,.rar,.7z,.csv,.json,.jpg,.jpeg,.png,.gif,.bmp,.webp,.tiff"
+                      style={{ display: 'none' }}
+                    />
+                    <button 
+                      className="btn btn-light btn-xs" 
+                      onClick={() => {
+                        if (canUpload) {
+                          customerAddInputRef.current?.click();
+                        } else {
+                          alert('담당자만 변경 가능합니다.');
+                        }
+                      }}
+                    >
+                      추가
+                    </button>
+                  </>
+                );
+              })()}
             </div>
           </div>
           <div className="uploader-list">
@@ -3577,32 +3704,28 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
               );
             }
             if (currentStatus === '견적처리중') {
-              // 권한 체크: 담당자 또는 관리자만 상태 변경 가능
+              // 권한 체크: 담당자만 상태 변경 가능 (관리자 제외)
               const userStr = localStorage.getItem('user');
               const currentUser = userStr ? JSON.parse(userStr) : null;
-              const isManager = currentUser?.userId === estimateData?.estimateSheet?.managerID;
-              const isAdmin = currentUser?.roleId === 1;
-              const canChangeStatus = isManager || isAdmin;
+              const isManager = currentUser?.userId === estimateData?.estimateSheet?.managerID || currentUser?.userID === estimateData?.estimateSheet?.managerID;
               
               return (
                 <div className="button-column">
-                  <button className="btn btn-primary" onClick={handleCompleteQuote} disabled={!canChangeStatus}>견적완료</button>
-                  <button className="btn btn-danger" onClick={handleCancelStart} disabled={!canChangeStatus}>시작취소</button>
+                  <button className="btn btn-primary" onClick={handleCompleteQuote}>견적완료</button>
+                  <button className="btn btn-danger" onClick={handleCancelStart}>시작취소</button>
                 </div>
               );
             }
             if (currentStatus === '견적완료') {
-              // 권한 체크: 담당자 또는 관리자만 상태 변경 가능
+              // 권한 체크: 담당자만 상태 변경 가능 (관리자 제외)
               const userStr = localStorage.getItem('user');
               const currentUser = userStr ? JSON.parse(userStr) : null;
-              const isManager = currentUser?.userId === estimateData?.estimateSheet?.managerID;
-              const isAdmin = currentUser?.roleId === 1;
-              const canChangeStatus = isManager || isAdmin;
+              const isManager = currentUser?.userId === estimateData?.estimateSheet?.managerID || currentUser?.userID === estimateData?.estimateSheet?.managerID;
               
               return (
                 <div className="button-column">
-                  <button className="btn btn-success" onClick={handleConfirmOrder} disabled={!canChangeStatus}>주문확정</button>
-                  <button className="btn btn-danger" onClick={handleCancelComplete} disabled={!canChangeStatus}>완료취소</button>
+                  <button className="btn btn-success" onClick={handleConfirmOrder}>주문확정</button>
+                  <button className="btn btn-danger" onClick={handleCancelComplete}>완료취소</button>
                 </div>
               );
             }

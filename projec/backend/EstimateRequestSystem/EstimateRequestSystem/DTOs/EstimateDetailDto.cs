@@ -34,12 +34,15 @@ namespace EstimateRequestSystem.DTOs
         public string WriterName { get; set; } = string.Empty; // 작성자명
         public string? ManagerID { get; set; }
         public string ManagerName { get; set; } = string.Empty; // 담당자명
+        public string? ManagerPosition { get; set; } // 담당자 직급
+        public int? ManagerRoleId { get; set; } // 담당자 역할 ID
         public int Status { get; set; }
         public string StatusText { get; set; } = string.Empty;
         public string? Project { get; set; }
         public string? CustomerRequirement { get; set; }
         public string? StaffComment { get; set; }
         public DateTime CreatedDate { get; set; } // TempEstimateNo에서 파싱
+        public DateTime? CompleteDate { get; set; } // 완료일자
     }
 
     // 견적 요청 상세 DTO (ValveType별 그룹)

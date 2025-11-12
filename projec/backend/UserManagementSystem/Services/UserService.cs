@@ -276,7 +276,7 @@ namespace UserManagementSystem.Services
         {
             return await _context.Users
                 .Include(u => u.Role)
-                .Where(u => u.IsApproved == isApproved)
+                .Where(u => u.IsApproved == isApproved && u.IsActive == true)
                 .Select(u => new UserListResponseDto
                 {
                     UserID = u.UserID,

@@ -16,6 +16,7 @@ namespace EstimateRequestSystem.Models
         public string? CustomerRequirement { get; set; }
         public string? StaffComment { get; set; }
         public DateTime? RequestDate { get; set; }
+        public DateTime? CompleteDate { get; set; }
 
         // Navigation properties
         public virtual User? Customer { get; set; }

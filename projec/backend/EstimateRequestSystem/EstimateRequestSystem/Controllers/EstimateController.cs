@@ -638,8 +638,9 @@ namespace EstimateRequestSystem.Controllers
                 var fileBytes = await _estimateService.DownloadAttachmentAsync(attachmentID);
                 var attachment = await _estimateService.GetAttachmentsAsync(""); // 임시로 빈 문자열 전달
                 var fileName = attachment.FirstOrDefault(a => a.AttachmentID == attachmentID)?.FileName ?? "file";
+                var contentType = GetContentType(fileName);
 
-                return File(fileBytes, "application/octet-stream", fileName);
+                return File(fileBytes, contentType, fileName);
             }
             catch (FileNotFoundException)
             {
@@ -686,7 +687,25 @@ namespace EstimateRequestSystem.Controllers
                 ".pdf" => "application/pdf",
                 ".doc" => "application/msword",
                 ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                ".ppt" => "application/vnd.ms-powerpoint",
+                ".pptx" => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                ".hwp" => "application/x-hwp",
                 ".txt" => "text/plain",
+                ".csv" => "text/csv",
+                ".json" => "application/json",
+                ".zip" => "application/zip",
+                ".rar" => "application/x-rar-compressed",
+                ".7z" => "application/x-7z-compressed",
+                // 이미지 파일
+                ".jpg" => "image/jpeg",
+                ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                ".bmp" => "image/bmp",
+                ".webp" => "image/webp",
+                ".tiff" => "image/tiff",
+                ".tif" => "image/tiff",
+                ".svg" => "image/svg+xml",
                 _ => "application/octet-stream"
             };
         }

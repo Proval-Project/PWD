@@ -46,5 +46,6 @@ namespace EstimateRequestSystem.DTOs
         public int? WriterRoleId { get; set; }                    // 작성자 역할 ID (1=관리자,3=고객 등)
         public string? CustomerName { get; set; }                 // 고객 담당자 이름 (User.Name)
         public string? CustomerPosition { get; set; }             // 고객 직급 (User.Position)
+        public DateTime? CompleteDate { get; set; }               // 완료일자
     }
 }

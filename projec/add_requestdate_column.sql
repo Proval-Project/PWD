@@ -11,6 +11,11 @@ ALTER TABLE EstimateSheetLv1
 ADD COLUMN RequestDate DATETIME NULL DEFAULT NULL 
 AFTER StaffComment;
 
+-- 1-1. EstimateSheetLv1 테이블에 CompleteDate 컬럼 추가
+ALTER TABLE EstimateSheetLv1 
+ADD COLUMN CompleteDate DATETIME NULL DEFAULT NULL 
+AFTER RequestDate;
+
 -- 기존 데이터가 있는 경우, TempEstimateNo에서 날짜를 추출하여 RequestDate 업데이트
 -- TEMP20250103-001 형식에서 날짜 추출
 UPDATE EstimateSheetLv1 

@@ -11,6 +11,7 @@ interface DraftItem {
   companyName: string;
   contactPerson: string;
   requestDate: string;
+  completeDate?: string;
   quantity: number;
   statusText: string;
   status: number;
@@ -123,15 +124,13 @@ const EstimateManagementPage: React.FC = () => {
     fetchData(1, { pageSize: newSize });
   };
 
-  const extractDateFromTempEstimateNo = (tempEstimateNo: string): string => {
-    const match = tempEstimateNo.match(/TEMP(\d{4})(\d{2})(\d{2})/);
-    if (match) return `${match[1]}.${match[2]}.${match[3]}`;
-    return tempEstimateNo;
-  };
-
-  const formatDateYmd = (dateString?: string) => {
-    if (!dateString) return '';
-    return dateString.slice(0, 10).replace(/[-/]/g, '.');
+  const extractDateFromCurEstimateNo = (estimateNo: string): string => {
+    // YAyyyymmdd-xxx 형태에서 yyyy.mm.dd 추출
+    const match = estimateNo.match(/YA(\d{4})(\d{2})(\d{2})/);
+    if (match) {
+      return `${match[1]}.${match[2]}.${match[3]}`;
+    }
+    return '-';
   };
 
   const handleRowClick = (item: DraftItem) => {
@@ -239,7 +238,7 @@ const EstimateManagementPage: React.FC = () => {
                         ? '고객'
                         : `${item.writerName || item.writerID || '-'}` + (item.writerPosition ? ` ${item.writerPosition}` : '')
                   }</td>
-                  <td>{item.requestDate ? formatDateYmd(item.requestDate) : extractDateFromTempEstimateNo(item.tempEstimateNo)}</td>
+                  <td>{item.estimateNo ? extractDateFromCurEstimateNo(item.estimateNo) : '-'}</td>
                   <td><span className={`status-${item.status}`}>{item.statusText}</span></td>
                   <td>{item.project || '-'}</td>
                   <td>
