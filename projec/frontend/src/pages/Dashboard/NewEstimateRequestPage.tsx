@@ -1207,7 +1207,7 @@ const NewEstimateRequestPage: React.FC = () => {
     }
   }, [fileAttachments]);
 
-  // 🔑 관리 첨부파일 로드 함수
+  // 🔑 관리 첨부파일 로드 함수 (EstimateDetailPage에서 업로드한 파일)
   const loadManagerAttachments = useCallback(async () => {
     if (!tempEstimateNo) return;
     try {
@@ -1217,16 +1217,52 @@ const NewEstimateRequestPage: React.FC = () => {
       
       if (response.ok) {
         const attachments = await response.json();
-        // ResultFiles/customer만 남김 (경로/managerFileType 모두 고려)
-        const customerResultFiles = (attachments || []).filter((att: any) => {
-          const p = att.path || att.filePath;
-          const type = (att.managerFileType || att.ManagerFileType || '').toString().toLowerCase();
-          return isResultCustomerFile(p) || type === 'customer';
+        console.log('📥 전체 첨부파일 목록:', attachments);
+        console.log('📥 전체 첨부파일 개수:', attachments?.length || 0);
+        
+        // 각 파일의 상세 정보 로깅
+        (attachments || []).forEach((att: any, index: number) => {
+          console.log(`📄 파일 ${index + 1}:`, {
+            fileName: att.fileName || att.name,
+            filePath: att.filePath || att.path,
+            managerFileType: att.managerFileType || att.ManagerFileType || '(없음)',
+            attachmentID: att.attachmentID || att.attachmentId || att.id,
+            전체객체: att
+          });
         });
-        setManagerAttachments(customerResultFiles);
-        console.log('✅ 관리 첨부파일(고객용) 로드 완료:', customerResultFiles.length, '개');
+        
+        // EstimateDetailPage에서 업로드한 파일 필터링
+        // - ManagerFileType이 'customer'인 파일 (고객 제출 문서)
+        // - ManagerFileType이 있고 'customer'가 아닌 파일 (관리 파일: datasheet, cvlist, vllist, singlequote, multiquote 등)
+        const managerFiles = (attachments || []).filter((att: any) => {
+          // 여러 필드명 시도 (camelCase, PascalCase, 소문자 등)
+          const managerFileType = (att.managerFileType || att.ManagerFileType || att.managerfiletype || '').toString().trim();
+          // ManagerFileType이 있는 경우 모두 포함 (customer 포함)
+          const isManagerFile = managerFileType !== '';
+          
+          console.log('🔍 파일 필터링:', {
+            fileName: att.fileName || att.name,
+            managerFileType: managerFileType,
+            managerFileType원본: att.managerFileType || att.ManagerFileType,
+            isManagerFile: isManagerFile,
+            전체객체키: Object.keys(att)
+          });
+          
+          return isManagerFile;
+        });
+        
+        console.log('✅ 필터링된 관리 첨부파일:', managerFiles.length, '개');
+        console.log('📋 관리 첨부파일 목록:', managerFiles);
+        
+        setManagerAttachments(managerFiles);
+        
+        if (managerFiles.length === 0) {
+          console.warn('⚠️ 관리 첨부파일이 없습니다. 필터링 조건을 확인하세요.');
+        }
       } else {
         console.error('❌ API 응답 실패:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('❌ 에러 내용:', errorText);
       }
     } catch (error) {
       console.error('관리 첨부파일 로드 오류:', error);
@@ -4128,7 +4164,57 @@ const NewEstimateRequestPage: React.FC = () => {
             </div>
           </div>
 
-          {/* 하단 관리 첨부파일 섹션 제거됨 */}
+          {/* 관리 첨부파일 섹션 (EstimateDetailPage에서 업로드한 파일) */}
+          <div className="attachment-section" style={{ marginTop: '20px' }}>
+            <div className="attachment-header">
+              <h4>관리 첨부파일</h4>
+            </div>
+            <div className="attachment-list">
+              {managerAttachments && managerAttachments.length > 0 ? (
+                <div className="file-list">
+                  {managerAttachments.map((file: any, index: number) => {
+                    const fileName = file.fileName || file.name || '파일명 없음';
+                    const attachmentId = file.attachmentID || file.attachmentId || file.id;
+                    const filePath = file.filePath || file.path;
+                    
+                    return (
+                      <div key={`manager-file-${attachmentId || index}`} className="file-item">
+                        <div className="file-info">
+                          <span className="file-name">{fileName}</span>
+                          {file.fileSize && (
+                            <span className="file-size">
+                              ({(file.fileSize / 1024 / 1024).toFixed(2)} MB)
+                            </span>
+                          )}
+                        </div>
+                        <div className="file-actions">
+                          <button 
+                            className="download-btn"
+                            onClick={() => {
+                              if (attachmentId) {
+                                handleDownloadAttachment(attachmentId, fileName);
+                              } else if (filePath) {
+                                handleDownloadManagerFile(file);
+                              } else {
+                                alert('파일 다운로드 정보를 찾을 수 없습니다.');
+                              }
+                            }}
+                            title="다운로드"
+                          >
+                            다운로드
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="no-files" style={{ padding: '10px', color: '#666', fontStyle: 'italic' }}>
+                  관리 첨부파일이 없습니다.
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

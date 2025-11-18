@@ -1250,7 +1250,8 @@ namespace EstimateRequestSystem.Services
                     FileSize = a.FileSize,
                     UploadDate = a.UploadDate,
                     UploadUserID = a.UploadUserID,
-                    UploadUserName = a.UploadUser!.Name
+                    UploadUserName = a.UploadUser!.Name,
+                    ManagerFileType = a.ManagerFileType
                 })
                 .ToListAsync();
         }
