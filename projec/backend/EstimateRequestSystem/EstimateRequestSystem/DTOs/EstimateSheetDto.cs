@@ -31,6 +31,7 @@ namespace EstimateRequestSystem.DTOs
         public string? CustomerUserName { get; set; } // 고객 사용자 이름 (Name, 요청자)
         public string? ManagerName { get; set; }
         public string? WriterName { get; set; }
+        public DateTime? CompleteDate { get; set; } // 완료일자
         public List<EstimateRequestResponseDto> EstimateRequests { get; set; } = new List<EstimateRequestResponseDto>();
         public List<EstimateAttachmentResponseDto> Attachments { get; set; } = new List<EstimateAttachmentResponseDto>();
     }

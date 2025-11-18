@@ -569,6 +569,7 @@ namespace EstimateRequestSystem.Services
                 CustomerUserName = estimateSheet.Customer?.Name ?? estimateSheet.CustomerID,
                 ManagerName = estimateSheet.Manager?.Name,
                 WriterName = estimateSheet.Writer?.Name,
+                CompleteDate = estimateSheet.CompleteDate,
                 EstimateRequests = estimateSheet.EstimateRequests.Select(er => new EstimateRequestResponseDto
                 {
                     TempEstimateNo = er.TempEstimateNo,

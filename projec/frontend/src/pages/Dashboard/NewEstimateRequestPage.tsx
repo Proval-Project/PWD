@@ -1342,11 +1342,23 @@ const NewEstimateRequestPage: React.FC = () => {
       const statusCodeServer = existingData?.status ?? existingData?.estimateSheet?.status;
       // curEstimateNo, manager, customerUserName 정보 세팅
       const curNo = existingData?.curEstimateNo ?? existingData?.estimateSheet?.curEstimateNo ?? null;
+      // CompleteDate는 백엔드에서 completeDate로 반환됨 (camelCase)
       const compDate = existingData?.completeDate ?? existingData?.estimateSheet?.completeDate ?? null;
       const mgrName = existingData?.managerName ?? existingData?.estimateSheet?.managerName ?? null;
       const mgrId = existingData?.managerID ?? existingData?.estimateSheet?.managerID ?? null;
       const custUserName = existingData?.customerUserName ?? existingData?.estimateSheet?.customerUserName ?? null;
       const wrId = existingData?.writerID ?? existingData?.estimateSheet?.writerID ?? null;
+      
+      console.log('🔍 완료일자 로드 디버깅:', {
+        statusCodeServer,
+        compDate,
+        existingDataCompleteDate: existingData?.completeDate,
+        existingDataCompleteDateUpper: existingData?.CompleteDate,
+        estimateSheetCompleteDate: existingData?.estimateSheet?.completeDate,
+        estimateSheetCompleteDateUpper: existingData?.estimateSheet?.CompleteDate,
+        fullExistingData: existingData
+      });
+      
       setCurEstimateNo(curNo);
       setCompleteDate(compDate);
       setManagerName(mgrName);
@@ -3843,14 +3855,30 @@ const NewEstimateRequestPage: React.FC = () => {
             })()}</strong></div>
             <div className="summary-item"><span className="label">담당자</span><strong className="value">{managerName || '-'}</strong></div>
             <div className="summary-item"><span className="label">완료일자</span><strong className="value">{(() => { 
-              // 상태가 완료(4) 이상일 때만 표시
-              if (!backendStatus || backendStatus < 4) return '-';
-              if (!completeDate) return '-';
+              // 상태가 완료(4) 이상일 때만 CompleteDate 표시
+              console.log('🔍 완료일자 표시 디버깅:', {
+                backendStatus,
+                completeDate,
+                isStatusOk: backendStatus && backendStatus >= 4,
+                hasCompleteDate: !!completeDate
+              });
+              
+              if (!backendStatus || backendStatus < 4) {
+                console.log('❌ 상태가 완료(4) 미만:', backendStatus);
+                return '-';
+              }
+              if (!completeDate) {
+                console.log('❌ completeDate가 없음');
+                return '-';
+              }
               const d = new Date(completeDate);
-              if (isNaN(d.getTime())) return '-';
-              const mm = String(d.getMonth() + 1).padStart(2, '0');
-              const dd = String(d.getDate()).padStart(2, '0');
-              return `${d.getFullYear()}.${mm}.${dd}`;
+              if (isNaN(d.getTime())) {
+                console.log('❌ 날짜 파싱 실패:', completeDate);
+                return '-';
+              }
+              const formattedDate = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+              console.log('✅ 완료일자 표시:', formattedDate);
+              return formattedDate;
             })()}</strong></div>
           </div>
         </div>
