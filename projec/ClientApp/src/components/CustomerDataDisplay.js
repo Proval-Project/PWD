@@ -18,7 +18,7 @@ const CustomerDataDisplay = ({ data, isLoading }) => {
           <tbody>
             <tr>
               <td className="fw-bold" style={{width: '30%'}}>견적번호</td>
-              <td>{data?.EstimateNo || '-'}</td>
+              <td>{data?.CurEstimateNo || data?.EstimateNo || '-'}</td>
             </tr>
             <tr>
               <td className="fw-bold">회사명</td>

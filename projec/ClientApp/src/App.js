@@ -7,7 +7,8 @@ import CustomerDataDisplay from './components/CustomerDataDisplay';
 import { fetchCustomerData, fetchConvalData, recalculateConval, retryConval } from './services/api';
 
 function App() {
-  const [estimateNo, setEstimateNo] = useState('');
+  const [estimateNo, setEstimateNo] = useState(''); // TempEstimateNo (API 호출용)
+  const [displayEstimateNo, setDisplayEstimateNo] = useState(''); // CurEstimateNo (표시용)
   const [sheetId, setSheetId] = useState(1);
 
   // URL 파라미터에서 견적번호와 sheetID 가져오기
@@ -18,6 +19,7 @@ function App() {
     
     if (estimateNoFromUrl) {
       setEstimateNo(estimateNoFromUrl);
+      setDisplayEstimateNo(estimateNoFromUrl); // 초기값은 TempEstimateNo
     }
     if (sheetIdFromUrl) {
       setSheetId(parseInt(sheetIdFromUrl) || 1);
@@ -70,6 +72,14 @@ function App() {
 
       setCustomerData(customerResult);
       setConvalData(convalResult);
+      
+      // CurEstimateNo가 있으면 표시용 견적번호 업데이트
+      if (customerResult?.CurEstimateNo) {
+        setDisplayEstimateNo(customerResult.CurEstimateNo);
+      } else if (customerResult?.EstimateNo) {
+        setDisplayEstimateNo(customerResult.EstimateNo);
+      }
+      
       setSuccess('데이터를 성공적으로 로드했습니다.');
       
       // 자동 CONVAL 재호출이 요청된 경우 실행
@@ -186,7 +196,7 @@ function App() {
                 <Form.Label>견적 번호</Form.Label>
                 <Form.Control
                   type="text"
-                  value={estimateNo}
+                  value={displayEstimateNo || estimateNo}
                   readOnly
                   className="form-control-plaintext"
                 />

@@ -120,9 +120,15 @@ namespace ConvalWebApi.Controllers
                 }
                 
                 // 데이터베이스에서 가져온 실제 데이터와 기본값을 조합 (운전조건 필드 포함)
+                // CurEstimateNo가 있으면 CurEstimateNo를, 없으면 TempEstimateNo를 EstimateNo로 사용
+                var curEstimateNo = customerData.GetValueOrDefault("CurEstimateNo", null);
+                var estimateNoToDisplay = curEstimateNo != null ? curEstimateNo.ToString() : 
+                                         customerData.GetValueOrDefault("EstimateNo", estimateNo)?.ToString() ?? estimateNo;
+                
                 var result = new Dictionary<string, object>
                 {
-                    ["EstimateNo"] = customerData.GetValueOrDefault("EstimateNo", estimateNo),
+                    ["CurEstimateNo"] = curEstimateNo,
+                    ["EstimateNo"] = estimateNoToDisplay,
                     ["CustomerName"] = GetValueOrDash(customerData.GetValueOrDefault("CustomerName", null)),
                     ["Requester"] = GetValueOrDash(customerData.GetValueOrDefault("Requester", null)),
                     ["Engineer"] = GetValueOrDash(customerData.GetValueOrDefault("Engineer", null)),
@@ -843,7 +849,9 @@ namespace ConvalWebApi.Controllers
                     string sql = @"
                         SELECT 
                             er.*,
-                            es.TempEstimateNo AS EstimateNo,
+                            es.TempEstimateNo AS TempEstimateNo,
+                            es.CurEstimateNo AS CurEstimateNo,
+                            COALESCE(es.CurEstimateNo, es.TempEstimateNo) AS EstimateNo,
                             c.CompanyName AS CustomerName,
                             c.Name AS Requester,
                             w.Name AS Engineer,
