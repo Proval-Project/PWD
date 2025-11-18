@@ -303,6 +303,9 @@ const EstimateDetailPage: React.FC = () => {
   const [selectedCustomerFiles, setSelectedCustomerFiles] = useState<File[]>([]);
   const customerAddInputRef = useRef<HTMLInputElement | null>(null);
 
+  // 이미 로드된 sheetID를 추적하여 중복 로드 방지
+  const [loadedSheetIDs, setLoadedSheetIDs] = useState<Set<number>>(new Set());
+
   // ACC 섹션 선택 상태 관리
   const [accSelections, setAccSelections] = useState<{
     positioner: { typeCode: string; makerCode: string; modelCode: string; specification: string; };
@@ -516,6 +519,11 @@ const EstimateDetailPage: React.FC = () => {
                     if (!sid) return;
                     
                     // 저장된 데이터가 있으면 해당 데이터 사용, 없으면 현재 상태 유지
+                    // 단, 이미 로드된 sheetID이면 다시 로드하지 않음 (중복 로드 방지)
+                    if (loadedSheetIDs.has(sid)) {
+                      return;
+                    }
+                    
                     const savedBodySelections = bodySelectionsBySheet[sid];
                     const savedTrimSelections = trimSelectionsBySheet[sid];
                     const savedActSelections = actSelectionsBySheet[sid];
@@ -533,7 +541,7 @@ const EstimateDetailPage: React.FC = () => {
                     if (savedAccSelections) {
                       setAccSelections(savedAccSelections);
                     }
-                  }, [selectedValve?.sheetID, bodySelectionsBySheet, trimSelectionsBySheet, actSelectionsBySheet, accSelectionsBySheet]);
+                  }, [selectedValve?.sheetID, bodySelectionsBySheet, trimSelectionsBySheet, actSelectionsBySheet, accSelectionsBySheet, loadedSheetIDs]);
 
                   // selectedValve 변경 시 해당 TAG의 데이터 로드 (한 번만)
                   useEffect(() => {
@@ -2371,24 +2379,53 @@ const handleSaveSpecification = async () => {
 
     // 컴포넌트 마운트 시 또는 accSelections 변경 시 입력 필드 초기화 및 선택 상태 설정
     useEffect(() => {
-      if (currentAcc?.modelCode) {
+      // currentAcc의 typeCode가 현재 typeCode와 일치하는지 확인
+      const isCurrentType = !currentAcc?.typeCode || currentAcc.typeCode === typeCode;
+      
+      if (currentAcc?.modelCode && currentAcc?.makerCode && isCurrentType) {
+        // 타입 코드가 일치하는 메이커만 찾기
         const selectedMakerName = accMakerList.find(maker => 
-          maker.accMakerCode === currentAcc?.makerCode && maker.accTypeCode === typeCode
+          maker.accMakerCode === currentAcc.makerCode && 
+          maker.accTypeCode === typeCode
         )?.accMakerName || '';
-        const selectedModelName = accModelList.find(model => 
-          model.accModelCode === currentAcc?.modelCode && model.accTypeCode === typeCode
-        )?.accModelName || '';
+        
+        // 타입 코드와 메이커 코드, 모델 코드가 모두 일치하는 모델만 찾기
+        const selectedModel = accModelList.find(model => 
+          model.accMakerCode === currentAcc.makerCode &&
+          model.accModelCode === currentAcc.modelCode && 
+          model.accTypeCode === typeCode
+        );
+        
+        const selectedModelName = selectedModel?.accModelName || '';
+        const selectedSpec = selectedModel?.accSize || currentAcc.specification || '';
+        
+        console.log(`🔍 ${accTypeKey} - currentAcc 기반 입력 필드 설정:`, {
+          currentAcc,
+          typeCode,
+          selectedMakerName,
+          selectedModelName,
+          selectedSpec,
+          foundModel: selectedModel
+        });
+        
         setMakerSearchTerm(selectedMakerName);
         setModelSearchTerm(selectedModelName);
-        setSpecSearchTerm(currentAcc.specification || '');
+        setSpecSearchTerm(selectedSpec);
         setIsSelected(true); // 모델이 이미 선택되어 있으면 isSelected를 true로
       } else {
+        // 타입이 일치하지 않거나 모델 코드가 없으면 초기화
+        if (!isCurrentType) {
+          console.log(`🔍 ${accTypeKey} - 타입 불일치로 초기화:`, {
+            currentAccTypeCode: currentAcc?.typeCode,
+            expectedTypeCode: typeCode
+          });
+        }
         setMakerSearchTerm('');
         setModelSearchTerm('');
         setSpecSearchTerm('');
         setIsSelected(false); // 모델이 없으면 isSelected를 false로
       }
-    }, [currentAcc, accMakerList, accModelList, typeCode]);
+    }, [currentAcc, accMakerList, accModelList, typeCode, accTypeKey]);
 
 
 
@@ -2405,6 +2442,7 @@ const handleSaveSpecification = async () => {
       console.log('  - typeCode:', typeCode);
       console.log('  - accModelList 길이:', accModelList.length);
       console.log('  - accMakerList 길이:', accMakerList.length);
+      console.log('  - 검색어:', { makerSearchTerm, modelSearchTerm, specSearchTerm });
 
       if (allSearchTerms.length === 0) {
         // 검색어가 없으면 해당 타입 코드와 일치하는 전체 모델 반환
@@ -2414,45 +2452,139 @@ const handleSaveSpecification = async () => {
         return filtered;
       }
 
-      const lowerCaseSearchWords = allSearchTerms.map(term => term.toLowerCase().split(' ').filter(word => word)).flat();
+      // 각 필드별로 검색어를 분리하여 정확하게 매칭 (AND 조건)
+      const makerSearchLower = (makerSearchTerm || '').toLowerCase().trim();
+      const modelSearchLower = (modelSearchTerm || '').toLowerCase().trim();
+      const specSearchLower = (specSearchTerm || '').toLowerCase().trim();
 
       const filtered = accModelList.filter(item => {
+        // 타입 코드 필터링 (필수)
         if (!typeCode || item.accTypeCode !== typeCode) {
           return false;
         }
 
-        const makerName = (accMakerList.find(maker => maker.accMakerCode === item.accMakerCode && maker.accTypeCode === item.accTypeCode)?.accMakerName || '').toLowerCase();
+        // 메이커 정보 찾기 (타입 코드도 일치해야 함)
+        const makerInfo = accMakerList.find(maker => 
+          maker.accMakerCode === item.accMakerCode && maker.accTypeCode === item.accTypeCode
+        );
+        const makerName = (makerInfo?.accMakerName || '').toLowerCase();
         const modelName = (item.accModelName || '').toLowerCase();
         const specification = (item.accSize || '').toLowerCase();
 
-        // 모든 검색 단어를 모든 필드에서 AND 검색
-        return lowerCaseSearchWords.every(word =>
-          makerName.includes(word) || modelName.includes(word) || specification.includes(word)
-        );
+        // AND 조건: 모든 검색어가 각각의 필드에 정확히 매칭되어야 함
+        // 검색어가 비어있으면 해당 조건은 무시 (true)
+        // 검색어가 있으면 반드시 해당 필드에 포함되어야 함
+        const hasMakerSearch = makerSearchLower.length > 0;
+        const hasModelSearch = modelSearchLower.length > 0;
+        const hasSpecSearch = specSearchLower.length > 0;
+
+        // 메이커 검색어가 있으면 메이커 이름에만 매칭 (이름으로 검색, 선택 시 코드 저장)
+        const makerMatch = !hasMakerSearch || makerName.includes(makerSearchLower);
+        
+        // 모델 검색어가 있으면 모델 이름에만 매칭 (이름으로 검색, 선택 시 코드 저장)
+        const modelMatch = !hasModelSearch || modelName.includes(modelSearchLower);
+        
+        // 규격 검색어가 있으면 규격에만 매칭 (다른 필드와 혼동 방지)
+        const specMatch = !hasSpecSearch || specification.includes(specSearchLower);
+
+        // 모든 조건이 AND로 연결됨 (무조건 AND 조건)
+        const result = makerMatch && modelMatch && specMatch;
+        
+        if (result) {
+          console.log('  ✅ 매칭된 항목:', {
+            makerCode: item.accMakerCode,
+            makerName: makerInfo?.accMakerName,
+            modelCode: item.accModelCode,
+            modelName: item.accModelName,
+            spec: item.accSize,
+            '메이커 매칭': makerMatch,
+            '모델 매칭': modelMatch,
+            '규격 매칭': specMatch
+          });
+        } else {
+          // 매칭 실패 시 이유 로깅
+          if (makerSearchLower && !makerMatch) {
+            console.log('  ❌ 메이커 매칭 실패:', {
+              검색어: makerSearchLower,
+              실제메이커이름: makerName,
+              makerCode: item.accMakerCode
+            });
+          }
+          if (modelSearchLower && !modelMatch) {
+            console.log('  ❌ 모델 매칭 실패:', {
+              검색어: modelSearchLower,
+              실제모델이름: modelName,
+              modelCode: item.accModelCode
+            });
+          }
+        }
+        
+        return result;
       });
 
       console.log('  - 필터링된 모델 수 (검색어 있음):', filtered.length);
-      console.log('  - 필터링된 모델들:', filtered);
+      console.log('  - 필터링된 모델들:', filtered.map(item => ({
+        makerCode: item.accMakerCode,
+        makerName: accMakerList.find(m => m.accMakerCode === item.accMakerCode)?.accMakerName,
+        modelCode: item.accModelCode,
+        modelName: item.accModelName
+      })));
       return filtered;
     }, [makerSearchTerm, modelSearchTerm, specSearchTerm, accModelList, accMakerList, typeCode]);
 
     // 악세사리 선택 핸들러
     const handleSelectAccessory = (selectedModel: any) => {
+      console.log('🔍 handleSelectAccessory 호출:', {
+        accTypeKey,
+        typeCode,
+        selectedModel,
+        makerCode: selectedModel.accMakerCode,
+        modelCode: selectedModel.accModelCode,
+        modelName: selectedModel.accModelName
+      });
+      
       // 메이커 이름 찾기
       const selectedMakerName = accMakerList.find(maker => 
         maker.accMakerCode === selectedModel.accMakerCode && maker.accTypeCode === selectedModel.accTypeCode
       )?.accMakerName || '';
       
-      // onAccessoryChange에 makerName과 modelName 포함하여 전달
-      onAccessoryChange({
-        ...selectedModel,
-        typeCode: selectedModel.accTypeCode,
+      console.log('🔍 선택된 메이커 이름:', selectedMakerName);
+      console.log('🔍 선택된 모델 정보:', {
+        makerCode: selectedModel.accMakerCode,
+        modelCode: selectedModel.accModelCode,
+        modelName: selectedModel.accModelName,
+        specification: selectedModel.accSize
+      });
+      
+      // onAccessoryChange에 필요한 필드만 명확하게 전달
+      const accessoryData = {
+        typeCode: selectedModel.accTypeCode || typeCode,
         makerCode: selectedModel.accMakerCode,
         modelCode: selectedModel.accModelCode,
         specification: selectedModel.accSize || '',
+        // 디버깅용 (실제 저장에는 사용되지 않음)
         makerName: selectedMakerName,
         modelName: selectedModel.accModelName || '',
+        // 원본 데이터 참조용 (필요시)
+        accTypeCode: selectedModel.accTypeCode,
+        accMakerCode: selectedModel.accMakerCode,
+        accModelCode: selectedModel.accModelCode,
+        accSize: selectedModel.accSize,
+        accModelName: selectedModel.accModelName,
+      };
+      
+      console.log('🔍 onAccessoryChange에 전달할 데이터:', accessoryData);
+      console.log('🔍 선택된 항목 검증:', {
+        '선택한 메이커 코드': selectedModel.accMakerCode,
+        '선택한 모델 코드': selectedModel.accModelCode,
+        '선택한 모델 이름': selectedModel.accModelName,
+        '메이커 이름': selectedMakerName,
+        '타입 코드': selectedModel.accTypeCode,
+        '예상 타입 코드': typeCode,
+        '전체 selectedModel': selectedModel
       });
+      onAccessoryChange(accessoryData);
+      
       // 선택 시 세 입력 필드를 선택된 값으로 채우기
       setMakerSearchTerm(selectedMakerName);
       setModelSearchTerm(selectedModel.accModelName || '');
@@ -2525,16 +2657,44 @@ const handleSaveSpecification = async () => {
         {isDropdownOpen && (
           <ul className="dropdown-list">
             {filteredModels.length > 0 ? (
-              filteredModels.map((item: any) => (
-                <li
-                  key={`${item.accTypeCode}-${item.accMakerCode}-${item.accModelCode}`}
-                  onClick={() => {if (!isReadOnly) handleSelectAccessory(item);}} // isReadOnly일 때 클릭 불가
-                >
-                  <span className="dropdown-maker">{accMakerList.find(maker => maker.accMakerCode === item.accMakerCode)?.accMakerName || ''}</span>
-                  <span className="dropdown-model">{item.accModelName}</span>
-                  <span className="dropdown-spec">{item.accSize || ''}</span>
-                </li>
-              ))
+              filteredModels.map((item: any, index: number) => {
+                const makerName = accMakerList.find(maker => maker.accMakerCode === item.accMakerCode && maker.accTypeCode === item.accTypeCode)?.accMakerName || '';
+                // 클릭 시 전달할 항목을 명확하게 구성
+                const itemToPass = {
+                  ...item,
+                  accTypeCode: item.accTypeCode || typeCode, // 타입 코드 명확히 설정
+                };
+                return (
+                  <li
+                    key={`${item.accTypeCode}-${item.accMakerCode}-${item.accModelCode}-${index}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (!isReadOnly) {
+                        console.log('🔍 드롭다운 항목 클릭:', {
+                          index,
+                          item,
+                          itemToPass,
+                          makerCode: item.accMakerCode,
+                          modelCode: item.accModelCode,
+                          modelName: item.accModelName,
+                          makerName,
+                          accTypeCode: item.accTypeCode,
+                          typeCode,
+                          '전달할 항목': itemToPass
+                        });
+                        // 명확하게 타입 코드가 설정된 item 전달
+                        handleSelectAccessory(itemToPass);
+                      }
+                    }}
+                    style={{ cursor: isReadOnly ? 'default' : 'pointer' }}
+                  >
+                    <span className="dropdown-maker">{makerName}</span>
+                    <span className="dropdown-model">{item.accModelName}</span>
+                    <span className="dropdown-spec">{item.accSize || ''}</span>
+                  </li>
+                );
+              })
             ) : ( 
               <li>검색 결과가 없습니다.</li>
             )}
@@ -3489,12 +3649,18 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
 
   useEffect(() => {
     // types와 accModelList가 모두 로드된 후에만 loadInitialSpecification을 호출
+    // 단, 이미 로드된 sheetID이거나 tempSelections에 저장된 값이 있으면 다시 로드하지 않음
     if (tempEstimateNo && types.length > 0 && accModelList.length > 0) {
       if (selectedValve && selectedValve.sheetID > 0) {
-        loadInitialSpecification(selectedValve.sheetID);
+        const sheetID = selectedValve.sheetID;
+        // 이미 로드되었거나 tempSelections에 저장된 값이 있으면 다시 로드하지 않음
+        if (!loadedSheetIDs.has(sheetID) && !tempSelections[sheetID]) {
+          loadInitialSpecification(sheetID);
+          setLoadedSheetIDs(prev => new Set(prev).add(sheetID));
+        }
       }
     }
-  }, [selectedValve?.sheetID, tempEstimateNo, types, accModelList]); // types와 accModelList 추가
+  }, [selectedValve?.sheetID, tempEstimateNo, types.length, accModelList.length]); // types와 accModelList의 length만 의존성으로 사용
 
   // 시작 취소 핸들러
   const handleCancelStart = async () => {
@@ -3557,9 +3723,32 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
 
   // 악세사리 변경 핸들러
   const handleAccessoryChange = (accTypeKey: string, accessory: any) => {
+    console.log('🔍 handleAccessoryChange 호출:', {
+      accTypeKey,
+      accessory,
+      makerCode: accessory?.makerCode,
+      modelCode: accessory?.modelCode,
+      modelName: accessory?.modelName,
+      makerName: accessory?.makerName,
+      accTypeCode: accessory?.accTypeCode,
+      typeCode: accessory?.typeCode
+    });
+    
+    // 필요한 필드만 추출하여 저장 (불필요한 데이터 제거)
+    const cleanAccessory = {
+      typeCode: accessory?.typeCode || accessory?.accTypeCode || '',
+      makerCode: accessory?.makerCode || accessory?.accMakerCode || '',
+      modelCode: accessory?.modelCode || accessory?.accModelCode || '',
+      specification: accessory?.specification || accessory?.accSize || '',
+    };
+    
+    console.log('🔍 정리된 악세사리 데이터:', cleanAccessory);
+    
     setAccSelections(prev => {
       // 기존 악세사리 값들을 모두 유지하면서 특정 타입만 업데이트
-      const newSelections = { ...prev, [accTypeKey]: accessory };
+      const newSelections = { ...prev, [accTypeKey]: cleanAccessory };
+      
+      console.log('🔍 업데이트된 accSelections:', newSelections);
       
       // 맵에 반영
       const sid = selectedValve?.sheetID;
