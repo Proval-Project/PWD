@@ -1208,11 +1208,12 @@ const NewEstimateRequestPage: React.FC = () => {
   }, [fileAttachments]);
 
   // 🔑 관리 첨부파일 로드 함수 (EstimateDetailPage에서 업로드한 파일)
-  const loadManagerAttachments = useCallback(async () => {
-    if (!tempEstimateNo) return;
+  const loadManagerAttachments = useCallback(async (estimateNo?: string) => {
+    const targetEstimateNo = estimateNo || tempEstimateNo;
+    if (!targetEstimateNo) return;
     try {
-      console.log('🔄 loadManagerAttachments 시작 - tempEstimateNo:', tempEstimateNo);
-      const response = await fetch(buildApiUrl(`/estimate/sheets/${tempEstimateNo}/attachments`));
+      console.log('🔄 loadManagerAttachments 시작 - tempEstimateNo:', targetEstimateNo);
+      const response = await fetch(buildApiUrl(`/estimate/sheets/${targetEstimateNo}/attachments`));
       console.log('📡 API 응답 상태:', response.status, response.ok);
       
       if (response.ok) {
@@ -1268,6 +1269,14 @@ const NewEstimateRequestPage: React.FC = () => {
       console.error('관리 첨부파일 로드 오류:', error);
     }
   }, [tempEstimateNo]);
+
+  // 🔑 tempEstimateNo가 변경될 때마다 관리 첨부파일 자동 로드
+  useEffect(() => {
+    if (tempEstimateNo) {
+      console.log('🔄 tempEstimateNo 변경 감지, 관리 첨부파일 자동 로드:', tempEstimateNo);
+      loadManagerAttachments(tempEstimateNo);
+    }
+  }, [tempEstimateNo, loadManagerAttachments]);
 
   // 첨부파일 다운로드 함수
   const handleDownloadAttachment = useCallback(async (attachmentId: number | string, fileName: string) => {
@@ -1796,8 +1805,8 @@ const NewEstimateRequestPage: React.FC = () => {
       // 🔑 추가 안전장치: fileAttachments도 완전 초기화
       console.log('🔍 loadExistingData 완료 후 pendingFiles 상태:', pendingFiles);
       
-      // 🔑 관리 첨부파일 로드
-      await loadManagerAttachments();
+      // 🔑 관리 첨부파일 로드 (loadTempEstimateNo를 직접 전달하여 상태 업데이트 전에 호출 가능)
+      await loadManagerAttachments(loadTempEstimateNo);
       
     } catch (error) {
       console.error('데이터 불러오기 실패:', error);
