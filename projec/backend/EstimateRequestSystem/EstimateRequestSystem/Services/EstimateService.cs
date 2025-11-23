@@ -6704,6 +6704,15 @@ public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
                                bsl.BodySize as BodySizeName,
                                tpsl.PortSize as TrimPortSizeName,
                                ahl.HW as HWName,
+                               ac.ActSeries as ActSeriesName,
+                               pl.AccModelName as PosCodeName,
+                               sl.AccModelName as SolCodeName,
+                               ll.AccModelName as LimCodeName,
+                               al.AccModelName as ASCodeName,
+                               vl.AccModelName as VolCodeName,
+                               al_acc.AccModelName as AirOpCodeName,
+                               lkl.AccModelName as LockupCodeName,
+                               sal.AccModelName as SnapActCodeName,
                                c.CompanyName as CustomerCompanyName,
                                c.Name as CustomerName
                         FROM DataSheetLv3 d 
@@ -6716,10 +6725,19 @@ public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
                         LEFT JOIN BodyRatingUnitList brul ON d.RatingUnit = brul.RatingUnitCode
                         LEFT JOIN BodyConnectionList bcl ON d.Connection = bcl.ConnectionCode
                         LEFT JOIN ActTypeList atl ON d.ActType = atl.ActTypeCode
+                        LEFT JOIN ActSeriesList ac ON d.ActSeriesCode = ac.ActSeriesCode
                         LEFT JOIN ActSizeList asl ON d.ActSeriesCode = asl.ActSeriesCode AND d.ActSize = asl.ActSizeCode
                         LEFT JOIN BodySizeList bsl ON d.BodySize = bsl.BodySizeCode AND d.BodySizeUnit = bsl.UnitCode
                         LEFT JOIN TrimPortSizeList tpsl ON d.TrimPortSize = tpsl.PortSizeCode AND d.TrimPortSizeUnit = tpsl.UnitCode
                         LEFT JOIN ActHWList ahl ON d.HW = ahl.HWCode
+                        LEFT JOIN PositionerList pl ON d.PosCode = pl.AccModelCode AND d.PosMakerCode = pl.AccMakerCode
+                        LEFT JOIN SolenoidList sl ON d.SolCode = sl.AccModelCode AND d.SolMakerCode = sl.AccMakerCode
+                        LEFT JOIN LimitList ll ON d.LimCode = ll.AccModelCode AND d.LimMakerCode = ll.AccMakerCode
+                        LEFT JOIN AirsetList al ON d.ASCode = al.AccModelCode AND d.ASMakerCode = al.AccMakerCode
+                        LEFT JOIN VolumeList vl ON d.VolCode = vl.AccModelCode AND d.VolMakerCode = vl.AccMakerCode
+                        LEFT JOIN AiroperateList al_acc ON d.AirOpMakerCode = al_acc.AccMakerCode AND d.AirOpCode = al_acc.AccModelCode
+                        LEFT JOIN LockupList lkl ON d.LockupCode = lkl.AccModelCode AND d.LockupMakerCode = lkl.AccMakerCode
+                        LEFT JOIN SnapactingList sal ON d.SnapActCode = sal.AccModelCode AND d.SnapActMakerCode = sal.AccMakerCode
                         LEFT JOIN User c ON e.CustomerID = c.UserID
                         LEFT JOIN User m ON e.ManagerID = m.UserID
                         WHERE d.TempEstimateNo = @tempEstimateNo
@@ -6770,6 +6788,16 @@ public async Task<string> GenerateDataSheetAsync(string tempEstimateNo)
                 (reader["UnitPrice"] == DBNull.Value ? 0m : Convert.ToDecimal(reader["UnitPrice"])) *
                 (reader["Qty"] == DBNull.Value ? 0m : Convert.ToDecimal(reader["Qty"]));
             worksheet_est1.Cell(11, 4).Value = "Pneumatic " + reader["ValveTypeName"]?.ToString() + " Valve";
+            
+            // 액세서리 코드 데이터 (32,6)부터 아래로
+            worksheet_est1.Cell(32, 6).Value = reader["PosCodeName"]?.ToString();
+            worksheet_est1.Cell(33, 6).Value = reader["SolCodeName"]?.ToString();
+            worksheet_est1.Cell(34, 6).Value = reader["LimCodeName"]?.ToString();
+            worksheet_est1.Cell(35, 6).Value = reader["ASCodeName"]?.ToString();
+            worksheet_est1.Cell(36, 6).Value = reader["VolCodeName"]?.ToString();
+            worksheet_est1.Cell(37, 6).Value = reader["AirOpCodeName"]?.ToString();
+            worksheet_est1.Cell(38, 6).Value = reader["LockupCodeName"]?.ToString();
+            worksheet_est1.Cell(39, 6).Value = reader["SnapActCodeName"]?.ToString();
             
             rowCount++;
         }
