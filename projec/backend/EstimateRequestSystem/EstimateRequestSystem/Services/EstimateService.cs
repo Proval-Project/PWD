@@ -7056,6 +7056,187 @@ public async Task<bool> DeleteFileByManagerTypeAsync(string tempEstimateNo, stri
     return true;
 }
 
+// ========== Statistics 관련 메서드들 ==========
+
+public async Task<StatisticsSummaryDto> GetStatisticsSummaryAsync()
+{
+    var summary = await _context.EstimateSheetLv1
+        .GroupBy(e => e.Status)
+        .Select(g => new { Status = g.Key, Count = g.Count() })
+        .ToListAsync();
+
+    var result = new StatisticsSummaryDto();
+    foreach (var item in summary)
+    {
+        switch (item.Status)
+        {
+            case 1:
+                result.Input = item.Count;
+                break;
+            case 2:
+                result.Waiting = item.Count;
+                break;
+            case 4:
+                result.Completed = item.Count;
+                break;
+            case 5:
+                result.Ordered = item.Count;
+                break;
+        }
+    }
+
+    return result;
+}
+
+public async Task<StatusDistributionDto> GetStatusDistributionAsync(DateTime startDate, DateTime endDate)
+{
+    var distribution = await _context.EstimateSheetLv1
+        .Where(e => e.RequestDate >= startDate && e.RequestDate <= endDate)
+        .GroupBy(e => e.Status)
+        .Select(g => new { Status = g.Key, Count = g.Count() })
+        .ToListAsync();
+
+    var result = new StatusDistributionDto();
+    foreach (var item in distribution)
+    {
+        switch (item.Status)
+        {
+            case 1:
+                result.Input = item.Count;
+                break;
+            case 2:
+                result.Waiting = item.Count;
+                break;
+            case 4:
+                result.Completed = item.Count;
+                break;
+            case 5:
+                result.Ordered = item.Count;
+                break;
+        }
+    }
+
+    return result;
+}
+
+public async Task<List<MonthlyOrderDto>> GetMonthlyOrderStatisticsAsync(DateTime startDate, DateTime endDate, string? valveType)
+{
+    var connectionString = _context.Database.GetConnectionString();
+    using var connection = new MySqlConnection(connectionString);
+    await connection.OpenAsync();
+
+    var query = @"
+        SELECT 
+            DATE_FORMAT(es.RequestDate, '%Y-%m') as Month, 
+            COUNT(DISTINCT es.TempEstimateNo) as Count
+        FROM EstimateSheetLv1 es
+        LEFT JOIN EstimateRequest er ON es.TempEstimateNo = er.TempEstimateNo
+        WHERE es.RequestDate BETWEEN @startDate AND @endDate
+            AND (@valveType IS NULL OR er.ValveType = @valveType)
+        GROUP BY DATE_FORMAT(es.RequestDate, '%Y-%m')
+        ORDER BY Month";
+
+    using var command = new MySqlCommand(query, connection);
+    command.Parameters.AddWithValue("@startDate", startDate);
+    command.Parameters.AddWithValue("@endDate", endDate);
+    command.Parameters.AddWithValue("@valveType", valveType ?? (object)DBNull.Value);
+
+    var monthlyData = new List<MonthlyOrderDto>();
+    using var reader = await command.ExecuteReaderAsync();
+    while (await reader.ReadAsync())
+    {
+        monthlyData.Add(new MonthlyOrderDto
+        {
+            Month = reader.GetString(reader.GetOrdinal("Month")),
+            Count = reader.GetInt32(reader.GetOrdinal("Count"))
+        });
+    }
+
+    return monthlyData;
+}
+
+public async Task<List<ValveRatioDto>> GetValveRatioStatisticsAsync(DateTime startDate, DateTime endDate, string? valveType)
+{
+    var query = from er in _context.EstimateRequest
+                join es in _context.EstimateSheetLv1 on er.TempEstimateNo equals es.TempEstimateNo
+                where es.RequestDate >= startDate && es.RequestDate <= endDate
+                select new { er.ValveType };
+
+    if (!string.IsNullOrEmpty(valveType))
+    {
+        query = query.Where(x => x.ValveType == valveType);
+    }
+
+    var valveGroups = await query
+        .Where(x => !string.IsNullOrEmpty(x.ValveType))
+        .GroupBy(x => x.ValveType)
+        .Select(g => new { ValveType = g.Key, Count = g.Count() })
+        .ToListAsync();
+
+    var totalCount = valveGroups.Sum(x => x.Count);
+
+    // 밸브 타입 이름 매핑을 위해 BodyValveList 조회
+    var valveList = await _context.BodyValveList.ToListAsync();
+    var valveMap = valveList.ToDictionary(v => v.ValveSeriesCode, v => v.ValveSeries);
+
+    var result = valveGroups.Select(g => new ValveRatioDto
+    {
+        ValveType = g.ValveType ?? string.Empty,
+        ValveTypeName = valveMap.ContainsKey(g.ValveType ?? string.Empty) 
+            ? valveMap[g.ValveType ?? string.Empty] 
+            : g.ValveType ?? string.Empty,
+        Count = g.Count,
+        Percentage = totalCount > 0 ? Math.Round((g.Count * 100.0 / totalCount), 2) : 0
+    }).ToList();
+
+    return result;
+}
+
+public async Task<List<ConversionRateDto>> GetConversionRateStatisticsAsync(DateTime startDate, DateTime endDate)
+{
+    var connectionString = _context.Database.GetConnectionString();
+    using var connection = new MySqlConnection(connectionString);
+    await connection.OpenAsync();
+
+    var query = @"
+        SELECT
+            DATE_FORMAT(RequestDate, '%Y-%m') as Month,
+            COUNT(*) as TotalRequests,
+            COUNT(CASE WHEN Status >= 4 THEN 1 END) as CompletedQuotes,
+            COUNT(CASE WHEN Status = 5 THEN 1 END) as ActualOrders,
+            ROUND((COUNT(CASE WHEN Status = 5 THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0)), 2) as ConversionRate
+        FROM EstimateSheetLv1
+        WHERE RequestDate BETWEEN @startDate AND @endDate
+        GROUP BY DATE_FORMAT(RequestDate, '%Y-%m')
+        ORDER BY Month";
+
+    using var command = new MySqlCommand(query, connection);
+    command.Parameters.AddWithValue("@startDate", startDate);
+    command.Parameters.AddWithValue("@endDate", endDate);
+
+    var conversionData = new List<ConversionRateDto>();
+    using var reader = await command.ExecuteReaderAsync();
+    while (await reader.ReadAsync())
+    {
+        var monthOrdinal = reader.GetOrdinal("Month");
+        var totalRequestsOrdinal = reader.GetOrdinal("TotalRequests");
+        var completedQuotesOrdinal = reader.GetOrdinal("CompletedQuotes");
+        var actualOrdersOrdinal = reader.GetOrdinal("ActualOrders");
+        var conversionRateOrdinal = reader.GetOrdinal("ConversionRate");
+        
+        conversionData.Add(new ConversionRateDto
+        {
+            Month = reader.GetString(monthOrdinal),
+            TotalRequests = reader.GetInt32(totalRequestsOrdinal),
+            CompletedQuotes = reader.GetInt32(completedQuotesOrdinal),
+            ActualOrders = reader.GetInt32(actualOrdersOrdinal),
+            ConversionRate = reader.IsDBNull(conversionRateOrdinal) ? 0 : reader.GetDouble(conversionRateOrdinal)
+        });
+    }
+
+    return conversionData;
+}
+
     }
 
 

@@ -1,17 +1,471 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { 
+  getStatisticsSummary, 
+  getStatusDistribution, 
+  getMonthlyOrderStatistics, 
+  getValveRatioStatistics, 
+  getConversionRateStatistics,
+  type StatisticsSummaryDto,
+  type StatusDistributionDto,
+  type MonthlyOrderDto,
+  type ValveRatioDto,
+  type ConversionRateDto
+} from '../../api/statistics';
+import axios from 'axios';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import {
+  BarChart,
+  Bar,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  ComposedChart
+} from 'recharts';
+import './StatisticsPage.css';
 import './DashboardPages.css';
 
-const StatisticsPage: React.FC = () => {
+// 밸브 타입 인터페이스
+interface BodyValveListItem {
+  valveSeriesCode: string;
+  valveSeries: string;
+}
+
+// 탭 메뉴 컴포넌트
+const TabMenu: React.FC<{ active: 'workflow' | 'product'; onSelect: (tab: 'workflow' | 'product') => void }> = ({ active, onSelect }) => {
   return (
-    <div className="page">
-      <h1>📊 통계 분석</h1>
-      <p>이 페이지는 통계 분석 기능을 제공합니다.</p>
-      <div style={{ padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '8px', marginTop: '20px' }}>
-        <h3>간이 페이지입니다</h3>
-        <p>실제 구현 시에는 차트와 통계 데이터가 표시됩니다.</p>
+    <div className="statistics-tab-menu">
+      <button
+        className={`statistics-tab ${active === 'workflow' ? 'active' : ''}`}
+        onClick={() => onSelect('workflow')}
+      >
+        업무 통계
+      </button>
+      <button
+        className={`statistics-tab ${active === 'product' ? 'active' : ''}`}
+        onClick={() => onSelect('product')}
+      >
+        제품 통계
+      </button>
+    </div>
+  );
+};
+
+// 상태 카드 리스트 컴포넌트
+const StatusCardList: React.FC<{ data: StatisticsSummaryDto }> = ({ data }) => {
+  const cards = [
+    { label: '입력', value: data.input, color: '#007bff' },
+    { label: '접수', value: data.waiting, color: '#ffc107' },
+    { label: '완료', value: data.completed, color: '#28a745' },
+    { label: '수주', value: data.ordered, color: '#dc3545' }
+  ];
+
+  return (
+    <div className="status-card-list">
+      {cards.map((card, index) => (
+        <div key={index} className="status-card" style={{ borderLeft: `4px solid ${card.color}` }}>
+          <div className="status-card-label">{card.label}</div>
+          <div className="status-card-value">{card.value.toLocaleString()}</div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// 날짜 범위 선택기 컴포넌트
+const DateRangePicker: React.FC<{
+  startDate: Date;
+  endDate: Date;
+  onStartDateChange: (date: Date) => void;
+  onEndDateChange: (date: Date) => void;
+}> = ({ startDate, endDate, onStartDateChange, onEndDateChange }) => {
+  return (
+    <div className="date-range-picker">
+      <label>기간 선택:</label>
+      <DatePicker
+        selected={startDate}
+        onChange={(date: Date | null) => {
+          if (date) onStartDateChange(date);
+        }}
+        selectsStart
+        startDate={startDate}
+        endDate={endDate}
+        dateFormat="yyyy-MM-dd"
+        className="date-picker-input"
+      />
+      <span> ~ </span>
+      <DatePicker
+        selected={endDate}
+        onChange={(date: Date | null) => {
+          if (date) onEndDateChange(date);
+        }}
+        selectsEnd
+        startDate={startDate}
+        endDate={endDate}
+        minDate={startDate}
+        dateFormat="yyyy-MM-dd"
+        className="date-picker-input"
+      />
+    </div>
+  );
+};
+
+// 밸브 타입 선택기 컴포넌트
+const ValveTypeSelector: React.FC<{
+  valveTypes: BodyValveListItem[];
+  selectedValveType: string | null;
+  onValveTypeChange: (valveType: string | null) => void;
+}> = ({ valveTypes, selectedValveType, onValveTypeChange }) => {
+  return (
+    <div className="valve-type-selector">
+      <label>밸브 종류:</label>
+      <select
+        value={selectedValveType || ''}
+        onChange={(e) => onValveTypeChange(e.target.value || null)}
+        className="valve-type-select"
+      >
+        <option value="">전체</option>
+        {valveTypes.map((valve) => (
+          <option key={valve.valveSeriesCode} value={valve.valveSeriesCode}>
+            {valve.valveSeries}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
+// 상태 분포 차트 컴포넌트
+const StatusDistributionChart: React.FC<{ data: StatusDistributionDto }> = ({ data }) => {
+  const chartData = [
+    { name: '입력', value: data.input },
+    { name: '접수', value: data.waiting },
+    { name: '완료', value: data.completed },
+    { name: '수주', value: data.ordered }
+  ];
+
+  const COLORS = ['#007bff', '#ffc107', '#28a745', '#dc3545'];
+
+  return (
+    <div className="chart-container">
+      <h3>상태 분포</h3>
+      <div className="chart-row">
+        <div className="chart-item">
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="value" fill="#007bff" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="chart-item">
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={chartData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );
 };
 
-export default StatisticsPage; 
+// 전환율 혼합 차트 컴포넌트
+const ConversionRateComposedChart: React.FC<{ data: ConversionRateDto[] }> = ({ data }) => {
+  return (
+    <div className="chart-container">
+      <h3>전환율 추이</h3>
+      <ResponsiveContainer width="100%" height={400}>
+        <ComposedChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="month" />
+          <YAxis yAxisId="left" label={{ value: '건수', angle: -90, position: 'insideLeft' }} />
+          <YAxis yAxisId="right" orientation="right" label={{ value: '전환율 (%)', angle: 90, position: 'insideRight' }} />
+          <Tooltip />
+          <Legend />
+          <Bar yAxisId="left" dataKey="totalRequests" fill="#8884d8" name="전체 요청" />
+          <Bar yAxisId="left" dataKey="completedQuotes" fill="#82ca9d" name="완료" />
+          <Line yAxisId="right" type="monotone" dataKey="conversionRate" stroke="#ff7300" name="전환율 (%)" />
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+// 밸브 사양 비율 테이블 컴포넌트
+const ValveSpecTable: React.FC<{ data: ValveRatioDto[] }> = ({ data }) => {
+  return (
+    <div className="valve-spec-table-container">
+      <h3>밸브 사양 비율</h3>
+      <table className="valve-spec-table">
+        <thead>
+          <tr>
+            <th>밸브 타입</th>
+            <th>건수</th>
+            <th>비율 (%)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((item, index) => (
+            <tr key={index}>
+              <td>{item.valveTypeName || item.valveType}</td>
+              <td>{item.count.toLocaleString()}</td>
+              <td>{item.percentage.toFixed(2)}%</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+// 밸브 사양 비율 도넛 차트 컴포넌트
+const ValveRatioDonutChart: React.FC<{ data: ValveRatioDto[] }> = ({ data }) => {
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
+
+  // Recharts가 기대하는 형식으로 변환
+  const chartData = data.map(item => ({
+    name: item.valveTypeName || item.valveType,
+    value: item.count,
+    percentage: item.percentage
+  }));
+
+  return (
+    <div className="chart-container">
+      <h3>밸브 사양 비율</h3>
+      <ResponsiveContainer width="100%" height={300}>
+        <PieChart>
+          <Pie
+            data={chartData}
+            cx="50%"
+            cy="50%"
+            labelLine={false}
+            label={(entry: any) => {
+              const percentage = entry.percentage !== undefined ? entry.percentage : (entry.percent ? entry.percent * 100 : 0);
+              return `${entry.name}: ${percentage.toFixed(1)}%`;
+            }}
+            outerRadius={80}
+            innerRadius={40}
+            fill="#8884d8"
+            dataKey="value"
+          >
+            {chartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            ))}
+          </Pie>
+          <Tooltip formatter={(value: any, name: any, props: any) => {
+            const percentage = props.payload?.percentage !== undefined 
+              ? props.payload.percentage 
+              : (props.payload?.percent ? props.payload.percent * 100 : 0);
+            return [`${value}건 (${percentage.toFixed(1)}%)`, name];
+          }} />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+// 월별 수주 현황 막대 차트 컴포넌트
+const MonthlyOrderChart: React.FC<{ data: MonthlyOrderDto[] }> = ({ data }) => {
+  return (
+    <div className="chart-container">
+      <h3>월별 수주 현황</h3>
+      <ResponsiveContainer width="100%" height={400}>
+        <BarChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="month" />
+          <YAxis />
+          <Tooltip />
+          <Legend />
+          <Bar dataKey="count" fill="#007bff" name="수주 건수" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+const StatisticsPage: React.FC = () => {
+  // 탭 상태
+  const [activeTab, setActiveTab] = useState<'workflow' | 'product'>('workflow');
+
+  // 날짜 범위 상태 (기본값: 현재 월)
+  const now = new Date();
+  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const [startDate, setStartDate] = useState<Date>(firstDayOfMonth);
+  const [endDate, setEndDate] = useState<Date>(lastDayOfMonth);
+
+  // 밸브 타입 필터 (Product 탭용)
+  const [selectedValveType, setSelectedValveType] = useState<string | null>(null);
+  const [bodyValveList, setBodyValveList] = useState<BodyValveListItem[]>([]);
+
+  // 데이터 상태
+  const [summaryData, setSummaryData] = useState<StatisticsSummaryDto | null>(null);
+  const [statusDistributionData, setStatusDistributionData] = useState<StatusDistributionDto | null>(null);
+  const [monthlyOrderData, setMonthlyOrderData] = useState<MonthlyOrderDto[]>([]);
+  const [valveRatioData, setValveRatioData] = useState<ValveRatioDto[]>([]);
+  const [conversionRateData, setConversionRateData] = useState<ConversionRateDto[]>([]);
+
+  // 로딩 상태
+  const [loading, setLoading] = useState<boolean>(false);
+
+  // BodyValveList 가져오기
+  useEffect(() => {
+    const fetchBodyValveList = async () => {
+      try {
+        const response = await axios.get('/api/estimate/body-valve-list');
+        setBodyValveList(response.data || []);
+      } catch (error) {
+        console.error('BodyValveList 가져오기 실패:', error);
+      }
+    };
+    fetchBodyValveList();
+  }, []);
+
+  // 요약 데이터 가져오기
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const data = await getStatisticsSummary();
+        setSummaryData(data);
+      } catch (error) {
+        console.error('요약 데이터 가져오기 실패:', error);
+      }
+    };
+    fetchSummary();
+  }, []);
+
+  // Workflow 탭 데이터 가져오기
+  useEffect(() => {
+    if (activeTab === 'workflow') {
+      const fetchWorkflowData = async () => {
+        setLoading(true);
+        try {
+          const [distribution, conversion] = await Promise.all([
+            getStatusDistribution(startDate, endDate),
+            getConversionRateStatistics(startDate, endDate)
+          ]);
+          setStatusDistributionData(distribution);
+          setConversionRateData(conversion);
+        } catch (error) {
+          console.error('Workflow 데이터 가져오기 실패:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchWorkflowData();
+    }
+  }, [activeTab, startDate, endDate]);
+
+  // Product 탭 데이터 가져오기
+  useEffect(() => {
+    if (activeTab === 'product') {
+      const fetchProductData = async () => {
+        setLoading(true);
+        try {
+          const [monthly, valveRatio] = await Promise.all([
+            getMonthlyOrderStatistics(startDate, endDate, selectedValveType),
+            getValveRatioStatistics(startDate, endDate, selectedValveType)
+          ]);
+          setMonthlyOrderData(monthly);
+          setValveRatioData(valveRatio);
+        } catch (error) {
+          console.error('Product 데이터 가져오기 실패:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchProductData();
+    }
+  }, [activeTab, startDate, endDate, selectedValveType]);
+
+  return (
+    <div className="dashboard-page">
+      <div className="page">
+        <h1>📊 통계 분석</h1>
+
+        {/* 탭 메뉴 */}
+        <TabMenu active={activeTab} onSelect={setActiveTab} />
+
+        {/* 상단 요약 카드 (Workflow 탭 전용) */}
+        {activeTab === 'workflow' && summaryData && (
+          <StatusCardList data={summaryData} />
+        )}
+
+        {/* 날짜 범위 선택기 */}
+        <DateRangePicker
+          startDate={startDate}
+          endDate={endDate}
+          onStartDateChange={setStartDate}
+          onEndDateChange={setEndDate}
+        />
+
+        {/* 밸브 타입 선택기 (Product 탭 전용) */}
+        {activeTab === 'product' && (
+          <ValveTypeSelector
+            valveTypes={bodyValveList}
+            selectedValveType={selectedValveType}
+            onValveTypeChange={setSelectedValveType}
+          />
+        )}
+
+        {/* 로딩 인디케이터 */}
+        {loading && (
+          <div className="loading-indicator">데이터를 불러오는 중...</div>
+        )}
+
+        {/* Workflow 탭 내용 */}
+        {activeTab === 'workflow' && !loading && (
+          <div className="workflow-tab-content">
+            {statusDistributionData && (
+              <StatusDistributionChart data={statusDistributionData} />
+            )}
+            {conversionRateData.length > 0 && (
+              <ConversionRateComposedChart data={conversionRateData} />
+            )}
+          </div>
+        )}
+
+        {/* Product 탭 내용 */}
+        {activeTab === 'product' && !loading && (
+          <div className="product-tab-content">
+            <div className="product-chart-row">
+              <ValveSpecTable data={valveRatioData} />
+              <ValveRatioDonutChart data={valveRatioData} />
+            </div>
+            {monthlyOrderData.length > 0 && (
+              <MonthlyOrderChart data={monthlyOrderData} />
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default StatisticsPage;
