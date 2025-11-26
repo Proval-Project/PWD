@@ -165,62 +165,22 @@ function App() {
   }, [convalData]);
 
   return (
-    <Container className="mt-4">
-      <Row>
+    <Container fluid className="px-4 py-3" style={{ backgroundColor: '#EFEFEF', minHeight: '100vh' }}>
+      <Row className="mb-3">
         <Col>
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <button 
-              className="btn btn-outline-secondary"
+          <div className="d-flex align-items-center">
+            <span 
+              style={{ cursor: 'pointer', fontSize: '1.8rem', fontWeight: '900' }}
               onClick={() => {
                 const url = `http://192.168.0.59:3000/dashboard/estimate-detail/${estimateNo}`;
                 window.open(url, '_self');
               }}
             >
-              ← 견적 상세로 돌아가기
-            </button>
-            <h1 className="text-center mb-0">CONVAL 테스트 웹 애플리케이션</h1>
-            <div style={{width: '120px'}}></div> {/* 오른쪽 여백을 위한 더미 div */}
+              &lt;  CONVAL 결과
+            </span>
           </div>
         </Col>
       </Row>
-
-      {/* 메인 애플리케이션 */}
-      <Card className="mb-4">
-        <Card.Header>
-          <h5>데이터 조회</h5>
-        </Card.Header>
-        <Card.Body>
-          <Row>
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>견적 번호</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={displayEstimateNo || estimateNo}
-                  readOnly
-                  className="form-control-plaintext"
-                />
-              </Form.Group>
-            </Col>
-            <Col md={3}>
-              <Form.Group className="mb-3">
-                <Form.Label>시트 ID</Form.Label>
-                <Form.Control
-                  type="number"
-                  value={sheetId}
-                  readOnly
-                  className="form-control-plaintext"
-                />
-              </Form.Group>
-            </Col>
-            <Col md={3} className="d-flex align-items-end">
-              <div className="text-muted">
-                <small>URL 파라미터에서 자동 로드됩니다</small>
-              </div>
-            </Col>
-          </Row>
-        </Card.Body>
-      </Card>
 
       {/* 알림 메시지 */}
       {error && (
@@ -234,18 +194,18 @@ function App() {
         </Alert>
       )}
 
-      {/* 데이터 표시 */}
+      {/* 2컬럼 레이아웃: CUSTOMER DATA (왼쪽) | CONVAL DATA (오른쪽) */}
       <Row>
-        {/* 고객 데이터 */}
-        <Col md={6}>
+        {/* 왼쪽: CUSTOMER DATA */}
+        <Col md={5} style={{ borderRight: '1px solid #CDCDCD', paddingRight: '20px' }}>
           <CustomerDataDisplay 
             data={customerData} 
             isLoading={isLoading}
           />
         </Col>
 
-        {/* CONVAL 데이터 */}
-        <Col md={6}>
+        {/* 오른쪽: CONVAL DATA */}
+        <Col md={7} style={{ paddingLeft: '20px' }}>
           <ConvalDataDisplay 
             data={convalData} 
             isLoading={isLoading}
