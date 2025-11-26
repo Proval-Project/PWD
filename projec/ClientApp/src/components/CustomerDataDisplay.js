@@ -1,286 +1,338 @@
 import React from 'react';
-import { Card, Table } from 'react-bootstrap';
+import { Table, Form } from 'react-bootstrap';
 
 const CustomerDataDisplay = ({ data, isLoading }) => {
-  const renderCustomerData = () => {
-    if (!data || Object.keys(data).length === 0) {
-      return (
-        <div className="text-center text-muted p-3">
-          고객 데이터가 없습니다.
-        </div>
-      );
-    }
-
+  if (isLoading) {
     return (
-      <div>
-        <h6 className="mb-3">CUSTOMER DATA (고객 데이터)</h6>
-        <Table bordered size="sm">
-          <tbody>
-            <tr>
-              <td className="fw-bold" style={{width: '30%'}}>견적번호</td>
-              <td>{data?.CurEstimateNo || data?.EstimateNo || '-'}</td>
-            </tr>
-            <tr>
-              <td className="fw-bold">회사명</td>
-              <td>{data?.CustomerName || '-'}</td>
-            </tr>
-            <tr>
-              <td className="fw-bold">요청자</td>
-              <td>{data?.Requester || '-'}</td>
-            </tr>
-            <tr>
-              <td className="fw-bold">담당자</td>
-              <td>{data?.Engineer || '-'}</td>
-            </tr>
-          </tbody>
-        </Table>
-      </div>
-    );
-  };
-
-  const renderFluidData = () => {
-    if (!data || Object.keys(data).length === 0) {
-      return null;
-    }
-    
-    return (
-      <div className="mt-4">
-        <h6 className="mb-3">Fluid (유체)</h6>
-        <div className="mb-3">
-          <h6 className="mb-2">Properties</h6>
-          <Table bordered size="sm">
-            <tbody>
-              <tr>
-                <td className="fw-bold" style={{width: '30%'}}>Medium</td>
-                <td>{data?.Medium || '-'}</td>
-              </tr>
-              <tr>
-                <td className="fw-bold">Fluid</td>
-                <td>{data?.Fluid || '-'}</td>
-              </tr>
-              <tr>
-                <td className="fw-bold">Density</td>
-                <td>{data?.Density || '-'} {data?.DensityUnit ? `(${data.DensityUnit})` : ''}</td>
-              </tr>
-              <tr>
-                <td className="fw-bold">Molecular</td>
-                <td>{data?.Molecular || '-'} {data?.MolecularWeightUnit ? `(${data.MolecularWeightUnit})` : ''}</td>
-              </tr>
-            </tbody>
-          </Table>
-        </div>
-        
-        <div>
-          <h6 className="mb-2">Operating Conditions</h6>
-          <Table bordered size="sm">
-            <thead>
-              <tr>
-                <th>항목</th>
-                <th>Max</th>
-                <th>Normal</th>
-                <th>Min</th>
-                <th>Unit</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>t1</td>
-                <td>{data?.InletTemperatureQ ?? '-'}</td>
-                <td>{data?.InletTemperatureNorQ ?? '-'}</td>
-                <td>{data?.InletTemperatureMinQ ?? '-'}</td>
-                <td>{data?.TemperatureUnit || '-'}</td>
-              </tr>
-              <tr>
-                <td>p1</td>
-                <td>{data?.InletPressureMaxQ ?? '-'}</td>
-                <td>{data?.InletPressureNorQ ?? '-'}</td>
-                <td>{data?.InletPressureMinQ ?? '-'}</td>
-                <td>{data?.PressureUnit || '-'}</td>
-              </tr>
-              <tr>
-                <td>p2</td>
-                <td>{data?.OutletPressureMaxQ ?? '-'}</td>
-                <td>{data?.OutletPressureNorQ ?? '-'}</td>
-                <td>{data?.OutletPressureMinQ ?? '-'}</td>
-                <td>{data?.PressureUnit || '-'}</td>
-              </tr>
-              <tr>
-                <td>Δp</td>
-                <td>{data?.DifferentialPressureMaxQ ?? '-'}</td>
-                <td>{data?.DifferentialPressureNorQ ?? '-'}</td>
-                <td>{data?.DifferentialPressureMinQ ?? '-'}</td>
-                <td>{data?.PressureUnit || '-'}</td>
-              </tr>
-              <tr>
-                <td>qm</td>
-                <td>{data?.QMMax ?? '-'}</td>
-                <td>{data?.QMNor ?? '-'}</td>
-                <td>{data?.QMMin ?? '-'}</td>
-                <td>{data?.QMUnit || '-'}</td>
-              </tr>
-              <tr>
-                <td>qn</td>
-                <td>{data?.QNMax ?? '-'}</td>
-                <td>{data?.QNNor ?? '-'}</td>
-                <td>{data?.QNMin ?? '-'}</td>
-                <td>{data?.QNUnit || '-'}</td>
-              </tr>
-            </tbody>
-          </Table>
+      <div className="text-center p-4">
+        <div className="spinner-border" role="status">
+          <span className="visually-hidden">로딩 중...</span>
         </div>
       </div>
     );
-  };
+  }
 
-  const renderBodyData = () => {
-    if (!data || Object.keys(data).length === 0) {
-      return null;
-    }
-    
+  if (!data || Object.keys(data).length === 0) {
     return (
-      <div className="mt-4">
-        <h6 className="mb-3">BODY (본체)</h6>
-        <Table bordered size="sm">
-          <tbody>
-                          <tr>
-                <td className="fw-bold" style={{width: '30%'}}>Type</td>
-                <td>{data?.ValveType || '-'}</td>
-              </tr>
-              <tr>
-                <td className="fw-bold">Size</td>
-                <td>{data?.BodySize || '-'} {data?.BodySizeUnit ? `(${data.BodySizeUnit})` : ''}</td>
-              </tr>
-              <tr>
-                <td className="fw-bold">Material Body</td>
-                <td>{data?.BodyMat || '-'}</td>
-              </tr>
-              <tr>
-                <td className="fw-bold">Material Trim</td>
-                <td>{data?.TrimMat || '-'}</td>
-              </tr>
-              <tr>
-                <td className="fw-bold">Option</td>
-                <td>{data?.TrimOption || '-'}</td>
-              </tr>
-              <tr>
-                <td className="fw-bold">Rating</td>
-                <td>{data?.BodyRating || '-'} {data?.BodyRatingUnit ? `(${data.BodyRatingUnit})` : ''}</td>
-              </tr>
-          </tbody>
-        </Table>
+      <div className="text-center text-muted p-3">
+        고객 데이터가 없습니다.
       </div>
     );
-  };
+  }
 
-  const renderActuatorData = () => {
-    if (!data || Object.keys(data).length === 0) {
-      return null;
-    }
-    
-    return (
-      <div className="mt-4">
-        <h6 className="mb-3">ACTUATOR (액추에이터)</h6>
-        <Table bordered size="sm">
-          <tbody>
-                          <tr>
-                <td className="fw-bold" style={{width: '30%'}}>Type</td>
-                <td>{data?.ActType || '-'}</td>
-              </tr>
-              <tr>
-                <td className="fw-bold">H.W</td>
-                <td>{data?.IsHW ? 'Yes' : (data?.IsHW === false ? 'No' : '-')}</td>
-              </tr>
-          </tbody>
-        </Table>
-      </div>
-    );
-  };
-
-  const renderAccessoryData = () => {
-    if (!data || Object.keys(data).length === 0) {
-      return null;
-    }
-    
-    return (
-      <div className="mt-4">
-        <h6 className="mb-3">ACCESSORY (액세서리)</h6>
-        <Table bordered size="sm">
-          <tbody>
-                          <tr>
-                <td className="fw-bold" style={{width: '30%'}}>Positioner</td>
-                <td>{data?.IsPositioner ? 'Yes' : (data?.IsPositioner === false ? 'No' : '-')}</td>
-              </tr>
-              <tr>
-                <td className="fw-bold">Type</td>
-                <td>{data?.PositionerType || '-'}</td>
-              </tr>
-              <tr>
-                <td className="fw-bold">Explosion proof</td>
-                <td>{data?.ExplosionProof || '-'}</td>
-              </tr>
-              <tr>
-                <td className="fw-bold">Transmitter</td>
-                <td>{data?.TransmitterType || '-'}</td>
-              </tr>
-              <tr>
-                <td className="fw-bold">Solenoid Valve</td>
-                <td>{data?.IsSolenoid ? 'Yes' : (data?.IsSolenoid === false ? 'No' : '-')}</td>
-              </tr>
-              <tr>
-                <td className="fw-bold">Limit Switch</td>
-                <td>{data?.IsLimSwitch ? 'Yes' : (data?.IsLimSwitch === false ? 'No' : '-')}</td>
-              </tr>
-              <tr>
-                <td className="fw-bold">Air-set</td>
-                <td>{data?.IsAirSet ? 'Yes' : (data?.IsAirSet === false ? 'No' : '-')}</td>
-              </tr>
-              <tr>
-                <td className="fw-bold">Volume booster</td>
-                <td>{data?.IsVolumeBooster ? 'Yes' : (data?.IsVolumeBooster === false ? 'No' : '-')}</td>
-              </tr>
-              <tr>
-                <td className="fw-bold">Air Operated Valve</td>
-                <td>{data?.IsAirOperated ? 'Yes' : (data?.IsAirOperated === false ? 'No' : '-')}</td>
-              </tr>
-              <tr>
-                <td className="fw-bold">Lockup Valve</td>
-                <td>{data?.IsLockUp ? 'Yes' : (data?.IsLockUp === false ? 'No' : '-')}</td>
-              </tr>
-              <tr>
-                <td className="fw-bold">Snap-acting relay</td>
-                <td>{data?.IsSnapActingRelay ? 'Yes' : (data?.IsSnapActingRelay === false ? 'No' : '-')}</td>
-              </tr>
-          </tbody>
-        </Table>
-      </div>
-    );
-  };
+  // 공통 스타일
+  const borderColor = '#CDCDCD';
+  const labelStyle = { width: '35%', color: '#666', backgroundColor: '#DFDFDF', padding: '8px' };
+  const valueStyle = { fontWeight: '500', padding: '8px' };
+  const rowBorder = { borderBottom: `1px solid ${borderColor}` };
 
   return (
-    <Card>
-      <Card.Header>
-        <h5>Customer Data (EstimateRequest)</h5>
-      </Card.Header>
-      <Card.Body>
-        {isLoading ? (
-          <div className="processing-indicator">
-            <div className="spinner-border" role="status">
-              <span className="visually-hidden">로딩 중...</span>
-            </div>
-            <span className="ms-2">데이터 로딩 중...</span>
+    <div style={{ fontSize: '0.85rem' }}>
+      {/* CUSTOMER DATA 헤더 */}
+      <div className="d-flex align-items-center mb-3">
+        <span style={{ 
+          width: '8px', 
+          height: '8px', 
+          borderRadius: '50%', 
+          border: '2px solid #333',
+          marginRight: '8px'
+        }}></span>
+        <strong style={{ fontSize: '1.3rem', fontWeight: '700' }}>CUSTOMER DATA</strong>
+      </div>
+
+      {/* 2열 레이아웃 */}
+      <div className="row">
+        {/* 왼쪽 컬럼 */}
+        <div className="col-6">
+          {/* Estimate data */}
+          <div className="mb-4">
+            <div style={{ fontSize: '1.05rem', fontWeight: '700' }} className="mb-2">Estimate data</div>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <tbody>
+                <tr>
+                  <td style={{ ...labelStyle, ...rowBorder }}>견적번호</td>
+                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.CurEstimateNo || data?.EstimateNo || '-'}</td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle, ...rowBorder }}>프로젝트명</td>
+                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.ProjectName || '-'}</td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle, ...rowBorder }}>Tag No</td>
+                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.TagNo || '-'}</td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle, ...rowBorder }}>회사명</td>
+                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.CustomerName || '-'}</td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle, ...rowBorder }}>요청자</td>
+                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.Requester || '-'}</td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle }}>담당자</td>
+                  <td style={{ ...valueStyle }}>{data?.Engineer || '-'}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-        ) : (
-          <div className="data-display">
-            {renderCustomerData()}
-            {renderFluidData()}
-            {renderBodyData()}
-            {renderActuatorData()}
-            {renderAccessoryData()}
+
+          {/* Fluid */}
+          <div className="mb-4">
+            <div style={{ fontSize: '1.05rem', fontWeight: '700' }} className="mb-2">Fluid</div>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <tbody>
+                <tr>
+                  <td style={{ ...labelStyle, ...rowBorder }}>Medium</td>
+                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.Medium || '-'}</td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle, ...rowBorder }}>Fluid</td>
+                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.Fluid || '-'}</td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle, ...rowBorder }}>
+                    <div className="d-flex align-items-center">
+                      <Form.Check 
+                        type="checkbox" 
+                        checked={!!data?.Density} 
+                        readOnly 
+                        className="me-2"
+                        style={{ marginTop: 0 }}
+                      />
+                      Density
+                    </div>
+                  </td>
+                  <td style={{ ...rowBorder, padding: 0 }}>
+                    <div style={{ display: 'flex' }}>
+                      <span style={{ ...valueStyle, width: '50%', borderRight: `1px solid ${borderColor}` }}>{data?.Density || '-'}</span>
+                      <span style={{ ...valueStyle, width: '50%' }} className="text-muted">{data?.DensityUnit || 'kg/m3'}</span>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle }}>
+                    <div className="d-flex align-items-center">
+                      <Form.Check 
+                        type="checkbox" 
+                        checked={!!data?.Molecular} 
+                        readOnly 
+                        className="me-2"
+                        style={{ marginTop: 0 }}
+                      />
+                      Molecular
+                    </div>
+                  </td>
+                  <td style={{ padding: 0 }}>
+                    <div style={{ display: 'flex' }}>
+                      <span style={{ ...valueStyle, width: '50%', borderRight: `1px solid ${borderColor}` }}>{data?.Molecular || '-'}</span>
+                      <span style={{ ...valueStyle, width: '50%' }} className="text-muted">{data?.MolecularWeightUnit || 'kg.lmol'}</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-        )}
-      </Card.Body>
-    </Card>
+
+      {/* Operating data */}
+          <div className="mb-4">
+            <div style={{ fontSize: '1.05rem', fontWeight: '700' }} className="mb-2">Operating data</div>
+            <Table bordered size="sm" style={{ marginBottom: 0, backgroundColor: '#EFEFEF' }}>
+              <thead>
+                <tr>
+                  <th style={{ width: '20%', backgroundColor: '#DFDFDF' }}></th>
+                  <th className="text-center" style={{ backgroundColor: '#DFDFDF' }}>Max</th>
+                  <th className="text-center" style={{ backgroundColor: '#DFDFDF' }}>Normal</th>
+                  <th className="text-center" style={{ backgroundColor: '#DFDFDF' }}>Min</th>
+                  <th className="text-center" style={{ backgroundColor: '#DFDFDF' }}>Unit</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="text-center" style={{ backgroundColor: '#DFDFDF' }}>t1</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.InletTemperatureQ ?? '-'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.InletTemperatureNorQ ?? '-'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.InletTemperatureMinQ ?? '-'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.TemperatureUnit || 'kgf/cm²(g)'}</td>
+                </tr>
+                <tr>
+                  <td className="text-center" style={{ backgroundColor: '#DFDFDF' }}>p1</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.InletPressureMaxQ ?? '-'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.InletPressureNorQ ?? '-'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.InletPressureMinQ ?? '-'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.PressureUnit || 'Mpa(g)'}</td>
+                </tr>
+                <tr>
+                  <td style={{ backgroundColor: '#DFDFDF' }}>
+                    <div className="d-flex align-items-center justify-content-center">
+                      <Form.Check type="checkbox" checked={!!data?.OutletPressureMaxQ} readOnly className="me-1" />
+                      p2
+                    </div>
+                  </td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.OutletPressureMaxQ ?? '-'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.OutletPressureNorQ ?? '-'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.OutletPressureMinQ ?? '-'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.PressureUnit || 'Mpa(g)'}</td>
+                </tr>
+                <tr>
+                  <td style={{ backgroundColor: '#DFDFDF' }}>
+                    <div className="d-flex align-items-center justify-content-center">
+                      <Form.Check type="checkbox" checked={!!data?.DifferentialPressureMaxQ} readOnly className="me-1" />
+                      Δp
+                    </div>
+                  </td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.DifferentialPressureMaxQ ?? '-'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.DifferentialPressureNorQ ?? '-'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.DifferentialPressureMinQ ?? '-'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.PressureUnit || 'Mpa(g)'}</td>
+                </tr>
+                <tr>
+                  <td style={{ backgroundColor: '#DFDFDF' }}>
+                    <div className="d-flex align-items-center justify-content-center">
+                      <Form.Check type="checkbox" checked={!!data?.QMMax} readOnly className="me-1" />
+                      qm
+                    </div>
+                  </td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.QMMax ?? '-'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.QMNor ?? '-'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.QMMin ?? '-'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.QMUnit || 't/h'}</td>
+                </tr>
+                <tr>
+                  <td style={{ backgroundColor: '#DFDFDF' }}>
+                    <div className="d-flex align-items-center justify-content-center">
+                      <Form.Check type="checkbox" checked={!!data?.QNMax} readOnly className="me-1" />
+                      qn
+                    </div>
+                  </td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.QNMax ?? '-'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.QNNor ?? '-'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.QNMin ?? '-'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.QNUnit || 'm3/h'}</td>
+                </tr>
+              </tbody>
+            </Table>
+          </div>
+        </div>
+
+        {/* 오른쪽 컬럼 */}
+        <div className="col-6">
+          {/* BODY */}
+          <div className="mb-4">
+            <div style={{ fontSize: '1.05rem', fontWeight: '700' }} className="mb-2">BODY</div>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <tbody>
+                <tr>
+                  <td style={{ ...labelStyle, width: '40%', ...rowBorder }}>Type</td>
+                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.ValveType || '-'}</td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle, ...rowBorder }}>Size</td>
+                  <td style={{ ...rowBorder, padding: 0 }}>
+                    <div style={{ display: 'flex' }}>
+                      <span style={{ ...valueStyle, width: '50%', borderRight: `1px solid ${borderColor}` }}>{data?.BodySizeUnit || 'inch'}</span>
+                      <span style={{ ...valueStyle, width: '50%' }}>{data?.BodySize || '-'}</span>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle, ...rowBorder }}>Material Body</td>
+                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.BodyMat || '-'}</td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle, ...rowBorder }}>Material Trim</td>
+                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.TrimMat || '-'}</td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle, ...rowBorder }}>Option</td>
+                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.TrimOption || '-'}</td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle }}>Rating</td>
+                  <td style={{ padding: 0 }}>
+                    <div style={{ display: 'flex' }}>
+                      <span style={{ ...valueStyle, width: '50%', borderRight: `1px solid ${borderColor}` }}>{data?.BodyRatingUnit || 'JIS'}</span>
+                      <span style={{ ...valueStyle, width: '50%' }}>{data?.BodyRating || '-'}</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Actuator */}
+          <div className="mb-4">
+            <div style={{ fontSize: '1.05rem', fontWeight: '700' }} className="mb-2">Actuator</div>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <tbody>
+                <tr>
+                  <td style={{ ...labelStyle, width: '40%', ...rowBorder }}>Type</td>
+                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.ActType || '-'}</td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle }}>H.W</td>
+                  <td style={{ ...valueStyle }}>{data?.IsHW ? 'Yes' : 'No'}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Accessory */}
+          <div className="mb-4">
+            <div style={{ fontSize: '1.05rem', fontWeight: '700' }} className="mb-2">Accessory</div>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <tbody>
+                <tr>
+                  <td style={{ ...labelStyle, width: '50%', ...rowBorder }}>Positioner</td>
+                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.IsPositioner ? 'Yes' : 'No'}</td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle, paddingLeft: '20px', ...rowBorder }}>Type</td>
+                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.PositionerType || '-'}</td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle, ...rowBorder }}>Explosion proof</td>
+                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.ExplosionProof || 'No'}</td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle, ...rowBorder }}>Transmitter</td>
+                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.TransmitterType || '-'}</td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle, ...rowBorder }}>Solenoid Valve</td>
+                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.IsSolenoid ? 'Yes' : 'No'}</td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle, ...rowBorder }}>Limit Switch</td>
+                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.IsLimSwitch ? 'Yes' : 'No'}</td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle, ...rowBorder }}>Air-set</td>
+                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.IsAirSet ? 'Yes' : 'No'}</td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle, ...rowBorder }}>Volume booster</td>
+                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.IsVolumeBooster ? 'Yes' : 'No'}</td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle, ...rowBorder }}>Air Operated Valve</td>
+                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.IsAirOperated ? 'Yes' : 'No'}</td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle, ...rowBorder }}>Lockup Valve</td>
+                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.IsLockUp ? 'Yes' : 'No'}</td>
+                </tr>
+                <tr>
+                  <td style={{ ...labelStyle }}>Snap-acting relay</td>
+                  <td style={{ ...valueStyle }}>{data?.IsSnapActingRelay ? 'Yes' : 'No'}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
-export default CustomerDataDisplay; 
+export default CustomerDataDisplay;
