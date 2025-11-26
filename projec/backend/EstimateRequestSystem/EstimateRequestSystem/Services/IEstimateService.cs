@@ -219,5 +219,12 @@ namespace EstimateRequestSystem.Services
         Task<bool> AddTrimPortSizeUnitAsync(string unitCode, string unitName);
         Task<bool> UpdateTrimPortSizeUnitAsync(string unitCode, string unitName);
         Task<bool> DeleteTrimPortSizeUnitAsync(string unitCode);
+
+        // Statistics 관련 메서드들
+        Task<StatisticsSummaryDto> GetStatisticsSummaryAsync();
+        Task<StatusDistributionDto> GetStatusDistributionAsync(DateTime startDate, DateTime endDate);
+        Task<List<MonthlyOrderDto>> GetMonthlyOrderStatisticsAsync(DateTime startDate, DateTime endDate, string? valveType);
+        Task<List<ValveRatioDto>> GetValveRatioStatisticsAsync(DateTime startDate, DateTime endDate, string? valveType);
+        Task<List<ConversionRateDto>> GetConversionRateStatisticsAsync(DateTime startDate, DateTime endDate);
     }
 } 

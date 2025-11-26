@@ -48,6 +48,7 @@ logs
 
 # Runtime data
 pids
+.pids/
 *.pid
 *.seed
 *.pid.lock

@@ -391,7 +391,9 @@ const EstimateDetailPage: React.FC = () => {
     setSelectedValve(valve);
   
     // 새 태그에 대해: 임시값 있으면 그걸 복원, 없으면 서버 초기값 로드
+    console.log('🔍 handleValveSelection - sheetID:', valve.sheetID, 'tempSelections 존재:', !!tempSelections[valve.sheetID]);
     if (tempSelections[valve.sheetID]) {
+      console.log('⚠️ handleValveSelection - tempSelections에서 복원');
       const saved = tempSelections[valve.sheetID];
       // 복원(각 selections set 함수 호출)
       setBodySelections(saved.body || {});
@@ -399,6 +401,7 @@ const EstimateDetailPage: React.FC = () => {
       setActSelections(saved.act || {});
       setAccSelections(saved.acc || {});
     } else {
+      console.log('🔍 handleValveSelection - loadInitialSpecification 호출');
       loadInitialSpecification(valve.sheetID);
     }
   };
@@ -1447,13 +1450,15 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
       }
       
       // 읽기 전용 상태 설정
-      // 수정 가능 조건: 담당자 AND 견적처리중(3) 이상
+      // 수정 가능 조건: 담당자 AND 견적처리중(3) - 견적 완료(4) 이상일 때는 무조건 수정 불가
       const currentStatus = data.estimateSheet?.status || 0;
-      const isStatusInProgressOrAbove = currentStatus >= 3; // 견적처리중(3) 이상
+      const isStatusInProgress = currentStatus === 3; // 견적처리중(3)만
+      const isStatusCompletedOrAbove = currentStatus >= 4; // 견적완료(4) 이상
       const isCurrentUserManager = currentUser?.userId === data.estimateSheet?.managerID || currentUser?.userID === data.estimateSheet?.managerID; // 현재 사용자가 담당자인지
       
-      // 담당자이고 견적처리중 이상일 때만 수정 가능
-      const shouldBeReadOnly = !(isStatusInProgressOrAbove && isCurrentUserManager);
+      // 견적 완료(4) 이상일 때는 무조건 수정 불가
+      // 담당자이고 견적처리중(3)일 때만 수정 가능
+      const shouldBeReadOnly = isStatusCompletedOrAbove || !(isStatusInProgress && isCurrentUserManager);
       setIsReadOnly(shouldBeReadOnly);
       //console.log('EstimateDetailPage isReadOnly 설정됨:', shouldBeReadOnly);
       //console.log('  status:', data.estimateSheet?.status, '(3이면 견적처리중)');
@@ -1689,8 +1694,11 @@ const onDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number, listKey: 
           // 상태 변경 후 isReadOnly 재계산
           const newStatusCode = getStatusCodeFromText(newStatus);
           const isStatusThree = newStatusCode === 3; // 상태가 3 (견적처리중)인지
+          const isStatusCompletedOrAbove = newStatusCode >= 4; // 견적완료(4) 이상
           const isCurrentUserManager = currentUser?.userId === estimateData.estimateSheet?.managerID; // 현재 사용자가 담당자인지
-          const shouldBeReadOnly = !(isStatusThree && isCurrentUserManager); // 둘 다 참일 때만 false (수정 가능)
+          // 견적 완료(4) 이상일 때는 무조건 수정 불가
+          // 담당자이고 견적처리중(3)일 때만 수정 가능
+          const shouldBeReadOnly = isStatusCompletedOrAbove || !(isStatusThree && isCurrentUserManager);
           setIsReadOnly(shouldBeReadOnly);
           alert('상태가 성공적으로 변경되었습니다.'); // 메시지 일반화
           // 상태 변경 후 상세 정보를 다시 불러오는 로직이 필요할 수 있습니다.
@@ -2758,8 +2766,11 @@ const handleSaveSpecification = async () => {
 
   // 초기 사양 데이터 로드 (DB에서 불러오기)
   const loadInitialSpecification = async (sheetID: number) => {
+    console.log('🔍 loadInitialSpecification 호출됨 - sheetID:', sheetID);
+    
     // 이미 임시 저장된 값이 있으면 서버값으로 덮어쓰지 않음
   if (tempSelections[sheetID]) {
+    console.log('⚠️ tempSelections에 저장된 값이 있어서 서버에서 로드하지 않음');
     const saved = tempSelections[sheetID];
     setBodySelections(saved.body || {});
     setTrimSelections(saved.trim || {});
@@ -2773,21 +2784,26 @@ const handleSaveSpecification = async () => {
         console.error("tempEstimateNo가 없습니다.");
         return;
       }
+      console.log('🔍 API 호출 시작 - tempEstimateNo:', tempEstimateNo, 'sheetID:', sheetID);
       const response = await fetch(buildApiUrl(`/estimate/sheets/${tempEstimateNo}/specification/${sheetID}`));
+      console.log('🔍 API 응답 상태:', response.status, response.ok);
+      
       if (response.ok) {
         const specificationData = await response.json();
-        console.log('--- 실제 Accessories 데이터 구조 ---', specificationData.accessories);
+        console.log('🔍 specificationData 전체:', specificationData);
+        console.log('🔍 specificationData.accessories 존재 여부:', !!specificationData.accessories);
+        // console.log('--- 실제 Accessories 데이터 구조 ---', specificationData.accessories);
         
-        if (specificationData.accessories) {
-          console.log('개별 악세사리 데이터 (Positioner):', specificationData.accessories.positioner);
-          console.log('개별 악세사리 데이터 (Solenoid):', specificationData.accessories.solenoid);
-          console.log('개별 악세사리 데이터 (AirOperator):', specificationData.accessories.airOperator);
-          console.log('개별 악세사리 데이터 (LockUp):', specificationData.accessories.lockUp);
-        }
+        // if (specificationData.accessories) {
+        //   console.log('개별 악세사리 데이터 (Positioner):', specificationData.accessories.positioner);
+        //   console.log('개별 악세사리 데이터 (Solenoid):', specificationData.accessories.solenoid);
+        //   console.log('개별 악세사리 데이터 (AirOperator):', specificationData.accessories.airOperator);
+        //   console.log('개별 악세사리 데이터 (LockUp):', specificationData.accessories.lockUp);
+        // }
         
         // Body 사양 데이터 설정 (초기값만) - null 처리 개선
         if (specificationData.body) {
-          console.log('Body 데이터:', specificationData.body); // Body 데이터 로그 추가
+          // console.log('Body 데이터:', specificationData.body); // Body 데이터 로그 추가
           setBodySelections(prev => ({
             ...prev,
             bonnetType: specificationData.body.bonnetTypeCode || '',
@@ -2821,7 +2837,7 @@ const handleSaveSpecification = async () => {
         
         // Trim 사양 데이터 설정 (초기값만) - null 처리 개선
         if (specificationData.trim) {
-          console.log('Trim 데이터:', specificationData.trim); // Trim 데이터 로그 추가
+          // console.log('Trim 데이터:', specificationData.trim); // Trim 데이터 로그 추가
           setTrimSelections(prev => ({
             ...prev,
             trimType: specificationData.trim.typeCode || '',
@@ -2842,7 +2858,7 @@ const handleSaveSpecification = async () => {
         
         // Actuator 사양 데이터 설정 (초기값만) - null 처리 개선
         if (specificationData.actuator) {
-          console.log('Actuator 데이터:', specificationData.actuator); // Actuator 데이터 로그 추가
+          // console.log('Actuator 데이터:', specificationData.actuator); // Actuator 데이터 로그 추가
           const seriesCode = specificationData.actuator.seriesCode || '';
           setActSelections(prev => ({
             ...prev,
@@ -2864,6 +2880,9 @@ const handleSaveSpecification = async () => {
         
         // Accessory 사양 데이터 설정 - 기존 데이터가 있으면 로드, 없으면 fetchMasterData에서 초기화됨
         if (specificationData.accessories) {
+          console.log('🔍 전체 Accessories 객체:', specificationData.accessories);
+          console.log('🔍 Accessories 키 목록:', Object.keys(specificationData.accessories));
+          
           const newAccSelections = {
             positioner: { typeCode: 'Positioner', makerCode: '', modelCode: '', specification: '' },
             solenoid: { typeCode: 'Solenoid', makerCode: '', modelCode: '', specification: '' },
@@ -2875,46 +2894,82 @@ const handleSaveSpecification = async () => {
             snapActingRelay: { typeCode: 'Snapacting', makerCode: '', modelCode: '', specification: '' },
           };
 
-          const accKeys: Array<keyof typeof specificationData.accessories> = [
-            'positioner', 'solenoid', 'limiter', 'airSupply',
-            'volumeBooster', 'airOperator', 'lockUp', 'snapActingRelay',
+          // 백엔드 키 매핑 (PascalCase와 camelCase 모두 시도)
+          // 백엔드 TypeCode → 프론트엔드 typeCode 매핑
+          const backendToFrontendTypeCodeMap: Record<string, string> = {
+            'Positioner': 'Positioner',
+            'Solenoid': 'Solenoid',
+            'Limiter': 'Limit',        // 백엔드는 "Limiter", 프론트엔드는 "Limit"
+            'AirSupply': 'Airset',     // 백엔드는 "AirSupply", 프론트엔드는 "Airset"
+            'VolumeBooster': 'Volume', // 백엔드는 "VolumeBooster", 프론트엔드는 "Volume"
+            'AirOperator': 'Airoperate', // 백엔드는 "AirOperator", 프론트엔드는 "Airoperate"
+            'LockUp': 'Lockup',        // 백엔드는 "LockUp", 프론트엔드는 "Lockup"
+            'SnapActingRelay': 'Snapacting' // 백엔드는 "SnapActingRelay", 프론트엔드는 "Snapacting"
+          };
+          
+          const keyMappings = [
+            { backend: 'Positioner', frontend: 'positioner', frontendTypeCode: 'Positioner' },
+            { backend: 'Solenoid', frontend: 'solenoid', frontendTypeCode: 'Solenoid' },
+            { backend: 'Limiter', frontend: 'limiter', frontendTypeCode: 'Limit' },
+            { backend: 'AirSupply', frontend: 'airSupply', frontendTypeCode: 'Airset' },
+            { backend: 'VolumeBooster', frontend: 'volumeBooster', frontendTypeCode: 'Volume' },
+            { backend: 'AirOperator', frontend: 'airOperator', frontendTypeCode: 'Airoperate' },
+            { backend: 'LockUp', frontend: 'lockUp', frontendTypeCode: 'Lockup' },
+            { backend: 'SnapActingRelay', frontend: 'snapActingRelay', frontendTypeCode: 'Snapacting' },
           ];
 
-          accKeys.forEach(key => {
-            const accObj = specificationData.accessories[key];
-            console.log(`로딩될 악세사리 데이터 (${String(key)}):`, accObj);
-            // 1. 데이터 개수 확인
-console.log('accModelList 길이:', accModelList.length);
-console.log('accMakerList 길이:', accMakerList.length);
-
-// 2. Positioner 데이터 확인
-console.log('Positioner 모델들:', accModelList.filter(item => item.accTypeCode === 'Positioner'));
-console.log('Positioner 메이커들:', accMakerList.filter(item => item.accTypeCode === 'Positioner'));
-
-// 3. 데이터 구조 확인
-console.log('첫 번째 모델:', accModelList[0]);
-console.log('첫 번째 메이커:', accMakerList[0]);
-            if (accObj && accObj.makerCode && accObj.modelCode) {
-              // 실제 데이터가 있는 경우에만 설정
-              newAccSelections[key as keyof typeof newAccSelections] = {
-                typeCode: accObj.typeCode || newAccSelections[key as keyof typeof newAccSelections].typeCode,
-                makerCode: accObj.makerCode || '',
-                modelCode: accObj.modelCode || '',
-                specification: accObj.specification || '',
+          keyMappings.forEach(({ backend, frontend, frontendTypeCode }) => {
+            // 백엔드 키 접근: PascalCase와 camelCase 모두 시도
+            const accObj = (specificationData.accessories as any)[backend] || 
+                          (specificationData.accessories as any)[frontend];
+            
+            console.log(`🔍 악세사리 데이터 확인 (${backend}/${frontend}):`, accObj);
+            
+            // PascalCase와 camelCase 모두 시도 (원래 Positioner, Solenoid가 작동했던 방식)
+            const makerCode = accObj?.makerCode || accObj?.MakerCode || '';
+            const modelCode = accObj?.modelCode || accObj?.ModelCode || '';
+            const backendTypeCode = accObj?.typeCode || accObj?.TypeCode || '';
+            const specification = accObj?.specification || accObj?.Specification || '';
+            
+            // 백엔드 TypeCode를 프론트엔드 typeCode로 변환
+            const frontendTypeCodeFinal = backendToFrontendTypeCodeMap[backendTypeCode] || frontendTypeCode;
+            
+            if (accObj && makerCode && modelCode) {
+              // 실제 데이터가 있는 경우에만 설정 (프론트엔드 typeCode 사용)
+              newAccSelections[frontend as keyof typeof newAccSelections] = {
+                typeCode: frontendTypeCodeFinal, // 프론트엔드에서 사용하는 typeCode로 변환
+                makerCode: makerCode,
+                modelCode: modelCode,
+                specification: specification,
               };
-              console.log(`새로운 AccSelections (${String(key)}) 데이터 설정됨:`, newAccSelections[key as keyof typeof newAccSelections]);
+              console.log(`✅ AccSelections (${frontend}) 데이터 설정됨:`, {
+                typeCode: frontendTypeCodeFinal,
+                backendTypeCode,
+                makerCode,
+                modelCode,
+                specification
+              });
+            } else {
+              console.log(`⚠️ 악세사리 데이터 없음 (${backend}/${frontend}):`, {
+                accObj,
+                makerCode,
+                modelCode,
+                backendTypeCode,
+                hasData: !!(accObj && makerCode && modelCode)
+              });
             }
-            // 데이터가 없으면 기본값 유지 (fetchMasterData에서 설정됨)
           });
-          console.log('최종 업데이트될 AccSelections:', newAccSelections);
+          // console.log('최종 업데이트될 AccSelections:', newAccSelections);
           setAccSelections(newAccSelections);
+        } else {
+          console.log('⚠️ specificationData.accessories가 없습니다.');
         }
         // 액세서리 데이터가 없는 경우 fetchMasterData에서 초기화됨
       } else {
-        console.log('API 응답 실패:', response.status, response.statusText);
+        console.log('❌ API 응답 실패:', response.status, response.statusText);
       }
     } catch (error) {
-      console.log('초기 사양 데이터 로드 실패:', error);
+      console.log('❌ 초기 사양 데이터 로드 실패:', error);
     }
   };
   const saveOrder = async () => {
@@ -3650,15 +3705,39 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
   useEffect(() => {
     // types와 accModelList가 모두 로드된 후에만 loadInitialSpecification을 호출
     // 단, 이미 로드된 sheetID이거나 tempSelections에 저장된 값이 있으면 다시 로드하지 않음
+    console.log('🔍 useEffect 체크:', {
+      tempEstimateNo: !!tempEstimateNo,
+      typesLength: types.length,
+      accModelListLength: accModelList.length,
+      selectedValve: !!selectedValve,
+      sheetID: selectedValve?.sheetID,
+      loadedSheetIDs: Array.from(loadedSheetIDs),
+      hasTempSelection: selectedValve ? !!tempSelections[selectedValve.sheetID] : false
+    });
+    
     if (tempEstimateNo && types.length > 0 && accModelList.length > 0) {
       if (selectedValve && selectedValve.sheetID > 0) {
         const sheetID = selectedValve.sheetID;
         // 이미 로드되었거나 tempSelections에 저장된 값이 있으면 다시 로드하지 않음
         if (!loadedSheetIDs.has(sheetID) && !tempSelections[sheetID]) {
+          console.log('🔍 useEffect - loadInitialSpecification 호출');
           loadInitialSpecification(sheetID);
           setLoadedSheetIDs(prev => new Set(prev).add(sheetID));
+        } else {
+          console.log('⚠️ useEffect - loadInitialSpecification 호출 안함:', {
+            alreadyLoaded: loadedSheetIDs.has(sheetID),
+            hasTempSelection: !!tempSelections[sheetID]
+          });
         }
+      } else {
+        console.log('⚠️ useEffect - selectedValve가 없거나 sheetID가 0');
       }
+    } else {
+      console.log('⚠️ useEffect - 조건 불충족:', {
+        tempEstimateNo: !!tempEstimateNo,
+        typesLength: types.length,
+        accModelListLength: accModelList.length
+      });
     }
   }, [selectedValve?.sheetID, tempEstimateNo, types.length, accModelList.length]); // types와 accModelList의 length만 의존성으로 사용
 

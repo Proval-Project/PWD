@@ -293,16 +293,54 @@ const NewEstimateRequestPage: React.FC = () => {
       alert('삭제할 견적번호를 확인할 수 없습니다.');
       return;
     }
-    if (!window.confirm('해당 견적을 완전히 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+    
+    // 1단계: 사용자 확인
+    if (!window.confirm('진짜 삭제 하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+    
+    // 2단계: 데이터베이스에서 최신 상태 확인
+    try {
+      const response = await fetch(buildApiUrl(`/estimate/sheets/${targetNo}`));
+      if (response.ok) {
+        const data = await response.json();
+        const currentStatus = data.status || data.Status || 0;
+        
+        // 상태가 3 이상이면 삭제 불가
+        if (currentStatus >= 3) {
+          alert('진행중인 견적이므로 삭제 실패하였습니다. 화면 새로고침 후 담당자에게 문의해주세요.');
+          return;
+        }
+      } else {
+        console.error('상태 확인 실패:', response.status);
+        // 상태 확인 실패 시에도 기존 backendStatus로 체크
+        if (backendStatus !== null && backendStatus !== undefined && backendStatus >= 3) {
+          alert('진행중인 견적이므로 삭제 실패하였습니다. 담당자에게 문의해주세요.');
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('상태 확인 실패:', error);
+      // 상태 확인 실패 시에도 기존 backendStatus로 체크
+      if (backendStatus !== null && backendStatus !== undefined && backendStatus >= 3) {
+        alert('진행중인 견적이므로 삭제 실패하였습니다. 담당자에게 문의해주세요.');
+        return;
+      }
+    }
+    
+    // 3단계: 실제 삭제 실행
     try {
       await deleteEstimateSheet(targetNo);
       alert('견적이 삭제되었습니다.');
       navigate('/estimate-inquiry');
     } catch (e: any) {
       console.error('견적 삭제 실패:', e);
-      alert('견적 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      // 백엔드에서 상태 체크 후 에러를 반환한 경우
+      if (e.response?.status === 400 || e.response?.status === 403) {
+        alert('진행중인 견적이므로 삭제 실패하였습니다. 담당자에게 문의해주세요.');
+      } else {
+        alert('견적 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      }
     }
-  }, [tempEstimateNo, routeTempEstimateNo, navigate]);
+  }, [tempEstimateNo, routeTempEstimateNo, navigate, backendStatus]);
   const [curEstimateNo, setCurEstimateNo] = useState<string | null>(null);   // 최종 견적번호 (있으면 Temp 대신 표시)
   const [managerName, setManagerName] = useState<string | null>(null);       // 담당자 이름
   const [managerId, setManagerId] = useState<string | null>(null);           // 담당자 ID
@@ -1208,11 +1246,12 @@ const NewEstimateRequestPage: React.FC = () => {
   }, [fileAttachments]);
 
   // 🔑 관리 첨부파일 로드 함수 (EstimateDetailPage에서 업로드한 파일)
-  const loadManagerAttachments = useCallback(async () => {
-    if (!tempEstimateNo) return;
+  const loadManagerAttachments = useCallback(async (estimateNo?: string) => {
+    const targetEstimateNo = estimateNo || tempEstimateNo;
+    if (!targetEstimateNo) return;
     try {
-      console.log('🔄 loadManagerAttachments 시작 - tempEstimateNo:', tempEstimateNo);
-      const response = await fetch(buildApiUrl(`/estimate/sheets/${tempEstimateNo}/attachments`));
+      console.log('🔄 loadManagerAttachments 시작 - tempEstimateNo:', targetEstimateNo);
+      const response = await fetch(buildApiUrl(`/estimate/sheets/${targetEstimateNo}/attachments`));
       console.log('📡 API 응답 상태:', response.status, response.ok);
       
       if (response.ok) {
@@ -1268,6 +1307,14 @@ const NewEstimateRequestPage: React.FC = () => {
       console.error('관리 첨부파일 로드 오류:', error);
     }
   }, [tempEstimateNo]);
+
+  // 🔑 tempEstimateNo가 변경될 때마다 관리 첨부파일 자동 로드
+  useEffect(() => {
+    if (tempEstimateNo) {
+      console.log('🔄 tempEstimateNo 변경 감지, 관리 첨부파일 자동 로드:', tempEstimateNo);
+      loadManagerAttachments(tempEstimateNo);
+    }
+  }, [tempEstimateNo, loadManagerAttachments]);
 
   // 첨부파일 다운로드 함수
   const handleDownloadAttachment = useCallback(async (attachmentId: number | string, fileName: string) => {
@@ -1796,8 +1843,8 @@ const NewEstimateRequestPage: React.FC = () => {
       // 🔑 추가 안전장치: fileAttachments도 완전 초기화
       console.log('🔍 loadExistingData 완료 후 pendingFiles 상태:', pendingFiles);
       
-      // 🔑 관리 첨부파일 로드
-      await loadManagerAttachments();
+      // 🔑 관리 첨부파일 로드 (loadTempEstimateNo를 직접 전달하여 상태 업데이트 전에 호출 가능)
+      await loadManagerAttachments(loadTempEstimateNo);
       
     } catch (error) {
       console.error('데이터 불러오기 실패:', error);
@@ -3841,8 +3888,16 @@ const NewEstimateRequestPage: React.FC = () => {
                       <>
                         <button className="btn-lg btn-request" onClick={handleSaveEdit}>저장</button>
                         <button className="btn-lg btn-draft" onClick={handleCancelEdit}>취소</button>
-                        {backendStatus === 1 && (
-                          <button className="btn-lg btn-danger" onClick={handleDeleteEstimate}>삭제</button>
+                        {(backendStatus === 1 || backendStatus === 2) && (
+                          <button 
+                            className="btn-lg" 
+                            onClick={handleDeleteEstimate}
+                            style={{ background: '#dc3545', color: '#fff' }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#c82333'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = '#dc3545'}
+                          >
+                            삭제
+                          </button>
                         )}
                       </>
                     );
@@ -3851,8 +3906,16 @@ const NewEstimateRequestPage: React.FC = () => {
                   return (
                     <>
                       <button className="btn-lg btn-draft" onClick={handleEdit}>수정</button>
-                      {backendStatus === 1 && (
-                        <button className="btn-lg btn-danger" onClick={handleDeleteEstimate}>삭제</button>
+                      {(backendStatus === 1 || backendStatus === 2) && (
+                        <button 
+                          className="btn-lg" 
+                          onClick={handleDeleteEstimate}
+                          style={{ background: '#dc3545', color: '#fff' }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = '#c82333'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = '#dc3545'}
+                        >
+                          삭제
+                        </button>
                       )}
                     </>
                   );
