@@ -522,14 +522,14 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
         {/* 오른쪽 컬럼 */}
         <Col md={6}>
           {/* 버튼 그룹 */}
-          <div className="mb-4" style={{ backgroundColor: '#DFDFDF', padding: '20px', borderRadius: '8px' }}>
-            <div className="d-flex gap-3 mb-4">
+          <div className="mb-4" style={{ backgroundColor: '#DFDFDF', padding: '15px', borderRadius: '8px', height: '165px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', marginTop: '33px' }}>
+            <div className="d-flex gap-3">
               <Button 
                 onClick={handleReset}
                 style={{ 
                   flex: 1, 
-                  padding: '12px 20px', 
-                  fontSize: '1rem', 
+                  padding: '10px 16px', 
+                  fontSize: '0.95rem', 
                   fontWeight: '600',
                   backgroundColor: '#6c757d',
                   border: 'none',
@@ -543,8 +543,8 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                 disabled={isProcessing}
                 style={{ 
                   flex: 1, 
-                  padding: '12px 20px', 
-                  fontSize: '1rem', 
+                  padding: '10px 16px', 
+                  fontSize: '0.95rem', 
                   fontWeight: '600',
                   backgroundColor: '#3b7dd8',
                   border: 'none',
@@ -554,17 +554,17 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                 {isProcessing ? '처리 중...' : 'CONVAL 재호출'}
               </Button>
             </div>
-            <div className="d-flex align-items-center mb-2">
-              <span style={{ width: '80px', fontWeight: '600', fontSize: '0.9rem' }}>PDF FILE</span>
-              <div className="d-flex gap-3 flex-grow-1">
+            <div className="d-flex align-items-center">
+              <span style={{ width: '70px', fontWeight: '600', fontSize: '0.85rem' }}>PDF FILE</span>
+              <div className="d-flex gap-2 flex-grow-1">
                 <Button 
                   variant="light" 
                   onClick={handlePdfDownload} 
                   disabled={downloading.pdf} 
                   style={{ 
                     flex: 1, 
-                    fontSize: '0.9rem', 
-                    padding: '8px 16px',
+                    fontSize: '0.85rem', 
+                    padding: '6px 12px',
                     backgroundColor: 'white',
                     border: '1px solid #ccc',
                     borderRadius: '6px',
@@ -579,8 +579,8 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                   onClick={handlePdfView} 
                   style={{ 
                     flex: 1, 
-                    fontSize: '0.9rem', 
-                    padding: '8px 16px',
+                    fontSize: '0.85rem', 
+                    padding: '6px 12px',
                     backgroundColor: 'white',
                     border: '1px solid #ccc',
                     borderRadius: '6px',
@@ -593,16 +593,16 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
               </div>
             </div>
             <div className="d-flex align-items-center">
-              <span style={{ width: '80px', fontWeight: '600', fontSize: '0.9rem' }}>CCV FILE</span>
-              <div className="d-flex gap-3 flex-grow-1">
+              <span style={{ width: '70px', fontWeight: '600', fontSize: '0.85rem' }}>CCV FILE</span>
+              <div className="d-flex gap-2 flex-grow-1">
                 <Button 
                   variant="light" 
                   onClick={handleCcvDownload} 
                   disabled={downloading.ccv} 
                   style={{ 
                     flex: 1, 
-                    fontSize: '0.9rem', 
-                    padding: '8px 16px',
+                    fontSize: '0.85rem', 
+                    padding: '6px 12px',
                     backgroundColor: 'white',
                     border: '1px solid #ccc',
                     borderRadius: '6px',
@@ -617,8 +617,8 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                   onClick={handleCcvView} 
                   style={{ 
                     flex: 1, 
-                    fontSize: '0.9rem', 
-                    padding: '8px 16px',
+                    fontSize: '0.85rem', 
+                    padding: '6px 12px',
                     backgroundColor: 'white',
                     border: '1px solid #ccc',
                     borderRadius: '6px',

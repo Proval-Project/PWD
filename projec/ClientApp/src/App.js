@@ -170,7 +170,7 @@ function App() {
         <Col>
           <div className="d-flex align-items-center">
             <span 
-              style={{ cursor: 'pointer', fontSize: '1.8rem', fontWeight: '1200' }}
+              style={{ cursor: 'pointer', fontSize: '1.8rem', fontWeight: '900' }}
               onClick={() => {
                 const url = `http://192.168.0.59:3000/dashboard/estimate-detail/${estimateNo}`;
                 window.open(url, '_self');
