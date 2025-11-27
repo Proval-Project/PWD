@@ -43,10 +43,10 @@ namespace UserManagementSystem.Controllers
                     return NotFound(new { message = "담당자를 찾을 수 없습니다." });
                 }
 
-                // roleID가 2인 담당자인지 확인
-                if (staff.RoleID != 2)
+                // roleID가 2인 담당자 또는 1인 관리자인지 확인
+                if (staff.RoleID != 2 && staff.RoleID != 1)
                 {
-                    return BadRequest(new { message = "해당 사용자는 담당자가 아닙니다." });
+                    return BadRequest(new { message = "해당 사용자는 담당자/관리자가 아닙니다." });
                 }
 
                 return Ok(staff);
@@ -104,10 +104,10 @@ namespace UserManagementSystem.Controllers
                     return NotFound(new { message = "담당자를 찾을 수 없습니다." });
                 }
 
-                // roleID가 2인 담당자인지 확인
-                if (staff.RoleID != 2)
+                // roleID가 2인 담당자 또는 1인 관리자인지 확인
+                if (staff.RoleID != 2 && staff.RoleID != 1)
                 {
-                    return BadRequest(new { message = "해당 사용자는 담당자가 아닙니다." });
+                    return BadRequest(new { message = "해당 사용자는 담당자/관리자가 아닙니다." });
                 }
 
                 return Ok(staff);

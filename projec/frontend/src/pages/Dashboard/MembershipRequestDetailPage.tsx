@@ -10,6 +10,8 @@ interface MembershipRequestDetail {
   companyName: string;
   name: string;
   email: string;
+  roleID: number;
+  roleName: string;
   businessNumber: string;
   address: string;
   companyPhone: string;
@@ -32,7 +34,24 @@ const MembershipRequestDetailPage: React.FC = () => {
       try {
         const list = await getPendingApprovals();
         const found = list.find((r: any) => r.userID === userID);
-        setDetail(found || null);
+        if (found) {
+          setDetail({
+            userID: found.userID,
+            companyName: found.companyName,
+            name: found.name,
+            email: found.email,
+            roleID: found.roleID,
+            roleName: found.roleName,
+            businessNumber: found.businessNumber,
+            address: found.address,
+            companyPhone: found.companyPhone,
+            department: found.department,
+            position: found.position,
+            phoneNumber: found.phoneNumber,
+          });
+        } else {
+          setDetail(null);
+        }
       } catch (err) {
         console.error("상세 로드 실패:", err);
       } finally {
@@ -41,6 +60,22 @@ const MembershipRequestDetailPage: React.FC = () => {
     };
     fetchDetail();
   }, [userID]);
+
+  const getRoleDisplayName = (roleID: number, roleName: string) => {
+    if (roleName) {
+      switch (roleName) {
+        case 'Admin': return '관리자';
+        case 'Sales': return '담당자';
+        case 'Customer': return '고객';
+      }
+    }
+    switch (roleID) {
+      case 1: return '관리자';
+      case 2: return '담당자';
+      case 3: return '고객';
+      default: return roleName || `역할(${roleID})`;
+    }
+  };
 
   if (loading) return <div>로딩 중...</div>;
   if (!detail) return <div>요청을 찾을 수 없습니다.</div>;
@@ -81,6 +116,7 @@ const MembershipRequestDetailPage: React.FC = () => {
           <tbody>
             <tr><th className="w-1/3 bg-[#DFDFDF] border p-3 text-left font-semibold">아이디</th><td className="p-3 font-semibold">{detail.userID}</td></tr>
             <tr><th className="bg-[#DFDFDF] border p-3 text-left font-semibold">회사명</th><td className="p-3 font-semibold">{detail.companyName}</td></tr>
+            <tr><th className="bg-[#DFDFDF] border p-3 text-left font-semibold">역할</th><td className="p-3 font-semibold">{getRoleDisplayName(detail.roleID, detail.roleName)}</td></tr>
             <tr><th className="bg-[#DFDFDF] border p-3 text-left font-semibold">사업자등록번호</th><td className="p-3 font-semibold">{detail.businessNumber}</td></tr>
             <tr><th className="bg-[#DFDFDF] border p-3 text-left font-semibold">주소</th><td className="p-3 font-semibold">{detail.address}</td></tr>
             <tr><th className="bg-[#DFDFDF] border p-3 text-left font-semibold">대표번호</th><td className="p-3 font-semibold">{detail.companyPhone}</td></tr>

@@ -48,7 +48,7 @@ const menuItems: MenuItem[] = [
   label: '개인정보 관리',
   icon: <FiUser />,
   path: '/profile-management',
-  roles: [3] // Customer only
+    roles: [1, 2, 3] // Admin, Staff, Customer 모두 사용
   },
   {
     id: 'estimate-request',

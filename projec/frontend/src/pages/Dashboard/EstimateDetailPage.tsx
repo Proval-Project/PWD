@@ -2638,31 +2638,52 @@ const handleSaveSpecification = async () => {
             type="text"
             placeholder="메이커"
             value={makerSearchTerm}
-            onChange={(e) => {if (!isSelected) {setMakerSearchTerm(e.target.value); setIsDropdownOpen(true);}}}
-            onFocus={() => {if (!isSelected) setIsDropdownOpen(true);}}
+            onChange={(e) => {
+              if (!isSelected && !isReadOnly) {
+                setMakerSearchTerm(e.target.value);
+                setIsDropdownOpen(true);
+              }
+            }}
+            onFocus={() => {
+              if (!isSelected && !isReadOnly) setIsDropdownOpen(true);
+            }}
             readOnly={isSelected || isReadOnly} // isReadOnly 상태에 따라 읽기 전용
           />
           <input
             type="text"
             placeholder="모델명"
             value={modelSearchTerm}
-            onChange={(e) => {if (!isSelected) {setModelSearchTerm(e.target.value); setIsDropdownOpen(true);}}}
-            onFocus={() => {if (!isSelected) setIsDropdownOpen(true);}}
+            onChange={(e) => {
+              if (!isSelected && !isReadOnly) {
+                setModelSearchTerm(e.target.value);
+                setIsDropdownOpen(true);
+              }
+            }}
+            onFocus={() => {
+              if (!isSelected && !isReadOnly) setIsDropdownOpen(true);
+            }}
             readOnly={isSelected || isReadOnly}
           />
           <input
             type="text"
             placeholder="규격"
             value={specSearchTerm}
-            onChange={(e) => {if (!isSelected) {setSpecSearchTerm(e.target.value); setIsDropdownOpen(true);}}}
-            onFocus={() => {if (!isSelected) setIsDropdownOpen(true);}}
+            onChange={(e) => {
+              if (!isSelected && !isReadOnly) {
+                setSpecSearchTerm(e.target.value);
+                setIsDropdownOpen(true);
+              }
+            }}
+            onFocus={() => {
+              if (!isSelected && !isReadOnly) setIsDropdownOpen(true);
+            }}
             readOnly={isSelected || isReadOnly}
           />
           {isSelected && (
             <button type="button" onClick={handleReset} className="reset-button" disabled={isReadOnly}>초기화</button>
           )}
         </div>
-        {isDropdownOpen && (
+        {!isReadOnly && isDropdownOpen && (
           <ul className="dropdown-list">
             {filteredModels.length > 0 ? (
               filteredModels.map((item: any, index: number) => {
@@ -3462,7 +3483,8 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                             accMakerList={accMakerListByType.Positioner || []}
                             accModelList={accModelListByType.Positioner || []}
                             onAccessoryChange={(accessory) => handleAccessoryChange('positioner', accessory)}
-                            isReadOnly={isReadOnly}
+                            // EstimateRequest.IsPositioner(= tag.isPositioner)가 false이면 선택 비활성
+                            isReadOnly={isReadOnly || !(selectedValve?.accessory.positioner?.exists)}
                           />
                         </td>
                       </tr>
@@ -3476,7 +3498,8 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                             accMakerList={accMakerListByType.Solenoid || []}
                             accModelList={accModelListByType.Solenoid || []}
                             onAccessoryChange={(accessory) => handleAccessoryChange('solenoid', accessory)}
-                            isReadOnly={isReadOnly}
+                            // EstimateRequest.IsSolenoid(= tag.isSolenoid)가 false이면 선택 비활성
+                            isReadOnly={isReadOnly || !selectedValve?.accessory.solenoidValve}
                           />
                         </td>
                       </tr>
@@ -3490,7 +3513,8 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                             accMakerList={accMakerListByType.Limit || []}
                             accModelList={accModelListByType.Limit || []}
                             onAccessoryChange={(accessory) => handleAccessoryChange('limiter', accessory)}
-                            isReadOnly={isReadOnly}
+                            // EstimateRequest.IsLimSwitch(= tag.isLimSwitch)가 false이면 선택 비활성
+                            isReadOnly={isReadOnly || !selectedValve?.accessory.limitSwitch}
                           />
                         </td>
                       </tr>
@@ -3504,7 +3528,8 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                             accMakerList={accMakerListByType.Airset || []}
                             accModelList={accModelListByType.Airset || []}
                             onAccessoryChange={(accessory) => handleAccessoryChange('airSupply', accessory)}
-                            isReadOnly={isReadOnly}
+                            // EstimateRequest.IsAirSet(= tag.isAirSet)가 false이면 선택 비활성
+                            isReadOnly={isReadOnly || !selectedValve?.accessory.airSet}
                           />
                         </td>
                       </tr>
@@ -3518,7 +3543,8 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                             accMakerList={accMakerListByType.Volume || []}
                             accModelList={accModelListByType.Volume || []}
                             onAccessoryChange={(accessory) => handleAccessoryChange('volumeBooster', accessory)}
-                            isReadOnly={isReadOnly}
+                            // EstimateRequest.IsVolumeBooster(= tag.isVolumeBooster)가 false이면 선택 비활성
+                            isReadOnly={isReadOnly || !selectedValve?.accessory.volumeBooster}
                           />
                         </td>
                       </tr>
@@ -3532,7 +3558,8 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                             accMakerList={accMakerListByType.Airoperate || []}
                             accModelList={accModelListByType.Airoperate || []}
                             onAccessoryChange={(accessory) => handleAccessoryChange('airOperator', accessory)}
-                            isReadOnly={isReadOnly}
+                            // EstimateRequest.IsAirOperated(= tag.isAirOperated)가 false이면 선택 비활성
+                            isReadOnly={isReadOnly || !selectedValve?.accessory.airOperatedValve}
                           />
                         </td>
                       </tr>
@@ -3546,7 +3573,8 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                             accMakerList={accMakerListByType.Lockup || []}
                             accModelList={accModelListByType.Lockup || []}
                             onAccessoryChange={(accessory) => handleAccessoryChange('lockUp', accessory)}
-                            isReadOnly={isReadOnly}
+                            // EstimateRequest.IsLockUp(= tag.isLockUp)가 false이면 선택 비활성
+                            isReadOnly={isReadOnly || !selectedValve?.accessory.lockupValve}
                           />
                         </td>
                       </tr>
@@ -3560,7 +3588,8 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                             accMakerList={accMakerListByType.Snapacting || []}
                             accModelList={accModelListByType.Snapacting || []}
                             onAccessoryChange={(accessory) => handleAccessoryChange('snapActingRelay', accessory)}
-                            isReadOnly={isReadOnly}
+                            // EstimateRequest.IsSnapActingRelay(= tag.isSnapActingRelay)가 false이면 선택 비활성
+                            isReadOnly={isReadOnly || !selectedValve?.accessory.snapActingRelay}
                           />
                         </td>
                       </tr>

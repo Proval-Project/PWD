@@ -11,6 +11,8 @@ interface MembershipRequest {
   companyName: string;
   name: string;
   email: string;
+  roleID: number;
+  roleName: string;
 }
 
 const MembershipRequestsPage: React.FC = () => {
@@ -48,7 +50,9 @@ const MembershipRequestsPage: React.FC = () => {
         userID: r.userID,
         companyName: r.companyName,
         name: r.name,
-        email: r.email
+        email: r.email,
+        roleID: r.roleID,
+        roleName: r.roleName
       }));
       setRequests(requestData);
       setFilteredRequests(requestData);
@@ -102,6 +106,23 @@ const MembershipRequestsPage: React.FC = () => {
     );
   }
 
+  const getRoleDisplayName = (roleID: number, roleName: string) => {
+    // 백엔드 RoleName: Admin, Sales, Customer
+    if (roleName) {
+      switch (roleName) {
+        case 'Admin': return '관리자';
+        case 'Sales': return '담당자';
+        case 'Customer': return '고객';
+      }
+    }
+    switch (roleID) {
+      case 1: return '관리자';
+      case 2: return '담당자';
+      case 3: return '고객';
+      default: return roleName || `역할(${roleID})`;
+    }
+  };
+
   if (error) {
     return (
       <div className="staff-management-page">
@@ -135,6 +156,7 @@ const MembershipRequestsPage: React.FC = () => {
                 <th>회사명</th>
                 <th>담당자 성함</th>
                 <th>담당자 이메일</th>
+                <th>역할</th>
               </tr>
             </thead>
             <tbody>
@@ -148,6 +170,7 @@ const MembershipRequestsPage: React.FC = () => {
                   <td>{r.companyName}</td>
                   <td>{r.name}</td>
                   <td>{r.email}</td>
+                  <td>{getRoleDisplayName(r.roleID, r.roleName)}</td>
                 </tr>
               ))}
             </tbody>

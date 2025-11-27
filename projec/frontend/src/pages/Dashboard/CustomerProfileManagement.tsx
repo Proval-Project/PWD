@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { IoIosArrowBack } from "react-icons/io";
 import { useNavigate } from "react-router-dom";
 import Modal from "../../components/common/Modal";
-import { deleteCustomer, getCustomerById, UserResponseDto } from "../../api/userManagement";
+import { deleteCustomer, getCustomerById, getUserById, UserResponseDto } from "../../api/userManagement";
 
 interface UserInfo {
   userID: string;
@@ -47,8 +47,8 @@ const ClientInfoPage: React.FC = () => {
           return;
         }
 
-        // API에서 최신 사용자 정보 가져오기
-        const userData = await getCustomerById(userID);
+        // 역할과 무관하게 공통 사용자 정보 조회
+        const userData: UserResponseDto = await getUserById(userID);
         
         // UserResponseDto를 UserInfo로 변환
         setUserInfo({
@@ -63,7 +63,7 @@ const ClientInfoPage: React.FC = () => {
           address: userData.address || '',
           companyPhone: userData.companyPhone || '',
           roleID: userData.roleID,
-          roleName: (userData as any).roleName || '',
+          roleName: userData.roleName || '',
           isApproved: userData.isApproved,
         });
       } catch (error) {
@@ -106,6 +106,11 @@ const ClientInfoPage: React.FC = () => {
     try {
       if (!userInfo?.userID) {
         alert("사용자 정보를 찾을 수 없습니다.");
+        return;
+      }
+      // 현재는 고객만 탈퇴 허용 (RoleID 3)
+      if (userInfo.roleID !== 3) {
+        alert("담당자/관리자는 이 화면에서 탈퇴할 수 없습니다. 관리자에게 문의해주세요.");
         return;
       }
       await deleteCustomer(userInfo.userID);
@@ -213,13 +218,21 @@ const ClientInfoPage: React.FC = () => {
     <Modal
       isOpen={isEditModalOpen}
       title="수정하시겠습니까?"
-      message="회원 정보를 수정하시겠습니까?"
+      message="회원 정보를 수정 화면에서 변경하시겠습니까?"
       confirmText="수정"
       cancelText="취소"
       confirmColor="green"
       onConfirm={() => {
         setIsEditModalOpen(false);
-        console.log("수정 페이지 이동 or 수정 로직 실행");
+        if (!userInfo) return;
+        // 역할별 상세 수정 페이지로 이동
+        if (userInfo.roleID === 3) {
+          // 고객: 고객 상세/수정 화면
+          navigate(`/customer-detail/${userInfo.userID}`);
+        } else if (userInfo.roleID === 2 || userInfo.roleID === 1) {
+          // 담당자 / 관리자: 담당자 상세/수정 화면 재사용
+          navigate(`/staff-detail/${userInfo.userID}`);
+        }
       }}
       onCancel={() => setIsEditModalOpen(false)}
     />

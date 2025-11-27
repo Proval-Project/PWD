@@ -61,10 +61,10 @@ const TabMenu: React.FC<{ active: 'workflow' | 'product'; onSelect: (tab: 'workf
 // 상태 카드 리스트 컴포넌트
 const StatusCardList: React.FC<{ data: StatisticsSummaryDto }> = ({ data }) => {
   const cards = [
-    { label: '입력', value: data.input, color: '#007bff' },
-    { label: '접수', value: data.waiting, color: '#ffc107' },
-    { label: '완료', value: data.completed, color: '#28a745' },
-    { label: '수주', value: data.ordered, color: '#dc3545' }
+    { label: '견적요청', value: data.input, color: '#007bff' },
+    { label: '견적처리중', value: data.waiting, color: '#ffc107' },
+    { label: '견적완료', value: data.completed, color: '#28a745' },
+    { label: '주문', value: data.ordered, color: '#dc3545' }
   ];
 
   return (
@@ -145,10 +145,10 @@ const ValveTypeSelector: React.FC<{
 // 상태 분포 차트 컴포넌트
 const StatusDistributionChart: React.FC<{ data: StatusDistributionDto }> = ({ data }) => {
   const chartData = [
-    { name: '입력', value: data.input },
-    { name: '접수', value: data.waiting },
-    { name: '완료', value: data.completed },
-    { name: '수주', value: data.ordered }
+    { name: '견적요청', value: data.input },
+    { name: '견적처리중', value: data.waiting },
+    { name: '견적완료', value: data.completed },
+    { name: '주문', value: data.ordered }
   ];
 
   const COLORS = ['#007bff', '#ffc107', '#28a745', '#dc3545'];
@@ -162,7 +162,7 @@ const StatusDistributionChart: React.FC<{ data: StatusDistributionDto }> = ({ da
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
-              <YAxis />
+              <YAxis label={{ value: '건 수', angle: -90, position: 'insideLeft' }} />
               <Tooltip />
               <Legend />
               <Bar dataKey="value" fill="#007bff" />
@@ -205,7 +205,7 @@ const ConversionRateComposedChart: React.FC<{ data: ConversionRateDto[] }> = ({ 
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="month" />
           <YAxis yAxisId="left" label={{ value: '건수', angle: -90, position: 'insideLeft' }} />
-          <YAxis yAxisId="right" orientation="right" label={{ value: '전환율 (%)', angle: 90, position: 'insideRight' }} />
+          <YAxis yAxisId="right" orientation="right" label={{ value: '전환율 (%)', angle: 90, position: 'insideRight' }} domain={[0, 100]} />
           <Tooltip />
           <Legend />
           <Bar yAxisId="left" dataKey="totalRequests" fill="#8884d8" name="전체 요청" />
@@ -390,7 +390,7 @@ const StatisticsPage: React.FC = () => {
         try {
           const [monthly, valveRatio] = await Promise.all([
             getMonthlyOrderStatistics(startDate, endDate, selectedValveType),
-            getValveRatioStatistics(startDate, endDate, selectedValveType)
+            getValveRatioStatistics(startDate, endDate, null)
           ]);
           setMonthlyOrderData(monthly);
           setValveRatioData(valveRatio);
@@ -425,15 +425,6 @@ const StatisticsPage: React.FC = () => {
           onEndDateChange={setEndDate}
         />
 
-        {/* 밸브 타입 선택기 (Product 탭 전용) */}
-        {activeTab === 'product' && (
-          <ValveTypeSelector
-            valveTypes={bodyValveList}
-            selectedValveType={selectedValveType}
-            onValveTypeChange={setSelectedValveType}
-          />
-        )}
-
         {/* 로딩 인디케이터 */}
         {loading && (
           <div className="loading-indicator">데이터를 불러오는 중...</div>
@@ -458,6 +449,16 @@ const StatisticsPage: React.FC = () => {
               <ValveSpecTable data={valveRatioData} />
               <ValveRatioDonutChart data={valveRatioData} />
             </div>
+            
+            {/* 밸브 타입 선택기를 여기로 이동 */}
+            <div style={{ marginTop: '20px', marginBottom: '10px' }}>
+              <ValveTypeSelector
+                valveTypes={bodyValveList}
+                selectedValveType={selectedValveType}
+                onValveTypeChange={setSelectedValveType}
+              />
+            </div>
+            
             {monthlyOrderData.length > 0 && (
               <MonthlyOrderChart data={monthlyOrderData} />
             )}

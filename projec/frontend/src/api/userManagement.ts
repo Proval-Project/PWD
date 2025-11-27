@@ -8,6 +8,7 @@ export interface UserResponseDto {
   userID: string;
   email: string;
   roleID: number;
+  roleName: string;
   companyName: string;
   businessNumber: string;
   address: string;
@@ -70,6 +71,12 @@ export const getCustomers = async (): Promise<UserListResponseDto[]> => {
 
 export const getCustomerById = async (userID: string): Promise<UserResponseDto> => {
   const response = await axios.get(`${USER_MANAGEMENT_API_BASE_URL}/customer/${userID}`);
+  return response.data;
+};
+
+// 사용자 공통 정보 조회 (역할 무관)
+export const getUserById = async (userID: string): Promise<UserResponseDto> => {
+  const response = await axios.get(`${USER_MANAGEMENT_API_BASE_URL}/user/${userID}`);
   return response.data;
 };
 

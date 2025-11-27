@@ -3808,7 +3808,7 @@ const NewEstimateRequestPage: React.FC = () => {
         >
           <IoIosArrowBack />
         </button>
-        <h1 className="text-2xl font-bold text-black">{isReadOnly ? '견적요청 조회' : '견적요청'}</h1>
+        <h1 className="text-2xl font-bold text-black">{isReadOnly ? '견적요청 목록' : '견적요청'}</h1>
       </div>
 
       {/* 상단 카드: 프로젝트명 표 + 우측 액션 버튼 (임시저장/견적요청) */}
