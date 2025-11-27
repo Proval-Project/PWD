@@ -118,6 +118,7 @@ namespace  ConvalServiceApi.Models
                                     FluidV1Max = @FluidV1Max, FluidV1Nor = @FluidV1Nor, FluidV1Min = @FluidV1Min, FluidV1Unit = @FluidV1Unit,
                                     FluidPV1Max = @FluidPV1Max, FluidPV1Nor = @FluidPV1Nor, FluidPV1Min = @FluidPV1Min, FluidPV1Unit = @FluidPV1Unit,
                                     FluidTV1Max = @FluidTV1Max, FluidTV1Nor = @FluidTV1Nor, FluidTV1Min = @FluidTV1Min, FluidTV1Unit = @FluidTV1Unit,
+                                    FluidCF1Max = @FluidCF1Max, FluidCF1Nor = @FluidCF1Nor, FluidCF1Min = @FluidCF1Min, FluidCF1Unit = @FluidCF1Unit,
                                     FluidKMax = @FluidKMax, FluidKNor = @FluidKNor, FluidKMin = @FluidKMin,
                                     U1Max = @U1Max, U1Nor = @U1Nor, U1Min = @U1Min,
                                     U2Max = @U2Max, U2Nor = @U2Nor, U2Min = @U2Min
@@ -145,6 +146,7 @@ namespace  ConvalServiceApi.Models
                                     FluidV1Max, FluidV1Nor, FluidV1Min, FluidV1Unit,
                                     FluidPV1Max, FluidPV1Nor, FluidPV1Min, FluidPV1Unit,
                                     FluidTV1Max, FluidTV1Nor, FluidTV1Min, FluidTV1Unit,
+                                    FluidCF1Max, FluidCF1Nor, FluidCF1Min, FluidCF1Unit,
                                     FluidKMax, FluidKNor, FluidKMin,
                                     U1Max, U1Nor, U1Min,
                                     U2Max, U2Nor, U2Min
@@ -166,6 +168,7 @@ namespace  ConvalServiceApi.Models
                                     @FluidV1Max, @FluidV1Nor, @FluidV1Min, @FluidV1Unit,
                                     @FluidPV1Max, @FluidPV1Nor, @FluidPV1Min, @FluidPV1Unit,
                                     @FluidTV1Max, @FluidTV1Nor, @FluidTV1Min, @FluidTV1Unit,
+                                    @FluidCF1Max, @FluidCF1Nor, @FluidCF1Min, @FluidCF1Unit,
                                     @FluidKMax, @FluidKNor, @FluidKMin,
                                     @U1Max, @U1Nor, @U1Min,
                                     @U2Max, @U2Nor, @U2Min
@@ -239,6 +242,10 @@ namespace  ConvalServiceApi.Models
                                 ["@FluidTV1Nor"] = DBNull.Value,
                                 ["@FluidTV1Min"] = DBNull.Value,
                                 ["@FluidTV1Unit"] = DBNull.Value,
+                                ["@FluidCF1Max"] = DBNull.Value,
+                                ["@FluidCF1Nor"] = DBNull.Value,
+                                ["@FluidCF1Min"] = DBNull.Value,
+                                ["@FluidCF1Unit"] = DBNull.Value,
                                 ["@FluidKMax"] = DBNull.Value,
                                 ["@FluidKNor"] = DBNull.Value,
                                 ["@FluidKMin"] = DBNull.Value,

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Row, Col, Form, Table } from 'react-bootstrap';
 import { getFileStatus, downloadPdf, downloadCcv } from '../services/api';
 
-const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFileStatusRefresh }) => {
+const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQueued, onFileStatusRefresh }) => {
   const [formData, setFormData] = useState({});
   const [fileStatus, setFileStatus] = useState({ pdfExists: false, ccvExists: false });
   const [downloading, setDownloading] = useState({ pdf: false, ccv: false });
@@ -551,7 +551,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, onFil
                   borderRadius: '6px'
                 }}
               >
-                {isProcessing ? '처리 중...' : 'CONVAL 재호출'}
+                {isQueued ? '대기 중...' : (isProcessing ? '처리 중...' : 'CONVAL 재호출')}
               </Button>
             </div>
             <div className="d-flex align-items-center">

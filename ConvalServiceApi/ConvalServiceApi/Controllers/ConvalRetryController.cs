@@ -49,6 +49,8 @@ namespace ConvalServiceApi.Controllers
             }
 
             // 2. 큐에 파일명(파라미터) 추가
+            bool wasAlreadyProcessing = queueProcessor.IsProcessing();
+            bool queued = false;
             if (!string.IsNullOrEmpty(model?.SomeParam))
             {
                 Debug.WriteLine("[컨트롤러] 큐에 추가 시도");
@@ -58,6 +60,7 @@ namespace ConvalServiceApi.Controllers
                     var workKey = $"{model.SomeParam}_{sheet}";
                     Debug.WriteLine($"[컨트롤러] 큐 키: {workKey}");
                     queueProcessor.ProcessButtonClicked(workKey);
+                    queued = true;
                     Debug.WriteLine("[컨트롤러] 큐에 추가 완료");
 
                     // 3. 큐 처리 시작 (이미 처리 중이면 내부에서 무시)
@@ -75,14 +78,43 @@ namespace ConvalServiceApi.Controllers
                 Debug.WriteLine("[컨트롤러] 큐 추가 생략: SomeParam 없음");
             }
 
+            // 큐 상태 확인
+            bool isCurrentlyProcessing = queueProcessor.IsProcessing();
+            int queueCount = queueProcessor.GetQueueCount();
+            bool isQueued = queued && (isCurrentlyProcessing || queueCount > 0);
+
             // 호출 시각과 전달받은 파라미터를 응답에 포함
             Debug.WriteLine("[컨트롤러] 응답 반환");
             return Ok(new {
                 success = true,
-                message = "Conval 재호출 완료",
+                message = isQueued && wasAlreadyProcessing ? "큐에 추가되었습니다. 대기 중..." : "Conval 재호출 완료",
                 calledAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                receivedParam = model?.SomeParam
+                receivedParam = model?.SomeParam,
+                isProcessing = isCurrentlyProcessing,
+                queueCount = queueCount,
+                isQueued = isQueued
             });
+        }
+
+        [HttpGet]
+        [Route("status")]
+        public IHttpActionResult GetQueueStatus()
+        {
+            try
+            {
+                return Ok(new
+                {
+                    isProcessing = queueProcessor.IsProcessing(),
+                    queueCount = queueProcessor.GetQueueCount(),
+                    successCount = queueProcessor.GetSuccessCount(),
+                    errorCount = queueProcessor.GetErrorCount()
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[컨트롤러][오류] 큐 상태 조회 실패: {ex.Message}\n{ex}");
+                return InternalServerError(ex);
+            }
         }
 
         // CONVAL 데이터를 데이터베이스에 저장

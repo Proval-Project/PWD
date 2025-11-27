@@ -6323,7 +6323,7 @@ namespace EstimateRequestSystem.Services
                                ttl.TrimType as TrimTypeName,
                                tfl.TrimForm as TrimFormName,
                                al.AccSize as AiroperateAccSize,
-                               er.IsPositioner,
+                               er.IsAirSet,
                                er.IsSolenoid,
                                er.IsLimSwitch,
                                er.IsLockUp,
@@ -6400,7 +6400,7 @@ namespace EstimateRequestSystem.Services
                 string[] vl_target_value = {
                     "Tagno", "ValveTypeName", "BodySizeName", "TrimPortSizeName", "Medium",
                     "Fluid", "BodyMatName", "TrimMatName", "RatingName", "ActTypeName",
-                    "ActSizeName", "HWName", "BonnetTypeName", "TrimFormName", "IsPositioner",
+                    "ActSizeName", "HWName", "BonnetTypeName", "TrimFormName", "IsAirSet",
                     "IsSolenoid", "IsLimSwitch", "IsLockUp", "IsVolumeBooster",
                     "IsSnapActingRelay", "IsAirOperated", "Qty", "UnitPrice",
                 };

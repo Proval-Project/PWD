@@ -144,4 +144,34 @@ export const downloadCcv = async (estimateNo) => {
   } catch (error) {
     throw new Error(error.response?.data?.error || 'CCV 파일 다운로드 실패');
   }
+};
+
+// 큐 상태 확인
+export const getQueueStatus = async () => {
+  const url = buildConvalApiUrl('/conval/status');
+  try {
+    console.log('[API] getQueueStatus request', { url });
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: { 
+        'Accept': 'application/json'
+      }
+    });
+    
+    console.log('[API] getQueueStatus response status:', response.status);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[API] getQueueStatus error response body:', errorText);
+      throw new Error(`HTTP ${response.status} ${response.statusText}: ${errorText}`);
+    }
+    
+    const data = await response.json();
+    console.log('[API] getQueueStatus success', data);
+    return data;
+  } catch (error) {
+    console.error('[API] getQueueStatus error', error);
+    throw new Error('큐 상태 확인 실패: ' + (error?.message || String(error)));
+  }
 }; 

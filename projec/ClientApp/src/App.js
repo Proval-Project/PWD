@@ -1,10 +1,10 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Container, Row, Col, Card, Button, Form, Alert, Spinner, Nav, Tab } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 import ConvalDataDisplay from './components/ConvalDataDisplay';
 import CustomerDataDisplay from './components/CustomerDataDisplay';
-import { fetchCustomerData, fetchConvalData, recalculateConval, retryConval } from './services/api';
+import { fetchCustomerData, fetchConvalData, recalculateConval, retryConval, getQueueStatus } from './services/api';
 
 function App() {
   const [estimateNo, setEstimateNo] = useState(''); // TempEstimateNo (API 호출용)
@@ -30,19 +30,33 @@ function App() {
   const [convalData, setConvalData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isQueued, setIsQueued] = useState(false); // 큐에 대기 중인지 여부
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [hasAutoExecuted, setHasAutoExecuted] = useState(false); // 자동 실행 여부 추적
+  const timeoutRef = useRef(null); // 타임아웃 ID 저장용
 
-  // 상태 폴링
+  // 상태 폴링 - 큐 상태 확인
   useEffect(() => {
-    if (isProcessing) {
+    if (isProcessing || isQueued) {
       const interval = setInterval(async () => {
         try {
-          // 상태 조회 API 호출
-          // const status = await fetchStatus();
-          if (!isProcessing) { // isProcessing가 false일 때만 폴링 중단
+          const status = await getQueueStatus();
+          console.log('[UI] 큐 상태 확인:', status);
+          
+          // 큐에 항목이 있거나 처리 중이면 계속 대기
+          if (status.isProcessing || status.queueCount > 0) {
+            setIsProcessing(true);
+            setIsQueued(status.queueCount > 0);
+          } else {
+            // 큐가 비어있고 처리 중이 아니면 완료
+            // 타임아웃 정리
+            if (timeoutRef.current) {
+              clearTimeout(timeoutRef.current);
+              timeoutRef.current = null;
+            }
             setIsProcessing(false);
+            setIsQueued(false);
             // 처리 완료 후 데이터 새로고침
             if (estimateNo) {
               await loadData();
@@ -50,12 +64,17 @@ function App() {
           }
         } catch (error) {
           console.error('상태 조회 실패:', error);
+          // 에러 발생 시에도 일정 시간 후 자동으로 false로 설정
+          setTimeout(() => {
+            setIsProcessing(false);
+            setIsQueued(false);
+          }, 5000);
         }
-      }, 1000);
+      }, 2000); // 2초마다 확인
 
       return () => clearInterval(interval);
     }
-  }, [isProcessing, estimateNo]);
+  }, [isProcessing, isQueued, estimateNo]);
 
   const loadData = async (autoExecuteConval = false) => {
     if (!estimateNo) return;
@@ -112,14 +131,9 @@ function App() {
     }
     console.log('[UI] handleRecalculate start', { estimateNo, sheetId });
     setIsProcessing(true);
+    setIsQueued(false);
     setError('');
     setSuccess('');
-    
-    // 60초 후 자동으로 false로 설정 (안전장치)
-    const timeoutId = setTimeout(() => {
-      setIsProcessing(false);
-      console.log('[UI] Processing timeout - automatically setting isProcessing to false');
-    }, 60000);
     
     try {
       // ConvalDataDisplay에서 전달받은 업데이트된 데이터 사용
@@ -130,27 +144,71 @@ function App() {
       });
       const result = await retryConval({ SomeParam: estimateNo, SheetId: sheetId, ConvalData: convalDataToSend });
       console.log('[UI] retryConval success', result);
-      clearTimeout(timeoutId); // 성공 시 타임아웃 제거
-      setIsProcessing(false); // 성공 시에도 false로 설정
-      setSuccess(result.message + ' - 데이터 자동 업데이트 중...');
       
-      // CONVAL 재호출 완료 후 자동으로 데이터베이스에서 최신 데이터 가져오기
-      try {
-        // 잠시 대기 후 데이터 새로고침 (CONVAL 엔진 처리 시간 고려)
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        console.log('[UI] CONVAL 재호출 완료, 데이터베이스에서 최신 데이터 가져오기 시작');
-        await loadData();
-        setSuccess('CONVAL 재호출 완료 후 데이터가 자동으로 업데이트되었습니다.');
-      } catch (refreshError) {
-        console.error('[UI] 데이터 자동 업데이트 실패:', refreshError);
-        setError('데이터 자동 업데이트 중 오류가 발생했습니다: ' + refreshError.message);
+      // 큐 상태 확인
+      if (result.isQueued || result.queueCount > 0 || result.isProcessing) {
+        // 큐에 추가되었거나 처리 중이면 대기 상태 유지
+        setIsProcessing(true);
+        setIsQueued(result.isQueued || result.queueCount > 0);
+        setSuccess(result.message || '큐에 추가되었습니다. 대기 중...');
+        
+        // 동적 타임아웃 설정: 큐 개수 * 50초(작업당 소요시간) + 30초(여유시간)
+        // 최대 10개 작업까지 고려 (약 8분)
+        const queueCount = result.queueCount || 1;
+        const estimatedTime = (queueCount * 50000) + 30000; // 밀리초 단위
+        const maxTimeout = 600000; // 최대 10분
+        const timeoutDuration = Math.min(estimatedTime, maxTimeout);
+        
+        console.log(`[UI] 큐 상태: ${queueCount}개 작업, 예상 시간: ${timeoutDuration/1000}초`);
+        
+        // 기존 타임아웃이 있으면 정리
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+        
+        // 안전장치 타임아웃 설정 (큐 폴링이 실패할 경우를 대비)
+        // 실제로는 큐 폴링이 2초마다 실행되어 큐가 비어있으면 자동으로 false가 되므로
+        // 이 타임아웃은 네트워크 오류 등으로 폴링이 실패할 경우를 위한 안전장치입니다
+        timeoutRef.current = setTimeout(() => {
+          console.log('[UI] Processing timeout - automatically setting isProcessing to false');
+          setIsProcessing(false);
+          setIsQueued(false);
+          timeoutRef.current = null;
+        }, timeoutDuration);
+      } else {
+        // 즉시 처리 완료된 경우
+        // 타임아웃 정리
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+        setIsProcessing(false);
+        setIsQueued(false);
+        setSuccess(result.message + ' - 데이터 자동 업데이트 중...');
+        
+        // CONVAL 재호출 완료 후 자동으로 데이터베이스에서 최신 데이터 가져오기
+        try {
+          // 잠시 대기 후 데이터 새로고침 (CONVAL 엔진 처리 시간 고려)
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          console.log('[UI] CONVAL 재호출 완료, 데이터베이스에서 최신 데이터 가져오기 시작');
+          await loadData();
+          setSuccess('CONVAL 재호출 완료 후 데이터가 자동으로 업데이트되었습니다.');
+        } catch (refreshError) {
+          console.error('[UI] 데이터 자동 업데이트 실패:', refreshError);
+          setError('데이터 자동 업데이트 중 오류가 발생했습니다: ' + refreshError.message);
+        }
       }
       
       return result; // 반드시 반환
     } catch (error) {
       console.error('[UI] retryConval error', error);
-      clearTimeout(timeoutId); // 에러 시 타임아웃 제거
+      // 타임아웃 정리
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
       setIsProcessing(false);
+      setIsQueued(false);
       setError('CONVAL 재호출 중 오류가 발생했습니다: ' + error.message);
     }
   };
@@ -211,6 +269,7 @@ function App() {
             isLoading={isLoading}
             onRecalculate={handleRecalculate}
             isProcessing={isProcessing}
+            isQueued={isQueued}
             onFileStatusRefresh={refreshFileStatus}
           />
         </Col>
