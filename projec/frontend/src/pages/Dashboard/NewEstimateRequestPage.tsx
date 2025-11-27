@@ -1270,24 +1270,31 @@ const NewEstimateRequestPage: React.FC = () => {
           });
         });
         
-        // EstimateDetailPage에서 업로드한 파일 필터링
-        // - ManagerFileType이 'customer'인 파일 (고객 제출 문서)
-        // - ManagerFileType이 있고 'customer'가 아닌 파일 (관리 파일: datasheet, cvlist, vllist, singlequote, multiquote 등)
+        // EstimateDetailPage에서 담당자가 "고객 제출 문서 업로드"로 업로드한 파일만 필터링
+        // - ResultFiles 폴더 안에 있는 파일만 포함 (CustomerRequest 폴더 제외)
+        // - ManagerFileType이 'customer'인 파일만 포함 (EstimateDetailPage에서 담당자가 업로드한 것)
         const managerFiles = (attachments || []).filter((att: any) => {
+          // 파일 경로 확인
+          const filePath = att.filePath || att.path || '';
+          const isInResultFiles = isManagerFile(filePath);
+          
           // 여러 필드명 시도 (camelCase, PascalCase, 소문자 등)
           const managerFileType = (att.managerFileType || att.ManagerFileType || att.managerfiletype || '').toString().trim();
-          // ManagerFileType이 있는 경우 모두 포함 (customer 포함)
-          const isManagerFile = managerFileType !== '';
+          
+          // ResultFiles 폴더 안에 있고, ManagerFileType이 'customer'인 경우만 포함
+          const isManagerFileResult = isInResultFiles && managerFileType === 'customer';
           
           console.log('🔍 파일 필터링:', {
             fileName: att.fileName || att.name,
+            filePath: filePath,
+            isInResultFiles: isInResultFiles,
             managerFileType: managerFileType,
             managerFileType원본: att.managerFileType || att.ManagerFileType,
-            isManagerFile: isManagerFile,
+            isManagerFile: isManagerFileResult,
             전체객체키: Object.keys(att)
           });
           
-          return isManagerFile;
+          return isManagerFileResult;
         });
         
         console.log('✅ 필터링된 관리 첨부파일:', managerFiles.length, '개');
