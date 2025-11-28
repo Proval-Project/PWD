@@ -165,7 +165,7 @@ const StatusDistributionChart: React.FC<{ data: StatusDistributionDto }> = ({ da
               <YAxis label={{ value: '건 수', angle: -90, position: 'insideLeft' }} />
               <Tooltip />
               <Legend />
-              <Bar dataKey="value" fill="#007bff" />
+              <Bar dataKey="value" fill="#007bff" name="건수" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -210,6 +210,7 @@ const ConversionRateComposedChart: React.FC<{ data: ConversionRateDto[] }> = ({ 
           <Legend />
           <Bar yAxisId="left" dataKey="totalRequests" fill="#8884d8" name="전체 요청" />
           <Bar yAxisId="left" dataKey="completedQuotes" fill="#82ca9d" name="완료" />
+          <Bar yAxisId="left" dataKey="actualOrders" fill="#1e40af" name="주문" />
           <Line yAxisId="right" type="monotone" dataKey="conversionRate" stroke="#ff7300" name="전환율 (%)" />
         </ComposedChart>
       </ResponsiveContainer>
