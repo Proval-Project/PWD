@@ -632,9 +632,9 @@ namespace ConvalServiceApi.Models
                 SafeAddParameter(result, cData, "Kappa1Ap3", "FluidKMin", "Value");
                 
                 // 105-111: CF1, SS100 관련
-                // SafeAddParameter(result, cData, "Cf", "FluidCF1Max", "Value");
-                // SafeAddParameter(result, cData, "CfAp2", "FluidCF1Nor", "Value");
-                // SafeAddParameter(result, cData, "CfAp3", "FluidCF1Min", "Value");
+                SafeAddParameter(result, cData, "Cf", "FluidCF1Max", "Value");
+                SafeAddParameter(result, cData, "CfAp2", "FluidCF1Nor", "Value");
+                SafeAddParameter(result, cData, "CfAp3", "FluidCF1Min", "Value");
                 // SafeAddParameter(result, cData, "Cf", "FluidCF1Unit", "Unit");
                 
                 // 112-122: U1, U2, LpAe 관련
