@@ -189,7 +189,45 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
 
   // 압력 단위 옵션
   const pressureUnitOptions = [
-    'Mpa(g)', 'bar(a)', 'bar(g)', 'kPa(a)', 'kPa(g)', 'MPa(a)', 'psi(a)', 'psi(g)', 'kgf/cm²(a)', 'kgf/cm²(g)'
+    '',
+    'bar(a)',
+    'mbar(a)',
+    'Pa(a)',
+    'kPa(a)',
+    'MPa(a)',
+    'at(a)',
+    'atm(a)',
+    'kp/cm²(a)',
+    'N/m²(a)',
+    'N/mm²(a)',
+    'Torr(a)',
+    'mmHg(a)',
+    'mmH2O(a)',
+    'psi(a)',
+    'ftH2O(a)',
+    'inHg(a)',
+    'inH2O(a)',
+    'lbf/ft²(a)',
+    'bar(g)',
+    'mbar(g)',
+    'Pa(g)',
+    'kPa(g)',
+    'MPa(g)',
+    'at(g)',
+    'atm(g)',
+    'kp/cm²(g)',
+    'N/m²(g)',
+    'N/mm²(g)',
+    'Torr(g)',
+    'mmHg(g)',
+    'mmH2O(g)',
+    'psi(g)',
+    'ftH2O(g)',
+    'inHg(g)',
+    'inH2O(g)',
+    'lbf/ft²(g)',
+    'kgf/cm²(a)',
+    'kgf/cm²(g)'
   ];
 
   return (
@@ -223,7 +261,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td style={{ color: '#666', backgroundColor: '#DFDFDF', backgroundColor: '#DFDFDF' }}>Fluid</td>
                   <td>
                     <Form.Select size="sm" value={formData.Fluid || ''} onChange={(e) => handleInputChange('Fluid', e.target.value)}>
-                      <option value="">선택</option>
+                      <option value="">단위 선택</option>
                       <option value="Liquid">Liquid</option>
                       <option value="Vaporous">Vaporous</option>
                       <option value="Gaseous">Gaseous</option>
@@ -235,9 +273,28 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td>
                     <div className="d-flex gap-2">
                       <Form.Control size="sm" value={formData.Density || ''} onChange={(e) => handleInputChange('Density', e.target.value)} style={{ maxWidth: '100px' }} />
-                      <Form.Select size="sm" value={formData.DensityUnit || 'kg/m3'} onChange={(e) => handleInputChange('DensityUnit', e.target.value)} style={{ maxWidth: '100px' }}>
-                        <option value="kg/m3">kg/m3</option>
-                        <option value="kg/l">kg/l</option>
+                      <Form.Select size="sm" value={formData.DensityUnit || 'kg/m³'} onChange={(e) => handleInputChange('DensityUnit', e.target.value)} style={{ maxWidth: '100px' }}>
+                      <option value="">단위 선택</option>
+                      <option value="kg/m³">kg/m³</option>
+                      <option value="kg/l">kg/l</option>
+                      <option value="gr/ft³">gr/ft³</option>
+                      <option value="lb/ft³">lb/ft³</option>
+                      <option value="lb/gal(US)">lb/gal(US)</option>
+                      <option value="lb/gal(UK)">lb/gal(UK)</option>
+                      <option value="g/ml">g/ml</option>
+                      <option value="oz/gal(US)">oz/gal(US)</option>
+                      <option value="oz/gal(UK)">oz/gal(UK)</option>
+                      <option value="oz/in³">oz/in³</option>
+                      <option value="lb/in³">lb/in³</option>
+                      <option value="slug/ft³">slug/ft³</option>
+                      <option value="ton/yd³(UK)">ton/yd³(UK)</option>
+                      <option value="ton/yd³(US)">ton/yd³(US)</option>
+                      <option value="g/cm³">g/cm³</option>
+                      <option value="mg/l">mg/l</option>
+                      <option value="mg/m³">mg/m³</option>
+                      <option value="SG.H2O(60°F)">SG.H2O(60°F)</option>
+                      <option value="SG.H2O(68°F)">SG.H2O(68°F)</option>
+                      <option value="SG.H2O(4°C)">SG.H2O(4°C)</option>
                       </Form.Select>
                     </div>
                   </td>
@@ -247,9 +304,11 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td>
                     <div className="d-flex gap-2">
                       <Form.Control size="sm" value={formData.Molecular || ''} onChange={(e) => handleInputChange('Molecular', e.target.value)} style={{ maxWidth: '100px' }} />
-                      <Form.Select size="sm" value={formData.MolecularWeightUnit || 'kg.lmol'} onChange={(e) => handleInputChange('MolecularWeightUnit', e.target.value)} style={{ maxWidth: '100px' }}>
-                        <option value="kg.lmol">kg.lmol</option>
-                        <option value="g/mol">g/mol</option>
+                      <Form.Select size="sm" value={formData.MolecularWeightUnit || 'kg/kmol'} onChange={(e) => handleInputChange('MolecularWeightUnit', e.target.value)} style={{ maxWidth: '100px' }}>
+                      <option value="">단위 선택</option>
+                      <option value="kg/kmol">kg/kmol</option>
+                      <option value="g/mol">g/mol</option>
+                      <option value="lb/lbmol">lb/lbmol</option>
                       </Form.Select>
                     </div>
                   </td>
@@ -278,9 +337,13 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td><Form.Control size="sm" value={formData.t1Normal || ''} onChange={(e) => handleInputChange('t1Normal', e.target.value)} /></td>
                   <td><Form.Control size="sm" value={formData.t1Min || ''} onChange={(e) => handleInputChange('t1Min', e.target.value)} /></td>
                   <td>
-                    <Form.Select size="sm" value={formData.t1Unit || 'kgf/cm²(g)'} onChange={(e) => handleInputChange('t1Unit', e.target.value)}>
-                      <option value="kgf/cm²(g)">kgf/cm²(g)</option>
-                      <option value="°C">°C</option>
+                    <Form.Select size="sm" value={formData.t1Unit || '°C'} onChange={(e) => handleInputChange('t1Unit', e.target.value)}>
+                    <option value="">단위 선택</option>
+                    <option value="°C">°C</option>
+                    <option value="K">K</option>
+                    <option value="°F">°F</option>
+                    <option value="°Reaumur">°Reaumur</option>
+                    <option value="°Rankine">°Rankine</option>
                     </Form.Select>
                   </td>
                 </tr>
@@ -290,8 +353,8 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td><Form.Control size="sm" value={formData.p1Normal || ''} onChange={(e) => handleInputChange('p1Normal', e.target.value)} /></td>
                   <td><Form.Control size="sm" value={formData.p1Min || ''} onChange={(e) => handleInputChange('p1Min', e.target.value)} /></td>
                   <td>
-                    <Form.Select size="sm" value={formData.PressureUnit || 'Mpa(g)'} onChange={(e) => handleInputChange('PressureUnit', e.target.value)}>
-                      {pressureUnitOptions.map(u => <option key={u} value={u}>{u}</option>)}
+                    <Form.Select size="sm" value={formData.PressureUnit || 'bar(a)'} onChange={(e) => handleInputChange('PressureUnit', e.target.value)}>
+                      {pressureUnitOptions.map(u => <option key={u || 'empty'} value={u}>{u || '단위 선택'}</option>)}
                     </Form.Select>
                   </td>
                 </tr>
@@ -306,8 +369,8 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td><Form.Control size="sm" value={formData.p2Normal || ''} onChange={(e) => handleInputChange('p2Normal', e.target.value)} disabled={pressureType !== 'p2'} /></td>
                   <td><Form.Control size="sm" value={formData.p2Min || ''} onChange={(e) => handleInputChange('p2Min', e.target.value)} disabled={pressureType !== 'p2'} /></td>
                   <td>
-                    <Form.Select size="sm" value={formData.PressureUnit || 'Mpa(g)'} onChange={(e) => handleInputChange('PressureUnit', e.target.value)}>
-                      {pressureUnitOptions.map(u => <option key={u} value={u}>{u}</option>)}
+                    <Form.Select size="sm" value={formData.PressureUnit || 'bar(a)'} onChange={(e) => handleInputChange('PressureUnit', e.target.value)}>
+                      {pressureUnitOptions.map(u => <option key={u || 'empty'} value={u}>{u || '단위 선택'}</option>)}
                     </Form.Select>
                   </td>
                 </tr>
@@ -322,8 +385,8 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td><Form.Control size="sm" value={formData.dpNormal || ''} onChange={(e) => handleInputChange('dpNormal', e.target.value)} disabled={pressureType !== 'dp'} /></td>
                   <td><Form.Control size="sm" value={formData.dpMin || ''} onChange={(e) => handleInputChange('dpMin', e.target.value)} disabled={pressureType !== 'dp'} /></td>
                   <td>
-                    <Form.Select size="sm" value={formData.PressureUnit || 'Mpa(g)'} onChange={(e) => handleInputChange('PressureUnit', e.target.value)}>
-                      {pressureUnitOptions.map(u => <option key={u} value={u}>{u}</option>)}
+                    <Form.Select size="sm" value={formData.PressureUnit || 'bar(a)'} onChange={(e) => handleInputChange('PressureUnit', e.target.value)}>
+                      {pressureUnitOptions.map(u => <option key={u || 'empty'} value={u}>{u || '단위 선택'}</option>)}
                     </Form.Select>
                   </td>
                 </tr>
@@ -333,8 +396,10 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td><Form.Control size="sm" value={formData.CVNormal || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
                   <td><Form.Control size="sm" value={formData.CVMin || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
                   <td>
-                    <Form.Select size="sm" value={formData.CVUnit || 'Mpa(g)'} onChange={(e) => handleInputChange('CVUnit', e.target.value)}>
-                      {pressureUnitOptions.map(u => <option key={u} value={u}>{u}</option>)}
+                    <Form.Select size="sm" value={formData.CVUnit || 'm³/h'} onChange={(e) => handleInputChange('CVUnit', e.target.value)}>
+                    <option value="">단위 선택</option>
+                    <option value="m³/h">m³/h</option>
+                    <option value="GPM(US)">GPM(US)</option>
                     </Form.Select>
                   </td>
                 </tr>
@@ -349,9 +414,21 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td><Form.Control size="sm" value={formData.qmNormal || ''} onChange={(e) => handleInputChange('qmNormal', e.target.value)} disabled={flowType !== 'qm'} /></td>
                   <td><Form.Control size="sm" value={formData.qmMin || ''} onChange={(e) => handleInputChange('qmMin', e.target.value)} disabled={flowType !== 'qm'} /></td>
                   <td>
-                    <Form.Select size="sm" value={formData.qmUnit || 't/h'} onChange={(e) => handleInputChange('qmUnit', e.target.value)}>
-                      <option value="t/h">t/h</option>
-                      <option value="kg/h">kg/h</option>
+                    <Form.Select size="sm" value={formData.qmUnit || 'kg/h'} onChange={(e) => handleInputChange('qmUnit', e.target.value)}>
+                    <option value="">단위 선택</option>
+                    <option value="kg/h">kg/h</option>
+                    <option value="kg/s">kg/s</option>
+                    <option value="t/h">t/h</option>
+                    <option value="t/d">t/d</option>
+                    <option value="ton/h(US)">ton/h(US)</option>
+                    <option value="ton/d(US)">ton/d(US)</option>
+                    <option value="ton/h(UK)">ton/h(UK)</option>
+                    <option value="ton/d(UK)">ton/d(UK)</option>
+                    <option value="lb/h">lb/h</option>
+                    <option value="lb/s">lb/s</option>
+                    <option value="g/h">g/h</option>
+                    <option value="g/min">g/min</option>
+                    <option value="g/s">g/s</option>
                     </Form.Select>
                   </td>
                 </tr>
@@ -367,8 +444,73 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td><Form.Control size="sm" value={formData.qnMin || ''} onChange={(e) => handleInputChange('qnMin', e.target.value)} disabled={flowType !== 'qn'} /></td>
                   <td>
                     <Form.Select size="sm" value={formData.qnUnit || 'm3/h'} onChange={(e) => handleInputChange('qnUnit', e.target.value)}>
-                      <option value="m3/h">m3/h</option>
-                      <option value="l/h">l/h</option>
+                      <option value="">단위 선택</option>
+                      {formData.Fluid === 'Gaseous' ? (
+                        // Gaseous용 단위 옵션
+                        <>
+                          <option value="m³/h">m³/h</option>
+                          <option value="m³/s">m³/s</option>
+                          <option value="m³/d">m³/d</option>
+                          <option value="l/h">l/h</option>
+                          <option value="l/s">l/s</option>
+                          <option value="l/min">l/min</option>
+                          <option value="GPH(US)">GPH(US)</option>
+                          <option value="GPM(US)">GPM(US)</option>
+                          <option value="MMSCFD">MMSCFD</option>
+                          <option value="MSCFD">MSCFD</option>
+                          <option value="MMSCFH">MMSCFH</option>
+                          <option value="MSCFH">MSCFH</option>
+                          <option value="SCFH">SCFH</option>
+                          <option value="MMSCFM">MMSCFM</option>
+                          <option value="MSCFM">MSCFM</option>
+                          <option value="SCFM">SCFM</option>
+                          <option value="GPH(UK)">GPH(UK)</option>
+                          <option value="GPM(UK)">GPM(UK)</option>
+                          <option value="dm³/h">dm³/h</option>
+                          <option value="MMSCMD">MMSCMD</option>
+                          <option value="MSCMD">MSCMD</option>
+                          <option value="MMSCMH">MMSCMH</option>
+                          <option value="MSCMH">MSCMH</option>
+                          <option value="MMSCMM">MMSCMM</option>
+                          <option value="MSCMM">MSCMM</option>
+                          <option value="bbl/d(US)">bbl/d(US)</option>
+                          <option value="bbl/d(oil)">bbl/d(oil)</option>
+                          <option value="bbl/d(UK)">bbl/d(UK)</option>
+                          <option value="bbl/h(US)">bbl/h(US)</option>
+                          <option value="bbl/h(oil)">bbl/h(oil)</option>
+                          <option value="bbl/h(UK)">bbl/h(UK)</option>
+                        </>
+                      ) : (
+                        // 일반용 단위 옵션 (액체용)
+                        <>
+                          <option value="bbl/d(oil)">bbl/d(oil)</option>
+                          <option value="bbl/d(UK)">bbl/d(UK)</option>
+                          <option value="bbl/d(US)">bbl/d(US)</option>
+                          <option value="bbl/h(oil)">bbl/h(oil)</option>
+                          <option value="bbl/h(UK)">bbl/h(UK)</option>
+                          <option value="bbl/h(US)">bbl/h(US)</option>
+                          <option value="dm³/h">dm³/h</option>
+                          <option value="ft³/h">ft³/h</option>
+                          <option value="ft³/min">ft³/min</option>
+                          <option value="gal/d(UK)">gal/d(UK)</option>
+                          <option value="gal/d(US)">gal/d(US)</option>
+                          <option value="gal/h(UK)">gal/h(UK)</option>
+                          <option value="gal/h(US)">gal/h(US)</option>
+                          <option value="gal/min(UK)">gal/min(UK)</option>
+                          <option value="gal/min(US)">gal/min(US)</option>
+                          <option value="GPD(US)">GPD(US)</option>
+                          <option value="GPH(US)">GPH(US)</option>
+                          <option value="GPM(US)">GPM(US)</option>
+                          <option value="l/h">l/h</option>
+                          <option value="l/min">l/min</option>
+                          <option value="l/s">l/s</option>
+                          <option value="m³/d">m³/d</option>
+                          <option value="m³/h">m³/h</option>
+                          <option value="m³/s">m³/s</option>
+                          <option value="ml/h">ml/h</option>
+                          <option value="ml/min">ml/min</option>
+                        </>
+                      )}
                     </Form.Select>
                   </td>
                 </tr>
@@ -379,7 +521,8 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td><Form.Control size="sm" value={formData.SS100Min || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
                   <td>
                     <Form.Select size="sm" value={formData.SS100Unit || '%'} onChange={(e) => handleInputChange('SS100Unit', e.target.value)}>
-                      <option value="%">%</option>
+                    <option value="%">%</option>
+                    <option value="-">-</option>
                     </Form.Select>
                   </td>
                 </tr>
@@ -391,10 +534,60 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td>dB(A)</td>
                 </tr>
                 <tr>
-                  <td colSpan={5} className="text-center" style={{ backgroundColor: '#e9ecef' }}>{formData.WarningStateMax || 'Cavitation'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#DFDFDF' }}>Warning State</td>
+                  <td>
+                    <Form.Control
+                      size="sm"
+                      value={formData.WarningStateMax || ''}
+                      readOnly
+                      style={{ backgroundColor: '#e9ecef' }}
+                    />
+                  </td>
+                  <td>
+                    <Form.Control
+                      size="sm"
+                      value={formData.WarningStateNormal || ''}
+                      readOnly
+                      style={{ backgroundColor: '#e9ecef' }}
+                    />
+                  </td>
+                  <td>
+                    <Form.Control
+                      size="sm"
+                      value={formData.WarningStateMin || ''}
+                      readOnly
+                      style={{ backgroundColor: '#e9ecef' }}
+                    />
+                  </td>
+                  <td></td>
                 </tr>
                 <tr>
-                  <td colSpan={5} className="text-center" style={{ backgroundColor: '#e9ecef' }}>{formData.WarningTypeMax || 'Cavitation'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#DFDFDF' }}>Warning Type</td>
+                  <td>
+                    <Form.Control
+                      size="sm"
+                      value={formData.WarningTypeMax || ''}
+                      readOnly
+                      style={{ backgroundColor: '#e9ecef' }}
+                    />
+                  </td>
+                  <td>
+                    <Form.Control
+                      size="sm"
+                      value={formData.WarningTypeNormal || ''}
+                      readOnly
+                      style={{ backgroundColor: '#e9ecef' }}
+                    />
+                  </td>
+                  <td>
+                    <Form.Control
+                      size="sm"
+                      value={formData.WarningTypeMin || ''}
+                      readOnly
+                      style={{ backgroundColor: '#e9ecef' }}
+                    />
+                  </td>
+                  <td></td>
                 </tr>
               </tbody>
             </Table>
@@ -425,9 +618,28 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td><Form.Control size="sm" value={formData.FluidP1Nor || ''} onChange={(e) => handleInputChange('FluidP1Nor', e.target.value)} /></td>
                   <td><Form.Control size="sm" value={formData.FluidP1Min || ''} onChange={(e) => handleInputChange('FluidP1Min', e.target.value)} /></td>
                   <td>
-                    <Form.Select size="sm" value={formData.FluidPUnit || 'kgf/cm²(g)'} onChange={(e) => handleInputChange('FluidPUnit', e.target.value)}>
-                      <option value="kgf/cm²(g)">kgf/cm²(g)</option>
-                      <option value="kg/m³">kg/m³</option>
+                    <Form.Select size="sm" value={formData.FluidPUnit || 'kg/m³'} onChange={(e) => handleInputChange('FluidPUnit', e.target.value)}>
+                    <option value="">단위 선택</option>
+                    <option value="kg/m³">kg/m³</option>
+                    <option value="kg/l">kg/l</option>
+                    <option value="gr/ft³">gr/ft³</option>
+                    <option value="lb/ft³">lb/ft³</option>
+                    <option value="lb/gal(US)">lb/gal(US)</option>
+                    <option value="lb/gal(UK)">lb/gal(UK)</option>
+                    <option value="g/ml">g/ml</option>
+                    <option value="oz/gal(US)">oz/gal(US)</option>
+                    <option value="oz/gal(UK)">oz/gal(UK)</option>
+                    <option value="oz/in³">oz/in³</option>
+                    <option value="lb/in³">lb/in³</option>
+                    <option value="slug/ft³">slug/ft³</option>
+                    <option value="ton/yd³(UK)">ton/yd³(UK)</option>
+                    <option value="ton/yd³(US)">ton/yd³(US)</option>
+                    <option value="g/cm³">g/cm³</option>
+                    <option value="mg/l">mg/l</option>
+                    <option value="mg/m³">mg/m³</option>
+                    <option value="SG.H2O(60°F)">SG.H2O(60°F)</option>
+                    <option value="SG.H2O(68°F)">SG.H2O(68°F)</option>
+                    <option value="SG.H2O(4°C)">SG.H2O(4°C)</option>
                     </Form.Select>
                   </td>
                 </tr>
@@ -437,8 +649,28 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td><Form.Control size="sm" value={formData.FluidP2Nor || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
                   <td><Form.Control size="sm" value={formData.FluidP2Min || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
                   <td>
-                    <Form.Select size="sm" value={formData.FluidPUnit || 'kg/m3'} onChange={(e) => handleInputChange('FluidPUnit', e.target.value)}>
-                      <option value="kg/m3">kg/m3</option>
+                    <Form.Select size="sm" value={formData.FluidPUnit || 'kg/m³'} onChange={(e) => handleInputChange('FluidPUnit', e.target.value)}>
+                    <option value="">단위 선택</option>
+                    <option value="kg/m³">kg/m³</option>
+                    <option value="kg/l">kg/l</option>
+                    <option value="gr/ft³">gr/ft³</option>
+                    <option value="lb/ft³">lb/ft³</option>
+                    <option value="lb/gal(US)">lb/gal(US)</option>
+                    <option value="lb/gal(UK)">lb/gal(UK)</option>
+                    <option value="g/ml">g/ml</option>
+                    <option value="oz/gal(US)">oz/gal(US)</option>
+                    <option value="oz/gal(UK)">oz/gal(UK)</option>
+                    <option value="oz/in³">oz/in³</option>
+                    <option value="lb/in³">lb/in³</option>
+                    <option value="slug/ft³">slug/ft³</option>
+                    <option value="ton/yd³(UK)">ton/yd³(UK)</option>
+                    <option value="ton/yd³(US)">ton/yd³(US)</option>
+                    <option value="g/cm³">g/cm³</option>
+                    <option value="mg/l">mg/l</option>
+                    <option value="mg/m³">mg/m³</option>
+                    <option value="SG.H2O(60°F)">SG.H2O(60°F)</option>
+                    <option value="SG.H2O(68°F)">SG.H2O(68°F)</option>
+                    <option value="SG.H2O(4°C)">SG.H2O(4°C)</option>
                     </Form.Select>
                   </td>
                 </tr>
@@ -454,7 +686,23 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td><Form.Control size="sm" value={formData.FluidN1Min || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
                   <td>
                     <Form.Select size="sm" value={formData.FluidN1Unit || 'mPa s'} onChange={(e) => handleInputChange('FluidN1Unit', e.target.value)}>
-                      <option value="mPa s">mPa s</option>
+                    <option value="">단위 선택</option>
+                    <option value="Pa s">Pa s</option>
+                    <option value="mPa s">mPa s</option>
+                    <option value="μPa s">μPa s</option>
+                    <option value="N s/m²">N s/m²</option>
+                    <option value="mN s/m²">mN s/m²</option>
+                    <option value="μN s/m²">μN s/m²</option>
+                    <option value="kp s/m²">kp s/m²</option>
+                    <option value="lb/(ft h)">lb/(ft h)</option>
+                    <option value="g/(cm s)">g/(cm s)</option>
+                    <option value="kp h/m²">kp h/m²</option>
+                    <option value="kg/(ft h)">kg/(ft h)</option>
+                    <option value="lb/(ft s)">lb/(ft s)</option>
+                    <option value="Poise">Poise</option>
+                    <option value="cP">cP</option>
+                    <option value="mP">mP</option>
+                    <option value="kg/(m s)">kg/(m s)</option>
                     </Form.Select>
                   </td>
                 </tr>
@@ -470,7 +718,13 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td><Form.Control size="sm" value={formData.FluidV1Min || ''} onChange={(e) => handleInputChange('FluidV1Min', e.target.value)} /></td>
                   <td>
                     <Form.Select size="sm" value={formData.FluidV1Unit || 'mm²/s'} onChange={(e) => handleInputChange('FluidV1Unit', e.target.value)}>
-                      <option value="mm²/s">mm²/s</option>
+                    <option value="">단위 선택</option>
+                    <option value="m²/s">m²/s</option>
+                    <option value="cST">cST</option>
+                    <option value="mm²/s">mm²/s</option>
+                    <option value="m²/h">m²/h</option>
+                    <option value="ft²/s">ft²/s</option>
+                    <option value="ft²/h">ft²/h</option>
                     </Form.Select>
                   </td>
                 </tr>
@@ -481,7 +735,45 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td><Form.Control size="sm" value={formData.FluidPV1Min || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
                   <td>
                     <Form.Select size="sm" value={formData.FluidPV1Unit || 'bar(a)'} onChange={(e) => handleInputChange('FluidPV1Unit', e.target.value)}>
-                      <option value="bar(a)">bar(a)</option>
+                    <option value="">단위 선택</option>
+                    <option value="bar(a)">bar(a)</option>
+                    <option value="mbar(a)">mbar(a)</option>
+                    <option value="Pa(a)">Pa(a)</option>
+                    <option value="kPa(a)">kPa(a)</option>
+                    <option value="MPa(a)">MPa(a)</option>
+                    <option value="at(a)">at(a)</option>
+                    <option value="atm(a)">atm(a)</option>
+                    <option value="kp/cm²(a)">kp/cm²(a)</option>
+                    <option value="N/m²(a)">N/m²(a)</option>
+                    <option value="N/mm²(a)">N/mm²(a)</option>
+                    <option value="Torr(a)">Torr(a)</option>
+                    <option value="mmHg(a)">mmHg(a)</option>
+                    <option value="mmH2O(a)">mmH2O(a)</option>
+                    <option value="psi(a)">psi(a)</option>
+                    <option value="ftH2O(a)">ftH2O(a)</option>
+                    <option value="inHg(a)">inHg(a)</option>
+                    <option value="inH2O(a)">inH2O(a)</option>
+                    <option value="lbf/ft²(a)">lbf/ft²(a)</option>
+                    <option value="bar(g)">bar(g)</option>
+                    <option value="mbar(g)">mbar(g)</option>
+                    <option value="Pa(g)">Pa(g)</option>
+                    <option value="kPa(g)">kPa(g)</option>
+                    <option value="MPa(g)">MPa(g)</option>
+                    <option value="at(g)">at(g)</option>
+                    <option value="atm(g)">atm(g)</option>
+                    <option value="kp/cm²(g)">kp/cm²(g)</option>
+                    <option value="N/m²(g)">N/m²(g)</option>
+                    <option value="N/mm²(g)">N/mm²(g)</option>
+                    <option value="Torr(g)">Torr(g)</option>
+                    <option value="mmHg(g)">mmHg(g)</option>
+                    <option value="mmH2O(g)">mmH2O(g)</option>
+                    <option value="psi(g)">psi(g)</option>
+                    <option value="ftH2O(g)">ftH2O(g)</option>
+                    <option value="inHg(g)">inHg(g)</option>
+                    <option value="inH2O(g)">inH2O(g)</option>
+                    <option value="lbf/ft²(g)">lbf/ft²(g)</option>
+                    <option value="kgf/cm²(a)">kgf/cm²(a)</option>
+                    <option value="kgf/cm²(g)">kgf/cm²(g)</option>
                     </Form.Select>
                   </td>
                 </tr>
@@ -492,7 +784,12 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td><Form.Control size="sm" value={formData.FluidTV1Min || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
                   <td>
                     <Form.Select size="sm" value={formData.FluidTV1Unit || '°C'} onChange={(e) => handleInputChange('FluidTV1Unit', e.target.value)}>
-                      <option value="°C">°C</option>
+                    <option value="">단위 선택</option>
+                    <option value="°C">°C</option>
+                    <option value="K">K</option>
+                    <option value="°F">°F</option>
+                    <option value="°Reaumur">°Reaumur</option>
+                    <option value="°Rankine">°Rankine</option>
                     </Form.Select>
                   </td>
                 </tr>
@@ -503,7 +800,17 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td><Form.Control size="sm" value={formData.FluidCF1Min || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
                   <td>
                     <Form.Select size="sm" value={formData.FluidCF1Unit || 'm/s'} onChange={(e) => handleInputChange('FluidCF1Unit', e.target.value)}>
-                      <option value="m/s">m/s</option>
+                    <option value="">단위 선택</option>
+                    <option value="m/s">m/s</option>
+                    <option value="ft/s">ft/s</option>
+                    <option value="mile/h">mile/h</option>
+                    <option value="ft/h">ft/h</option>
+                    <option value="ft/min">ft/min</option>
+                    <option value="in/s">in/s</option>
+                    <option value="km/h">km/h</option>
+                    <option value="in/min">in/min</option>
+                    <option value="cm/min">cm/min</option>
+                    <option value="mm/s">mm/s</option>
                     </Form.Select>
                   </td>
                 </tr>
@@ -640,22 +947,98 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                 <tr>
                   <td style={{ width: '45%', color: '#666', backgroundColor: '#DFDFDF' }}>Valve type</td>
                   <td>
-                    <Form.Select size="sm" value={formData.ValveType || ''} onChange={(e) => handleInputChange('ValveType', e.target.value)}>
-                      <option value="">선택</option>
-                      <option value="Straight globe valve">Straight globe valve</option>
-                      <option value="Angle globe valve">Angle globe valve</option>
-                      <option value="Ball valve">Ball valve</option>
-                      <option value="Butterfly valve">Butterfly valve</option>
-                    </Form.Select>
+                    <Form.Control
+                      size="sm"
+                      value={formData.ValveType || ''}
+                      readOnly
+                      style={{ backgroundColor: '#e9ecef' }}
+                    />
                   </td>
                 </tr>
                 <tr>
                   <td style={{ color: '#666', backgroundColor: '#DFDFDF' }}>Trim type</td>
                   <td>
-                    <Form.Select size="sm" value={formData.CONVALTrim || ''} onChange={(e) => handleInputChange('CONVALTrim', e.target.value)}>
+                    <Form.Select
+                      size="sm"
+                      value={formData.CONVALTrim || ''}
+                      onChange={(e) => handleInputChange('CONVALTrim', e.target.value)}
+                    >
                       <option value="">선택</option>
-                      <option value="Cage trim">Cage trim</option>
-                      <option value="Parabolic plug">Parabolic plug</option>
+                      {formData.ValveType === 'Straight globe valve' ? (
+                        // Straight globe valve용 Trim type 옵션
+                        <>
+                          <option value="Cage trim">Cage trim</option>
+                          <option value="Parabolic plug">Parabolic plug</option>
+                          <option value="V-port plug">V-port plug</option>
+                          <option value="Multi-hole trim">Multi-hole trim</option>
+                          <option value="Contoured plug">Contoured plug</option>
+                          <option value="Multi stage - multi channel">Multi stage - multi channel</option>
+                        </>
+                      ) : formData.ValveType === 'Angle Y-seated valve' ? (
+                        // Angle Y-seated valve용 Trim type 옵션
+                        <>
+                          <option value="Cage trim">Cage trim</option>
+                          <option value="Parabolic plug">Parabolic plug</option>
+                          <option value="V-port plug">V-port plug</option>
+                          <option value="Multi-hole trim">Multi-hole trim</option>
+                          <option value="Contoured plug">Contoured plug</option>
+                          <option value="Multi stage - multi channel">Multi stage - multi channel</option>
+                        </>
+                      ) : formData.ValveType === 'Rotary plug valve' ? (
+                        // Rotary plug valve용 Trim type 옵션
+                        <>
+                          <option value="Eccentric ball valve">Eccentric ball valve</option>
+                          <option value="Eccentric plug valve">Eccentric plug valve</option>
+                          <option value="Low-noise plug">Low-noise plug</option>
+                        </>
+                      ) : formData.ValveType === 'Angle globe valve' ? (
+                        // Angle globe valve용 Trim type 옵션
+                        <>
+                          <option value="Cage trim">Cage trim</option>
+                          <option value="Parabolic plug">Parabolic plug</option>
+                          <option value="V-port plug">V-port plug</option>
+                          <option value="Multi-hole trim">Multi-hole trim</option>
+                          <option value="Contoured plug">Contoured plug</option>
+                          <option value="Multi stage - multi channel">Multi stage - multi channel</option>
+                        </>
+                      ) : formData.ValveType === 'Butterfly valve' ? (
+                        // Butterfly valve용 Trim type 옵션
+                        <>
+                          <option value="Centric swing through 90°">Centric swing through 90°</option>
+                          <option value="Centric swing through 70°">Centric swing through 70°</option>
+                          <option value="Fluted vane 70°">Fluted vane 70°</option>
+                          <option value="Eccentric">Eccentric</option>
+                          <option value="Centric swing through 60°">Centric swing through 60°</option>
+                          <option value="Double eccentric">Double eccentric</option>
+                          <option value="Triple eccentric">Triple eccentric</option>
+                          <option value="Centric reinforced">Centric reinforced</option>
+                        </>
+                      ) : formData.ValveType === 'Sleeved plug valve' ? (
+                        // Sleeved plug valve용 Trim type 옵션
+                        <>
+                          <option value="Segmented port">Segmented port</option>
+                          <option value="Full port">Full port</option>
+                          <option value="Low-noise plug">Low-noise plug</option>
+                        </>
+                      ) : formData.ValveType === 'Ball valve' ? (
+                        // Ball valve용 Trim type 옵션
+                        <>
+                          <option value="Segmented port">Segmented port</option>
+                          <option value="Full port">Full port</option>
+                          <option value="Low-noise plug">Low-noise plug</option>
+                        </>
+                      ) : formData.ValveType === 'Axial valve' ? (
+                        // Axial valve용 Trim type 옵션
+                        <>
+                          <option value="Standard plug">Standard plug</option>
+                          <option value="Low-noise plug">Low-noise plug</option>
+                        </>
+                      ) : (
+                        // 기본 옵션 (Valve type이 선택되지 않은 경우)
+                        <>
+                          <option value="">-- trim type 없음 --</option>
+                        </>
+                      )}
                     </Form.Select>
                   </td>
                 </tr>
@@ -663,9 +1046,10 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td style={{ color: '#666', backgroundColor: '#DFDFDF' }}>Flow direction</td>
                   <td>
                     <Form.Select size="sm" value={formData.FlowDirection || ''} onChange={(e) => handleInputChange('FlowDirection', e.target.value)}>
-                      <option value="">선택</option>
-                      <option value="FTO">FTO</option>
-                      <option value="FTC">FTC</option>
+                    <option value="">선택</option>
+                    <option value="FTO">FTO</option>
+                    <option value="FTC">FTC</option>
+                    <option value="Arbitrary">Arbitrary</option>
                     </Form.Select>
                   </td>
                 </tr>
@@ -673,9 +1057,11 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td style={{ color: '#666', backgroundColor: '#DFDFDF' }}>Valve performance class</td>
                   <td>
                     <Form.Select size="sm" value={formData.ValvePerformClass || ''} onChange={(e) => handleInputChange('ValvePerformClass', e.target.value)}>
-                      <option value="">선택</option>
-                      <option value="Heavy duty valve">Heavy duty valve</option>
-                      <option value="Multi stage valve">Multi stage valve</option>
+                    <option value="">선택</option>
+                    <option value="Heavy duty valve">Heavy duty valve</option>
+                    <option value="Multi stage valve">Multi stage valve</option>
+                    <option value="Multi stage valve (heavy duty)">Multi stage valve (heavy duty)</option>
+                    <option value="Special valve">Special valve</option>
                     </Form.Select>
                   </td>
                 </tr>
@@ -683,9 +1069,14 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td style={{ color: '#666', backgroundColor: '#DFDFDF' }}>Protection</td>
                   <td>
                     <Form.Select size="sm" value={formData.Protection || ''} onChange={(e) => handleInputChange('Protection', e.target.value)}>
-                      <option value="">선택</option>
-                      <option value="Hardened seat/plug">Hardened seat/plug</option>
-                      <option value="Non-hardened">Non-hardened</option>
+                    <option value="">선택</option>
+                  <option value="Non-hardened">Non-hardened</option>
+                  <option value="Hardened seat/plug">Hardened seat/plug</option>
+                  <option value="Hardened seat/plug and outlet-liner">Hardened seat/plug and outlet-liner</option>
+                  <option value="Soft sealing">Soft sealing</option>
+                  <option value="PTFE/PFA liner">PTFE/PFA liner</option>
+                  <option value="Ceramic alloy trim">Ceramic alloy trim</option>
+                  <option value="Ceramic alloy trim and body">Ceramic alloy trim and body</option>
                     </Form.Select>
                   </td>
                 </tr>
@@ -702,9 +1093,11 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td style={{ width: '45%', color: '#666', backgroundColor: '#DFDFDF' }}>Basic characteristic</td>
                   <td>
                     <Form.Select size="sm" value={formData.BasicCharacter || ''} onChange={(e) => handleInputChange('BasicCharacter', e.target.value)}>
-                      <option value="">선택</option>
-                      <option value="Linear">Linear</option>
-                      <option value="Equal percentage">Equal percentage</option>
+                    <option value="">선택</option>
+                  <option value="Equal percentage">Equal percentage</option>
+                  <option value="Linear">Linear</option>
+                  <option value="Modified">Modified</option>
+                  <option value="On/off">On/off</option>
                     </Form.Select>
                   </td>
                 </tr>
@@ -714,7 +1107,8 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                     <div className="d-flex gap-2">
                       <Form.Control size="sm" value={formData.TheoreticalRangeability || ''} onChange={(e) => handleInputChange('TheoreticalRangeability', e.target.value)} style={{ maxWidth: '80px' }} />
                       <Form.Select size="sm" value={formData.TheoreticalRangeabilityUnit || '%'} onChange={(e) => handleInputChange('TheoreticalRangeabilityUnit', e.target.value)} style={{ maxWidth: '60px' }}>
-                        <option value="%">%</option>
+                      <option value="%">%</option>
+                      <option value="-">-</option>
                       </Form.Select>
                     </div>
                   </td>
@@ -724,9 +1118,10 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td>
                     <div className="d-flex gap-2">
                       <Form.Control size="sm" value={formData.FlowCoeff || ''} readOnly style={{ backgroundColor: '#e9ecef', maxWidth: '80px' }} />
-                      <Form.Select size="sm" value={formData.FlowCoeffUnit || 'GMP(US)'} onChange={(e) => handleInputChange('FlowCoeffUnit', e.target.value)} style={{ maxWidth: '100px' }}>
-                        <option value="GMP(US)">GMP(US)</option>
-                        <option value="m³/h">m³/h</option>
+                      <Form.Select size="sm" value={formData.FlowCoeffUnit || 'm³/h'} onChange={(e) => handleInputChange('FlowCoeffUnit', e.target.value)} style={{ maxWidth: '100px' }}>
+                      <option value="">단위 선택</option>
+                    <option value="m³/h">m³/h</option>
+                    <option value="GPM(US)">GPM(US)</option>
                       </Form.Select>
                     </div>
                   </td>
@@ -736,9 +1131,10 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td>
                     <div className="d-flex gap-2">
                       <Form.Control size="sm" value={formData.NorFlowCoeff || ''} onChange={(e) => handleInputChange('NorFlowCoeff', e.target.value)} style={{ maxWidth: '80px' }} />
-                      <Form.Select size="sm" value={formData.FlowCoeffUnit || 'GMP(US)'} onChange={(e) => handleInputChange('FlowCoeffUnit', e.target.value)} style={{ maxWidth: '100px' }}>
-                        <option value="GMP(US)">GMP(US)</option>
-                        <option value="m³/h">m³/h</option>
+                      <Form.Select size="sm" value={formData.FlowCoeffUnit || 'm³/h'} onChange={(e) => handleInputChange('FlowCoeffUnit', e.target.value)} style={{ maxWidth: '100px' }}>
+                      <option value="">단위 선택</option>
+                    <option value="m³/h">m³/h</option>
+                    <option value="GPM(US)">GPM(US)</option>
                       </Form.Select>
                     </div>
                   </td>
@@ -747,9 +1143,10 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td style={{ color: '#666', backgroundColor: '#DFDFDF' }}>Size and pressure class</td>
                   <td>
                     <Form.Select size="sm" value={formData.SizePressureClass || ''} onChange={(e) => handleInputChange('SizePressureClass', e.target.value)}>
-                      <option value="">선택</option>
-                      <option value="ANSI">ANSI</option>
-                      <option value="DIN">DIN</option>
+                    <option value="">선택</option>
+                  <option value="ANSI">ANSI</option>
+                  <option value="DIN (legacy)">DIN (legacy)</option>
+                  <option value="EN (metric)">EN (metric)</option>
                     </Form.Select>
                   </td>
                 </tr>
@@ -757,10 +1154,32 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td style={{ color: '#666', backgroundColor: '#DFDFDF' }}>Selected valve size</td>
                   <td>
                     <Form.Select size="sm" value={formData.BodySize || ''} onChange={(e) => handleInputChange('BodySize', e.target.value)}>
-                      <option value="">선택</option>
-                      <option value='1/2"'>1/2"</option>
-                      <option value='1"'>1"</option>
-                      <option value='2"'>2"</option>
+                    <option value="">선택</option>
+                  <option value={'1/2"'}>1/2"</option>
+                  <option value={'3/4"'}>3/4"</option>
+                  <option value={'1"'}>1"</option>
+                  <option value={'1 1/4"'}>1 1/4"</option>
+                  <option value={'1 1/2"'}>1 1/2"</option>
+                  <option value={'2"'}>2"</option>
+                  <option value={'2 1/2"'}>2 1/2"</option>
+                  <option value={'3"'}>3"</option>
+                  <option value={'4"'}>4"</option>
+                  <option value={'5"'}>5"</option>
+                  <option value={'6"'}>6"</option>
+                  <option value={'8"'}>8"</option>
+                  <option value={'10"'}>10"</option>
+                  <option value={'12"'}>12"</option>
+                  <option value={'14"'}>14"</option>
+                  <option value={'16"'}>16"</option>
+                  <option value={'18"'}>18"</option>
+                  <option value={'20"'}>20"</option>
+                  <option value={'22"'}>22"</option>
+                  <option value={'24"'}>24"</option>
+                  <option value={'26"'}>26"</option>
+                  <option value={'28"'}>28"</option>
+                  <option value={'30"'}>30"</option>
+                  <option value={'32"'}>32"</option>
+                  <option value={'36"'}>36"</option>
                     </Form.Select>
                   </td>
                 </tr>
@@ -768,10 +1187,14 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td style={{ color: '#666', backgroundColor: '#DFDFDF' }}>Pressure class</td>
                   <td>
                     <Form.Select size="sm" value={formData.PressureClass || ''} onChange={(e) => handleInputChange('PressureClass', e.target.value)}>
-                      <option value="">선택</option>
-                      <option value="class 150">class 150</option>
-                      <option value="class 300">class 300</option>
-                      <option value="class 600">class 600</option>
+                    <option value="">선택</option>
+                  <option value="class 150">class 150</option>
+                  <option value="class 300">class 300</option>
+                  <option value="class 600">class 600</option>
+                  <option value="class 900">class 900</option>
+                  <option value="class 1500">class 1500</option>
+                  <option value="class 2500">class 2500</option>
+                  <option value="class 4500">class 4500</option>
                     </Form.Select>
                   </td>
                 </tr>
@@ -800,7 +1223,8 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td><Form.Control size="sm" value={formData.SS100Min || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
                   <td>
                     <Form.Select size="sm" value={formData.SS100Unit || '%'} onChange={(e) => handleInputChange('SS100Unit', e.target.value)}>
-                      <option value="%">%</option>
+                    <option value="%">%</option>
+                    <option value="-">-</option>
                     </Form.Select>
                   </td>
                 </tr>
@@ -810,8 +1234,18 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   <td><Form.Control size="sm" value={formData.U1Nor || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
                   <td><Form.Control size="sm" value={formData.U1Min || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
                   <td>
-                    <Form.Select size="sm" value={formData.U1Unit || 'kg/m3'} onChange={(e) => handleInputChange('U1Unit', e.target.value)}>
-                      <option value="kg/m3">kg/m3</option>
+                    <Form.Select size="sm" value={formData.U1Unit || 'm/s'} onChange={(e) => handleInputChange('U1Unit', e.target.value)}>
+                    <option value="">단위 선택</option>
+                    <option value="m/s">m/s</option>
+                    <option value="ft/s">ft/s</option>
+                    <option value="mile/h">mile/h</option>
+                    <option value="ft/h">ft/h</option>
+                    <option value="ft/min">ft/min</option>
+                    <option value="in/s">in/s</option>
+                    <option value="km/h">km/h</option>
+                    <option value="in/min">in/min</option>
+                    <option value="cm/min">cm/min</option>
+                    <option value="mm/s">mm/s</option>
                     </Form.Select>
                   </td>
                 </tr>
