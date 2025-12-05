@@ -197,6 +197,52 @@ const StatusDistributionChart: React.FC<{ data: StatusDistributionDto }> = ({ da
 
 // 전환율 혼합 차트 컴포넌트
 const ConversionRateComposedChart: React.FC<{ data: ConversionRateDto[] }> = ({ data }) => {
+  // 범례 순서를 명시적으로 제어하는 커스텀 렌더러
+  const renderCustomLegend = (props: any) => {
+    const { payload } = props;
+    if (!payload) return null;
+
+    // 원하는 순서대로 정렬: 전체 요청, 완료, 주문, 전환율 (%)
+    const orderMap: { [key: string]: number } = {
+      '전체 요청': 0,
+      '완료': 1,
+      '주문': 2,
+      '전환율 (%)': 3
+    };
+
+    const sortedPayload = [...payload].sort((a, b) => {
+      const orderA = orderMap[a.value] !== undefined ? orderMap[a.value] : 999;
+      const orderB = orderMap[b.value] !== undefined ? orderMap[b.value] : 999;
+      return orderA - orderB;
+    });
+
+    return (
+      <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', justifyContent: 'center', flexWrap: 'wrap' }}>
+        {sortedPayload.map((entry: any, index: number) => (
+          <li key={`item-${index}`} style={{ display: 'flex', alignItems: 'center', margin: '0 10px', marginBottom: '5px' }}>
+            {entry.type === 'line' ? (
+              <svg width="20" height="20" style={{ marginRight: '5px' }}>
+                <line x1="0" y1="10" x2="20" y2="10" stroke={entry.color} strokeWidth="2" />
+                <circle cx="10" cy="10" r="3" fill={entry.color} />
+              </svg>
+            ) : (
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: '14px',
+                  height: '14px',
+                  backgroundColor: entry.color,
+                  marginRight: '5px'
+                }}
+              />
+            )}
+            <span>{entry.value}</span>
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
   return (
     <div className="chart-container">
       <h3>전환율 추이</h3>
@@ -207,7 +253,7 @@ const ConversionRateComposedChart: React.FC<{ data: ConversionRateDto[] }> = ({ 
           <YAxis yAxisId="left" label={{ value: '건수', angle: -90, position: 'insideLeft' }} />
           <YAxis yAxisId="right" orientation="right" label={{ value: '전환율 (%)', angle: 90, position: 'insideRight' }} domain={[0, 100]} />
           <Tooltip />
-          <Legend />
+          <Legend content={renderCustomLegend} />
           <Bar yAxisId="left" dataKey="totalRequests" fill="#8884d8" name="전체 요청" />
           <Bar yAxisId="left" dataKey="completedQuotes" fill="#82ca9d" name="완료" />
           <Bar yAxisId="left" dataKey="actualOrders" fill="#1e40af" name="주문" />
@@ -407,8 +453,8 @@ const StatisticsPage: React.FC = () => {
 
   return (
     <div className="dashboard-page">
-      <div className="page">
-        <h1>📊 통계 분석</h1>
+    <div className="page">
+      <h1>📊 통계 분석</h1>
 
         {/* 탭 메뉴 */}
         <TabMenu active={activeTab} onSelect={setActiveTab} />
@@ -470,4 +516,4 @@ const StatisticsPage: React.FC = () => {
   );
 };
 
-export default StatisticsPage;
+export default StatisticsPage; 

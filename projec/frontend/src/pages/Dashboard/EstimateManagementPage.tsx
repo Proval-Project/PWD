@@ -44,8 +44,16 @@ const EstimateManagementPage: React.FC = () => {
 
   // 필터
   const [searchKeyword, setSearchKeyword] = useState('');
+  // 오늘 날짜를 YYYY-MM-DD 형식으로 변환
+  const getTodayDateString = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
   const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [endDate, setEndDate] = useState(getTodayDateString()); // 초기값: 오늘 날짜
   const [statusFilter, setStatusFilter] = useState<string>('');
 
   // 페이징
@@ -59,9 +67,9 @@ const EstimateManagementPage: React.FC = () => {
     try {
       const params = {
         searchKeyword: searchKeyword || undefined,
-        // startDate, endDate 제거 - 전체 데이터 조회
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
         status: statusFilter ? parseInt(statusFilter) : undefined,
-        // excludeStatus 제거 - 서버에서 지원하지 않을 수 있음
         page,
         pageSize,
         isDescending: true,
@@ -91,7 +99,8 @@ const EstimateManagementPage: React.FC = () => {
       setItems(filteredItems);
       setCurrentPage(response.CurrentPage || response.currentPage || 1);
       setTotalPages(response.TotalPages || response.totalPages || 1);
-      setTotalCount(filteredItems.length); // 필터링된 결과의 실제 개수
+      // 서버에서 반환한 전체 건수 사용 (필터링 적용된 전체 건수)
+      setTotalCount(response.TotalCount || response.totalCount || 0);
     } catch (err) {
       console.error('견적 목록 조회 실패:', err);
     } finally {
@@ -102,17 +111,21 @@ const EstimateManagementPage: React.FC = () => {
   useEffect(() => {
     const userStr = localStorage.getItem('user');
     if (userStr) setCurrentUser(JSON.parse(userStr));
-
-    // 날짜 필터 제거 - 전체 데이터 조회
-    setStartDate('');
-    setEndDate('');
   }, []);
 
   useEffect(() => {
-    // 날짜 필터 없이 바로 데이터 조회
+    // 상태 필터 변경 시 데이터 조회
     fetchData(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
+
+  useEffect(() => {
+    // 날짜 필터 변경 시 데이터 조회
+    if (startDate || endDate) {
+      fetchData(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startDate, endDate]);
 
   const handlePageChange = (page: number) => {
     fetchData(page);
@@ -176,7 +189,18 @@ const EstimateManagementPage: React.FC = () => {
                 className="calendar-icon"
                 onClick={() => (document.getElementById("startDate") as HTMLInputElement)?.showPicker?.()}
               />
-              <input type="date" id="startDate" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              <input 
+                type="date" 
+                id="startDate" 
+                value={startDate} 
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  // 날짜 변경 시 즉시 검색 (useEffect에서도 처리되지만 명시적으로 호출)
+                  if (e.target.value || endDate) {
+                    setTimeout(() => fetchData(1), 100);
+                  }
+                }} 
+              />
             </div>
             <span>~</span>
             <div className="date-picker">
@@ -184,7 +208,18 @@ const EstimateManagementPage: React.FC = () => {
                 className="calendar-icon"
                 onClick={() => (document.getElementById("endDate") as HTMLInputElement)?.showPicker?.()}
               />
-              <input type="date" id="endDate" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              <input 
+                type="date" 
+                id="endDate" 
+                value={endDate} 
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  // 날짜 변경 시 즉시 검색 (useEffect에서도 처리되지만 명시적으로 호출)
+                  if (startDate || e.target.value) {
+                    setTimeout(() => fetchData(1), 100);
+                  }
+                }} 
+              />
             </div>
           </div>
 
