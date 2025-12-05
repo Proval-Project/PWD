@@ -92,41 +92,23 @@ const CustomerDataDisplay = ({ data, isLoading }) => {
                 </tr>
                 <tr>
                   <td style={{ ...labelStyle, ...rowBorder }}>
-                    <div className="d-flex align-items-center">
-                      <Form.Check 
-                        type="checkbox" 
-                        checked={!!data?.Density} 
-                        readOnly 
-                        className="me-2"
-                        style={{ marginTop: 0 }}
-                      />
-                      Density
-                    </div>
+                    Density
                   </td>
                   <td style={{ ...rowBorder, padding: 0 }}>
                     <div style={{ display: 'flex' }}>
                       <span style={{ ...valueStyle, width: '50%', borderRight: `1px solid ${borderColor}` }}>{data?.Density || '-'}</span>
-                      <span style={{ ...valueStyle, width: '50%' }} className="text-muted">{data?.DensityUnit || 'kg/m3'}</span>
+                      <span style={{ ...valueStyle, width: '50%' }} className="text-muted">{data?.DensityUnit || '-'}</span>
                     </div>
                   </td>
                 </tr>
                 <tr>
                   <td style={{ ...labelStyle }}>
-                    <div className="d-flex align-items-center">
-                      <Form.Check 
-                        type="checkbox" 
-                        checked={!!data?.Molecular} 
-                        readOnly 
-                        className="me-2"
-                        style={{ marginTop: 0 }}
-                      />
-                      Molecular
-                    </div>
+                    Molecular
                   </td>
                   <td style={{ padding: 0 }}>
                     <div style={{ display: 'flex' }}>
                       <span style={{ ...valueStyle, width: '50%', borderRight: `1px solid ${borderColor}` }}>{data?.Molecular || '-'}</span>
-                      <span style={{ ...valueStyle, width: '50%' }} className="text-muted">{data?.MolecularWeightUnit || 'kg.lmol'}</span>
+                      <span style={{ ...valueStyle, width: '50%' }} className="text-muted">{data?.MolecularWeightUnit || '-'}</span>
                     </div>
                   </td>
                 </tr>
@@ -153,62 +135,42 @@ const CustomerDataDisplay = ({ data, isLoading }) => {
                   <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.InletTemperatureQ ?? '-'}</td>
                   <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.InletTemperatureNorQ ?? '-'}</td>
                   <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.InletTemperatureMinQ ?? '-'}</td>
-                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.TemperatureUnit || 'kgf/cm²(g)'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.TemperatureUnit || '-'}</td>
                 </tr>
                 <tr>
                   <td className="text-center" style={{ backgroundColor: '#DFDFDF' }}>p1</td>
                   <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.InletPressureMaxQ ?? '-'}</td>
                   <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.InletPressureNorQ ?? '-'}</td>
                   <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.InletPressureMinQ ?? '-'}</td>
-                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.PressureUnit || 'Mpa(g)'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.PressureUnit || '-'}</td>
                 </tr>
                 <tr>
-                  <td style={{ backgroundColor: '#DFDFDF' }}>
-                    <div className="d-flex align-items-center justify-content-center">
-                      <Form.Check type="checkbox" checked={!!data?.OutletPressureMaxQ} readOnly className="me-1" />
-                      p2
-                    </div>
-                  </td>
+                  <td className="text-center" style={{ backgroundColor: '#DFDFDF' }}>p2</td>
                   <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.OutletPressureMaxQ ?? '-'}</td>
                   <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.OutletPressureNorQ ?? '-'}</td>
                   <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.OutletPressureMinQ ?? '-'}</td>
-                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.PressureUnit || 'Mpa(g)'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.PressureUnit || '-'}</td>
                 </tr>
                 <tr>
-                  <td style={{ backgroundColor: '#DFDFDF' }}>
-                    <div className="d-flex align-items-center justify-content-center">
-                      <Form.Check type="checkbox" checked={!!data?.DifferentialPressureMaxQ} readOnly className="me-1" />
-                      Δp
-                    </div>
-                  </td>
+                  <td className="text-center" style={{ backgroundColor: '#DFDFDF' }}>Δp</td>
                   <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.DifferentialPressureMaxQ ?? '-'}</td>
                   <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.DifferentialPressureNorQ ?? '-'}</td>
                   <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.DifferentialPressureMinQ ?? '-'}</td>
-                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.PressureUnit || 'Mpa(g)'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.PressureUnit || '-'}</td>
                 </tr>
                 <tr>
-                  <td style={{ backgroundColor: '#DFDFDF' }}>
-                    <div className="d-flex align-items-center justify-content-center">
-                      <Form.Check type="checkbox" checked={!!data?.QMMax} readOnly className="me-1" />
-                      qm
-                    </div>
-                  </td>
+                  <td className="text-center" style={{ backgroundColor: '#DFDFDF' }}>qm</td>
                   <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.QMMax ?? '-'}</td>
                   <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.QMNor ?? '-'}</td>
                   <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.QMMin ?? '-'}</td>
-                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.QMUnit || 't/h'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.QMUnit || '-'}</td>
                 </tr>
                 <tr>
-                  <td style={{ backgroundColor: '#DFDFDF' }}>
-                    <div className="d-flex align-items-center justify-content-center">
-                      <Form.Check type="checkbox" checked={!!data?.QNMax} readOnly className="me-1" />
-                      qn
-                    </div>
-                  </td>
+                  <td className="text-center" style={{ backgroundColor: '#DFDFDF' }}>qn</td>
                   <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.QNMax ?? '-'}</td>
                   <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.QNNor ?? '-'}</td>
                   <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.QNMin ?? '-'}</td>
-                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.QNUnit || 'm3/h'}</td>
+                  <td className="text-center" style={{ backgroundColor: '#EFEFEF' }}>{data?.QNUnit || '-'}</td>
                 </tr>
               </tbody>
             </Table>
@@ -230,7 +192,7 @@ const CustomerDataDisplay = ({ data, isLoading }) => {
                   <td style={{ ...labelStyle, ...rowBorder }}>Size</td>
                   <td style={{ ...rowBorder, padding: 0 }}>
                     <div style={{ display: 'flex' }}>
-                      <span style={{ ...valueStyle, width: '50%', borderRight: `1px solid ${borderColor}` }}>{data?.BodySizeUnit || 'inch'}</span>
+                      <span style={{ ...valueStyle, width: '50%', borderRight: `1px solid ${borderColor}` }}>{data?.BodySizeUnit || '-'}</span>
                       <span style={{ ...valueStyle, width: '50%' }}>{data?.BodySize || '-'}</span>
                     </div>
                   </td>
@@ -251,7 +213,7 @@ const CustomerDataDisplay = ({ data, isLoading }) => {
                   <td style={{ ...labelStyle }}>Rating</td>
                   <td style={{ padding: 0 }}>
                     <div style={{ display: 'flex' }}>
-                      <span style={{ ...valueStyle, width: '50%', borderRight: `1px solid ${borderColor}` }}>{data?.BodyRatingUnit || 'JIS'}</span>
+                      <span style={{ ...valueStyle, width: '50%', borderRight: `1px solid ${borderColor}` }}>{data?.BodyRatingUnit || '-'}</span>
                       <span style={{ ...valueStyle, width: '50%' }}>{data?.BodyRating || '-'}</span>
                     </div>
                   </td>
@@ -292,7 +254,7 @@ const CustomerDataDisplay = ({ data, isLoading }) => {
                 </tr>
                 <tr>
                   <td style={{ ...labelStyle, ...rowBorder }}>Explosion proof</td>
-                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.ExplosionProof || 'No'}</td>
+                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.ExplosionProof || '-'}</td>
                 </tr>
                 <tr>
                   <td style={{ ...labelStyle, ...rowBorder }}>Transmitter</td>

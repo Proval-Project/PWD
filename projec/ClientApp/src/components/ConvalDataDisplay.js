@@ -269,10 +269,20 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   </td>
                 </tr>
                 <tr>
-                  <td style={{ color: '#666', backgroundColor: '#DFDFDF' }}>Density</td>
+                <td style={{ backgroundColor: '#DFDFDF' }}>
+                  <div className="d-flex align-items-center justify-content-center">
+                    <Form.Check
+                      type="checkbox"
+                      checked={massType === 'density'}
+                      onChange={() => setMassType('density')}
+                      className="me-1"
+                    />
+                    Density
+                  </div>
+                </td>
                   <td>
                     <div className="d-flex gap-2">
-                      <Form.Control size="sm" value={formData.Density || ''} onChange={(e) => handleInputChange('Density', e.target.value)} style={{ maxWidth: '100px' }} />
+                      <Form.Control size="sm" value={formData.Density || ''} onChange={(e) => handleInputChange('Density', e.target.value)} style={{ maxWidth: '100px' } } disabled={massType !== 'density'} />
                       <Form.Select size="sm" value={formData.DensityUnit || 'kg/m³'} onChange={(e) => handleInputChange('DensityUnit', e.target.value)} style={{ maxWidth: '100px' }}>
                       <option value="">단위 선택</option>
                       <option value="kg/m³">kg/m³</option>
@@ -300,10 +310,20 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                   </td>
                 </tr>
                 <tr>
-                  <td style={{ color: '#666', backgroundColor: '#DFDFDF' }}>Molecular</td>
+                <td style={{ backgroundColor: '#DFDFDF' }}>
+                  <div className="d-flex align-items-center justify-content-center">
+                    <Form.Check
+                      type="checkbox"
+                      checked={massType === 'molecular'}
+                      onChange={() => setMassType('molecular')}
+                      className="me-1"
+                    />
+                    Molecular
+                  </div>
+                </td>
                   <td>
                     <div className="d-flex gap-2">
-                      <Form.Control size="sm" value={formData.Molecular || ''} onChange={(e) => handleInputChange('Molecular', e.target.value)} style={{ maxWidth: '100px' }} />
+                      <Form.Control size="sm" value={formData.Molecular || ''} onChange={(e) => handleInputChange('Molecular', e.target.value)} style={{ maxWidth: '100px' } } disabled={massType !== 'molecular'} />
                       <Form.Select size="sm" value={formData.MolecularWeightUnit || 'kg/kmol'} onChange={(e) => handleInputChange('MolecularWeightUnit', e.target.value)} style={{ maxWidth: '100px' }}>
                       <option value="">단위 선택</option>
                       <option value="kg/kmol">kg/kmol</option>
@@ -608,12 +628,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
               </thead>
               <tbody>
                 <tr>
-                  <td style={{ backgroundColor: '#DFDFDF' }}>
-                    <div className="d-flex align-items-center justify-content-center">
-                      <Form.Check type="checkbox" checked readOnly className="me-1" />
-                      ϱ1
-                    </div>
-                  </td>
+                  <td className="text-center" style={{ backgroundColor: '#DFDFDF' }}>ϱ1</td>
                   <td><Form.Control size="sm" value={formData.FluidP1Max || ''} onChange={(e) => handleInputChange('FluidP1Max', e.target.value)} /></td>
                   <td><Form.Control size="sm" value={formData.FluidP1Nor || ''} onChange={(e) => handleInputChange('FluidP1Nor', e.target.value)} /></td>
                   <td><Form.Control size="sm" value={formData.FluidP1Min || ''} onChange={(e) => handleInputChange('FluidP1Min', e.target.value)} /></td>
@@ -681,9 +696,9 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                       η1
                     </div>
                   </td>
-                  <td><Form.Control size="sm" value={formData.FluidN1Max || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
-                  <td><Form.Control size="sm" value={formData.FluidN1Nor || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
-                  <td><Form.Control size="sm" value={formData.FluidN1Min || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
+                  <td><Form.Control size="sm" value={formData.FluidN1Max || ''} readOnly style={{ backgroundColor: '#e9ecef' }} disabled={fluidType !== 'n1'} /></td>
+                  <td><Form.Control size="sm" value={formData.FluidN1Nor || ''} readOnly style={{ backgroundColor: '#e9ecef' }} disabled={fluidType !== 'n1'} /></td>
+                  <td><Form.Control size="sm" value={formData.FluidN1Min || ''} readOnly style={{ backgroundColor: '#e9ecef' }} disabled={fluidType !== 'n1'} /></td>
                   <td>
                     <Form.Select size="sm" value={formData.FluidN1Unit || 'mPa s'} onChange={(e) => handleInputChange('FluidN1Unit', e.target.value)}>
                     <option value="">단위 선택</option>
@@ -713,9 +728,9 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                       ν1
                     </div>
                   </td>
-                  <td><Form.Control size="sm" value={formData.FluidV1Max || ''} onChange={(e) => handleInputChange('FluidV1Max', e.target.value)} /></td>
-                  <td><Form.Control size="sm" value={formData.FluidV1Nor || ''} onChange={(e) => handleInputChange('FluidV1Nor', e.target.value)} /></td>
-                  <td><Form.Control size="sm" value={formData.FluidV1Min || ''} onChange={(e) => handleInputChange('FluidV1Min', e.target.value)} /></td>
+                  <td><Form.Control size="sm" value={formData.FluidV1Max || ''} onChange={(e) => handleInputChange('FluidV1Max', e.target.value)} disabled={fluidType !== 'v1'} /></td>
+                  <td><Form.Control size="sm" value={formData.FluidV1Nor || ''} onChange={(e) => handleInputChange('FluidV1Nor', e.target.value)} disabled={fluidType !== 'v1'} /></td>
+                  <td><Form.Control size="sm" value={formData.FluidV1Min || ''} onChange={(e) => handleInputChange('FluidV1Min', e.target.value)} disabled={fluidType !== 'v1'} /></td>
                   <td>
                     <Form.Select size="sm" value={formData.FluidV1Unit || 'mm²/s'} onChange={(e) => handleInputChange('FluidV1Unit', e.target.value)}>
                     <option value="">단위 선택</option>
