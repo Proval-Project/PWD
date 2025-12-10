@@ -2773,15 +2773,63 @@ div.valve-item-detail span {
   margin-bottom: 10px !important;
   border: none !important;
   table-layout: fixed !important; /* 테이블 레이아웃 고정 */
+  position: relative !important; /* stacking context 조정 */
+}
+
+/* 테이블의 tbody와 tr도 overflow visible 설정 */
+.estimate-detail-page .spec-section-detail .acc-properties-table tbody {
+  overflow: visible !important;
+  position: relative !important;
+}
+
+.estimate-detail-page .spec-section-detail .acc-properties-table tr {
+  overflow: visible !important;
+  position: relative !important;
+  isolation: isolate !important; /* 각 행의 stacking context 분리 */
 }
 
 .estimate-detail-page .spec-section-detail .acc-properties-table td {
-  padding: 8px 12px !important; /* 사진처럼 적당한 패딩 */
+  padding: 8px 12px !important;
   border-bottom: 1px solid #e5e7eb !important;
   vertical-align: middle !important;
-  min-height: 36px !important; /* 사진처럼 적당한 높이 */
-  height: 36px !important; /* 강제 높이 설정 */
+  min-height: 36px !important;
+  height: 36px !important;
   overflow: visible !important; /* 드롭다운이 보이도록 */
+  position: relative !important;
+}
+
+/* AccessorySelector 드롭다운 z-index 증가 */
+.accessory-selector {
+  position: relative !important;
+  width: 100%;
+  z-index: 1; /* 각 행 내에서의 기본 z-index */
+}
+
+.accessory-selector .dropdown-list {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  right: 0 !important;
+  background-color: #fff !important;
+  border: 1px solid #ced4da !important;
+  border-radius: 4px !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important;
+  max-height: 200px !important;
+  overflow-y: auto !important;
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 5px 0 0 0 !important;
+  z-index: 99999 !important; /* 매우 높은 z-index로 다른 모든 요소 위에 표시 */
+}
+
+/* 드롭다운이 열려있을 때 해당 행의 z-index 증가 */
+.estimate-detail-page .spec-section-detail .acc-properties-table tr:has(.accessory-selector .dropdown-list) {
+  z-index: 10 !important;
+  position: relative !important;
+}
+
+.estimate-detail-page .spec-section-detail .acc-properties-table tr:has(.accessory-selector .dropdown-list) td {
+  z-index: 10 !important;
   position: relative !important;
 }
 
