@@ -3289,6 +3289,66 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                     </tr>
                   </tbody>
                 </table>
+
+                <h4>ACT</h4>
+                <table className="act-properties-table">
+                  <tbody>
+                    <tr>
+                      <td>Action Type</td>
+                      <td>
+                        <select value={actSelections.actionType} onChange={(e) => handleActChange('actionType', e.target.value)} disabled={isReadOnly}>
+                          <option value="">선택하세요</option>
+                          {actTypeList && actTypeList.length > 0 && actTypeList.map((item: any) => (
+                            <option key={item.actTypeCode} value={item.actTypeCode}>
+                              {item.actType}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Series</td>
+                      <td>
+                        <select value={actSelections.series} onChange={(e) => handleActChange('series', e.target.value)} disabled={isReadOnly}>
+                          <option value="">선택하세요</option>
+                          {actSeriesList && actSeriesList.length > 0 && actSeriesList.map((item: any) => (
+                            <option key={item.actSeriesCode} value={item.actSeriesCode}>
+                              {item.actSeries}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Size</td>
+                      <td>
+                        <select value={actSelections.size} onChange={(e) => handleActChange('size', e.target.value)} disabled={!actSelections.series || isReadOnly}>
+                          <option value="">선택하세요</option>
+                          {actSizeList && actSizeList.length > 0 && 
+                            actSizeList.map((item: any) => (
+                              <option key={item.actSizeCode} value={item.actSizeCode}>
+                                {item.actSize}
+                              </option>
+                            ))
+                          }
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>H.W</td>
+                      <td>
+                        <select value={actSelections.hw} onChange={(e) => handleActChange('hw', e.target.value)} disabled={isReadOnly}>
+                          <option value="">선택하세요</option>
+                          {actHWList && actHWList.length > 0 && actHWList.map((item: any) => (
+                            <option key={item.hwCode} value={item.hwCode}>
+                              {item.hw}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
 
               {/* Trim 섹션 */}
@@ -3397,69 +3457,6 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                           {trimFormList && trimFormList.length > 0 && trimFormList.map((item: any) => (
                             <option key={item.trimFormCode} value={item.trimFormCode}>
                               {item.trimForm}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              {/* ACT 섹션 */}
-              <div className="spec-section-detail">
-                <h4>ACT</h4>
-                <table className="act-properties-table">
-                  <tbody>
-                    <tr>
-                      <td>Action Type</td>
-                      <td>
-                        <select value={actSelections.actionType} onChange={(e) => handleActChange('actionType', e.target.value)} disabled={isReadOnly}>
-                          <option value="">선택하세요</option>
-                          {actTypeList && actTypeList.length > 0 && actTypeList.map((item: any) => (
-                            <option key={item.actTypeCode} value={item.actTypeCode}>
-                              {item.actType}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Series</td>
-                      <td>
-                        <select value={actSelections.series} onChange={(e) => handleActChange('series', e.target.value)} disabled={isReadOnly}>
-                          <option value="">선택하세요</option>
-                          {actSeriesList && actSeriesList.length > 0 && actSeriesList.map((item: any) => (
-                            <option key={item.actSeriesCode} value={item.actSeriesCode}>
-                              {item.actSeries}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Size</td>
-                      <td>
-                        <select value={actSelections.size} onChange={(e) => handleActChange('size', e.target.value)} disabled={!actSelections.series || isReadOnly}>
-                          <option value="">선택하세요</option>
-                          {actSizeList && actSizeList.length > 0 && 
-                            actSizeList.map((item: any) => (
-                              <option key={item.actSizeCode} value={item.actSizeCode}>
-                                {item.actSize}
-                              </option>
-                            ))
-                          }
-                        </select>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>H.W</td>
-                      <td>
-                        <select value={actSelections.hw} onChange={(e) => handleActChange('hw', e.target.value)} disabled={isReadOnly}>
-                          <option value="">선택하세요</option>
-                          {actHWList && actHWList.length > 0 && actHWList.map((item: any) => (
-                            <option key={item.hwCode} value={item.hwCode}>
-                              {item.hw}
                             </option>
                           ))}
                         </select>

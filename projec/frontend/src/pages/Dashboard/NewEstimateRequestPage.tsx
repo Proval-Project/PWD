@@ -3171,6 +3171,182 @@ const NewEstimateRequestPage: React.FC = () => {
                       </tr>
                     </tbody>
                   </table>
+              
+              <div className="accessory-section">
+                <h4>Accessory</h4>
+                <table className="accessory-properties-table">
+                  <tbody>
+                    <tr>
+                      <td>Positioner</td>
+                      <td>
+                        <select 
+                          id="accessory-positioner"
+                          name="accessoryPositioner"
+                          value={currentValve.accessory.positioner.exists ? 'Yes' : 'No'}
+                          onChange={(e) => handleAccessoryChange('positioner.exists', e.target.value === 'Yes')}
+                          disabled={isReadOnly}
+                        >
+                          <option value="No">No</option>
+                          <option value="Yes">Yes</option>
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Type</td>
+                      <td>
+                        <select 
+                          id="accessory-type"
+                          name="accessoryType"
+                          value={currentValve.accessory.positioner.type || 'P.P'}
+                          onChange={(e) => handleAccessoryChange('positioner.type', e.target.value)}
+                          disabled={isReadOnly}
+                        >
+                          <option value="P.P">P.P</option>
+                          <option value="I.P">I.P</option>
+                          <option value="E.P">E.P</option>
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Explosion proof</td>
+                      <td>
+                        <select 
+                          id="accessory-explosion-proof"
+                          name="accessoryExplosionProof"
+                          value={currentValve.accessory.explosionProof || ''}
+                          onChange={(e) => handleAccessoryChange('explosionProof', e.target.value)}
+                          disabled={isReadOnly}
+                        >
+                          <option value="">선택하세요</option>
+                          <option value="No">No</option>
+                          <option value="Yes">Yes</option>
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Transmitter</td>
+                      <td>
+                        <select 
+                          id="accessory-transmitter"
+                          name="accessoryTransmitter"
+                          value={currentValve.accessory.transmitter.type || ''}
+                          onChange={(e) => handleAccessoryChange('transmitter.type', e.target.value)}
+                          disabled={isReadOnly}
+                        >
+                          <option value="">선택하세요</option>
+                          <option value="General">General</option>
+                          <option value="Special">Special</option>
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Solenoid Valve</td>
+                      <td>
+                        <select 
+                          id="accessory-solenoid-valve"
+                          name="accessorySolenoidValve"
+                          value={currentValve.accessory.solenoidValve.exists ? 'Yes' : 'No'}
+                          onChange={(e) => handleAccessoryChange('solenoidValve.exists', e.target.value === 'Yes')}
+                          disabled={isReadOnly}
+                        >
+                          <option value="No">No</option>
+                          <option value="Yes">Yes</option>
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Limit Switch</td>
+                      <td>
+                        <select 
+                          id="accessory-limit-switch"
+                          name="accessoryLimitSwitch"
+                          value={currentValve.accessory.limitSwitch.exists ? 'Yes' : 'No'}
+                          onChange={(e) => handleAccessoryChange('limitSwitch.exists', e.target.value === 'Yes')}
+                          disabled={isReadOnly}
+                        >
+                          <option value="No">No</option>
+                          <option value="Yes">Yes</option>
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Air-set</td>
+                      <td>
+                        <select 
+                          id="accessory-air-set"
+                          name="accessoryAirSet"
+                          value={currentValve.accessory.airSet.exists ? 'Yes' : 'No'}
+                          onChange={(e) => handleAccessoryChange('airSet.exists', e.target.value === 'Yes')}
+                          disabled={isReadOnly}
+                        >
+                          <option value="No">No</option>
+                          <option value="Yes">Yes</option>
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Volume booster</td>
+                      <td>
+                        <select 
+                          id="accessory-volume-booster"
+                          name="accessoryVolumeBooster"
+                          value={currentValve.accessory.volumeBooster.exists ? 'Yes' : 'No'}
+                          onChange={(e) => handleAccessoryChange('volumeBooster.exists', e.target.value === 'Yes')}
+                          disabled={isReadOnly}
+                        >
+                          <option value="No">No</option>
+                          <option value="Yes">Yes</option>
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Air Operated Valve</td>
+                      <td>
+                        <select 
+                          id="accessory-air-operated-valve"
+                          name="accessoryAirOperatedValve"
+                          value={currentValve.accessory.airOperatedValve.exists ? 'Yes' : 'No'}
+                          onChange={(e) => handleAccessoryChange('airOperatedValve.exists', e.target.value === 'Yes')}
+                          disabled={isReadOnly}
+                        >
+                          <option value="No">No</option>
+                          <option value="Yes">Yes</option>
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Lockup Valve</td>
+                      <td>
+                        <select 
+                          id="accessory-lockup-valve"
+                          name="accessoryLockupValve"
+                          value={currentValve.accessory.lockupValve.exists ? 'Yes' : 'No'}
+                          onChange={(e) => handleAccessoryChange('lockupValve.exists', e.target.value === 'Yes')}
+                          disabled={isReadOnly}
+                        >
+                          <option value="No">No</option>
+                          <option value="Yes">Yes</option>
+                        </select>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Snap-acting relay</td>
+                      <td>
+                        <select 
+                          id="accessory-snap-acting-relay"
+                          name="accessorySnapActingRelay"
+                          value={currentValve.accessory.snapActingRelay.exists ? 'Yes' : 'No'}
+                          onChange={(e) => handleAccessoryChange('snapActingRelay.exists', e.target.value === 'Yes')}
+                          disabled={isReadOnly}
+                        >
+                          <option value="No">No</option>
+                          <option value="Yes">Yes</option>
+                        </select>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
                   </div>
                   
                 <div className="specification-grid">
@@ -3429,182 +3605,6 @@ const NewEstimateRequestPage: React.FC = () => {
                     </table>
                   </div>
                 </div>
-              
-              <div className="accessory-section">
-                <h4>Accessory</h4>
-                <table className="accessory-properties-table">
-                  <tbody>
-                    <tr>
-                      <td>Positioner</td>
-                      <td>
-                        <select 
-                          id="accessory-positioner"
-                          name="accessoryPositioner"
-                          value={currentValve.accessory.positioner.exists ? 'Yes' : 'No'}
-                          onChange={(e) => handleAccessoryChange('positioner.exists', e.target.value === 'Yes')}
-                          disabled={isReadOnly}
-                        >
-                          <option value="No">No</option>
-                          <option value="Yes">Yes</option>
-                        </select>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Type</td>
-                      <td>
-                        <select 
-                          id="accessory-type"
-                          name="accessoryType"
-                          value={currentValve.accessory.positioner.type || 'P.P'}
-                          onChange={(e) => handleAccessoryChange('positioner.type', e.target.value)}
-                          disabled={isReadOnly}
-                        >
-                          <option value="P.P">P.P</option>
-                          <option value="I.P">I.P</option>
-                          <option value="E.P">E.P</option>
-                        </select>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Explosion proof</td>
-                      <td>
-                        <select 
-                          id="accessory-explosion-proof"
-                          name="accessoryExplosionProof"
-                          value={currentValve.accessory.explosionProof || ''}
-                          onChange={(e) => handleAccessoryChange('explosionProof', e.target.value)}
-                          disabled={isReadOnly}
-                        >
-                          <option value="">선택하세요</option>
-                          <option value="No">No</option>
-                          <option value="Yes">Yes</option>
-                        </select>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Transmitter</td>
-                      <td>
-                        <select 
-                          id="accessory-transmitter"
-                          name="accessoryTransmitter"
-                          value={currentValve.accessory.transmitter.type || ''}
-                          onChange={(e) => handleAccessoryChange('transmitter.type', e.target.value)}
-                          disabled={isReadOnly}
-                        >
-                          <option value="">선택하세요</option>
-                          <option value="General">General</option>
-                          <option value="Special">Special</option>
-                        </select>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Solenoid Valve</td>
-                      <td>
-                        <select 
-                          id="accessory-solenoid-valve"
-                          name="accessorySolenoidValve"
-                          value={currentValve.accessory.solenoidValve.exists ? 'Yes' : 'No'}
-                          onChange={(e) => handleAccessoryChange('solenoidValve.exists', e.target.value === 'Yes')}
-                          disabled={isReadOnly}
-                        >
-                          <option value="No">No</option>
-                          <option value="Yes">Yes</option>
-                        </select>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Limit Switch</td>
-                      <td>
-                        <select 
-                          id="accessory-limit-switch"
-                          name="accessoryLimitSwitch"
-                          value={currentValve.accessory.limitSwitch.exists ? 'Yes' : 'No'}
-                          onChange={(e) => handleAccessoryChange('limitSwitch.exists', e.target.value === 'Yes')}
-                          disabled={isReadOnly}
-                        >
-                          <option value="No">No</option>
-                          <option value="Yes">Yes</option>
-                        </select>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Air-set</td>
-                      <td>
-                        <select 
-                          id="accessory-air-set"
-                          name="accessoryAirSet"
-                          value={currentValve.accessory.airSet.exists ? 'Yes' : 'No'}
-                          onChange={(e) => handleAccessoryChange('airSet.exists', e.target.value === 'Yes')}
-                          disabled={isReadOnly}
-                        >
-                          <option value="No">No</option>
-                          <option value="Yes">Yes</option>
-                        </select>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Volume booster</td>
-                      <td>
-                        <select 
-                          id="accessory-volume-booster"
-                          name="accessoryVolumeBooster"
-                          value={currentValve.accessory.volumeBooster.exists ? 'Yes' : 'No'}
-                          onChange={(e) => handleAccessoryChange('volumeBooster.exists', e.target.value === 'Yes')}
-                          disabled={isReadOnly}
-                        >
-                          <option value="No">No</option>
-                          <option value="Yes">Yes</option>
-                        </select>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Air Operated Valve</td>
-                      <td>
-                        <select 
-                          id="accessory-air-operated-valve"
-                          name="accessoryAirOperatedValve"
-                          value={currentValve.accessory.airOperatedValve.exists ? 'Yes' : 'No'}
-                          onChange={(e) => handleAccessoryChange('airOperatedValve.exists', e.target.value === 'Yes')}
-                          disabled={isReadOnly}
-                        >
-                          <option value="No">No</option>
-                          <option value="Yes">Yes</option>
-                        </select>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Lockup Valve</td>
-                      <td>
-                        <select 
-                          id="accessory-lockup-valve"
-                          name="accessoryLockupValve"
-                          value={currentValve.accessory.lockupValve.exists ? 'Yes' : 'No'}
-                          onChange={(e) => handleAccessoryChange('lockupValve.exists', e.target.value === 'Yes')}
-                          disabled={isReadOnly}
-                        >
-                          <option value="No">No</option>
-                          <option value="Yes">Yes</option>
-                        </select>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Snap-acting relay</td>
-                      <td>
-                        <select 
-                          id="accessory-snap-acting-relay"
-                          name="accessorySnapActingRelay"
-                          value={currentValve.accessory.snapActingRelay.exists ? 'Yes' : 'No'}
-                          onChange={(e) => handleAccessoryChange('snapActingRelay.exists', e.target.value === 'Yes')}
-                          disabled={isReadOnly}
-                        >
-                          <option value="No">No</option>
-                          <option value="Yes">Yes</option>
-                        </select>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-            </div>
           </div>
           </div>
         ) : (

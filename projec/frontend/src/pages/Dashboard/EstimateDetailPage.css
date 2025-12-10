@@ -252,7 +252,7 @@
 /* 새로운 가로 배치 컨테이너 */
 .steps-horizontal-container {
   display: grid;
-  grid-template-columns: 1.6fr 1.9fr 5.5fr; /* 비율 기반으로 변경 */
+  grid-template-columns: 1.3fr 1.5fr 5.2fr; /* Step 1, 2 가로 사이즈 적절히 조정 */
   gap: 20px;
   align-items: stretch; /* 모든 컬럼이 같은 높이를 가지도록 */
 }
@@ -2517,7 +2517,8 @@ div.valve-item-detail span {
 
 /* Step 컨테이너들을 가로로 배치 */
 .estimate-detail-page .steps-horizontal-container {
-  display: flex !important;
+  display: grid !important;
+  grid-template-columns: 1.3fr 1.5fr 5.2fr !important; /* Step 1, 2 가로 사이즈 적절히 조정 */
   gap: 3px !important;
   align-items: stretch !important; /* 모든 컬럼이 같은 높이를 가지도록 */
   width: 100% !important; /* 너비 100%로 제한 */

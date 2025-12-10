@@ -555,6 +555,7 @@
   border-bottom: none; /* 하단 선 제거 */
   position: relative;
   overflow-x: auto;             /* 내용이 가로로 길어지면 수평 스크롤 */
+  overflow-y: visible;           /* 세로 스크롤 제거 - 브라우저 스크롤 사용 */
   -webkit-overflow-scrolling: touch;
   margin-top: 10px; /* Step 컴포넌트들을 아래로 내림 */
 }
@@ -584,7 +585,7 @@
 .step-section {
   display: grid;
   grid-template-columns: 1fr 1fr 4fr; /* 2,3,4번 비율 */
-  grid-template-rows: auto 1fr;       /* 첫 번째는 자동 높이 */
+  grid-template-rows: auto auto;       /* 첫 번째는 자동 높이, 두 번째도 자동 높이로 변경하여 스크롤 제거 */
   gap: 0;
   align-items: start;
 }
@@ -605,7 +606,9 @@
 .step-section > .step-subsection { grid-column: span 1 !important; min-width: 0; }
 
 .step-section .step-subsection:nth-of-type(4) {
-  height: 500px;
+  height: auto !important; /* 높이 자동 조정 - 내용에 맞춰 */
+  max-height: none !important; /* 최대 높이 제한 제거 */
+  overflow-y: visible !important; /* 세로 스크롤 제거 */
 }
 
 .step-section .step-subsection:nth-child(2) {
@@ -618,6 +621,9 @@
 
 .step-section .step-subsection:nth-child(4) {
   flex: 4;
+  height: auto !important; /* 높이 자동 조정 */
+  max-height: none !important; /* 최대 높이 제한 제거 */
+  overflow-y: visible !important; /* 세로 스크롤 제거 */
 }
 
 
@@ -946,9 +952,10 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
   align-content: start !important;        /* 그리드 전체 위 정렬 */
   row-gap: 8px !important;
   column-gap: 2px !important; /* 간격 최소화 (4px -> 2px, Fluid와 BODY/Trim/ACT 가깝게) */
-  max-height: 220px !important;
+  max-height: none !important; /* 최대 높이 제한 제거 - 스크롤 제거 */
   width: fit-content; /* 내용에 맞춰 너비 조정 */
   max-width: 100%; /* 최대 너비 제한 */
+  overflow-y: visible !important; /* 세로 스크롤 제거 */
 }
 
 /* 각 카드가 셀 상단에 고정, 불필요한 높이/마진 제거 */
@@ -959,8 +966,9 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
   width: 100%;
   min-width: 0;
   min-height: auto !important;  /* 최소 높이를 auto로 변경 */
-  max-height: 200px !important;  /* 최대 높이 유지 */
+  max-height: none !important;  /* 최대 높이 제한 제거 - 스크롤 제거 */
   height: fit-content !important;  /* 내용에 맞는 높이로 설정 */
+  overflow-y: visible !important; /* 세로 스크롤 제거 */
 }
 
 /* 카드 제목 간격 축소로 시각 높이 통일 */
@@ -1335,6 +1343,14 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
   word-break: break-all;
 }
 
+/* Step 3 세로 스크롤 제거 - 브라우저 스크롤 사용 */
+.step-col:nth-child(3) {
+  height: auto !important; /* 높이 자동 조정 - 내용에 맞춰 */
+  max-height: none !important; /* 최대 높이 제한 제거 */
+  overflow-y: visible !important; /* 세로 스크롤 제거 */
+  overflow-x: hidden !important; /* 가로 넘침 방지 */
+}
+
 /* Step 1: Type 선정 */
 .type-section {
   background: white;
@@ -1627,6 +1643,8 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
   padding: 0px;
   border-radius: 6px;
   border: 1px solid #e0e0e0;
+  overflow-y: visible !important; /* 세로 스크롤 제거 */
+  max-height: none !important; /* 최대 높이 제한 제거 */
 }
 
 .fluid-section h3 {
@@ -1803,9 +1821,11 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
   border-radius: 0px;
   border: 1px solid #e0e0e0;
   margin-top: 0px;
-  height: 100px !important;
+  height: auto !important; /* 높이 자동 조정 - 내용에 맞춰 */
+  max-height: none !important; /* 최대 높이 제한 제거 */
   width: 120%;  /* 폭을 1.2배로 확장 */
   margin: 0 auto;  /* 가운데 정렬 */
+  overflow-y: visible !important; /* 세로 스크롤 제거 */
 }
 
 .accessory-section h3 {
@@ -1864,7 +1884,6 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
   height: 28px !important; /* BODY와 동일한 높이 */
   min-height: 28px !important;
   font-size: 13px !important; /* BODY와 동일한 폰트 크기 */
-  padding: 6px 10px !important; /* BODY와 동일한 패딩 */
   border: 1px solid #d1d5db; /* BODY와 동일한 테두리 */
   border-radius: 4px; /* BODY와 동일한 모서리 */
   line-height: 1.2 !important;
@@ -2410,7 +2429,7 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
 /* Accessory 섹션만 별도로 위치 조정 */
 .accessory-section {
   min-width: 0; /* 최소 너비 제거 */
-  max-width: 420px; /* 표 너비 400px + padding 20px */
+  max-width: 600px; /* 표 너비 증가 (420px -> 600px) */
   flex-shrink: 0; /* 축소 방지 */
   background: white;
   border: none;
@@ -2438,8 +2457,8 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
 
 /* Accessory 섹션 테이블 디자인 */
 .accessory-properties-table {
-  width: 60%; /* 전체 너비 더 축소 (70% -> 60%, row 2 줄이기 위해) */
-  max-width: 400px; /* 최대 너비 축소 (500px -> 400px) */
+  width: 100%; /* 전체 너비 사용 (60% -> 100%) */
+  max-width: 580px; /* 최대 너비 증가 (400px -> 580px) */
   border-collapse: collapse;
   border-radius: 4px;
   overflow: hidden;
@@ -2460,17 +2479,17 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
 }
 
 .accessory-properties-table td {
-  padding: 8px 4px !important; /* 가로 패딩 더 축소 (6px -> 4px, 글자 잘림 방지) */
+  padding: 12px 4px !important; 
   border-bottom: 1px solid #e5e7eb;
   vertical-align: middle;
-  min-height: 55px !important; /* 높이 증가 (42px -> 55px, 세로 길이 늘림) */
+  min-height: 65px !important; 
   height: auto !important; /* 높이 자동 조정 */
 }
 
 /* 더 구체적인 선택자로 강제 적용 */
 .new-estimate-request-page .accessory-properties-table td {
-  padding: 8px 4px !important; /* 가로 패딩 더 축소 (6px -> 4px) */
-  min-height: 55px !important; /* 높이 증가 (42px -> 55px, 세로 길이 늘림) */
+  padding: 12px 4px !important;
+  min-height: 65px !important; 
   height: auto !important; /* 높이 자동 조정 */
   vertical-align: middle !important;
 }
@@ -2480,33 +2499,36 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
   font-weight: 600;
   font-size: 15px; /* BODY보다 조금 더 큰 폰트 크기 */
   color: #374151;
-  width: 30%; /* 라벨 컬럼 너비 유지 (row 1은 그대로) */
+  width: 40%; /* 라벨 컬럼 너비 증가 (30% -> 40%) */
   white-space: nowrap;
+  min-width: 150px; /* 최소 너비 설정 */
 }
 
 .accessory-properties-table td:last-child {
   background: white;
-  width: 25%; /* 입력 컬럼 너비 축소 (35% -> 25%, row 2 줄이기) */
+  width: 60%; /* 입력 컬럼 너비 (70% -> 60%, 라벨과 균형 맞춤) */
 }
 
 .accessory-properties-table input,
 .accessory-properties-table select {
   width: 100%;
-  padding: 12px 4px; /* 세로 패딩 증가 (10px -> 12px, 세로 길이 늘림) */
+  padding: 5px 4px; 
   border: 1px solid #d1d5db;
   border-radius: 4px;
   font-size: 13px; /* BODY와 동일한 폰트 크기 */
   background: white;
   max-width: 100%;
   box-sizing: border-box;
-  height: auto; /* 높이 자동 조정 */
-  min-height: 48px; /* 최소 높이 증가 (40px -> 48px, 세로 길이 늘림) */
+  height: 56px !important; /* 높이 명시적으로 설정 (세로 길이 더 늘림) */
+  min-height: 56px !important; 
   line-height: 1.6; /* 줄 간격 조정 */
 }
 
 .accessory-properties-table select {
   cursor: pointer;
   padding-right: 24px;
+  height: 56px !important; 
+  min-height: 56px !important; 
 }
 
 /* BODY Properties 테이블 - Accessory와 동일한 스타일 */
@@ -2541,7 +2563,8 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
 
 .body-properties-table td:last-child {
   background: white;
-  width: 35%; /* 입력 컬럼 너비 축소 (75% -> 30%) */
+  width: 40%; /* 입력 컬럼 너비 증가 (35% -> 40%) - "선택하세요" 텍스트 잘림 방지 */
+  min-width: 200px; /* 최소 너비 설정 */
 }
 
 .body-properties-table input,
@@ -2573,6 +2596,15 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
 .body-properties-table .rating-selection-group select {
   flex: 1;
   min-width: 0;
+  padding: 6px 30px 6px 6px !important; /* 오른쪽 패딩 증가 (24px -> 30px) - "선택하세요" 텍스트 잘림 방지 */
+  box-sizing: border-box;
+}
+
+/* 두 번째 select (값 선택)에 더 큰 padding 적용 */
+.body-properties-table .size-selection-group select:last-child,
+.body-properties-table .rating-selection-group select:last-child {
+  padding-right: 35px !important; /* 오른쪽 패딩 더 증가 - 텍스트 완전히 보이도록 */
+  min-width: 120px !important; /* 최소 너비 설정 */
 }
 
 /* Trim Properties 테이블 - BODY와 동일한 스타일 */
