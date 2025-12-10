@@ -2673,7 +2673,7 @@ const NewEstimateRequestPage: React.FC = () => {
                       pointerEvents: 'auto'
                     }}
                   >
-                    <span>TagNo: {item.tagNo} (Qty: {item.qty})</span>
+                    <span>{item.tagNo} (Qty: {item.qty})</span>
                   </div>
                 </SortableItem>
               ))}

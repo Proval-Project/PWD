@@ -123,9 +123,11 @@
   font-size: 8px;
 }
 
-/* 가로 배치 컨테이너 높이 재조정 */
+/* 가로 배치 컨테이너 높이 재조정 - Step 1, 2, 3 모두에 스크롤 적용 */
 .step-col-detail {
-  height: calc(100vh - 240px); /* 헤더 높이 등을 고려하여 재조정 */
+  /* Step 1, 2는 스크롤이 있어야 하므로 높이는 부모에 맞춤 */
+  overflow-y: auto !important; /* 세로 스크롤 유지 */
+  overflow-x: hidden !important; /* 가로 넘침 방지 */
 }
 
 /* EstimateDetailPage.css - 사양 선정 페이지 전용 스타일 */
@@ -252,7 +254,7 @@
   display: grid;
   grid-template-columns: 1.6fr 1.9fr 5.5fr; /* 비율 기반으로 변경 */
   gap: 20px;
-  align-items: start;
+  align-items: stretch; /* 모든 컬럼이 같은 높이를 가지도록 */
 }
 
 /* 가로 3열 내부: .step-col-detail은 이제 시각적 스타일이 없는 순수한 '칸'이 됩니다. */
@@ -263,28 +265,36 @@
 
 .step-col-detail .step-subsection-detail {
   height: 100%;
+  max-height: 100%;
   border: none;
   padding: 5px;
   margin-bottom: 0;
   background-color: transparent;
   box-shadow: none;
+  overflow: visible; /* step-subsection-detail은 스크롤 없음, step-col-detail에만 스크롤 */
 }
 
-/* Step 3 스크롤 제거 및 내부 컴팩트화 */
+/* Step 3도 Step 1, 2와 동일하게 스크롤 적용 */
 .step-col-detail:nth-child(3) {
-  height: auto;
-  overflow-y: visible;
+  height: auto !important; /* 높이 자동 조정 - 내용에 맞춰 (가장 높은 컬럼이 됨) */
+  max-height: none !important; /* 최대 높이 제한 제거 - ACC까지 모두 보이도록 */
+  overflow-y: visible !important; /* 세로 스크롤 제거 */
+  overflow-x: hidden !important; /* 가로 넘침 방지 */
   padding: 10px;
+  padding-bottom: 0px !important; /* 하단 패딩 제거 */
 }
 
 .step-col-detail:nth-child(3) .step-subsection-detail {
   padding: 5px;
+  padding-bottom: 0 !important; /* 하단 패딩 제거 */
+  margin-bottom: 0 !important; /* 하단 여백 제거 */
 }
 
 .step-col-detail:nth-child(3) .spec-section-detail,
 .step-col-detail:nth-child(3) .acc-section-detail {
   padding: 0px;
   border: 0px solid #f0f0f0;
+  margin-bottom: 0 !important; /* 하단 여백 제거 */
 }
 
 .step-col-detail:nth-child(3) .specification-grid-detail {
@@ -348,7 +358,7 @@
 
   /* 높이는 유지하되, 스크롤을 비활성화하여 내용이 넘치지 않도록 합니다. */
   height: calc(100vh - 280px); /* 280px -> 320px 로 수정하여 높이를 줄입니다. */
-  overflow: hidden; /* 스크롤바를 숨깁니다. 내용이 넘치면 잘립니다. */
+  overflow: visible; /* 드롭다운이 보이도록 visible로 변경 */
   word-break: break-all;
 }
 
@@ -1338,11 +1348,12 @@ div.valve-item-detail span {
 .accessory-selector {
   position: relative; /* 드롭다운 목록의 위치 지정을 위함 */
   width: 100%;
+  z-index: 100; /* 드롭다운이 다른 요소 위에 표시되도록 */
 }
 
 .accessory-selector input[type="text"] {
   width: 100%;
-  padding: 0px 0px;
+  padding: 8px 10px;
   border: 1px solid #ced4da;
   border-radius: 4px;
   box-sizing: border-box; /* 패딩이 너비에 포함되도록 */
@@ -1363,7 +1374,7 @@ div.valve-item-detail span {
   list-style: none;
   padding: 0;
   margin: 5px 0 0 0;
-  z-index: 1000; /* 다른 요소 위에 표시 */
+  z-index: 9999; /* 다른 요소 위에 표시 */
 }
 
 .accessory-selector .dropdown-list li {
@@ -2286,13 +2297,15 @@ div.valve-item-detail span {
   display: flex !important;
   flex-direction: row !important;
   align-items: flex-start !important;
-  gap: 0 !important;
+  justify-content: space-between !important;
+  gap: 20px !important;
   position: relative !important;
 }
 
 /* 각 컴포넌트 위치 고정 */
 .mini-tools-panel .estimate-summary-card {
-  margin-left: 20px !important;
+  margin-left: 0 !important;
+  margin-top: 0 !important;
   margin-bottom: 0 !important;
   padding-bottom: 0 !important;
   flex: 0 0 auto !important;
@@ -2300,20 +2313,21 @@ div.valve-item-detail span {
 }
 
 .mini-tools-panel .step-section-detail:has(.doc-issue-list) {
-  margin-left: 5px !important;
+  margin-left: 0 !important;
+  margin-top: 0 !important;
   flex: 0 0 auto !important;
   order: 2 !important;
 }
 
 .mini-tools-panel .customer-uploader {
-  margin-left: 33px !important;
-  margin-top: -5px !important;
+  margin-left: 0 !important;
+  margin-top: 0 !important;
   flex: 0 0 auto !important;
   order: 3 !important;
 }
 
 .mini-tools-panel .quote-actions {
-  margin-left: 20px !important;
+  margin-left: 0 !important;
   flex: 0 0 auto !important;
   order: 4 !important;
 }
@@ -2491,32 +2505,42 @@ div.valve-item-detail span {
   padding: 8px !important;
 }
 
-/* step-section-detail 패딩 제거 */
-.estimate-detail-page .step-section-detail {
+/* step-section-detail 패딩 제거 - StepsSection에만 적용 (견적 세부 정보는 제외) */
+.estimate-detail-page .steps-container-detail .step-section-detail {
   padding: 0 !important;
+  width: 100% !important; /* 너비 100%로 제한 */
+  max-width: 100% !important; /* 최대 너비 제한 */
+  box-sizing: border-box !important; /* padding 포함 계산 */
+  overflow: visible !important; /* 전체 스크롤 제거 */
+  height: auto !important; /* 높이 자동 */
 }
 
 /* Step 컨테이너들을 가로로 배치 */
 .estimate-detail-page .steps-horizontal-container {
   display: flex !important;
   gap: 3px !important;
-  align-items: flex-start !important;
+  align-items: stretch !important; /* 모든 컬럼이 같은 높이를 가지도록 */
+  width: 100% !important; /* 너비 100%로 제한 */
+  max-width: 100% !important; /* 최대 너비 제한 */
+  box-sizing: border-box !important; /* padding 포함 계산 */
+  overflow-x: hidden !important; /* 가로 넘침 방지 */
 }
 
 /* Step 3 specification-grid 가로 스크롤 - NewEstimateRequestPage와 동일 */
 .estimate-detail-page .specification-grid-detail {
   display: flex !important;
   gap: 12px !important;
-  overflow-x: auto !important;
+  overflow-x: visible !important; /* 가로 스크롤 제거 - step-content-container로 이동 */
   flex-wrap: nowrap !important;
-  padding-bottom: 10px !important;
+  padding-bottom: 0px !important;
+  margin-bottom: 0px !important;
   width: 100% !important;
 }
 
 /* BODY 표 디자인 - NewEstimateRequestPage와 완전히 동일 (높은 우선순위) */
 .estimate-detail-page .spec-section-detail .body-properties-table {
-  width: 100% !important;
-  max-width: 500px !important; /* 최대 너비 제한 */
+  width: 280px !important; /* 전체 너비 조정 (라벨 100px + 입력 180px) */
+  max-width: 280px !important; /* 최대 너비 제한 */
   border-collapse: collapse !important;
   border-radius: 4px !important;
   overflow: hidden !important;
@@ -2526,11 +2550,12 @@ div.valve-item-detail span {
 }
 
 .estimate-detail-page .spec-section-detail .body-properties-table td {
-  padding: 8px 12px !important; /* 사진처럼 적당한 패딩 */
+  padding: 8px 6px !important; /* 패딩 축소 (12px -> 6px, 텍스트 잘림 방지) */
   border-bottom: 1px solid #e5e7eb !important;
   vertical-align: middle !important;
   min-height: 36px !important; /* 사진처럼 적당한 높이 */
-  height: 36px !important; /* 강제 높이 설정 */
+  height: auto !important; /* 높이 자동 조정 (텍스트 잘림 방지) */
+  overflow: visible !important; /* 텍스트 잘림 방지 */
 }
 
 .estimate-detail-page .spec-section-detail .body-properties-table td:first-child {
@@ -2538,31 +2563,45 @@ div.valve-item-detail span {
   font-weight: 600 !important;
   font-size: 14px !important; /* 폰트 크기 증가 */
   color: #374151 !important;
-  width: 120px !important; /* 라벨 컬럼 고정 너비 */
+  width: 90px !important; /* 라벨 컬럼 너비 축소 (120px -> 100px) */
   white-space: nowrap !important;
 }
 
 .estimate-detail-page .spec-section-detail .body-properties-table td:last-child {
   background: white !important;
-  width: auto !important; /* 입력 컬럼 자동 너비 */
+  width: 150px !important; /* 입력 컬럼 너비 증가 (150px -> 180px) */
+  max-width: 150px !important; /* 최대 너비 제한 */
+  min-width: 150px !important; /* 최소 너비 보장 */
+  overflow: visible !important; /* 텍스트 잘림 방지 */
+  word-wrap: break-word !important; /* 긴 단어 줄바꿈 */
+  padding-left: 4px !important; /* 왼쪽 패딩 최소화 */
+  padding-right: 4px !important; /* 오른쪽 패딩 최소화 */
 }
 
 .estimate-detail-page .spec-section-detail .body-properties-table input,
 .estimate-detail-page .spec-section-detail .body-properties-table select {
   width: 100% !important;
-  padding: 6px 10px !important; /* 사진처럼 적당한 패딩 */
+  padding: 6px 4px !important; /* 패딩 축소 (10px -> 4px, 텍스트 잘림 방지) */
   border: 1px solid #d1d5db !important;
   border-radius: 4px !important;
   font-size: 13px !important; /* 사진처럼 적당한 폰트 크기 */
   background: white !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
-  height: 28px !important; /* 사진처럼 적당한 높이 */
+  min-height: 28px !important; /* 최소 높이 */
+  height: auto !important; /* 높이 자동 조정 */
+  overflow: visible !important; /* 텍스트 잘림 방지 */
+  text-overflow: clip !important; /* ellipsis 제거 */
+  white-space: normal !important; /* 텍스트 줄바꿈 허용 */
 }
 
 .estimate-detail-page .spec-section-detail .body-properties-table select {
   cursor: pointer !important;
-  padding-right: 24px !important;
+  padding-right: 20px !important; /* 패딩 축소 (24px -> 20px, 드롭다운 화살표 공간만) */
+  padding-left: 4px !important; /* 왼쪽 패딩 유지 */
+  overflow: visible !important; /* 텍스트 잘림 방지 */
+  text-overflow: clip !important; /* ellipsis 제거 */
+  white-space: normal !important; /* 텍스트 줄바꿈 허용 */
 }
 
 /* Size와 Rating의 2개 드롭다운을 더 작게 */
@@ -2580,8 +2619,8 @@ div.valve-item-detail span {
 
 /* TRIM 표 디자인 - BODY와 동일한 스타일 */
 .estimate-detail-page .spec-section-detail .trim-properties-table {
-  width: 100% !important;
-  max-width: 500px !important; /* 최대 너비 제한 */
+  width: 90px !important; /* 전체 너비 조정 (라벨 40px + 입력 50px) */
+  max-width: 90px !important; /* 최대 너비 제한 */
   border-collapse: collapse !important;
   border-radius: 4px !important;
   overflow: hidden !important;
@@ -2591,11 +2630,12 @@ div.valve-item-detail span {
 }
 
 .estimate-detail-page .spec-section-detail .trim-properties-table td {
-  padding: 8px 12px !important; /* 사진처럼 적당한 패딩 */
+  padding: 8px 6px !important; /* 패딩 축소 (12px -> 6px, 텍스트 잘림 방지) */
   border-bottom: 1px solid #e5e7eb !important;
   vertical-align: middle !important;
   min-height: 36px !important; /* 사진처럼 적당한 높이 */
-  height: 36px !important; /* 강제 높이 설정 */
+  height: auto !important; /* 높이 자동 조정 (텍스트 잘림 방지) */
+  overflow: visible !important; /* 텍스트 잘림 방지 */
 }
 
 .estimate-detail-page .spec-section-detail .trim-properties-table td:first-child {
@@ -2603,31 +2643,45 @@ div.valve-item-detail span {
   font-weight: 600 !important;
   font-size: 14px !important; /* 폰트 크기 증가 */
   color: #374151 !important;
-  width: 120px !important; /* 라벨 컬럼 고정 너비 */
+  width: 40px !important; /* 라벨 컬럼 너비 더 축소 (50px -> 40px) */
   white-space: nowrap !important;
 }
 
 .estimate-detail-page .spec-section-detail .trim-properties-table td:last-child {
   background: white !important;
-  width: auto !important; /* 입력 컬럼 자동 너비 */
+  width: 50px !important; /* 입력 컬럼 너비 축소 (70px -> 50px) */
+  max-width: 50px !important; /* 최대 너비 제한 */
+  min-width: 50px !important; /* 최소 너비 보장 */
+  overflow: visible !important; /* 텍스트 잘림 방지 */
+  word-wrap: break-word !important; /* 긴 단어 줄바꿈 */
+  padding-left: 4px !important; /* 왼쪽 패딩 최소화 */
+  padding-right: 4px !important; /* 오른쪽 패딩 최소화 */
 }
 
 .estimate-detail-page .spec-section-detail .trim-properties-table input,
 .estimate-detail-page .spec-section-detail .trim-properties-table select {
   width: 100% !important;
-  padding: 6px 10px !important; /* 사진처럼 적당한 패딩 */
+  padding: 6px 4px !important; /* 패딩 축소 (10px -> 4px, 텍스트 잘림 방지) */
   border: 1px solid #d1d5db !important;
   border-radius: 4px !important;
   font-size: 13px !important; /* 사진처럼 적당한 폰트 크기 */
   background: white !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
-  height: 28px !important; /* 사진처럼 적당한 높이 */
+  min-height: 28px !important; /* 최소 높이 */
+  height: auto !important; /* 높이 자동 조정 */
+  overflow: visible !important; /* 텍스트 잘림 방지 */
+  text-overflow: clip !important; /* ellipsis 제거 */
+  white-space: normal !important; /* 텍스트 줄바꿈 허용 */
 }
 
 .estimate-detail-page .spec-section-detail .trim-properties-table select {
   cursor: pointer !important;
-  padding-right: 24px !important;
+  padding-right: 20px !important; /* 패딩 축소 (24px -> 20px, 드롭다운 화살표 공간만) */
+  padding-left: 4px !important; /* 왼쪽 패딩 유지 */
+  overflow: visible !important; /* 텍스트 잘림 방지 */
+  text-overflow: clip !important; /* ellipsis 제거 */
+  white-space: normal !important; /* 텍스트 줄바꿈 허용 */
 }
 
 /* Size Port의 2개 드롭다운을 더 작게 */
@@ -2643,8 +2697,8 @@ div.valve-item-detail span {
 
 /* ACT 표 디자인 - BODY와 동일한 스타일 */
 .estimate-detail-page .spec-section-detail .act-properties-table {
-  width: 100% !important;
-  max-width: 500px !important; /* 최대 너비 제한 */
+  width: 280px !important; /* 전체 너비 조정 (라벨 100px + 입력 180px) */
+  max-width: 280px !important; /* 최대 너비 제한 */
   border-collapse: collapse !important;
   border-radius: 4px !important;
   overflow: hidden !important;
@@ -2654,11 +2708,12 @@ div.valve-item-detail span {
 }
 
 .estimate-detail-page .spec-section-detail .act-properties-table td {
-  padding: 8px 12px !important; /* 사진처럼 적당한 패딩 */
+  padding: 8px 6px !important; /* 패딩 축소 (12px -> 6px, 텍스트 잘림 방지) */
   border-bottom: 1px solid #e5e7eb !important;
   vertical-align: middle !important;
   min-height: 36px !important; /* 사진처럼 적당한 높이 */
-  height: 36px !important; /* 강제 높이 설정 */
+  height: auto !important; /* 높이 자동 조정 (텍스트 잘림 방지) */
+  overflow: visible !important; /* 텍스트 잘림 방지 */
 }
 
 .estimate-detail-page .spec-section-detail .act-properties-table td:first-child {
@@ -2666,40 +2721,54 @@ div.valve-item-detail span {
   font-weight: 600 !important;
   font-size: 14px !important; /* 폰트 크기 증가 */
   color: #374151 !important;
-  width: 120px !important; /* 라벨 컬럼 고정 너비 */
+  width: 100px !important; /* 라벨 컬럼 너비 축소 (120px -> 100px) */
   white-space: nowrap !important;
 }
 
 .estimate-detail-page .spec-section-detail .act-properties-table td:last-child {
   background: white !important;
-  width: auto !important; /* 입력 컬럼 자동 너비 */
+  width: 180px !important; /* 입력 컬럼 너비 증가 (150px -> 180px) */
+  max-width: 180px !important; /* 최대 너비 제한 */
+  min-width: 180px !important; /* 최소 너비 보장 */
+  overflow: visible !important; /* 텍스트 잘림 방지 */
+  word-wrap: break-word !important; /* 긴 단어 줄바꿈 */
+  padding-left: 4px !important; /* 왼쪽 패딩 최소화 */
+  padding-right: 4px !important; /* 오른쪽 패딩 최소화 */
 }
 
 .estimate-detail-page .spec-section-detail .act-properties-table input,
 .estimate-detail-page .spec-section-detail .act-properties-table select {
   width: 100% !important;
-  padding: 6px 10px !important; /* 사진처럼 적당한 패딩 */
+  padding: 6px 4px !important; /* 패딩 축소 (10px -> 4px, 텍스트 잘림 방지) */
   border: 1px solid #d1d5db !important;
   border-radius: 4px !important;
   font-size: 13px !important; /* 사진처럼 적당한 폰트 크기 */
   background: white !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
-  height: 28px !important; /* 사진처럼 적당한 높이 */
+  min-height: 28px !important; /* 최소 높이 */
+  height: auto !important; /* 높이 자동 조정 */
+  overflow: visible !important; /* 텍스트 잘림 방지 */
+  text-overflow: clip !important; /* ellipsis 제거 */
+  white-space: normal !important; /* 텍스트 줄바꿈 허용 */
 }
 
 .estimate-detail-page .spec-section-detail .act-properties-table select {
   cursor: pointer !important;
-  padding-right: 24px !important;
+  padding-right: 20px !important; /* 패딩 축소 (24px -> 20px, 드롭다운 화살표 공간만) */
+  padding-left: 4px !important; /* 왼쪽 패딩 유지 */
+  overflow: visible !important; /* 텍스트 잘림 방지 */
+  text-overflow: clip !important; /* ellipsis 제거 */
+  white-space: normal !important; /* 텍스트 줄바꿈 허용 */
 }
 
 /* ACC 표 디자인 - BODY와 동일한 스타일 */
 .estimate-detail-page .spec-section-detail .acc-properties-table {
   width: 100% !important;
-  max-width: 500px !important; /* 최대 너비 제한 */
+  max-width: 550px !important; /* 최대 너비 증가 (500px -> 550px) */
   border-collapse: collapse !important;
   border-radius: 4px !important;
-  overflow: hidden !important;
+  overflow: visible !important; /* 드롭다운이 보이도록 visible */
   margin-bottom: 10px !important;
   border: none !important;
   table-layout: fixed !important; /* 테이블 레이아웃 고정 */
@@ -2711,6 +2780,8 @@ div.valve-item-detail span {
   vertical-align: middle !important;
   min-height: 36px !important; /* 사진처럼 적당한 높이 */
   height: 36px !important; /* 강제 높이 설정 */
+  overflow: visible !important; /* 드롭다운이 보이도록 */
+  position: relative !important;
 }
 
 .estimate-detail-page .spec-section-detail .acc-properties-table td:first-child {
@@ -2718,18 +2789,19 @@ div.valve-item-detail span {
   font-weight: 600 !important;
   font-size: 14px !important; /* 폰트 크기 증가 */
   color: #374151 !important;
-  width: 120px !important; /* 라벨 컬럼 고정 너비 */
+  width: 150px !important; /* 라벨 컬럼 너비 증가 (120px -> 150px) */
   white-space: nowrap !important;
 }
 
 .estimate-detail-page .spec-section-detail .acc-properties-table td:last-child {
   background: white !important;
   width: auto !important; /* 입력 컬럼 자동 너비 */
+  min-width: 350px !important; /* 입력 컬럼 최소 너비 설정 */
 }
 
 .estimate-detail-page .acc-section-detail {
-  min-width: 500px !important;
-  max-width: 500px !important; /* 최대 너비 제한 */
+  min-width: 550px !important; /* 최소 너비 증가 (500px -> 550px) */
+  max-width: 550px !important; /* 최대 너비 증가 (500px -> 550px) */
   flex-shrink: 0 !important;
   display: block !important;
   width: auto !important;
@@ -2775,11 +2847,17 @@ div.valve-item-detail span {
 .estimate-detail-page .step-col-detail {
   flex: 1;
   margin-right: 3px;
+  min-width: 0 !important; /* 너비 축소 허용 */
+  max-width: 100% !important; /* 최대 너비 제한 */
+  box-sizing: border-box !important; /* padding 포함 계산 */
+  overflow-x: hidden !important; /* 가로 넘침 방지 */
 }
 
 .estimate-detail-page .step-col-detail:last-child {
   margin-right: 0;
   flex: 2; /* Step 3은 더 넓게 */
+  max-width: 100% !important; /* 최대 너비 제한 */
+  overflow-x: hidden !important; /* 가로 넘침 방지 */
 }
 
 /* Step 3만 헤더를 위로 올리기 */
@@ -2788,21 +2866,22 @@ div.valve-item-detail span {
 }
 
 /* 가로 스크롤바 스타일링 */
-.estimate-detail-page .specification-grid-detail::-webkit-scrollbar {
+/* 가로 스크롤바 스타일 - step-content-container로 이동 */
+.estimate-detail-page .step-content-container::-webkit-scrollbar {
   height: 8px;
 }
 
-.estimate-detail-page .specification-grid-detail::-webkit-scrollbar-track {
+.estimate-detail-page .step-content-container::-webkit-scrollbar-track {
   background: #f1f1f1;
   border-radius: 4px;
 }
 
-.estimate-detail-page .specification-grid-detail::-webkit-scrollbar-thumb {
+.estimate-detail-page .step-content-container::-webkit-scrollbar-thumb {
   background: #c1c1c1;
   border-radius: 4px;
 }
 
-.estimate-detail-page .specification-grid-detail::-webkit-scrollbar-thumb:hover {
+.estimate-detail-page .step-content-container::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
 
@@ -2813,6 +2892,15 @@ div.valve-item-detail span {
   flex-shrink: 0 !important;
   display: block !important;
   width: auto !important;
+}
+
+/* ACC 섹션 컨테이너 - BODY, Trim, ACT 표 아래에 배치 */
+.estimate-detail-page .acc-section-container {
+  width: fit-content !important; /* 내용에 맞게 너비 조정 */
+  min-width: 100% !important; /* 최소 너비는 100% */
+  margin-top: 12px !important;
+  display: block !important;
+  flex-shrink: 0 !important; /* 축소 방지 */
 }
 
 /* ACC 섹션도 가로 스크롤에 포함 */
@@ -2929,7 +3017,22 @@ div.valve-item-detail span {
   padding: 8px 12px;
   margin-bottom: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  min-height: 800px !important; /* 최소 높이 설정 */
+  min-height: auto !important; /* 높이 자동 조정 - ACC까지 포함 */
+  height: auto !important; /* 높이 자동 조정 */
+  overflow-y: visible !important;
+}
+
+/* Step 3 내용 wrapper - 가로 스크롤 적용 */
+.estimate-detail-page .step3-content-wrapper {
+  display: flex !important;
+  flex-direction: column !important;
+  width: fit-content !important; /* 내용에 맞게 너비 조정 */
+  min-width: 100% !important; /* 최소 너비는 100% */
+}
+
+/* Step 3 가로 스크롤 - ACC 아래에 위치 */
+.estimate-detail-page .step-content-container {
+  overflow-x: auto !important; /* 가로 스크롤을 step-content-container 레벨로 이동 */
 }
 
 .estimate-detail-page .step-icon {

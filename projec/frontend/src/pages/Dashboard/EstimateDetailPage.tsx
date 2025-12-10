@@ -3159,6 +3159,7 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
               </div>
             </div>
             <div className="step-content-container">
+              <div className="step3-content-wrapper">
               <div className="specification-grid-detail">
               {/* BODY 섹션 */}
               <div className="spec-section-detail">
@@ -3468,148 +3469,151 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                 </table>
               </div>
 
-              {/* ACC 섹션 */}
-              <div className="spec-section-detail acc-section-detail">
-                  <h4>ACC</h4>
-                  <table className="acc-properties-table">
-                    <tbody>
-                      <tr>
-                        <td>Positioner</td>
-                        <td>
-                          <AccessorySelector
-                            accTypeKey="positioner"
-                            typeCode="Positioner"
-                            currentAcc={accSelections.positioner}
-                            accMakerList={accMakerListByType.Positioner || []}
-                            accModelList={accModelListByType.Positioner || []}
-                            onAccessoryChange={(accessory) => handleAccessoryChange('positioner', accessory)}
-                            // EstimateRequest.IsPositioner(= tag.isPositioner)가 false이면 선택 비활성
-                            isReadOnly={isReadOnly || !(selectedValve?.accessory.positioner?.exists)}
-                          />
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>Solenoid Valve</td>
-                        <td>
-                          <AccessorySelector
-                            accTypeKey="solenoid"
-                            typeCode="Solenoid"
-                            currentAcc={accSelections.solenoid}
-                            accMakerList={accMakerListByType.Solenoid || []}
-                            accModelList={accModelListByType.Solenoid || []}
-                            onAccessoryChange={(accessory) => handleAccessoryChange('solenoid', accessory)}
-                            // EstimateRequest.IsSolenoid(= tag.isSolenoid)가 false이면 선택 비활성
-                            isReadOnly={isReadOnly || !selectedValve?.accessory.solenoidValve}
-                          />
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>Limit Switch</td>
-                        <td>
-                          <AccessorySelector
-                            accTypeKey="limiter"
-                            typeCode="Limit"
-                            currentAcc={accSelections.limiter}
-                            accMakerList={accMakerListByType.Limit || []}
-                            accModelList={accModelListByType.Limit || []}
-                            onAccessoryChange={(accessory) => handleAccessoryChange('limiter', accessory)}
-                            // EstimateRequest.IsLimSwitch(= tag.isLimSwitch)가 false이면 선택 비활성
-                            isReadOnly={isReadOnly || !selectedValve?.accessory.limitSwitch}
-                          />
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>Air Set</td>
-                        <td>
-                          <AccessorySelector
-                            accTypeKey="airSupply"
-                            typeCode="Airset"
-                            currentAcc={accSelections.airSupply}
-                            accMakerList={accMakerListByType.Airset || []}
-                            accModelList={accModelListByType.Airset || []}
-                            onAccessoryChange={(accessory) => handleAccessoryChange('airSupply', accessory)}
-                            // EstimateRequest.IsAirSet(= tag.isAirSet)가 false이면 선택 비활성
-                            isReadOnly={isReadOnly || !selectedValve?.accessory.airSet}
-                          />
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>Volume Booster</td>
-                        <td>
-                          <AccessorySelector
-                            accTypeKey="volumeBooster"
-                            typeCode="Volume"
-                            currentAcc={accSelections.volumeBooster}
-                            accMakerList={accMakerListByType.Volume || []}
-                            accModelList={accModelListByType.Volume || []}
-                            onAccessoryChange={(accessory) => handleAccessoryChange('volumeBooster', accessory)}
-                            // EstimateRequest.IsVolumeBooster(= tag.isVolumeBooster)가 false이면 선택 비활성
-                            isReadOnly={isReadOnly || !selectedValve?.accessory.volumeBooster}
-                          />
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>Air Operated Valve</td>
-                        <td>
-                          <AccessorySelector
-                            accTypeKey="airOperator"
-                            typeCode="Airoperate"
-                            currentAcc={accSelections.airOperator}
-                            accMakerList={accMakerListByType.Airoperate || []}
-                            accModelList={accModelListByType.Airoperate || []}
-                            onAccessoryChange={(accessory) => handleAccessoryChange('airOperator', accessory)}
-                            // EstimateRequest.IsAirOperated(= tag.isAirOperated)가 false이면 선택 비활성
-                            isReadOnly={isReadOnly || !selectedValve?.accessory.airOperatedValve}
-                          />
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>Lock-Up Valve</td>
-                        <td>
-                          <AccessorySelector
-                            accTypeKey="lockUp"
-                            typeCode="Lockup"
-                            currentAcc={accSelections.lockUp}
-                            accMakerList={accMakerListByType.Lockup || []}
-                            accModelList={accModelListByType.Lockup || []}
-                            onAccessoryChange={(accessory) => handleAccessoryChange('lockUp', accessory)}
-                            // EstimateRequest.IsLockUp(= tag.isLockUp)가 false이면 선택 비활성
-                            isReadOnly={isReadOnly || !selectedValve?.accessory.lockupValve}
-                          />
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>Snap Acting Relay</td>
-                        <td>
-                          <AccessorySelector
-                            accTypeKey="snapActingRelay"
-                            typeCode="Snapacting"
-                            currentAcc={accSelections.snapActingRelay}
-                            accMakerList={accMakerListByType.Snapacting || []}
-                            accModelList={accModelListByType.Snapacting || []}
-                            onAccessoryChange={(accessory) => handleAccessoryChange('snapActingRelay', accessory)}
-                            // EstimateRequest.IsSnapActingRelay(= tag.isSnapActingRelay)가 false이면 선택 비활성
-                            isReadOnly={isReadOnly || !selectedValve?.accessory.snapActingRelay}
-                          />
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  
-                  {/* 악세사리 재로딩 버튼 */}
-                  <div className="acc-reload-section">
-                    <button 
-                      type="button" 
-                      className="btn btn-primary acc-reload-btn"
-                      onClick={handleAccReload}
-                      disabled={isReadOnly}
-                    >
-                      <span className="refresh-icon">🔄</span>
-                      악세사리
-                    </button>
-                  </div>
-                </div>
+              </div>
 
+              {/* ACC 섹션 - BODY, Trim, ACT 표 아래로 이동 */}
+              <div className="acc-section-container">
+                <div className="spec-section-detail acc-section-detail">
+                    <h4>ACC</h4>
+                    <table className="acc-properties-table">
+                      <tbody>
+                        <tr>
+                          <td>Positioner</td>
+                          <td>
+                            <AccessorySelector
+                              accTypeKey="positioner"
+                              typeCode="Positioner"
+                              currentAcc={accSelections.positioner}
+                              accMakerList={accMakerListByType.Positioner || []}
+                              accModelList={accModelListByType.Positioner || []}
+                              onAccessoryChange={(accessory) => handleAccessoryChange('positioner', accessory)}
+                              // EstimateRequest.IsPositioner(= tag.isPositioner)가 false이면 선택 비활성
+                              isReadOnly={isReadOnly || !(selectedValve?.accessory.positioner?.exists)}
+                            />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Solenoid Valve</td>
+                          <td>
+                            <AccessorySelector
+                              accTypeKey="solenoid"
+                              typeCode="Solenoid"
+                              currentAcc={accSelections.solenoid}
+                              accMakerList={accMakerListByType.Solenoid || []}
+                              accModelList={accModelListByType.Solenoid || []}
+                              onAccessoryChange={(accessory) => handleAccessoryChange('solenoid', accessory)}
+                              // EstimateRequest.IsSolenoid(= tag.isSolenoid)가 false이면 선택 비활성
+                              isReadOnly={isReadOnly || !selectedValve?.accessory.solenoidValve}
+                            />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Limit Switch</td>
+                          <td>
+                            <AccessorySelector
+                              accTypeKey="limiter"
+                              typeCode="Limit"
+                              currentAcc={accSelections.limiter}
+                              accMakerList={accMakerListByType.Limit || []}
+                              accModelList={accModelListByType.Limit || []}
+                              onAccessoryChange={(accessory) => handleAccessoryChange('limiter', accessory)}
+                              // EstimateRequest.IsLimSwitch(= tag.isLimSwitch)가 false이면 선택 비활성
+                              isReadOnly={isReadOnly || !selectedValve?.accessory.limitSwitch}
+                            />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Air Set</td>
+                          <td>
+                            <AccessorySelector
+                              accTypeKey="airSupply"
+                              typeCode="Airset"
+                              currentAcc={accSelections.airSupply}
+                              accMakerList={accMakerListByType.Airset || []}
+                              accModelList={accModelListByType.Airset || []}
+                              onAccessoryChange={(accessory) => handleAccessoryChange('airSupply', accessory)}
+                              // EstimateRequest.IsAirSet(= tag.isAirSet)가 false이면 선택 비활성
+                              isReadOnly={isReadOnly || !selectedValve?.accessory.airSet}
+                            />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Volume Booster</td>
+                          <td>
+                            <AccessorySelector
+                              accTypeKey="volumeBooster"
+                              typeCode="Volume"
+                              currentAcc={accSelections.volumeBooster}
+                              accMakerList={accMakerListByType.Volume || []}
+                              accModelList={accModelListByType.Volume || []}
+                              onAccessoryChange={(accessory) => handleAccessoryChange('volumeBooster', accessory)}
+                              // EstimateRequest.IsVolumeBooster(= tag.isVolumeBooster)가 false이면 선택 비활성
+                              isReadOnly={isReadOnly || !selectedValve?.accessory.volumeBooster}
+                            />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Air Operated Valve</td>
+                          <td>
+                            <AccessorySelector
+                              accTypeKey="airOperator"
+                              typeCode="Airoperate"
+                              currentAcc={accSelections.airOperator}
+                              accMakerList={accMakerListByType.Airoperate || []}
+                              accModelList={accModelListByType.Airoperate || []}
+                              onAccessoryChange={(accessory) => handleAccessoryChange('airOperator', accessory)}
+                              // EstimateRequest.IsAirOperated(= tag.isAirOperated)가 false이면 선택 비활성
+                              isReadOnly={isReadOnly || !selectedValve?.accessory.airOperatedValve}
+                            />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Lock-Up Valve</td>
+                          <td>
+                            <AccessorySelector
+                              accTypeKey="lockUp"
+                              typeCode="Lockup"
+                              currentAcc={accSelections.lockUp}
+                              accMakerList={accMakerListByType.Lockup || []}
+                              accModelList={accModelListByType.Lockup || []}
+                              onAccessoryChange={(accessory) => handleAccessoryChange('lockUp', accessory)}
+                              // EstimateRequest.IsLockUp(= tag.isLockUp)가 false이면 선택 비활성
+                              isReadOnly={isReadOnly || !selectedValve?.accessory.lockupValve}
+                            />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Snap Acting Relay</td>
+                          <td>
+                            <AccessorySelector
+                              accTypeKey="snapActingRelay"
+                              typeCode="Snapacting"
+                              currentAcc={accSelections.snapActingRelay}
+                              accMakerList={accMakerListByType.Snapacting || []}
+                              accModelList={accModelListByType.Snapacting || []}
+                              onAccessoryChange={(accessory) => handleAccessoryChange('snapActingRelay', accessory)}
+                              // EstimateRequest.IsSnapActingRelay(= tag.isSnapActingRelay)가 false이면 선택 비활성
+                              isReadOnly={isReadOnly || !selectedValve?.accessory.snapActingRelay}
+                            />
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    
+                    {/* 악세사리 재로딩 버튼 */}
+                    <div className="acc-reload-section">
+                      <button 
+                        type="button" 
+                        className="btn btn-primary acc-reload-btn"
+                        onClick={handleAccReload}
+                        disabled={isReadOnly}
+                      >
+                        <span className="refresh-icon">🔄</span>
+                        악세사리
+                      </button>
+                    </div>
+                  </div>
+              </div>
               </div>
             </div>
           </div>
