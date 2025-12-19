@@ -934,22 +934,6 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                 >
                   다운로드
                 </Button>
-                <Button 
-                  variant="light" 
-                  onClick={handleCcvView} 
-                  style={{ 
-                    flex: 1, 
-                    fontSize: '0.85rem', 
-                    padding: '6px 12px',
-                    backgroundColor: 'white',
-                    border: '1px solid #ccc',
-                    borderRadius: '6px',
-                    color: '#000',
-                    fontWeight: '600'
-                  }}
-                >
-                  바로읽기
-                </Button>
               </div>
             </div>
           </div>
