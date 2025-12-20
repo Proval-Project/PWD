@@ -460,8 +460,10 @@
 .estimate-detail-page .type-list-detail, 
 .estimate-detail-page .valve-list-detail {
   display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
+  flex-direction: column; /* 세로로 배치하여 모든 블록이 동일한 너비를 갖도록 */
+  gap: 10px; /* NewEstimateRequest와 동일한 간격 */
+  width: 100%; /* 컨테이너 너비 100% */
+  margin-top: 12px !important; /* 헤더와 블록 리스트 사이 간격 추가 */
 }
 
 .estimate-detail-page .type-item-detail, 
@@ -1177,53 +1179,61 @@
   display: flex;
   gap: 10px;
   align-items: center;
-  padding: 20px 24px 20px 32px; /* 패딩 증가로 크기 확대, 왼쪽 패딩 더 늘림 */
+  padding: 16px 16px; /* 위아래 패딩 증가 (12px -> 16px) */
   background: #e9e9eb;                 /* 기본 회색 배경 */
-  border-radius: 30px;                  /* 더 둥근 모서리 */
+  border-radius: 12px;                  /* NewEstimateRequest와 동일한 둥근 모서리 */
   border: 1px solid #e5e7eb;
   position: relative;
   transition: all 0.2s ease;
-  min-height: 60px; /* 최소 높이 설정 */
-  font-size: 18px !important; /* 글씨 크기 더 크게 */
+  min-height: 50px; /* 최소 높이 축소 */
+  font-size: 16px !important; /* NewEstimateRequest와 동일한 글씨 크기 */
   font-weight: 700 !important; /* 글씨 더 굵게 */
   margin: 8px 0;
   cursor: pointer;
+  width: 100% !important; /* 모든 블록이 동일한 가로 길이를 갖도록 */
+  box-sizing: border-box !important; /* 패딩 포함 너비 계산 */
 }
 
 /* 더 구체적인 선택자로 강제 적용 */
 .estimate-detail-page .type-item-detail {
-  font-size: 18px !important;
+  font-size: 16px !important; /* NewEstimateRequest와 동일한 글씨 크기 */
   font-weight: 700 !important;
   border-radius: 12px !important;
-  padding: 20px 24px 20px 20px !important;
+  padding: 16px 16px !important; /* 위아래 패딩 증가 (12px -> 16px) */
+  width: 100% !important; /* 모든 블록이 동일한 가로 길이를 갖도록 */
+  box-sizing: border-box !important; /* 패딩 포함 너비 계산 */
 }
 
 .estimate-detail-page .type-item-detail span {
-  font-size: 18px !important;
+  font-size: 16px !important; /* NewEstimateRequest와 동일한 글씨 크기 */
   font-weight: 700 !important;
 }
 
 /* 최고 우선순위로 강제 적용 */
 div.type-item-detail {
-  font-size: 18px !important;
+  font-size: 16px !important; /* NewEstimateRequest와 동일한 글씨 크기 */
   font-weight: 700 !important;
-  border-radius: 30px !important;
-  padding: 20px 24px 20px 32px !important;
+  border-radius: 12px !important; /* NewEstimateRequest와 동일한 둥근 모서리 */
+  padding: 16px 16px !important; /* 위아래 패딩 증가 (12px -> 16px) */
+  width: 100% !important; /* 모든 블록이 동일한 가로 길이를 갖도록 */
+  box-sizing: border-box !important; /* 패딩 포함 너비 계산 */
 }
 
 div.type-item-detail span {
-  font-size: 18px !important;
+  font-size: 16px !important; /* NewEstimateRequest와 동일한 글씨 크기 */
   font-weight: 700 !important;
 }
 
 /* 인라인 스타일보다 우선 적용 */
 .type-item-detail[class*="type-item-detail"] {
-  font-size: 18px !important;
+  font-size: 16px !important; /* NewEstimateRequest와 동일한 글씨 크기 */
   font-weight: 700 !important;
+  width: 100% !important; /* 모든 블록이 동일한 가로 길이를 갖도록 */
+  box-sizing: border-box !important; /* 패딩 포함 너비 계산 */
 }
 
 .type-item-detail[class*="type-item-detail"] span {
-  font-size: 18px !important;
+  font-size: 16px !important; /* NewEstimateRequest와 동일한 글씨 크기 */
   font-weight: 700 !important;
 }
 
@@ -1232,8 +1242,15 @@ div.type-item-detail span {
 .estimate-detail-page .step-subsection .type-item-detail span,
 .estimate-detail-page .type-list-detail .type-item-detail,
 .estimate-detail-page .type-list-detail .type-item-detail span {
-  font-size: 18px !important;
+  font-size: 16px !important; /* NewEstimateRequest와 동일한 글씨 크기 */
   font-weight: 700 !important;
+}
+
+/* Step 1의 모든 type-item-detail이 동일한 너비를 갖도록 */
+.estimate-detail-page .type-list-detail .type-item-detail,
+.estimate-detail-page .step-subsection .type-item-detail {
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .type-item-detail:hover {
@@ -2491,7 +2508,7 @@ div.valve-item-detail span {
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 8px 12px;
-  margin-bottom: 8px;
+  margin-bottom: 12px !important; /* 헤더 아래 간격 증가 (8px -> 12px) */
   min-height: 50px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
