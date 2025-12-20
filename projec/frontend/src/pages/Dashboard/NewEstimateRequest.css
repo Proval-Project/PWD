@@ -1510,6 +1510,10 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
 
 .valve-list {
   padding: 15px;
+  display: flex;
+  flex-direction: column; /* 세로로 배치하여 모든 블록이 동일한 너비를 갖도록 */
+  gap: 10px; /* 블록 간 간격 */
+  width: 100%; /* 컨테이너 너비 100% */
 }
 
 .valve-item {
@@ -1526,8 +1530,8 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
   min-height: 60px; /* 최소 높이 설정 */
   font-size: 16px !important; /* 글씨 크기 적용 */
   font-weight: 700 !important; /* 글씨 굵게 */
-  width: fit-content; /* 내용에 맞춰 너비 조정 */
-  max-width: 100%; /* 최대 너비 제한 */
+  width: 100% !important; /* 모든 블록이 동일한 가로 길이를 갖도록 */
+  box-sizing: border-box !important; /* 패딩 포함 너비 계산 */
 }
 
 .valve-item.selected {                    /* 선택 시 꽉 찬 파란색 바 */
