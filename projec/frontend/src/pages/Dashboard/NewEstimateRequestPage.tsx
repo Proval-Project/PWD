@@ -3171,440 +3171,442 @@ const NewEstimateRequestPage: React.FC = () => {
                       </tr>
                     </tbody>
                   </table>
-              
-              <div className="accessory-section">
-                <h4>Accessory</h4>
-                <table className="accessory-properties-table">
-                  <tbody>
-                    <tr>
-                      <td>Positioner</td>
-                      <td>
-                        <select 
-                          id="accessory-positioner"
-                          name="accessoryPositioner"
-                          value={currentValve.accessory.positioner.exists ? 'Yes' : 'No'}
-                          onChange={(e) => handleAccessoryChange('positioner.exists', e.target.value === 'Yes')}
-                          disabled={isReadOnly}
-                        >
-                          <option value="No">No</option>
-                          <option value="Yes">Yes</option>
-                        </select>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Type</td>
-                      <td>
-                        <select 
-                          id="accessory-type"
-                          name="accessoryType"
-                          value={currentValve.accessory.positioner.type || 'P.P'}
-                          onChange={(e) => handleAccessoryChange('positioner.type', e.target.value)}
-                          disabled={isReadOnly}
-                        >
-                          <option value="P.P">P.P</option>
-                          <option value="I.P">I.P</option>
-                          <option value="E.P">E.P</option>
-                        </select>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Explosion proof</td>
-                      <td>
-                        <select 
-                          id="accessory-explosion-proof"
-                          name="accessoryExplosionProof"
-                          value={currentValve.accessory.explosionProof || ''}
-                          onChange={(e) => handleAccessoryChange('explosionProof', e.target.value)}
-                          disabled={isReadOnly}
-                        >
-                          <option value="">선택하세요</option>
-                          <option value="No">No</option>
-                          <option value="Yes">Yes</option>
-                        </select>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Transmitter</td>
-                      <td>
-                        <select 
-                          id="accessory-transmitter"
-                          name="accessoryTransmitter"
-                          value={currentValve.accessory.transmitter.type || ''}
-                          onChange={(e) => handleAccessoryChange('transmitter.type', e.target.value)}
-                          disabled={isReadOnly}
-                        >
-                          <option value="">선택하세요</option>
-                          <option value="General">General</option>
-                          <option value="Special">Special</option>
-                        </select>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Solenoid Valve</td>
-                      <td>
-                        <select 
-                          id="accessory-solenoid-valve"
-                          name="accessorySolenoidValve"
-                          value={currentValve.accessory.solenoidValve.exists ? 'Yes' : 'No'}
-                          onChange={(e) => handleAccessoryChange('solenoidValve.exists', e.target.value === 'Yes')}
-                          disabled={isReadOnly}
-                        >
-                          <option value="No">No</option>
-                          <option value="Yes">Yes</option>
-                        </select>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Limit Switch</td>
-                      <td>
-                        <select 
-                          id="accessory-limit-switch"
-                          name="accessoryLimitSwitch"
-                          value={currentValve.accessory.limitSwitch.exists ? 'Yes' : 'No'}
-                          onChange={(e) => handleAccessoryChange('limitSwitch.exists', e.target.value === 'Yes')}
-                          disabled={isReadOnly}
-                        >
-                          <option value="No">No</option>
-                          <option value="Yes">Yes</option>
-                        </select>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Air-set</td>
-                      <td>
-                        <select 
-                          id="accessory-air-set"
-                          name="accessoryAirSet"
-                          value={currentValve.accessory.airSet.exists ? 'Yes' : 'No'}
-                          onChange={(e) => handleAccessoryChange('airSet.exists', e.target.value === 'Yes')}
-                          disabled={isReadOnly}
-                        >
-                          <option value="No">No</option>
-                          <option value="Yes">Yes</option>
-                        </select>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Volume booster</td>
-                      <td>
-                        <select 
-                          id="accessory-volume-booster"
-                          name="accessoryVolumeBooster"
-                          value={currentValve.accessory.volumeBooster.exists ? 'Yes' : 'No'}
-                          onChange={(e) => handleAccessoryChange('volumeBooster.exists', e.target.value === 'Yes')}
-                          disabled={isReadOnly}
-                        >
-                          <option value="No">No</option>
-                          <option value="Yes">Yes</option>
-                        </select>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Air Operated Valve</td>
-                      <td>
-                        <select 
-                          id="accessory-air-operated-valve"
-                          name="accessoryAirOperatedValve"
-                          value={currentValve.accessory.airOperatedValve.exists ? 'Yes' : 'No'}
-                          onChange={(e) => handleAccessoryChange('airOperatedValve.exists', e.target.value === 'Yes')}
-                          disabled={isReadOnly}
-                        >
-                          <option value="No">No</option>
-                          <option value="Yes">Yes</option>
-                        </select>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Lockup Valve</td>
-                      <td>
-                        <select 
-                          id="accessory-lockup-valve"
-                          name="accessoryLockupValve"
-                          value={currentValve.accessory.lockupValve.exists ? 'Yes' : 'No'}
-                          onChange={(e) => handleAccessoryChange('lockupValve.exists', e.target.value === 'Yes')}
-                          disabled={isReadOnly}
-                        >
-                          <option value="No">No</option>
-                          <option value="Yes">Yes</option>
-                        </select>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Snap-acting relay</td>
-                      <td>
-                        <select 
-                          id="accessory-snap-acting-relay"
-                          name="accessorySnapActingRelay"
-                          value={currentValve.accessory.snapActingRelay.exists ? 'Yes' : 'No'}
-                          onChange={(e) => handleAccessoryChange('snapActingRelay.exists', e.target.value === 'Yes')}
-                          disabled={isReadOnly}
-                        >
-                          <option value="No">No</option>
-                          <option value="Yes">Yes</option>
-                        </select>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
                   </div>
                   
                 <div className="specification-grid">
-                  <div className="body-section">
-                    <h4>BODY</h4>
-                    <table className="body-properties-table">
-                      <tbody>
-                        <tr>
-                          <td>Type</td>
-                          <td>
-                            <input
-                              id="body-type"
-                              name="bodyType"
-                              type="text"
-                              value={currentValve.body.type}
-                              readOnly
-                            />
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>Size</td>
-                          <td>
-                            <div className="size-selection-group">
+                  <div className="left-sections-container">
+                    <div className="body-section">
+                      <h4>BODY</h4>
+                      <table className="body-properties-table">
+                        <tbody>
+                          <tr>
+                            <td>Type</td>
+                            <td>
+                              <input
+                                id="body-type"
+                                name="bodyType"
+                                type="text"
+                                value={currentValve.body.type}
+                                readOnly
+                              />
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>Size</td>
+                            <td>
+                              <div className="size-selection-group">
+                                <select 
+                                  id="body-size-unit"
+                                  name="bodySizeUnit"
+                                  value={currentValve.body.sizeUnit}
+                                  onChange={(e) => {
+                                    handleBodyChange('sizeUnit', e.target.value);
+                                    // 단위가 변경되면 size 초기화
+                                    handleBodyChange('size', '');
+                                  }}
+                                  disabled={isReadOnly}
+                                >
+                                  <option value="">단위</option>
+                                  {bodySizeUnits && bodySizeUnits.length > 0 ? bodySizeUnits.map(unit => {
+                                    // Unit 코드를 사용자 친화적인 이름으로 변환
+                                    let displayName = unit.name;
+                                    if (unit.code === 'A') displayName = 'DN';
+                                    if (unit.code === 'I') displayName = 'inch';
+                                    if (unit.code === 'N') displayName = 'None';
+                                    if (unit.code === 'Z') displayName = 'SPECIAL';
+                                    
+                                    return (
+                                      <option key={unit.code} value={unit.code}>
+                                        {displayName}
+                                      </option>
+                                    );
+                                  }) : (
+                                    <option value="" disabled>로딩 중...</option>
+                                  )}
+                                </select>
+                                <select 
+                                  id="body-size"
+                                  name="bodySize"
+                                  value={currentValve.body.size}
+                              onChange={(e) => handleBodyChange('size', e.target.value)}
+                              disabled={!currentValve.body.sizeUnit || isReadOnly}
+                            >
+                              <option value="">선택하세요</option>
+                              {filteredSizeList && filteredSizeList.length > 0 ? filteredSizeList.map(item => (
+                                <option key={`${item.sizeUnitCode}-${item.bodySizeCode}`} value={item.bodySizeCode}>
+                                  {item.bodySize}
+                                </option>
+                              )) : (
+                                <option value="" disabled>Size Unit을 먼저 선택하세요</option>
+                              )}
+                            </select>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>Material Body</td>
+                            <td>
                               <select 
-                                id="body-size-unit"
-                                name="bodySizeUnit"
-                                value={currentValve.body.sizeUnit}
-                                onChange={(e) => {
-                                  handleBodyChange('sizeUnit', e.target.value);
-                                  // 단위가 변경되면 size 초기화
-                                  handleBodyChange('size', '');
-                                }}
+                                id="body-material-body"
+                                name="bodyMaterialBody"
+                                value={currentValve.body.materialBody}
+                                onChange={(e) => handleBodyChange('materialBody', e.target.value)}
                                 disabled={isReadOnly}
                               >
-                                <option value="">단위</option>
-                                {bodySizeUnits && bodySizeUnits.length > 0 ? bodySizeUnits.map(unit => {
-                                  // Unit 코드를 사용자 친화적인 이름으로 변환
-                                  let displayName = unit.name;
-                                  if (unit.code === 'A') displayName = 'DN';
-                                  if (unit.code === 'I') displayName = 'inch';
-                                  if (unit.code === 'N') displayName = 'None';
-                                  if (unit.code === 'Z') displayName = 'SPECIAL';
-                                  
-                                  return (
+                                <option value="">선택하세요</option>
+                                {bodyMatList.map(item => (
+                                  <option key={item.bodyMatCode} value={item.bodyMatCode}>
+                                    {item.bodyMat}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>Material Trim</td>
+                            <td>
+                              <select 
+                                id="trim-material-trim"
+                                name="trimMaterialTrim"
+                                value={currentValve.body.materialTrim}
+                                onChange={(e) => handleBodyChange('materialTrim', e.target.value)}
+                                disabled={isReadOnly}
+                              >
+                                <option value="">선택하세요</option>
+                                {trimMatList.map(item => (
+                                  <option key={item.trimMatCode} value={item.trimMatCode}>
+                                    {item.trimMat}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>Option</td>
+                            <td>
+                              <select 
+                                id="trim-option"
+                                name="trimOption"
+                                value={currentValve.body.option}
+                                onChange={(e) => handleBodyChange('option', e.target.value)}
+                                disabled={isReadOnly}
+                              >
+                                <option value="">선택하세요</option>
+                                {trimOptionList.map((item: any) => (
+                                  <option key={item.trimOptionCode} value={item.trimOptionCode}>
+                                    {item.trimOption}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>Rating</td>
+                            <td>
+                              <div className="rating-selection-group">
+                                <select 
+                                  id="body-rating-unit"
+                                  name="bodyRatingUnit"
+                                  value={currentValve.body.ratingUnit}
+                                  onChange={(e) => {
+                                    handleBodyChange('ratingUnit', e.target.value);
+                                    handleBodyChange('rating', '');
+                                  }}
+                                  disabled={isReadOnly}
+                                >
+                                  <option value="">단위</option>
+                                  {uniqueRatingUnits.map(unit => (
                                     <option key={unit.code} value={unit.code}>
-                                      {displayName}
+                                      {unit.name}
                                     </option>
-                                  );
-                                }) : (
-                                  <option value="" disabled>로딩 중...</option>
-                                )}
-                              </select>
+                                  ))}
+                                </select>
+                                <select 
+                                  id="body-rating"
+                                  name="bodyRating"
+                                  value={currentValve.body.rating}
+                                  onChange={(e) => handleBodyChange('rating', e.target.value)}
+                                  disabled={!currentValve.body.ratingUnit || isReadOnly}
+                                >
+                                  <option value="">등급</option>
+                                  {filteredRatingList.map(item => (
+                                    <option key={item.id} value={item.ratingCode}>
+                                      {item.ratingName}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="trim-section">
+                      <h4>Trim</h4>
+                      <table className="trim-properties-table">
+                        <tbody>
+                          <tr>
+                            <td>Material Trim</td>
+                            <td>
                               <select 
-                                id="body-size"
-                                name="bodySize"
-                                value={currentValve.body.size}
-                            onChange={(e) => handleBodyChange('size', e.target.value)}
-                            disabled={!currentValve.body.sizeUnit || isReadOnly}
-                          >
-                            <option value="">선택하세요</option>
-                            {filteredSizeList && filteredSizeList.length > 0 ? filteredSizeList.map(item => (
-                              <option key={`${item.sizeUnitCode}-${item.bodySizeCode}`} value={item.bodySizeCode}>
-                                {item.bodySize}
-                              </option>
-                            )) : (
-                              <option value="" disabled>Size Unit을 먼저 선택하세요</option>
-                            )}
-                          </select>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>Material Body</td>
-                          <td>
-                            <select 
-                              id="body-material-body"
-                              name="bodyMaterialBody"
-                              value={currentValve.body.materialBody}
-                              onChange={(e) => handleBodyChange('materialBody', e.target.value)}
-                              disabled={isReadOnly}
-                            >
-                              <option value="">선택하세요</option>
-                              {bodyMatList.map(item => (
-                                <option key={item.bodyMatCode} value={item.bodyMatCode}>
-                                  {item.bodyMat}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>Material Trim</td>
-                          <td>
-                            <select 
-                              id="trim-material-trim"
-                              name="trimMaterialTrim"
-                              value={currentValve.body.materialTrim}
-                              onChange={(e) => handleBodyChange('materialTrim', e.target.value)}
-                              disabled={isReadOnly}
-                            >
-                              <option value="">선택하세요</option>
-                              {trimMatList.map(item => (
-                                <option key={item.trimMatCode} value={item.trimMatCode}>
-                                  {item.trimMat}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>Option</td>
-                          <td>
-                            <select 
-                              id="trim-option"
-                              name="trimOption"
-                              value={currentValve.body.option}
-                              onChange={(e) => handleBodyChange('option', e.target.value)}
-                              disabled={isReadOnly}
-                            >
-                              <option value="">선택하세요</option>
-                              {trimOptionList.map((item: any) => (
-                                <option key={item.trimOptionCode} value={item.trimOptionCode}>
-                                  {item.trimOption}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>Rating</td>
-                          <td>
-                            <div className="rating-selection-group">
-                              <select 
-                                id="body-rating-unit"
-                                name="bodyRatingUnit"
-                                value={currentValve.body.ratingUnit}
-                                onChange={(e) => {
-                                  handleBodyChange('ratingUnit', e.target.value);
-                                  handleBodyChange('rating', '');
-                                }}
+                                id="trim-material-trim"
+                                name="trimMaterialTrim"
+                                value={currentValve.body.materialTrim}
+                                onChange={(e) => handleBodyChange('materialTrim', e.target.value)}
                                 disabled={isReadOnly}
                               >
-                                <option value="">단위</option>
-                                {uniqueRatingUnits.map(unit => (
-                                  <option key={unit.code} value={unit.code}>
-                                    {unit.name}
+                                <option value="">선택하세요</option>
+                                {trimMatList.map((item: any) => (
+                                  <option key={item.trimMatCode} value={item.trimMatCode}>
+                                    {item.trimMat}
                                   </option>
                                 ))}
                               </select>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>Option</td>
+                            <td>
                               <select 
-                                id="body-rating"
-                                name="bodyRating"
-                                value={currentValve.body.rating}
-                                onChange={(e) => handleBodyChange('rating', e.target.value)}
-                                disabled={!currentValve.body.ratingUnit || isReadOnly}
+                                id="trim-option"
+                                name="trimOption"
+                                value={currentValve.body.option}
+                                onChange={(e) => handleBodyChange('option', e.target.value)}
+                                disabled={isReadOnly}
                               >
-                                <option value="">등급</option>
-                                {filteredRatingList.map(item => (
-                                  <option key={item.id} value={item.ratingCode}>
-                                    {item.ratingName}
+                                <option value="">선택하세요</option>
+                                {trimOptionList.map((item: any) => (
+                                  <option key={item.trimOptionCode} value={item.trimOptionCode}>
+                                    {item.trimOption}
                                   </option>
                                 ))}
                               </select>
-                            </div>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="actuator-section">
+                      <h4>ACT</h4>
+                      <table className="actuator-properties-table">
+                        <tbody>
+                          <tr>
+                            <td>Type</td>
+                            <td>
+                              <select 
+                                id="actuator-type"
+                                name="actuatorType"
+                                value={currentValve.actuator.type}
+                                onChange={(e) => handleActuatorChange('type', e.target.value)}
+                                disabled={isReadOnly}
+                              >
+                                <option value="">선택하세요</option>
+                                {actuatorTypeOptions.map(option => (
+                                  <option key={option} value={option}>{option}</option>
+                                ))}
+                              </select>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>H/W</td>
+                            <td>
+                              <select 
+                                id="actuator-hw"
+                                name="actuatorHw"
+                                value={currentValve.actuator.hw}
+                                onChange={(e) => handleActuatorChange('hw', e.target.value)}
+                                disabled={isReadOnly}
+                              >
+                                <option value="">선택하세요</option>
+                                {hwOptions.map(option => (
+                                  <option key={option} value={option}>{option}</option>
+                                ))}
+                              </select>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
 
-                  <div className="trim-section">
-                    <h4>Trim</h4>
-                    <table className="trim-properties-table">
+                  <div className="accessory-section">
+                    <h4>Accessory</h4>
+                    <table className="accessory-properties-table">
                       <tbody>
                         <tr>
-                          <td>Material Trim</td>
+                          <td>Positioner</td>
                           <td>
                             <select 
-                              id="trim-material-trim"
-                              name="trimMaterialTrim"
-                              value={currentValve.body.materialTrim}
-                              onChange={(e) => handleBodyChange('materialTrim', e.target.value)}
+                              id="accessory-positioner"
+                              name="accessoryPositioner"
+                              value={currentValve.accessory.positioner.exists ? 'Yes' : 'No'}
+                              onChange={(e) => handleAccessoryChange('positioner.exists', e.target.value === 'Yes')}
                               disabled={isReadOnly}
                             >
-                              <option value="">선택하세요</option>
-                              {trimMatList.map((item: any) => (
-                                <option key={item.trimMatCode} value={item.trimMatCode}>
-                                  {item.trimMat}
-                                </option>
-                              ))}
+                              <option value="No">No</option>
+                              <option value="Yes">Yes</option>
                             </select>
                           </td>
                         </tr>
-                        <tr>
-                          <td>Option</td>
-                          <td>
-                            <select 
-                              id="trim-option"
-                              name="trimOption"
-                              value={currentValve.body.option}
-                              onChange={(e) => handleBodyChange('option', e.target.value)}
-                              disabled={isReadOnly}
-                            >
-                              <option value="">선택하세요</option>
-                              {trimOptionList.map((item: any) => (
-                                <option key={item.trimOptionCode} value={item.trimOptionCode}>
-                                  {item.trimOption}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <div className="actuator-section">
-                    <h4>ACT</h4>
-                    <table className="actuator-properties-table">
-                      <tbody>
                         <tr>
                           <td>Type</td>
                           <td>
                             <select 
-                              id="actuator-type"
-                              name="actuatorType"
-                              value={currentValve.actuator.type}
-                              onChange={(e) => handleActuatorChange('type', e.target.value)}
+                              id="accessory-type"
+                              name="accessoryType"
+                              value={currentValve.accessory.positioner.type || 'P.P'}
+                              onChange={(e) => handleAccessoryChange('positioner.type', e.target.value)}
                               disabled={isReadOnly}
                             >
-                              <option value="">선택하세요</option>
-                              {actuatorTypeOptions.map(option => (
-                                <option key={option} value={option}>{option}</option>
-                              ))}
+                              <option value="P.P">P.P</option>
+                              <option value="I.P">I.P</option>
+                              <option value="E.P">E.P</option>
                             </select>
                           </td>
                         </tr>
                         <tr>
-                          <td>H/W</td>
+                          <td>Explosion proof</td>
                           <td>
                             <select 
-                              id="actuator-hw"
-                              name="actuatorHw"
-                              value={currentValve.actuator.hw}
-                              onChange={(e) => handleActuatorChange('hw', e.target.value)}
+                              id="accessory-explosion-proof"
+                              name="accessoryExplosionProof"
+                              value={currentValve.accessory.explosionProof || ''}
+                              onChange={(e) => handleAccessoryChange('explosionProof', e.target.value)}
                               disabled={isReadOnly}
                             >
                               <option value="">선택하세요</option>
-                              {hwOptions.map(option => (
-                                <option key={option} value={option}>{option}</option>
-                              ))}
+                              <option value="No">No</option>
+                              <option value="Yes">Yes</option>
+                            </select>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Transmitter</td>
+                          <td>
+                            <select 
+                              id="accessory-transmitter"
+                              name="accessoryTransmitter"
+                              value={currentValve.accessory.transmitter.type || ''}
+                              onChange={(e) => handleAccessoryChange('transmitter.type', e.target.value)}
+                              disabled={isReadOnly}
+                            >
+                              <option value="">선택하세요</option>
+                              <option value="General">General</option>
+                              <option value="Special">Special</option>
+                            </select>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Solenoid Valve</td>
+                          <td>
+                            <select 
+                              id="accessory-solenoid-valve"
+                              name="accessorySolenoidValve"
+                              value={currentValve.accessory.solenoidValve.exists ? 'Yes' : 'No'}
+                              onChange={(e) => handleAccessoryChange('solenoidValve.exists', e.target.value === 'Yes')}
+                              disabled={isReadOnly}
+                            >
+                              <option value="No">No</option>
+                              <option value="Yes">Yes</option>
+                            </select>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Limit Switch</td>
+                          <td>
+                            <select 
+                              id="accessory-limit-switch"
+                              name="accessoryLimitSwitch"
+                              value={currentValve.accessory.limitSwitch.exists ? 'Yes' : 'No'}
+                              onChange={(e) => handleAccessoryChange('limitSwitch.exists', e.target.value === 'Yes')}
+                              disabled={isReadOnly}
+                            >
+                              <option value="No">No</option>
+                              <option value="Yes">Yes</option>
+                            </select>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Air-set</td>
+                          <td>
+                            <select 
+                              id="accessory-air-set"
+                              name="accessoryAirSet"
+                              value={currentValve.accessory.airSet.exists ? 'Yes' : 'No'}
+                              onChange={(e) => handleAccessoryChange('airSet.exists', e.target.value === 'Yes')}
+                              disabled={isReadOnly}
+                            >
+                              <option value="No">No</option>
+                              <option value="Yes">Yes</option>
+                            </select>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Volume booster</td>
+                          <td>
+                            <select 
+                              id="accessory-volume-booster"
+                              name="accessoryVolumeBooster"
+                              value={currentValve.accessory.volumeBooster.exists ? 'Yes' : 'No'}
+                              onChange={(e) => handleAccessoryChange('volumeBooster.exists', e.target.value === 'Yes')}
+                              disabled={isReadOnly}
+                            >
+                              <option value="No">No</option>
+                              <option value="Yes">Yes</option>
+                            </select>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Air Operated Valve</td>
+                          <td>
+                            <select 
+                              id="accessory-air-operated-valve"
+                              name="accessoryAirOperatedValve"
+                              value={currentValve.accessory.airOperatedValve.exists ? 'Yes' : 'No'}
+                              onChange={(e) => handleAccessoryChange('airOperatedValve.exists', e.target.value === 'Yes')}
+                              disabled={isReadOnly}
+                            >
+                              <option value="No">No</option>
+                              <option value="Yes">Yes</option>
+                            </select>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Lockup Valve</td>
+                          <td>
+                            <select 
+                              id="accessory-lockup-valve"
+                              name="accessoryLockupValve"
+                              value={currentValve.accessory.lockupValve.exists ? 'Yes' : 'No'}
+                              onChange={(e) => handleAccessoryChange('lockupValve.exists', e.target.value === 'Yes')}
+                              disabled={isReadOnly}
+                            >
+                              <option value="No">No</option>
+                              <option value="Yes">Yes</option>
+                            </select>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Snap-acting relay</td>
+                          <td>
+                            <select 
+                              id="accessory-snap-acting-relay"
+                              name="accessorySnapActingRelay"
+                              value={currentValve.accessory.snapActingRelay.exists ? 'Yes' : 'No'}
+                              onChange={(e) => handleAccessoryChange('snapActingRelay.exists', e.target.value === 'Yes')}
+                              disabled={isReadOnly}
+                            >
+                              <option value="No">No</option>
+                              <option value="Yes">Yes</option>
                             </select>
                           </td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
-                </div>
+            </div>
           </div>
           </div>
         ) : (
