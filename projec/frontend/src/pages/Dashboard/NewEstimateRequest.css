@@ -1567,26 +1567,55 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
 .valve-item {
   display: flex;
   gap: 10px;
-  align-items: center;
-  padding: 20px 12px; /* 가로 패딩 축소 (24px -> 12px, Tag-0001 텍스트에 맞춤) */
-  background: #e9e9eb;                 /* 기본 회색 배경 */
-  border-radius: 12px;                  /* 더 둥근 모서리 */
+  align-items: center !important;
+  padding: 20px 12px;
+  background: #e9e9eb;
+  border-radius: 12px;
   border: 1px solid #e5e7eb;
   margin-bottom: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-height: 60px; /* 최소 높이 설정 */
-  font-size: 16px !important; /* 글씨 크기 적용 */
-  font-weight: 700 !important; /* 글씨 굵게 */
-  width: 100% !important; /* 모든 블록이 동일한 가로 길이를 갖도록 */
-  box-sizing: border-box !important; /* 패딩 포함 너비 계산 */
+  min-height: 60px;
+  height: auto !important;
+  max-height: none !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
-.valve-item.selected {                    /* 선택 시 꽉 찬 파란색 바 */
+div.valve-item,
+.step-subsection .valve-item {
+  height: auto !important;
+  max-height: none !important;
+  align-items: center !important;
+}
+
+.valve-item span {
+  flex: 1;
+  min-width: 0;
+  overflow: visible;
+  word-break: break-all;
+  white-space: normal;
+}
+
+.valve-item.selected {
   background: #2639ff !important;
   color: #ffffff !important;
   border: 1px solid #2639ff !important;
   box-shadow: none !important;
+  height: auto !important;
+  min-height: 60px !important;
+  max-height: none !important;
+  align-items: center !important;
+}
+
+div.valve-item.selected,
+.step-subsection .valve-item.selected {
+  height: auto !important;
+  min-height: 60px !important;
+  max-height: none !important;
+  align-items: center !important;
 }
 
 /* Step 3: 상세사양 입력 */
