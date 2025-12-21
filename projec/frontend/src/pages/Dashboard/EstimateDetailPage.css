@@ -249,18 +249,57 @@
   gap: 24px; /* 상하 간격 확대 */
 }
 
-/* 새로운 가로 배치 컨테이너 */
 .steps-horizontal-container {
-  display: grid;
-  grid-template-columns: 1.3fr 1.5fr 5.2fr; /* Step 1, 2 가로 사이즈 적절히 조정 */
-  gap: 20px;
-  align-items: stretch; /* 모든 컬럼이 같은 높이를 가지도록 */
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 3px !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  padding-bottom: 10px !important;
+  align-items: flex-start !important;
+  scroll-behavior: smooth;
 }
 
-/* 가로 3열 내부: .step-col-detail은 이제 시각적 스타일이 없는 순수한 '칸'이 됩니다. */
+.steps-horizontal-container > .step-col-detail {
+  flex-shrink: 0 !important;
+}
+
+.steps-horizontal-container > .step-col-detail:nth-child(1) {
+  flex: 0 0 16.67% !important;
+  min-width: 200px !important;
+}
+
+.steps-horizontal-container > .step-col-detail:nth-child(2) {
+  flex: 0 0 16.67% !important;
+  min-width: 200px !important;
+}
+
+.steps-horizontal-container > .step-col-detail:nth-child(3) {
+  flex: 0 1 auto !important;
+  min-width: 1100px !important;
+  max-width: none !important;
+}
+
+.steps-horizontal-container::-webkit-scrollbar {
+  height: 8px;
+}
+
+.steps-horizontal-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.steps-horizontal-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.steps-horizontal-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
 .step-col-detail {
-  min-width: 0; /* 너비 축소를 위해 이 속성은 유지합니다. */
-  /* height, overflow, padding, border 등은 모두 제거하고 아래로 옮깁니다. */
+  min-width: 0;
 }
 
 .step-col-detail .step-subsection-detail {
@@ -274,14 +313,13 @@
   overflow: visible; /* step-subsection-detail은 스크롤 없음, step-col-detail에만 스크롤 */
 }
 
-/* Step 3도 Step 1, 2와 동일하게 스크롤 적용 */
 .step-col-detail:nth-child(3) {
-  height: auto !important; /* 높이 자동 조정 - 내용에 맞춰 (가장 높은 컬럼이 됨) */
-  max-height: none !important; /* 최대 높이 제한 제거 - ACC까지 모두 보이도록 */
-  overflow-y: visible !important; /* 세로 스크롤 제거 */
-  overflow-x: hidden !important; /* 가로 넘침 방지 */
+  height: auto !important;
+  max-height: none !important;
+  overflow-y: visible !important;
+  overflow-x: visible !important;
   padding: 10px;
-  padding-bottom: 0px !important; /* 하단 패딩 제거 */
+  padding-bottom: 0px !important;
 }
 
 .step-col-detail:nth-child(3) .step-subsection-detail {
@@ -1106,13 +1144,31 @@
 }
 
 .acc-options-group-detail select {
-  flex: 2; /* 메이커, 모델명 드롭다운에 상대적으로 2의 비율로 공간 할당 */
-  min-width: 100px; /* 최소 너비 */
+  flex: 2 !important;
+  min-width: 100px !important;
+  padding: 6px 4px !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 4px !important;
+  font-size: 13px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  background: white !important;
+  box-sizing: border-box !important;
+  cursor: pointer !important;
+  padding-right: 20px !important;
 }
 
 .acc-options-group-detail input {
-  flex: 3; /* 규격 인풋에 상대적으로 3의 비율로 공간 할당 (더 넓게) */
-  min-width: 150px; /* 최소 너비 */
+  flex: 3 !important;
+  min-width: 150px !important;
+  padding: 6px 4px !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 4px !important;
+  font-size: 13px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  background: white !important;
+  box-sizing: border-box !important;
 }
 
 /* 반응형 디자인 개선 */
@@ -1402,12 +1458,15 @@ div.valve-item-detail span {
 }
 
 .accessory-selector input[type="text"] {
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  box-sizing: border-box; /* 패딩이 너비에 포함되도록 */
-  font-size: 1rem;
+  width: 100% !important;
+  padding: 6px 4px !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 4px !important;
+  font-size: 13px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  background: white !important;
+  box-sizing: border-box !important;
 }
 
 .accessory-selector .dropdown-list {
@@ -1446,27 +1505,32 @@ div.valve-item-detail span {
 }
 
 .accessory-selector .dropdown-maker {
-  flex: 2; /* 메이커 필드에 더 많은 공간 할당 */
-  min-width: 80px;
-  font-weight: bold;
+  flex: 2 !important;
+  min-width: 80px !important;
+  font-weight: bold !important;
+  font-size: 13px !important;
+  color: #111827 !important;
 }
 
 .accessory-selector .dropdown-model {
-  flex: 3; /* 모델명 필드에 더 많은 공간 할당 */
-  min-width: 100px;
+  flex: 3 !important;
+  min-width: 100px !important;
+  font-size: 13px !important;
+  color: #111827 !important;
 }
 
 .accessory-selector .dropdown-spec {
-  flex: 2; /* 규격 필드에 적절한 공간 할당 */
-  min-width: 80px;
-  text-align: right; /* 규격은 오른쪽 정렬 */
-  color: #6c757d;
+  flex: 2 !important;
+  min-width: 80px !important;
+  text-align: right !important;
+  color: #111827 !important;
+  font-size: 13px !important;
 }
 
 .selected-accessory-display {
   margin-top: 0px;
   font-size: 0.8em;
-  color: #6c757d;
+  color: #111827 !important;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1482,7 +1546,15 @@ div.valve-item-detail span {
 }
 
 .accessory-selector .input-group-detail input {
-  flex: 1; /* 각 입력 필드가 가용한 공간을 균등하게 분배 */
+  flex: 1 !important;
+  padding: 6px 4px !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 4px !important;
+  font-size: 13px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  background: white !important;
+  box-sizing: border-box !important;
 }
 
 .reset-button {
@@ -2567,25 +2639,40 @@ div.valve-item-detail span {
 
 /* Step 컨테이너들을 가로로 배치 */
 .estimate-detail-page .steps-horizontal-container {
-  display: grid !important;
-  grid-template-columns: 1.3fr 1.5fr 5.2fr !important; /* Step 1, 2 가로 사이즈 적절히 조정 */
+  display: flex !important;
+  flex-direction: row !important;
   gap: 3px !important;
-  align-items: stretch !important; /* 모든 컬럼이 같은 높이를 가지도록 */
-  width: 100% !important; /* 너비 100%로 제한 */
-  max-width: 100% !important; /* 최대 너비 제한 */
-  box-sizing: border-box !important; /* padding 포함 계산 */
-  overflow-x: hidden !important; /* 가로 넘침 방지 */
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  padding-bottom: 10px !important;
+  align-items: flex-start !important;
+  scroll-behavior: smooth;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
-/* Step 3 specification-grid 가로 스크롤 - NewEstimateRequestPage와 동일 */
 .estimate-detail-page .specification-grid-detail {
   display: flex !important;
+  flex-direction: row !important;
   gap: 12px !important;
-  overflow-x: visible !important; /* 가로 스크롤 제거 - step-content-container로 이동 */
+  overflow-x: visible !important;
   flex-wrap: nowrap !important;
   padding-bottom: 0px !important;
   margin-bottom: 0px !important;
   width: 100% !important;
+  align-items: flex-start !important;
+}
+
+.specification-grid-detail > .spec-section-detail {
+  flex-shrink: 0 !important;
+}
+
+.step-col-detail:nth-child(3) .specification-grid-detail,
+.step-col-detail:nth-child(3) .step-content-container {
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow-x: visible !important;
 }
 
 /* BODY 표 디자인 - NewEstimateRequestPage와 완전히 동일 (높은 우선순위) */
@@ -2816,7 +2903,7 @@ div.valve-item-detail span {
 /* ACC 표 디자인 - BODY와 동일한 스타일 */
 .estimate-detail-page .spec-section-detail .acc-properties-table {
   width: 100% !important;
-  max-width: 550px !important; /* 최대 너비 증가 (500px -> 550px) */
+  max-width: none !important;
   border-collapse: collapse !important;
   border-radius: 4px !important;
   overflow: visible !important; /* 드롭다운이 보이도록 visible */
@@ -2899,11 +2986,11 @@ div.valve-item-detail span {
 }
 
 .estimate-detail-page .acc-section-detail {
-  min-width: 550px !important; /* 최소 너비 증가 (500px -> 550px) */
-  max-width: 550px !important; /* 최대 너비 증가 (500px -> 550px) */
+  min-width: 864px !important;
+  max-width: none !important;
+  width: 100% !important;
   flex-shrink: 0 !important;
   display: block !important;
-  width: auto !important;
 }
 
 /* 악세사리 재로딩 버튼 스타일 */
@@ -2993,21 +3080,20 @@ div.valve-item-detail span {
   width: auto !important;
 }
 
-/* ACC 섹션 컨테이너 - BODY, Trim, ACT 표 아래에 배치 */
 .estimate-detail-page .acc-section-container {
-  width: fit-content !important; /* 내용에 맞게 너비 조정 */
-  min-width: 100% !important; /* 최소 너비는 100% */
+  width: 100% !important;
+  min-width: 864px !important;
   margin-top: 12px !important;
   display: block !important;
-  flex-shrink: 0 !important; /* 축소 방지 */
+  flex-shrink: 0 !important;
 }
 
-/* ACC 섹션도 가로 스크롤에 포함 */
 .estimate-detail-page .acc-section-detail {
-  min-width: 400px !important;
+  min-width: 864px !important;
+  max-width: none !important;
+  width: 100% !important;
   flex-shrink: 0 !important;
   display: block !important;
-  width: auto !important;
 }
 
 /* Step 1, 2 헤더 액션 버튼 - NewEstimateRequestPage와 동일 */
@@ -3129,9 +3215,8 @@ div.valve-item-detail span {
   min-width: 100% !important; /* 최소 너비는 100% */
 }
 
-/* Step 3 가로 스크롤 - ACC 아래에 위치 */
 .estimate-detail-page .step-content-container {
-  overflow-x: auto !important; /* 가로 스크롤을 step-content-container 레벨로 이동 */
+  overflow-x: visible !important;
 }
 
 .estimate-detail-page .step-icon {
