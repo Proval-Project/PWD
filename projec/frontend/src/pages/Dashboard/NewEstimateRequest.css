@@ -554,10 +554,22 @@
   padding: 4px; /* 패딩 대폭 감소 */
   border-bottom: none; /* 하단 선 제거 */
   position: relative;
-  overflow-x: auto;             /* 내용이 가로로 길어지면 수평 스크롤 */
+  overflow-x: visible !important;             /* 가로 스크롤 제거 - 상위 step-section에서 처리 */
   overflow-y: visible;           /* 세로 스크롤 제거 - 브라우저 스크롤 사용 */
   -webkit-overflow-scrolling: touch;
   margin-top: 10px; /* Step 컴포넌트들을 아래로 내림 */
+}
+
+.step-section > .step-subsection:nth-child(3) .step-content-container {
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow-x: visible !important;
+}
+
+.step-section > .step-subsection:nth-child(3) .spec-grid,
+.step-section > .step-subsection:nth-child(3) .specification-grid {
+  width: 100% !important;
+  min-width: fit-content !important; 
 }
 
 /* Step 본문 컨테이너 - 둥근 모서리 사각형으로 감싸기 */
@@ -583,27 +595,53 @@
 
 
 .step-section {
-  display: grid;
-  grid-template-columns: 1fr 1fr 4fr; /* 2,3,4번 비율 */
-  grid-template-rows: auto auto;       /* 첫 번째는 자동 높이, 두 번째도 자동 높이로 변경하여 스크롤 제거 */
-  gap: 0;
-  align-items: start;
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 20px !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  padding-bottom: 10px !important;
+  align-items: flex-start !important;
+  scroll-behavior: smooth;
 }
 
-/* 첫 번째 요소(헤더)는 전체 폭 차지 */
-.step-section > :first-child {
-  grid-column: 1 / -1;  /* 1번부터 마지막 열까지 */
+.step-section > .step-subsection {
+  flex-shrink: 0 !important;
 }
 
+.step-section > .step-subsection:nth-child(1) {
+  flex: 0 0 16.67% !important;
+  min-width: 200px !important;
+}
 
-/* 모든 자식의 grid-column을 기본값으로 리셋 */
-.step-section > * { grid-column: auto !important; }
+.step-section > .step-subsection:nth-child(2) {
+  flex: 0 0 16.67% !important;
+  min-width: 200px !important; 
+}
 
-/* 헤더만 전체 폭 */
-.step-section > .step-header { grid-column: 1 / -1 !important; margin-bottom: 0; }
+.step-section > .step-subsection:nth-child(3) {
+  flex: 0 1 auto !important; 
+  min-width: 1100px !important; 
+  max-width: none !important; 
+}
 
-/* 섹션(카드)은 1칸만 차지 */
-.step-section > .step-subsection { grid-column: span 1 !important; min-width: 0; }
+.step-section::-webkit-scrollbar {
+  height: 8px;
+}
+
+.step-section::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.step-section::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.step-section::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
 
 .step-section .step-subsection:nth-of-type(4) {
   height: auto !important; /* 높이 자동 조정 - 내용에 맞춰 */
@@ -937,28 +975,32 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
   align-items: start !important;
 }
 
-/* Body 부분만을 위한 세로 배치 */
 .body-spec-grid {
   display: flex !important;
   flex-direction: column !important;
   gap: 0px !important;
   align-items: stretch !important;
-  min-height: auto !important;  /* 최소 높이를 auto로 변경 */
-  padding: 4px 8px !important;  /* 패딩 줄임 */
-  height: fit-content !important;  /* 내용에 맞는 높이로 설정 */
+  min-height: auto !important;  
+  padding: 4px 8px !important;  
+  height: fit-content !important; 
 }
 
-/* 3행 유지 + 각 행은 내용 높이(auto) */
+
 .specification-grid {
-  grid-template-rows: repeat(3, auto) !important;
-  grid-auto-flow: column !important;      /* 위→아래 채우고 다음 열 */
-  align-content: start !important;        /* 그리드 전체 위 정렬 */
-  row-gap: 8px !important;
-  column-gap: 2px !important; /* 간격 최소화 (4px -> 2px, Fluid와 BODY/Trim/ACT 가깝게) */
-  max-height: none !important; /* 최대 높이 제한 제거 - 스크롤 제거 */
-  width: fit-content; /* 내용에 맞춰 너비 조정 */
-  max-width: 100%; /* 최대 너비 제한 */
-  overflow-y: visible !important; /* 세로 스크롤 제거 */
+  display: flex !important;              
+  flex-direction: row !important;        
+  align-items: flex-start !important;    
+  gap: 12px !important;                  
+  max-height: none !important;           
+  width: 100% !important;                
+  overflow-y: visible !important;        
+}
+
+.specification-grid > .left-sections-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;                              
+  flex-shrink: 0;
 }
 
 /* 각 카드가 셀 상단에 고정, 불필요한 높이/마진 제거 */
@@ -1967,33 +2009,14 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
   font-size: 14px !important;
 }
 
-/* Step 3 전체 컨테이너 - 가로 스크롤 가능 */
 .new-estimate-request-page .spec-grid { 
   display: flex !important;
-  gap: 2px !important; /* 간격 최소화 (4px -> 2px, Fluid와 BODY/Trim/ACT 가깝게) */
-  overflow-x: auto !important; /* 가로 스크롤 활성화 */
-  padding-bottom: 10px !important; /* 스크롤바 공간 확보 */
-  flex-wrap: nowrap !important; /* 줄바꿈 방지 */
-  width: fit-content; /* 내용에 맞춰 너비 조정 */
-  max-width: 100%; /* 최대 너비 제한 */
-}
-
-.spec-grid::-webkit-scrollbar {
-  height: 8px;
-}
-
-.spec-grid::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.spec-grid::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
-}
-
-.spec-grid::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  gap: 2px !important;
+  overflow-x: visible !important; 
+  padding-bottom: 0 !important; 
+  flex-wrap: nowrap !important; 
+  width: 100% !important; 
+  max-width: 100% !important; 
 }
 
 /* Fluid/ACC 등 섹션 내부 행 간격 축소 */
@@ -2149,9 +2172,12 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
   margin-bottom: 40px; /* Tag No/Q'ty 컴포넌트를 아래로 옮기기 */
 }
 
-/* Step 3 내 세부 컴포넌트들 간 세로 간격 */
 .specification-grid {
-  margin-top: 20px; /* Fluid 섹션과의 간격 */
+  margin-top: 20px; 
+  display: flex !important;              
+  flex-direction: row !important;        
+  align-items: flex-start !important;    
+  gap: 12px !important;                  
 }
 
 .fluid-section,
@@ -2419,27 +2445,26 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
   margin-right: 4px !important;
 }
 
-/* 다른 섹션들도 같은 크기로 설정 */
-.body-section,
-.trim-section,
-.actuator-section {
-  min-width: 0; /* 최소 너비 제거 */
-  max-width: 377px; /* 표 너비 357px + padding 20px */
-  flex-shrink: 0; /* 축소 방지 */
+.left-sections-container > .body-section,
+.left-sections-container > .trim-section,
+.left-sections-container > .actuator-section {
+  min-width: 377px; 
+  max-width: 377px; 
+  width: 377px !important; 
+  flex-shrink: 0; 
   background: white;
   border: none;
   border-radius: 6px;
   padding: 10px;
-  margin-bottom: 2px; /* 표 사이 간격 최소화 (12px -> 2px) */
-  margin-top: -15px; /* 위로 올리기 */
-  width: fit-content; /* 표 너비에 맞춰 조정 */
-  box-sizing: border-box; /* padding 포함 계산 */
+  margin-bottom: 2px; 
+  margin-top: 0; 
+  box-sizing: border-box; 
 }
 
-/* Accessory 섹션만 별도로 위치 조정 */
-.accessory-section {
+.specification-grid > .accessory-section {
   min-width: 0; /* 최소 너비 제거 */
-  max-width: 600px; /* 표 너비 증가 (420px -> 600px) */
+  max-width: 300px; 
+  width: 300px !important; 
   flex-shrink: 0; /* 축소 방지 */
   background: white;
   border: none;
@@ -2447,8 +2472,9 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
   padding: 10px;
   margin-bottom: 2px; /* 표 사이 간격 최소화 (12px -> 2px) */
   margin-top: 0; /* 위로 올리지 않음 */
-  width: fit-content; /* 표 너비에 맞춰 조정 */
-  box-sizing: border-box; /* padding 포함 계산 */
+  margin-left: auto; 
+  box-sizing: border-box; 
+  align-self: flex-start;
 }
 
 /* 각 섹션의 h4 제목 스타일 통일 */
@@ -2467,8 +2493,8 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
 
 /* Accessory 섹션 테이블 디자인 */
 .accessory-properties-table {
-  width: 100%; /* 전체 너비 사용 (60% -> 100%) */
-  max-width: 580px; /* 최대 너비 증가 (400px -> 580px) */
+  width: 100% !important; 
+  max-width: 280px !important; 
   border-collapse: collapse;
   border-radius: 4px;
   overflow: hidden;
@@ -2509,14 +2535,15 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
   font-weight: 600;
   font-size: 15px; /* BODY보다 조금 더 큰 폰트 크기 */
   color: #374151;
-  width: 40%; /* 라벨 컬럼 너비 증가 (30% -> 40%) */
-  white-space: nowrap;
-  min-width: 150px; /* 최소 너비 설정 */
+  width: 35%; /* 라벨 컬럼 너비 늘림 (25% -> 35%, 텍스트 잘림 방지) */
+  white-space: normal; /* 줄바꿈 허용 */
+  min-width: 120px; /* 최소 너비 증가 */
+  word-wrap: break-word; /* 긴 단어 줄바꿈 */
 }
 
 .accessory-properties-table td:last-child {
   background: white;
-  width: 60%; /* 입력 컬럼 너비 (70% -> 60%, 라벨과 균형 맞춤) */
+  width: 30%; /* 입력 컬럼 너비 절반으로 줄임 (60% -> 30%) */
 }
 
 .accessory-properties-table input,
@@ -2565,16 +2592,18 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
 .body-properties-table td:first-child {
   background: #f3f4f6;
   font-weight: 600;
-  font-size: 14px; /* 폰트 크기 증가 */
+  font-size: 14px;
   color: #374151;
-  width: 20%; /* 라벨 컬럼 너비 증가 (25% -> 40%) */
+  width: 30%;
+  min-width: 100px;
   white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 .body-properties-table td:last-child {
   background: white;
-  width: 40%; /* 입력 컬럼 너비 증가 (35% -> 40%) - "선택하세요" 텍스트 잘림 방지 */
-  min-width: 200px; /* 최소 너비 설정 */
+  width: 70%;
 }
 
 .body-properties-table input,
@@ -2641,15 +2670,18 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
 .trim-properties-table td:first-child {
   background: #f3f4f6;
   font-weight: 600;
-  font-size: 14px; /* 폰트 크기 증가 */
+  font-size: 14px;
   color: #374151;
-  width: 20%; /* BODY와 동일하게 (20%) */
+  width: 30%;
+  min-width: 100px;
   white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 .trim-properties-table td:last-child {
   background: white;
-  width: 35%; /* BODY와 동일하게 (35%) */
+  width: 70%;
 }
 
 .trim-properties-table input,
@@ -2704,7 +2736,7 @@ div.type-item.selected { background:#2639ff !important; color:#fff !important; b
 
 .actuator-properties-table td:last-child {
   background: white;
-  width: 35%; /* BODY와 동일하게 (35%) */
+  width: 80%; /* 입력 컬럼 너비 (라벨 20% + 입력 80%) */
 }
 
 .actuator-properties-table input,
