@@ -696,9 +696,9 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
                       η1
                     </div>
                   </td>
-                  <td><Form.Control size="sm" value={formData.FluidN1Max || ''} readOnly style={{ backgroundColor: '#e9ecef' }} disabled={fluidType !== 'n1'} /></td>
-                  <td><Form.Control size="sm" value={formData.FluidN1Nor || ''} readOnly style={{ backgroundColor: '#e9ecef' }} disabled={fluidType !== 'n1'} /></td>
-                  <td><Form.Control size="sm" value={formData.FluidN1Min || ''} readOnly style={{ backgroundColor: '#e9ecef' }} disabled={fluidType !== 'n1'} /></td>
+                  <td><Form.Control size="sm" value={formData.FluidN1Max || ''} onChange={(e) => handleInputChange('FluidN1Max', e.target.value)} disabled={fluidType !== 'n1'} /></td>
+                  <td><Form.Control size="sm" value={formData.FluidN1Nor || ''} onChange={(e) => handleInputChange('FluidN1Nor', e.target.value)} disabled={fluidType !== 'n1'} /></td>
+                  <td><Form.Control size="sm" value={formData.FluidN1Min || ''} onChange={(e) => handleInputChange('FluidN1Min', e.target.value)} disabled={fluidType !== 'n1'} /></td>
                   <td>
                     <Form.Select size="sm" value={formData.FluidN1Unit || 'mPa s'} onChange={(e) => handleInputChange('FluidN1Unit', e.target.value)}>
                     <option value="">단위 선택</option>
