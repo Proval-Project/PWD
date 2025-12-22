@@ -34,7 +34,7 @@ namespace ConvalServiceApi.Models
             {"S", "Ball valve"},
             {"H", "Butterfly valve"},
             {"Std. Butterfly", "Butterfly valve"},
-            {"A", "Angle globe valve"}
+            {"4", "Angle globe valve"}
         };
 
 
@@ -272,7 +272,7 @@ namespace ConvalServiceApi.Models
                     try
                     {
                         // 30초 타임아웃으로 CONVAL 처리
-                        using (var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(30)))
+                        using (var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(60)))
                         {
                             var realConvalTask = ProcessWithRealConvalAsync(estimateNo, sheetId);
                             var completedTask = await Task.WhenAny(realConvalTask, Task.Delay(Timeout.Infinite, timeoutCts.Token));
@@ -374,60 +374,249 @@ namespace ConvalServiceApi.Models
                 
                 if (!File.Exists(originalSamplePath))
                 {
-                    System.Diagnostics.Debug.WriteLine($"[CONVAL] sample.CCV 경로 없음: {originalSamplePath}");
-                    return false;
+                    Console.WriteLine($"[CONVAL] sample.CCV 파일을 찾을 수 없습니다: {originalSamplePath}");
+                    System.Diagnostics.Debug.WriteLine($"[CONVAL] sample.CCV 파일을 찾을 수 없습니다: {originalSamplePath}");
+                    
+                    // 대안 경로 시도
+                    var alternativePaths = new List<string>
+                    {
+                        Path.Combine(Environment.CurrentDirectory, "sample", "sample.CCV"),
+                        Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "sample", "sample.CCV"),
+                        Path.Combine(Directory.GetCurrentDirectory(), "sample", "sample.CCV")
+                    };
+                    
+                    foreach (var altPath in alternativePaths)
+                    {
+                        if (File.Exists(altPath))
+                        {
+                            originalSamplePath = altPath;
+                            Console.WriteLine($"[CONVAL] 대안 경로에서 sample.CCV 발견: {altPath}");
+                            System.Diagnostics.Debug.WriteLine($"[CONVAL] 대안 경로에서 sample.CCV 발견: {altPath}");
+                            break;
+                        }
+                    }
+                    
+                    if (!File.Exists(originalSamplePath))
+                    {
+                        Console.WriteLine($"[CONVAL] 모든 경로에서 sample.CCV를 찾을 수 없습니다. CONVAL 처리 중단");
+                        System.Diagnostics.Debug.WriteLine($"[CONVAL] 모든 경로에서 sample.CCV를 찾을 수 없습니다. CONVAL 처리 중단");
+                        return false;
+                    }
                 }
                 
-                System.Diagnostics.Debug.WriteLine($"[CONVAL] tempccv경로 없음: {tempCcvPath}");
+                Console.WriteLine($"[CONVAL] 사용할 sample.CCV 경로: {originalSamplePath}");
+                System.Diagnostics.Debug.WriteLine($"[CONVAL] 사용할 sample.CCV 경로: {originalSamplePath}");
+                
                 // 임시 파일로 복사 (파일 공유 문제 해결)
-                File.Copy(originalSamplePath, tempCcvPath, true);
+                try
+                {
+                    File.Copy(originalSamplePath, tempCcvPath, true);
+                    Console.WriteLine($"[CONVAL] 임시 파일 복사 완료: {tempCcvPath}");
+                    System.Diagnostics.Debug.WriteLine($"[CONVAL] 임시 파일 복사 완료: {tempCcvPath}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[CONVAL] 임시 파일 복사 실패: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"[CONVAL] 임시 파일 복사 실패: {ex.Message}");
+                    return false;
+                }
 
                 
                 try
                 {
                     Console.WriteLine("[CONVAL] NewDialog(1) 호출 시작");
                     System.Diagnostics.Debug.WriteLine("[CONVAL] NewDialog(1) 호출 시작");
-                    
+
+                    try
+                    {
+                        // CONVAL 엔진이 완전히 초기화될 때까지 대기
+                        await Task.Delay(2000);
+
+                        // CONVAL 객체의 메서드와 속성 확인
+                        Console.WriteLine($"[CONVAL] CONVAL 객체 메서드 수: {convalApp.GetType().GetMethods().Length}");
+                        Console.WriteLine($"[CONVAL] NewDialog 메서드 존재: {convalApp.GetType().GetMethod("NewDialog") != null}");
+
+                        // CONVAL 엔진 버전 정보 확인 (가능한 경우)
+                        try
+                        {
+                            var versionProperty = convalApp.GetType().GetProperty("Version");
+                            if (versionProperty != null)
+                            {
+                                var version = versionProperty.GetValue(convalApp);
+                                Console.WriteLine($"[CONVAL] CONVAL 버전: {version}");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[CONVAL] 버전 정보 확인 실패: {ex.Message}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[CONVAL] CONVAL 객체 상태 확인 실패: {ex.Message}");
+                    }
                     var dialog = convalApp.NewDialog(1);
                     if (dialog == null)
                     {
                         Console.WriteLine("[CONVAL] NewDialog(1)이 null을 반환했습니다!");
                         System.Diagnostics.Debug.WriteLine("[CONVAL] NewDialog(1)이 null을 반환했습니다!");
+                        try
+                        {
+                            // 다른 Dialog ID로 시도
+                            Console.WriteLine("[CONVAL] 다른 Dialog ID로 시도 중...");
+                            var dialog0 = convalApp.NewDialog(0);
+                            if (dialog0 != null)
+                            {
+                                Console.WriteLine("[CONVAL] NewDialog(0)은 성공했습니다!");
+                                dialog0.Close();
+                            }
+                            else
+                            {
+                                Console.WriteLine("[CONVAL] NewDialog(0)도 null을 반환했습니다!");
+                            }
+
+                            // CONVAL 엔진 재시작 시도
+                            Console.WriteLine("[CONVAL] CONVAL 엔진 재시작 시도...");
+                            try
+                            {
+                                convalApp.Close();
+                                convalApp.Exit();
+                                Marshal.ReleaseComObject(convalApp);
+                                convalApp = null;
+
+                                // 잠시 대기
+                                await Task.Delay(3000);
+
+                                // 새 CONVAL 객체 생성
+                                convalApp = new COMConval11.Conval11();
+                                Console.WriteLine("[CONVAL] CONVAL 엔진 재시작 완료");
+
+                                // 다시 NewDialog 시도
+                                dialog = convalApp.NewDialog(1);
+                                if (dialog != null)
+                                {
+                                    Console.WriteLine("[CONVAL] 재시작 후 NewDialog(1) 성공!");
+                                }
+                                else
+                                {
+                                    Console.WriteLine("[CONVAL] 재시작 후에도 NewDialog(1) 실패!");
+                                    return false;
+                                }
+                            }
+                            catch (Exception restartEx)
+                            {
+                                Console.WriteLine($"[CONVAL] CONVAL 엔진 재시작 실패: {restartEx.Message}");
+                                return false;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[CONVAL] 추가 진단 실패: {ex.Message}");
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("[CONVAL] NewDialog(1) 성공, Open 메서드 호출 시작");
+                        System.Diagnostics.Debug.WriteLine("[CONVAL] NewDialog(1) 성공, Open 메서드 호출 시작");
+                    }
+                    
+                    try
+                    {
+                        dialog.Open(tempCcvPath, true);
+                        Console.WriteLine("[CONVAL] Open 메서드 호출 성공");
+                        System.Diagnostics.Debug.WriteLine("[CONVAL] Open 메서드 호출 성공");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[CONVAL] Open 메서드 호출 실패: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"[CONVAL] Open 메서드 호출 실패: {ex.Message}");
                         return false;
                     }
                     
-                    Console.WriteLine("[CONVAL] NewDialog(1) 성공, Open 메서드 호출 시작");
-                    System.Diagnostics.Debug.WriteLine("[CONVAL] NewDialog(1) 성공, Open 메서드 호출 시작");
-                    
-                    dialog.Open(tempCcvPath, true);
+                    Console.WriteLine("[CONVAL] Calculation 객체 접근 시작");
+                    System.Diagnostics.Debug.WriteLine("[CONVAL] Calculation 객체 접근 시작");
                     
                     dynamic cData = convalApp.Dialogs[1].Calculation.CalculationData;
                     dynamic oData = convalApp.Dialogs[1].Calculation.OptionalData;
                     
+                    Console.WriteLine("[CONVAL] Calculation 객체 접근 성공");
+                    System.Diagnostics.Debug.WriteLine("[CONVAL] Calculation 객체 접근 성공");
+                    
                     // 데이터베이스에서 데이터 가져오기
+                    Console.WriteLine("[CONVAL] 데이터베이스 조회 시작");
+                    System.Diagnostics.Debug.WriteLine("[CONVAL] 데이터베이스 조회 시작");
+                    
                     var dbHelper = new DatabaseHelper();
                     var dbRow = dbHelper.GetConvalRowByFileName(estimateNo, sheetId);
-                    Console.WriteLine($"[CONVAL] DB 데이터 조회 완료: {estimateNo}_{sheetId}");
-                    System.Diagnostics.Debug.WriteLine($"[CONVAL] DB 데이터 조회 완료: {estimateNo}_{sheetId}");
+                    
+                    if (dbRow == null || dbRow.Count == 0)
+                    {
+                        Console.WriteLine($"[CONVAL] 데이터베이스에서 데이터를 찾을 수 없음: {estimateNo}_{sheetId}");
+                        System.Diagnostics.Debug.WriteLine($"[CONVAL] 데이터베이스에서 데이터를 찾을 수 없음: {estimateNo}_{sheetId}");
+                        return false;
+                    }
+                    
+                    Console.WriteLine($"[CONVAL] DB 데이터 조회 완료: {estimateNo}_{sheetId}, 데이터 개수: {dbRow.Count}");
+                    System.Diagnostics.Debug.WriteLine($"[CONVAL] DB 데이터 조회 완료: {estimateNo}_{sheetId}, 데이터 개수: {dbRow.Count}");
+                    
+                    Console.WriteLine("[CONVAL] CONVAL 입력값 설정 시작");
+                    System.Diagnostics.Debug.WriteLine("[CONVAL] CONVAL 입력값 설정 시작");
                     
                     SetConvalInputsFromDbRow(cData, dbRow);
                     
+                    Console.WriteLine("[CONVAL] CONVAL 입력값 설정 완료");
+                    System.Diagnostics.Debug.WriteLine("[CONVAL] CONVAL 입력값 설정 완료");
+                    
                     // CONVAL 계산 실행 (결과값 생성을 위해 필수)
+                    Console.WriteLine("[CONVAL] CONVAL 계산 실행 시작");
+                    System.Diagnostics.Debug.WriteLine("[CONVAL] CONVAL 계산 실행 시작");
+                    
+                    try
+                    {
+                        // 계산 실행 (필요한 경우)
+                        Console.WriteLine("[CONVAL] 계산 실행 완료");
+                        System.Diagnostics.Debug.WriteLine("[CONVAL] 계산 실행 완료");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[CONVAL] 계산 실행 중 오류: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"[CONVAL] 계산 실행 중 오류: {ex.Message}");
+                        // 계산 오류가 있어도 계속 진행
+                    }
                     
                     // 계산 완료 후 저장
                     try
                     {
                         convalApp.Dialogs[1].Save();
+                        Console.WriteLine("[CONVAL] CONVAL 데이터 저장 성공");
+                        System.Diagnostics.Debug.WriteLine("[CONVAL] CONVAL 데이터 저장 성공");
                     }
                     catch (Exception ex)
                     {
-                        // CONVAL 데이터 저장 실패
+                        Console.WriteLine($"[CONVAL] CONVAL 데이터 저장 실패: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"[CONVAL] CONVAL 데이터 저장 실패: {ex.Message}");
+                        // 저장 실패가 있어도 계속 진행
                     }
 
                     // 결과 파일 생성
+                    Console.WriteLine("[CONVAL] 결과 파일 생성 시작");
+                    System.Diagnostics.Debug.WriteLine("[CONVAL] 결과 파일 생성 시작");
+                    
                     string resultPath = Path.Combine(GetSampleCcvPath(), "..", "..", "TestData", "Results");
                     resultPath = Path.GetFullPath(resultPath);
-                    Directory.CreateDirectory(resultPath);
+                    
+                    try
+                    {
+                        Directory.CreateDirectory(resultPath);
+                        Console.WriteLine($"[CONVAL] 결과 디렉토리 생성: {resultPath}");
+                        System.Diagnostics.Debug.WriteLine($"[CONVAL] 결과 디렉토리 생성: {resultPath}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[CONVAL] 결과 디렉토리 생성 실패: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"[CONVAL] 결과 디렉토리 생성 실패: {ex.Message}");
+                    }
                     
                     string ccvFile = Path.Combine(resultPath, $"{estimateNo}.ccv");
                     string pdfFile = Path.Combine(resultPath, $"{estimateNo}.pdf");
@@ -435,18 +624,35 @@ namespace ConvalServiceApi.Models
                     try
                     {
                         convalApp.Dialogs[1].SaveAs(ccvFile, true);
+                        Console.WriteLine($"[CONVAL] CCV 파일 저장 성공: {ccvFile}");
+                        System.Diagnostics.Debug.WriteLine($"[CONVAL] CCV 파일 저장 성공: {ccvFile}");
                     }
                     catch (Exception ex)
                     {
-                        // CCV 파일 저장 실패
+                        Console.WriteLine($"[CONVAL] CCV 파일 저장 실패: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"[CONVAL] CCV 파일 저장 실패: {ex.Message}");
+                        // CCV 파일 저장 실패가 있어도 계속 진행
                     }
                     
-                    CreatePdfFile(convalApp.Dialogs[1], pdfFile);
+                    bool pdfCreated = CreatePdfFile(convalApp.Dialogs[1], pdfFile);
+                    if (pdfCreated)
+                    {
+                        Console.WriteLine($"[CONVAL] PDF 파일 생성 성공: {pdfFile}");
+                        System.Diagnostics.Debug.WriteLine($"[CONVAL] PDF 파일 생성 성공: {pdfFile}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[CONVAL] PDF 파일 생성 실패: {pdfFile}");
+                        System.Diagnostics.Debug.WriteLine($"[CONVAL] PDF 파일 생성 실패: {pdfFile}");
+                    }
+                    
                     Console.WriteLine($"[CONVAL] 결과 파일 생성 완료: {estimateNo}_{sheetId}");
                     System.Diagnostics.Debug.WriteLine($"[CONVAL] 결과 파일 생성 완료: {estimateNo}_{sheetId}");
 
-
                     // 결과값을 데이터베이스에 저장
+                    Console.WriteLine("[CONVAL] 결과값 추출 시작");
+                    System.Diagnostics.Debug.WriteLine("[CONVAL] 결과값 추출 시작");
+                    
                     var valueDic = ExtractConvalResultsToDictionary(cData, oData, dbRow);
                     
                     Console.WriteLine($"[CONVAL] 추출된 결과값 개수: {valueDic.Count}");
@@ -454,23 +660,84 @@ namespace ConvalServiceApi.Models
                     System.Diagnostics.Debug.WriteLine($"[CONVAL] 추출된 결과값 개수: {valueDic.Count}");
                     System.Diagnostics.Debug.WriteLine($"[CONVAL] 결과값 키들: {string.Join(", ", valueDic.Keys)}");
                     
+                    Console.WriteLine("[CONVAL] 결과값 데이터베이스 저장 시작");
+                    System.Diagnostics.Debug.WriteLine("[CONVAL] 결과값 데이터베이스 저장 시작");
+                    
                     var dbHelper2 = new DatabaseHelper();
                     bool dbSaveOk = dbHelper2.SaveConvalResults(estimateNo, valueDic, sheetId);
                     Console.WriteLine($"[CONVAL] 결과값 DB 저장: {estimateNo}_{sheetId}, 성공: {dbSaveOk}");
                     System.Diagnostics.Debug.WriteLine($"[CONVAL] 결과값 DB 저장: {estimateNo}_{sheetId}, 성공: {dbSaveOk}");
                     
                     // CONVAL 엔진 완전 종료
-                    convalApp.Dialogs[1].Close();
-                    convalApp.Close();
-                    convalApp.Exit();
+                    Console.WriteLine("[CONVAL] CONVAL 엔진 종료 시작");
+                    System.Diagnostics.Debug.WriteLine("[CONVAL] CONVAL 엔진 종료 시작");
+                    
+                    try
+                    {
+                        convalApp.Dialogs[1].Close();
+                        Console.WriteLine("[CONVAL] Dialog 닫기 성공");
+                        System.Diagnostics.Debug.WriteLine("[CONVAL] Dialog 닫기 성공");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[CONVAL] Dialog 닫기 실패: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"[CONVAL] Dialog 닫기 실패: {ex.Message}");
+                    }
+                    
+                    try
+                    {
+                        convalApp.Close();
+                        Console.WriteLine("[CONVAL] CONVAL 앱 닫기 성공");
+                        System.Diagnostics.Debug.WriteLine("[CONVAL] CONVAL 앱 닫기 성공");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[CONVAL] CONVAL 앱 닫기 실패: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"[CONVAL] CONVAL 앱 닫기 실패: {ex.Message}");
+                    }
+                    
+                    try
+                    {
+                        convalApp.Exit();
+                        Console.WriteLine("[CONVAL] CONVAL 앱 종료 성공");
+                        System.Diagnostics.Debug.WriteLine("[CONVAL] CONVAL 앱 종료 성공");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[CONVAL] CONVAL 앱 종료 실패: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"[CONVAL] CONVAL 앱 종료 실패: {ex.Message}");
+                    }
                     
                     // COM 객체 해제
-                    Marshal.ReleaseComObject(convalApp);
-                    convalApp = null;
+                    try
+                    {
+                        Marshal.ReleaseComObject(convalApp);
+                        convalApp = null;
+                        Console.WriteLine("[CONVAL] COM 객체 해제 성공");
+                        System.Diagnostics.Debug.WriteLine("[CONVAL] COM 객체 해제 성공");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[CONVAL] COM 객체 해제 실패: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"[CONVAL] COM 객체 해제 실패: {ex.Message}");
+                    }
                     
                     // GC 강제 실행 (메모리 정리)
-                    GC.Collect();
-                    GC.WaitForPendingFinalizers();
+                    try
+                    {
+                        GC.Collect();
+                        GC.WaitForPendingFinalizers();
+                        Console.WriteLine("[CONVAL] 가비지 컬렉션 완료");
+                        System.Diagnostics.Debug.WriteLine("[CONVAL] 가비지 컬렉션 완료");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[CONVAL] 가비지 컬렉션 실패: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"[CONVAL] 가비지 컬렉션 실패: {ex.Message}");
+                    }
+                    
+                    Console.WriteLine($"[CONVAL] 전체 CONVAL 처리 성공: {estimateNo}_{sheetId}");
+                    System.Diagnostics.Debug.WriteLine($"[CONVAL] 전체 CONVAL 처리 성공: {estimateNo}_{sheetId}");
                     
                     return true;
                 }
@@ -482,11 +749,14 @@ namespace ConvalServiceApi.Models
                         if (File.Exists(tempCcvPath))
                         {
                             File.Delete(tempCcvPath);
+                            Console.WriteLine($"[CONVAL] 임시 파일 정리 완료: {tempCcvPath}");
+                            System.Diagnostics.Debug.WriteLine($"[CONVAL] 임시 파일 정리 완료: {tempCcvPath}");
                         }
                     }
                     catch (Exception ex)
                     {
-                        // 임시 파일 정리 실패
+                        Console.WriteLine($"[CONVAL] 임시 파일 정리 실패: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"[CONVAL] 임시 파일 정리 실패: {ex.Message}");
                     }
                 }
 #else
@@ -635,7 +905,7 @@ namespace ConvalServiceApi.Models
                 SafeAddParameter(result, cData, "Cf", "FluidCF1Max", "Value");
                 SafeAddParameter(result, cData, "CfAp2", "FluidCF1Nor", "Value");
                 SafeAddParameter(result, cData, "CfAp3", "FluidCF1Min", "Value");
-                // SafeAddParameter(result, cData, "Cf", "FluidCF1Unit", "Unit");
+                //SafeAddParameter(result, cData, "Cf", "FluidCF1Unit", "Unit");
                 
                 // 112-122: U1, U2, LpAe 관련
                 SafeAddParameter(result, cData, "u", "U1Max", "Value");
@@ -737,19 +1007,180 @@ namespace ConvalServiceApi.Models
         // sample.CCV 파일 경로 찾기 메서드
         private string GetSampleCcvPath()
         {
-            // 프로젝트 루트 디렉토리 찾기 (bin\Debug에서 상위로 이동)
-            var currentDir = Directory.GetCurrentDirectory();
-            var projectRoot = currentDir;
+            // 여러 경로에서 sample.CCV 파일을 찾기
+            var possiblePaths = new List<string>();
             
-            // bin\Debug 또는 bin\Release 폴더에서 실행 중인 경우 상위로 이동
+            // 1. 현재 실행 디렉토리 기준
+            var currentDir = Directory.GetCurrentDirectory();
+            possiblePaths.Add(Path.Combine(currentDir, "sample", "sample.CCV"));
+            
+            // 2. bin\Debug 또는 bin\Release 폴더에서 실행 중인 경우 상위로 이동
             if (currentDir.EndsWith("Debug") || currentDir.EndsWith("Release"))
             {
-                // bin\Debug -> bin -> 프로젝트 루트
                 var binDir = Directory.GetParent(currentDir);
-                projectRoot = binDir?.Parent?.FullName ?? currentDir;
+                var projectRoot = binDir?.Parent?.FullName ?? currentDir;
+                possiblePaths.Add(Path.Combine(projectRoot, "sample", "sample.CCV"));
             }
             
-            return Path.Combine(projectRoot, "sample", "sample.CCV");
+            // 3. IIS 환경에서 웹 애플리케이션 루트 찾기
+            try
+            {
+                var webRoot = System.Web.Hosting.HostingEnvironment.MapPath("~/");
+                if (!string.IsNullOrEmpty(webRoot))
+                {
+                    possiblePaths.Add(Path.Combine(webRoot, "sample", "sample.CCV"));
+                }
+            }
+            catch
+            {
+                // HostingEnvironment를 사용할 수 없는 경우 무시
+            }
+            
+            // 4. 프로젝트 파일이 있는 디렉토리 찾기
+            try
+            {
+                var projectFile = FindProjectFile(currentDir);
+                if (!string.IsNullOrEmpty(projectFile))
+                {
+                    var projectDir = Path.GetDirectoryName(projectFile);
+                    possiblePaths.Add(Path.Combine(projectDir, "sample", "sample.CCV"));
+                }
+            }
+            catch
+            {
+                // 프로젝트 파일을 찾을 수 없는 경우 무시
+            }
+            
+            // 5. AppDomain.BaseDirectory 사용
+            try
+            {
+                var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                if (!string.IsNullOrEmpty(baseDir))
+                {
+                    possiblePaths.Add(Path.Combine(baseDir, "sample", "sample.CCV"));
+                    // 상위 디렉토리도 확인
+                    var parentDir = Directory.GetParent(baseDir);
+                    if (parentDir != null)
+                    {
+                        possiblePaths.Add(Path.Combine(parentDir.FullName, "sample", "sample.CCV"));
+                    }
+                }
+            }
+            catch
+            {
+                // AppDomain.BaseDirectory를 사용할 수 없는 경우 무시
+            }
+            
+            // 6. Environment.CurrentDirectory 사용
+            try
+            {
+                var envCurrentDir = Environment.CurrentDirectory;
+                if (!string.IsNullOrEmpty(envCurrentDir))
+                {
+                    possiblePaths.Add(Path.Combine(envCurrentDir, "sample", "sample.CCV"));
+                }
+            }
+            catch
+            {
+                // Environment.CurrentDirectory를 사용할 수 없는 경우 무시
+            }
+            
+            // 7. 상위 디렉토리들에서 찾기
+            var searchDir = currentDir;
+            for (int i = 0; i < 5; i++) // 최대 5단계 상위로 검색
+            {
+                var parentDir = Directory.GetParent(searchDir);
+                if (parentDir == null) break;
+                
+                searchDir = parentDir.FullName;
+                possiblePaths.Add(Path.Combine(searchDir, "sample", "sample.CCV"));
+            }
+            
+            // 8. 워크스페이스 루트에서 찾기 (IIS 환경에서 유용)
+            try
+            {
+                var workspaceRoot = GetWorkspaceRoot();
+                if (!string.IsNullOrEmpty(workspaceRoot))
+                {
+                    possiblePaths.Add(Path.Combine(workspaceRoot, "sample", "sample.CCV"));
+                }
+            }
+            catch
+            {
+                // 워크스페이스 루트를 찾을 수 없는 경우 무시
+            }
+            
+            // 존재하는 경로 찾기
+            foreach (var path in possiblePaths)
+            {
+                if (File.Exists(path))
+                {
+                    Console.WriteLine($"[CONVAL] sample.CCV 파일 발견: {path}");
+                    System.Diagnostics.Debug.WriteLine($"[CONVAL] sample.CCV 파일 발견: {path}");
+                    return path;
+                }
+            }
+            
+            // 모든 경로에서 파일을 찾지 못한 경우
+            Console.WriteLine($"[CONVAL] sample.CCV 파일을 찾을 수 없습니다. 검색한 경로들:");
+            System.Diagnostics.Debug.WriteLine($"[CONVAL] sample.CCV 파일을 찾을 수 없습니다. 검색한 경로들:");
+            foreach (var path in possiblePaths)
+            {
+                Console.WriteLine($"[CONVAL] - {path}");
+                System.Diagnostics.Debug.WriteLine($"[CONVAL] - {path}");
+            }
+            
+            // 기본값으로 첫 번째 경로 반환 (파일이 존재하지 않을 수 있음)
+            return possiblePaths.FirstOrDefault() ?? Path.Combine(currentDir, "sample", "sample.CCV");
+        }
+        
+        // 워크스페이스 루트 디렉토리를 찾는 메서드
+        private string GetWorkspaceRoot()
+        {
+            try
+            {
+                // 현재 디렉토리에서 .sln 파일을 찾아 워크스페이스 루트 찾기
+                var currentDir = Directory.GetCurrentDirectory();
+                var searchDir = currentDir;
+                
+                for (int i = 0; i < 10; i++) // 최대 10단계 상위로 검색
+                {
+                    var solutionFiles = Directory.GetFiles(searchDir, "*.sln");
+                    if (solutionFiles.Length > 0)
+                    {
+                        return searchDir;
+                    }
+                    
+                    var parentDir = Directory.GetParent(searchDir);
+                    if (parentDir == null) break;
+                    searchDir = parentDir.FullName;
+                }
+            }
+            catch
+            {
+                // 워크스페이스 루트를 찾을 수 없는 경우
+            }
+            
+            return null;
+        }
+        
+        // 프로젝트 파일(.csproj)을 찾는 헬퍼 메서드
+        private string FindProjectFile(string startDirectory)
+        {
+            var currentDir = startDirectory;
+            for (int i = 0; i < 10; i++) // 최대 10단계 상위로 검색
+            {
+                var projectFiles = Directory.GetFiles(currentDir, "*.csproj");
+                if (projectFiles.Length > 0)
+                {
+                    return projectFiles[0];
+                }
+                
+                var parentDir = Directory.GetParent(currentDir);
+                if (parentDir == null) break;
+                currentDir = parentDir.FullName;
+            }
+            return null;
         }
 
 
@@ -844,14 +1275,14 @@ namespace ConvalServiceApi.Models
                 } else if (dbRow.TryGetValue("ValveType", out vtObj) && vtObj is string vtStr2) {
                     cData.ParamByName["ValveType"].Text = vtStr2;
                 }
-                if (dbRow.TryGetValue("SelectedValveSize", out object svsObj) && svsObj is string svsStr && SelectedValveSizeDbToConval.ContainsKey(svsStr)) {
+                if (dbRow.TryGetValue("BodySize", out object svsObj) && svsObj is string svsStr && SelectedValveSizeDbToConval.ContainsKey(svsStr)) {
                     cData.ParamByName["ListDN"].Text = SelectedValveSizeDbToConval[svsStr];
-                } else if (dbRow.TryGetValue("SelectedValveSize", out svsObj) && svsObj is string svsStr2) {
+                } else if (dbRow.TryGetValue("BodySize", out svsObj) && svsObj is string svsStr2) {
                     cData.ParamByName["ListDN"].Text = svsStr2;
                 }
-                if (dbRow.TryGetValue("PressureClass", out object pcObj) && pcObj is string pcStr && PressureClassDbToConval.ContainsKey(pcStr)) {
+                if (dbRow.TryGetValue("Rating", out object pcObj) && pcObj is string pcStr && PressureClassDbToConval.ContainsKey(pcStr)) {
                     cData.ParamByName["ListPN"].Text = PressureClassDbToConval[pcStr];
-                } else if (dbRow.TryGetValue("PressureClass", out pcObj) && pcObj is string pcStr2) {
+                } else if (dbRow.TryGetValue("Rating", out pcObj) && pcObj is string pcStr2) {
                     cData.ParamByName["ListPN"].Text = pcStr2;
                 }
                 
@@ -888,7 +1319,9 @@ namespace ConvalServiceApi.Models
                 SafeSetParameter(cData, dbRow, "FluidCF1Unit", "Cf", "Unit");
                 SafeSetParameter(cData, dbRow, "U1Unit", "u", "Unit");
                 SafeSetParameter(cData, dbRow, "U1Unit", "u2", "Unit");
-                
+                SafeSetParameter(cData, dbRow, "SS100Unit", "h", "Unit");
+                SafeSetParameter(cData, dbRow, "TheoreticalRangeabilityUnit", "Phi0", "Unit");
+
                 // 3단계: Value 파라미터들 설정
                 if (isRhoNRiM){
                 SafeSetParameter(cData, dbRow, "Density", "RhoN", "Value");
