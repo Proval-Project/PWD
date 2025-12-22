@@ -116,7 +116,9 @@ interface ValveData {
     medium: string;
     fluid: string;
     density: string;
+    densityUnit: string;
     molecular: string;
+    molecularUnit: string;
     t1: { max: number; normal: number; min: number; };
     p1: { max: number; normal: number; min: number; };
     p2: { max: number; normal: number; min: number; };
@@ -725,7 +727,9 @@ const NewEstimateRequestPage: React.FC = () => {
       medium: '',
         fluid: '',
         density: '',
+        densityUnit: 'kg/m³',
         molecular: '',
+        molecularUnit: 'g/mol',
         t1: { max: 0, normal: 0, min: 0 },
         p1: { max: 0, normal: 0, min: 0 },
         p2: { max: 0, normal: 0, min: 0 },
@@ -1554,7 +1558,9 @@ const NewEstimateRequestPage: React.FC = () => {
                   medium: tagNo.medium || '',
                   fluid: tagNo.fluid || '',
                   density: tagNo.density?.toString() || '',
+                  densityUnit: tagNo.densityUnit || 'kg/m³',
                   molecular: tagNo.molecularWeight?.toString() || '',
+                  molecularUnit: tagNo.molecularWeightUnit || 'g/mol',
                   t1: { 
                     max: tagNo.inletTemperatureQ || 0, 
                     normal: tagNo.inletTemperatureNorQ || 0, 
@@ -1703,7 +1709,9 @@ const NewEstimateRequestPage: React.FC = () => {
                   medium: req.medium || '',
                   fluid: req.fluid || '',
                   density: req.density?.toString() || '',
+                  densityUnit: req.densityUnit || 'kg/m³',
                   molecular: req.molecularWeight?.toString() || '',
+                  molecularUnit: req.molecularWeightUnit || 'g/mol',
                   t1: { 
                     max: req.inletTemperatureQ || 0, 
                     normal: req.inletTemperatureNorQ || 0, 
@@ -1988,9 +1996,9 @@ const NewEstimateRequestPage: React.FC = () => {
         InletTemperatureQ: parseFloat(valve.fluid.t1.max.toString()) || 0,
         InletTemperatureNorQ: parseFloat(valve.fluid.t1.normal.toString()) || 0,
         InletTemperatureMinQ: parseFloat(valve.fluid.t1.min.toString()) || 0,
-                DensityUnit: 'kg/m³',
+                DensityUnit: valve.fluid.densityUnit || 'kg/m³',
                 Density: parseFloat(valve.fluid.density) || 0,
-                MolecularWeightUnit: 'g/mol',
+                MolecularWeightUnit: valve.fluid.molecularUnit || 'g/mol',
                 MolecularWeight: parseFloat(valve.fluid.molecular) || 0,
                 BodySizeUnit: valve.body.sizeUnit || null,
                 BodySize: getBodySizeCode(valve.body.size, valve.body.sizeUnit),
@@ -2848,8 +2856,34 @@ const NewEstimateRequestPage: React.FC = () => {
                             disabled={!currentValve.isDensity || isReadOnly}
                             className={!currentValve.isDensity ? 'disabled-input' : ''}
                           />
-                          <select disabled>
-                            <option value="kg/m3">kg/m3</option>
+                          <select 
+                            id="density-unit"
+                            name="densityUnit"
+                            value={currentValve.fluid.densityUnit || 'kg/m³'}
+                            onChange={(e) => handleFluidFieldChange('densityUnit', e.target.value)}
+                            disabled={!currentValve.isDensity || isReadOnly}
+                            className={!currentValve.isDensity ? 'disabled-input' : ''}
+                          >
+                            <option value="kg/m³">kg/m³</option>
+                            <option value="kg/l">kg/l</option>
+                            <option value="gr/ft³">gr/ft³</option>
+                            <option value="lb/ft³">lb/ft³</option>
+                            <option value="lb/gal(US)">lb/gal(US)</option>
+                            <option value="lb/gal(UK)">lb/gal(UK)</option>
+                            <option value="g/ml">g/ml</option>
+                            <option value="oz/gal(US)">oz/gal(US)</option>
+                            <option value="oz/gal(UK)">oz/gal(UK)</option>
+                            <option value="oz/in³">oz/in³</option>
+                            <option value="lb/in³">lb/in³</option>
+                            <option value="slug/ft³">slug/ft³</option>
+                            <option value="ton/yd³(UK)">ton/yd³(UK)</option>
+                            <option value="ton/yd³(US)">ton/yd³(US)</option>
+                            <option value="g/cm³">g/cm³</option>
+                            <option value="mg/l">mg/l</option>
+                            <option value="mg/m³">mg/m³</option>
+                            <option value="SG.H2O(60°F)">SG.H2O(60°F)</option>
+                            <option value="SG.H2O(68°F)">SG.H2O(68°F)</option>
+                            <option value="SG.H2O(4°C)">SG.H2O(4°C)</option>
                           </select>
                         </div>
                       </td>
@@ -2871,8 +2905,17 @@ const NewEstimateRequestPage: React.FC = () => {
                             disabled={currentValve.isDensity || isReadOnly}
                             className={currentValve.isDensity ? 'disabled-input' : ''}
                           />
-                          <select disabled>
-                            <option value="kg.lmol">kg.lmol</option>
+                          <select 
+                            id="molecular-unit"
+                            name="molecularUnit"
+                            value={currentValve.fluid.molecularUnit || 'g/mol'}
+                            onChange={(e) => handleFluidFieldChange('molecularUnit', e.target.value)}
+                            disabled={currentValve.isDensity || isReadOnly}
+                            className={currentValve.isDensity ? 'disabled-input' : ''}
+                          >
+                            <option value="kg/kmol">kg/kmol</option>
+                            <option value="g/mol">g/mol</option>
+                            <option value="lb/lbmol">lb/lbmol</option>
                           </select>
                         </div>
                       </td>
