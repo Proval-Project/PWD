@@ -35,6 +35,7 @@ function App() {
   const [success, setSuccess] = useState('');
   const [hasAutoExecuted, setHasAutoExecuted] = useState(false); // 자동 실행 여부 추적
   const timeoutRef = useRef(null); // 타임아웃 ID 저장용
+  const originalDataRef = useRef(null); // 초기 CONVAL 데이터 저장용
 
   // 상태 폴링 - 큐 상태 확인
   useEffect(() => {
@@ -92,6 +93,12 @@ function App() {
       setCustomerData(customerResult);
       setConvalData(convalResult);
       
+      // 초기 데이터가 없을 때만 originalDataRef에 저장 (최초 접속 상태 보존)
+      if (!originalDataRef.current && convalResult) {
+        originalDataRef.current = JSON.parse(JSON.stringify(convalResult)); // 깊은 복사
+        console.log('[시스템] 초기 데이터 저장 완료');
+      }
+      
       // CurEstimateNo가 있으면 표시용 견적번호 업데이트
       if (customerResult?.CurEstimateNo) {
         setDisplayEstimateNo(customerResult.CurEstimateNo);
@@ -120,7 +127,7 @@ function App() {
   // 견적번호가 설정되면 자동으로 데이터 로드 및 CONVAL 재호출
   useEffect(() => {
     if (estimateNo) {
-      loadData(true); // 자동 CONVAL 재호출 활성화
+      loadData(false); // 자동 CONVAL 재호출 활성화
     }
   }, [estimateNo]);
 
@@ -213,6 +220,61 @@ function App() {
     }
   };
 
+  const handleServerReset = async () => {
+    if (!originalDataRef.current || !estimateNo) {
+      alert("초기화할 데이터가 없습니다.");
+      return;
+    }
+  
+    if (window.confirm("초기 데이터로 되돌리시겠습니까?")) {
+      setIsProcessing(true);
+      setIsQueued(false);
+      setError('');
+      setSuccess('');
+      
+      try {
+        console.log('[시스템] 서버 데이터 원복 시작...');
+        
+        // 기존에 쓰던 retryConval API를 재활용하여 
+        // '박제해둔 원본(originalDataRef.current)'을 서버로 쏴버립니다.
+        const result = await retryConval({ 
+          SomeParam: estimateNo, 
+          SheetId: sheetId, 
+          ConvalData: originalDataRef.current 
+        });
+  
+        // 큐 상태 확인
+        if (result.isQueued || result.queueCount > 0 || result.isProcessing) {
+          // 큐에 추가되었거나 처리 중이면 대기 상태 유지 (기존 handleRecalculate와 동일한 로직)
+          setIsProcessing(true);
+          setIsQueued(result.isQueued || result.queueCount > 0);
+          setSuccess(result.message || '큐에 추가되었습니다. 대기 중...');
+          // 큐 폴링 로직이 자동으로 처리 완료 후 loadData()를 호출함
+        } else {
+          // 즉시 처리 완료된 경우
+          setIsProcessing(false);
+          setIsQueued(false);
+          setSuccess('서버 데이터 초기화 완료 - 데이터 자동 업데이트 중...');
+          
+          // CONVAL 재호출 완료 후 자동으로 데이터베이스에서 최신 데이터 가져오기
+          try {
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            console.log('[시스템] 서버 데이터 원복 완료, 데이터베이스에서 최신 데이터 가져오기 시작');
+            await loadData();
+            setSuccess('서버 데이터가 최초 상태로 초기화되었습니다.');
+          } catch (refreshError) {
+            console.error('[시스템] 데이터 자동 업데이트 실패:', refreshError);
+            setError('데이터 자동 업데이트 중 오류가 발생했습니다: ' + refreshError.message);
+          }
+        }
+      } catch (err) {
+        setIsProcessing(false);
+        setIsQueued(false);
+        setError('서버 초기화 중 오류 발생: ' + err.message);
+      }
+    }
+  };
+
   // 파일 상태 새로고침 함수
   const refreshFileStatus = useCallback(() => {
     // ConvalDataDisplay 컴포넌트에서 파일 상태를 새로고침하도록 트리거
@@ -266,6 +328,7 @@ function App() {
         <Col md={7} style={{ paddingLeft: '20px' }}>
           <ConvalDataDisplay 
             data={convalData} 
+            onServerReset={handleServerReset}
             isLoading={isLoading}
             onRecalculate={handleRecalculate}
             isProcessing={isProcessing}

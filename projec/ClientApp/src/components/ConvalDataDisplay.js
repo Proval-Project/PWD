@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Row, Col, Form, Table } from 'react-bootstrap';
 import { getFileStatus, downloadPdf, downloadCcv } from '../services/api';
 
-const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQueued, onFileStatusRefresh }) => {
+const ConvalDataDisplay = ({ data, isLoading, onServerReset, onRecalculate, isProcessing, isQueued, onFileStatusRefresh }) => {
   const [formData, setFormData] = useState({});
   const [fileStatus, setFileStatus] = useState({ pdfExists: false, ccvExists: false });
   const [downloading, setDownloading] = useState({ pdf: false, ccv: false });
@@ -163,9 +163,9 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
     }
   };
 
-  const handleReset = () => {
-    if (data) {
-      setFormData(data);
+  const handleResetClick = () => {
+    if (onServerReset) {
+      onServerReset();
     }
   };
 
@@ -847,7 +847,7 @@ const ConvalDataDisplay = ({ data, isLoading, onRecalculate, isProcessing, isQue
           <div className="mb-4" style={{ backgroundColor: '#DFDFDF', padding: '15px', borderRadius: '8px', height: '165px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', marginTop: '33px' }}>
             <div className="d-flex gap-3">
               <Button 
-                onClick={handleReset}
+                onClick={handleResetClick}
                 style={{ 
                   flex: 1, 
                   padding: '10px 16px', 
