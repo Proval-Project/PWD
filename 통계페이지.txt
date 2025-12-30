@@ -1,0 +1,166 @@
+통계 분석 화면 계산식 설명
+
+1. 상단 요약 카드 (StatisticsSummaryDto)
+
+데이터 소스: EstimateSheetLv1 테이블 전체
+
+계산 방식 (SQL):
+
+SELECT Status, COUNT(*)
+FROM EstimateSheetLv1
+GROUP BY Status
+
+
+상태별 매핑:
+
+견적요청 (Input): Status = 1 (임시저장) 건수
+
+견적처리중 (Waiting): Status = 2 (견적요청) 건수
+
+견적완료 (Completed): Status = 4 (견적완료) 건수
+
+주문 (Ordered): Status = 5 (주문) 건수
+
+특징: 기간 필터 없이 전체 누적 데이터를 표시함.
+
+2. 상태 분포 차트 (StatusDistributionDto)
+
+데이터 소스: EstimateSheetLv1 테이블 (기간 필터 적용)
+
+계산 방식 (SQL):
+
+SELECT Status, COUNT(*)
+FROM EstimateSheetLv1
+WHERE RequestDate BETWEEN @startDate AND @endDate
+GROUP BY Status
+
+
+상태별 매핑: 상단 요약 카드와 동일
+
+견적요청: Status = 1
+
+견적처리중: Status = 2
+
+견적완료: Status = 4
+
+주문: Status = 5
+
+특징: 선택한 기간(RequestDate) 내 데이터만 집계함.
+
+3. 월별 수주 현황 (MonthlyOrderDto)
+
+데이터 소스: EstimateSheetLv1 + EstimateRequest (JOIN)
+
+계산 방식 (SQL):
+
+SELECT
+    DATE_FORMAT(es.RequestDate, '%Y-%m') as Month,
+    COUNT(DISTINCT es.TempEstimateNo) as Count
+FROM EstimateSheetLv1 es
+LEFT JOIN EstimateRequest er ON es.TempEstimateNo = er.TempEstimateNo
+WHERE es.RequestDate BETWEEN @startDate AND @endDate
+  AND (@valveType IS NULL OR er.ValveType = @valveType)
+GROUP BY DATE_FORMAT(es.RequestDate, '%Y-%m')
+ORDER BY Month
+
+
+세부 계산식:
+
+월별 그룹화: DATE_FORMAT(RequestDate, '%Y-%m')
+
+건수: COUNT(DISTINCT TempEstimateNo) (중복 제거)
+
+밸브 타입 필터: 선택 시 해당 타입만 집계
+
+특징:
+
+견적번호 기준 중복 제거
+
+밸브 타입 필터 적용 가능
+
+4. 밸브 사양 비율 (ValveRatioDto)
+
+데이터 소스: EstimateRequest + EstimateSheetLv1 (JOIN)
+
+계산 방식 (Logic):
+
+// 1단계: 기간 필터링 및 그룹핑
+var valveGroups =
+    FROM er IN EstimateRequest
+    JOIN es IN EstimateSheetLv1 ON er.TempEstimateNo = es.TempEstimateNo
+    WHERE es.RequestDate >= startDate AND es.RequestDate <= endDate
+    GROUP BY er.ValveType
+    SELECT ValveType, COUNT(*) as Count;
+
+// 2단계: 비율 계산
+totalCount = SUM(Count);
+Percentage = (Count / totalCount) * 100;
+
+
+세부 계산식:
+
+건수: COUNT(*) (밸브 타입별)
+
+전체 건수: SUM(Count)
+
+비율: (해당 밸브 타입 건수 / 전체 건수) × 100 (소수점 둘째 자리)
+
+특징:
+
+프론트엔드에서 null 전달 시 전체 기준으로 계산
+
+밸브 타입 코드를 이름으로 매핑하여 표시
+
+5. 전환율 추이 (ConversionRateDto)
+
+데이터 소스: EstimateSheetLv1 테이블
+
+계산 방식 (SQL):
+
+SELECT
+    DATE_FORMAT(RequestDate, '%Y-%m') as Month,
+    COUNT(*) as TotalRequests,
+    COUNT(CASE WHEN Status >= 4 THEN 1 END) as CompletedQuotes,
+    COUNT(CASE WHEN Status = 5 THEN 1 END) as ActualOrders,
+    ROUND((COUNT(CASE WHEN Status = 5 THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0)), 2) as ConversionRate
+FROM EstimateSheetLv1
+WHERE RequestDate BETWEEN @startDate AND @endDate
+GROUP BY DATE_FORMAT(RequestDate, '%Y-%m')
+ORDER BY Month
+
+
+세부 계산식:
+
+전체 요청 건수 (TotalRequests): COUNT(*)
+
+견적 완료 건수 (CompletedQuotes): COUNT(CASE WHEN Status >= 4 THEN 1 END)
+
+실제 주문 건수 (ActualOrders): COUNT(CASE WHEN Status = 5 THEN 1 END)
+
+전환율 (ConversionRate): (주문 건수 / 전체 요청 건수) × 100 (소수점 둘째 자리)
+
+특징:
+
+월별 그룹화
+
+전환율은 주문 건수 기준
+
+분모가 0인 경우 NULLIF로 처리하여 에러 방지
+
+공통 사항
+
+기간 기준: 모든 통계는 RequestDate (견적요청일) 기준으로 필터링
+
+상태 값 (Status Code):
+
+1: 임시저장 (견적요청)
+
+2: 견적요청 (견적처리중)
+
+4: 견적완료
+
+5: 주문
+
+데이터베이스: MySQL 사용 (DATE_FORMAT, NULLIF 함수 등)
+
+반올림: 비율 계산은 소수점 둘째 자리까지 반올림
