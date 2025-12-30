@@ -140,7 +140,7 @@ function App() {
     setIsProcessing(true);
     setIsQueued(false);
     setError('');
-    setSuccess('');
+    setSuccess('CONVAL 재호출 요청을 전송했습니다. 처리 중...');
     
     try {
       // ConvalDataDisplay에서 전달받은 업데이트된 데이터 사용
@@ -157,7 +157,15 @@ function App() {
         // 큐에 추가되었거나 처리 중이면 대기 상태 유지
         setIsProcessing(true);
         setIsQueued(result.isQueued || result.queueCount > 0);
-        setSuccess(result.message || '큐에 추가되었습니다. 대기 중...');
+        
+        // 개선된 큐 메시지
+        const queueCount = result.queueCount || 1;
+        if (queueCount > 1) {
+          const estimatedMinutes = Math.ceil((queueCount * 50) / 60);
+          setSuccess(`CONVAL 재호출 요청이 큐에 추가되었습니다. (대기 순서: ${queueCount}번째, 예상 대기 시간: 약 ${estimatedMinutes}분)`);
+        } else {
+          setSuccess('CONVAL 재호출 요청이 큐에 추가되었습니다. 처리 중...');
+        }
         
         // 동적 타임아웃 설정: 큐 개수 * 50초(작업당 소요시간) + 30초(여유시간)
         // 최대 10개 작업까지 고려 (약 8분)
@@ -191,7 +199,7 @@ function App() {
         }
         setIsProcessing(false);
         setIsQueued(false);
-        setSuccess(result.message + ' - 데이터 자동 업데이트 중...');
+        setSuccess('CONVAL 재호출이 완료되었습니다. 최신 데이터를 불러오는 중...');
         
         // CONVAL 재호출 완료 후 자동으로 데이터베이스에서 최신 데이터 가져오기
         try {
@@ -199,7 +207,7 @@ function App() {
           await new Promise(resolve => setTimeout(resolve, 3000));
           console.log('[UI] CONVAL 재호출 완료, 데이터베이스에서 최신 데이터 가져오기 시작');
           await loadData();
-          setSuccess('CONVAL 재호출 완료 후 데이터가 자동으로 업데이트되었습니다.');
+          setSuccess('✅ CONVAL 재호출이 완료되었고 데이터가 업데이트되었습니다.');
         } catch (refreshError) {
           console.error('[UI] 데이터 자동 업데이트 실패:', refreshError);
           setError('데이터 자동 업데이트 중 오류가 발생했습니다: ' + refreshError.message);
