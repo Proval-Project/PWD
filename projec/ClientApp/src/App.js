@@ -124,10 +124,10 @@ function App() {
     }
   };
 
-  // 견적번호가 설정되면 자동으로 데이터 로드 및 CONVAL 재호출
+  // 견적번호가 설정되면 자동으로 데이터 로드 (CONVAL 재호출은 수동으로만 실행)
   useEffect(() => {
     if (estimateNo) {
-      loadData(false); // 자동 CONVAL 재호출 활성화
+      loadData(false); // 자동 CONVAL 재호출 비활성화
     }
   }, [estimateNo]);
 
@@ -169,7 +169,6 @@ function App() {
         
         // 동적 타임아웃 설정: 큐 개수 * 50초(작업당 소요시간) + 30초(여유시간)
         // 최대 10개 작업까지 고려 (약 8분)
-        const queueCount = result.queueCount || 1;
         const estimatedTime = (queueCount * 50000) + 30000; // 밀리초 단위
         const maxTimeout = 600000; // 최대 10분
         const timeoutDuration = Math.min(estimatedTime, maxTimeout);
