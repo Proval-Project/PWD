@@ -16,7 +16,7 @@ namespace ConvalServiceApi.Controllers
     {
         // 싱글턴 또는 static으로 큐 프로세서 관리
         private static readonly ConvalQueueProcessor queueProcessor = new ConvalQueueProcessor();
-        private readonly string connectionString = "Server=localhost;Database=pwd_final;Uid=root;";
+        private readonly string connectionString = "Server=192.168.0.59;Database=pwd_final;Uid=root;";
 
         [HttpPost]
         [Route("retry")]
@@ -45,7 +45,7 @@ namespace ConvalServiceApi.Controllers
             }
             else
             {
-                Debug.WriteLine("[컨트롤러] DB 저장 조건 불충족 (ConvalData/SomeParam/SheetId 확인)");
+               // Debug.WriteLine("[컨트롤러] DB 저장 조건 불충족 (ConvalData/SomeParam/SheetId 확인)");
             }
 
             // 2. 큐에 파일명(파라미터) 추가
@@ -53,24 +53,24 @@ namespace ConvalServiceApi.Controllers
             bool queued = false;
             if (!string.IsNullOrEmpty(model?.SomeParam))
             {
-                Debug.WriteLine("[컨트롤러] 큐에 추가 시도");
+                //Debug.WriteLine("[컨트롤러] 큐에 추가 시도");
                 try
                 {
                     var sheet = model.SheetId > 0 ? model.SheetId : 1;
                     var workKey = $"{model.SomeParam}_{sheet}";
-                    Debug.WriteLine($"[컨트롤러] 큐 키: {workKey}");
+                    //Debug.WriteLine($"[컨트롤러] 큐 키: {workKey}");
                     queueProcessor.ProcessButtonClicked(workKey);
                     queued = true;
-                    Debug.WriteLine("[컨트롤러] 큐에 추가 완료");
+                    //Debug.WriteLine("[컨트롤러] 큐에 추가 완료");
 
                     // 3. 큐 처리 시작 (이미 처리 중이면 내부에서 무시)
-                    Debug.WriteLine("[컨트롤러] 큐 처리 시작 호출");
+                    //Debug.WriteLine("[컨트롤러] 큐 처리 시작 호출");
                     await queueProcessor.StartProcessingAsync();
-                    Debug.WriteLine("[컨트롤러] 큐 처리 시작 호출 완료");
+                    //Debug.WriteLine("[컨트롤러] 큐 처리 시작 호출 완료");
                 }
                 catch (Exception ex)
                 {
-                    Debug.WriteLine($"[컨트롤러][오류] 큐 처리 중 예외: {ex.Message}\n{ex}");
+                    //Debug.WriteLine($"[컨트롤러][오류] 큐 처리 중 예외: {ex.Message}\n{ex}");
                 }
             }
             else
@@ -485,10 +485,10 @@ namespace ConvalServiceApi.Controllers
             }
             
             // 디버깅용 로그
-            Debug.WriteLine($"[컨트롤러] 전달받은 데이터 키들: {string.Join(", ", dataKeys)}");
-            Debug.WriteLine($"[컨트롤러] SQL 파라미터들: {string.Join(", ", sqlParams)}");
-            Debug.WriteLine($"[컨트롤러] 누락된 파라미터: {string.Join(", ", missingParams)}");
-            Debug.WriteLine($"[컨트롤러] 추가 데이터 키: {string.Join(", ", extraDataKeys)}");
+            //Debug.WriteLine($"[컨트롤러] 전달받은 데이터 키들: {string.Join(", ", dataKeys)}");
+            //Debug.WriteLine($"[컨트롤러] SQL 파라미터들: {string.Join(", ", sqlParams)}");
+            //Debug.WriteLine($"[컨트롤러] 누락된 파라미터: {string.Join(", ", missingParams)}");
+            //Debug.WriteLine($"[컨트롤러] 추가 데이터 키: {string.Join(", ", extraDataKeys)}");
             
             // 매핑된 필드들을 SQL 파라미터에 설정
             foreach (var mapping in fieldMapping)

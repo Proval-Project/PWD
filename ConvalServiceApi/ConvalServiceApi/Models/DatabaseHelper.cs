@@ -12,7 +12,7 @@ namespace  ConvalServiceApi.Models
         public DatabaseHelper()
         {
             // 로컬 MySQL 연결 문자열 (비밀번호 없음)
-            connectionString = "Server=localhost;Database=pwd_final;Uid=root;";
+            connectionString = "Server=192.168.0.59;Database=pwd_final;Uid=root;";
         }
 
         public bool TestConnection()
@@ -22,13 +22,13 @@ namespace  ConvalServiceApi.Models
                 using (var connection = new MySqlConnection(connectionString))
                 {
                     connection.Open();
-                    Console.WriteLine("데이터베이스 연결 성공!");
+                    System.Diagnostics.Debug.WriteLine("데이터베이스 연결 성공!");
                     return true;
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"데이터베이스 연결 실패: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"데이터베이스 연결 실패: {ex.Message}");
                 return false;
             }
         }
@@ -72,7 +72,7 @@ namespace  ConvalServiceApi.Models
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"데이터베이스 조회 실패: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"데이터베이스 조회 실패: {ex.Message}");
             }
             
             return result;
@@ -177,8 +177,8 @@ namespace  ConvalServiceApi.Models
                         
                         using (var command = new MySqlCommand(sql, connection))
                         {
-                            Console.WriteLine($"[DB] SQL 쿼리: {sql}");
-                            Console.WriteLine($"[DB] 기본 파라미터: TempEstimateNo={estimateNo}, SheetID={sheetId}");
+                            System.Diagnostics.Debug.WriteLine($"[DB] SQL 쿼리: {sql}");
+                            System.Diagnostics.Debug.WriteLine($"[DB] 기본 파라미터: TempEstimateNo={estimateNo}, SheetID={sheetId}");
                             
                             // 기본 파라미터 설정
                             command.Parameters.AddWithValue("@TempEstimateNo", estimateNo);
@@ -264,7 +264,7 @@ namespace  ConvalServiceApi.Models
                             }
                             
                             // 결과 데이터를 파라미터에 매핑
-                            Console.WriteLine($"[DB] 결과 데이터 매핑 시작, 총 {results.Count}개");
+                            System.Diagnostics.Debug.WriteLine($"[DB] 결과 데이터 매핑 시작, 총 {results.Count}개");
                             foreach (var item in results)
                             {
                                 string paramName = "@" + item.Key;
@@ -272,28 +272,28 @@ namespace  ConvalServiceApi.Models
                                 {
                                     var value = item.Value ?? DBNull.Value;
                                     command.Parameters[paramName].Value = value;
-                                    Console.WriteLine($"[DB] 파라미터 설정: {paramName} = {value} (타입: {value?.GetType().Name ?? "DBNull"})");
+                                    System.Diagnostics.Debug.WriteLine($"[DB] 파라미터 설정: {paramName} = {value} (타입: {value?.GetType().Name ?? "DBNull"})");
                                 }
                                 else
                                 {
-                                    Console.WriteLine($"[DB] 파라미터 없음: {paramName}");
+                                    System.Diagnostics.Debug.WriteLine($"[DB] 파라미터 없음: {paramName}");
                                 }
                             }
                             
-                            Console.WriteLine("[DB] SQL 실행 시작");
+                            System.Diagnostics.Debug.WriteLine("[DB] SQL 실행 시작");
                             try
                             {
                                 command.ExecuteNonQuery();
-                                Console.WriteLine("[DB] SQL 실행 완료");
+                                System.Diagnostics.Debug.WriteLine("[DB] SQL 실행 완료");
                             }
                             catch (Exception sqlEx)
                             {
-                                Console.WriteLine($"[DB] SQL 실행 실패: {sqlEx.Message}");
-                                Console.WriteLine($"[DB] SQL 실행 실패 타입: {sqlEx.GetType().FullName}");
+                                System.Diagnostics.Debug.WriteLine($"[DB] SQL 실행 실패: {sqlEx.Message}");
+                                System.Diagnostics.Debug.WriteLine($"[DB] SQL 실행 실패 타입: {sqlEx.GetType().FullName}");
                                 if (sqlEx is MySql.Data.MySqlClient.MySqlException mysqlSqlEx)
                                 {
-                                    Console.WriteLine($"[DB] MySQL SQL 에러 코드: {mysqlSqlEx.Number}");
-                                    Console.WriteLine($"[DB] MySQL SQL 에러 메시지: {mysqlSqlEx.Message}");
+                                    System.Diagnostics.Debug.WriteLine($"[DB] MySQL SQL 에러 코드: {mysqlSqlEx.Number}");
+                                    System.Diagnostics.Debug.WriteLine($"[DB] MySQL SQL 에러 메시지: {mysqlSqlEx.Message}");
                                 }
                                 throw; // 예외를 다시 던져서 상위에서 처리
                             }
@@ -305,22 +305,22 @@ namespace  ConvalServiceApi.Models
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"CONVAL 결과 저장 실패: {ex.Message}");
-                Console.WriteLine($"예외 타입: {ex.GetType().FullName}");
-                Console.WriteLine($"예외 상세: {ex}");
+                System.Diagnostics.Debug.WriteLine($"CONVAL 결과 저장 실패: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"예외 타입: {ex.GetType().FullName}");
+                System.Diagnostics.Debug.WriteLine($"예외 상세: {ex}");
                 
                 if (ex.InnerException != null)
                 {
-                    Console.WriteLine($"내부 예외: {ex.InnerException.Message}");
-                    Console.WriteLine($"내부 예외 타입: {ex.InnerException.GetType().FullName}");
+                    System.Diagnostics.Debug.WriteLine($"내부 예외: {ex.InnerException.Message}");
+                    System.Diagnostics.Debug.WriteLine($"내부 예외 타입: {ex.InnerException.GetType().FullName}");
                 }
                 
                 // MySQL 특정 예외 정보 출력
                 if (ex is MySql.Data.MySqlClient.MySqlException mysqlEx)
                 {
-                    Console.WriteLine($"MySQL 에러 코드: {mysqlEx.Number}");
-                    Console.WriteLine($"MySQL 에러 메시지: {mysqlEx.Message}");
-                    Console.WriteLine($"MySQL SQL 상태: {mysqlEx.SqlState}");
+                    System.Diagnostics.Debug.WriteLine($"MySQL 에러 코드: {mysqlEx.Number}");
+                    System.Diagnostics.Debug.WriteLine($"MySQL 에러 메시지: {mysqlEx.Message}");
+                    System.Diagnostics.Debug.WriteLine($"MySQL SQL 상태: {mysqlEx.SqlState}");
                 }
                 
                 return false;

@@ -1045,7 +1045,7 @@ th {
 .glyphicon-triangle-top:before {
   content: "\e253";
 }
-.glyphicon-console:before {
+.glyphicon-System.Diagnostics.Debug:before {
   content: "\e254";
 }
 .glyphicon-superscript:before {
