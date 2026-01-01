@@ -103,6 +103,56 @@ namespace ConvalServiceApi.Models
             convalSemaphore = new SemaphoreSlim(1, 1); // Conval은 한 번에 하나씩만
         }
 
+        private static HashSet<string> _systemFluidCache = null;
+        private static readonly object _cacheLock = new object();
+
+        // ⭐ 여기에 추가!
+        private HashSet<string> GetSystemFluidList(dynamic cData)
+        {
+            if (_systemFluidCache != null)
+                return _systemFluidCache;
+
+            lock (_cacheLock)
+            {
+                if (_systemFluidCache != null)
+                    return _systemFluidCache;
+
+                var systemFluids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                try
+                {
+                    var fluidParam = cData.ParamByName["FluidName"];
+                    int fluidCount = fluidParam.SwitchStateCount;
+
+                    for (int i = 1; i <= fluidCount; i++)
+                    {
+                        string fluidName = fluidParam.SwitchStateNames[i];
+                        systemFluids.Add(fluidName);
+                    }
+
+                    _systemFluidCache = systemFluids;
+                }
+                catch
+                {
+                    _systemFluidCache = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    "Water", "Steam", "Air", "Fuel Gas"
+                };
+                }
+
+                return _systemFluidCache;
+            }
+        }
+
+        private bool IsSystemFluid(string fluidName, dynamic cData)
+        {
+            if (string.IsNullOrWhiteSpace(fluidName))
+                return false;
+
+            var systemFluids = GetSystemFluidList(cData);
+            return systemFluids.Contains(fluidName.Trim());
+        }
+
         // 버튼 클릭 시 호출되는 메서드
         public void ProcessButtonClicked(string fileName)
         {
@@ -225,7 +275,7 @@ namespace ConvalServiceApi.Models
                         System.Diagnostics.Debug.WriteLine("[CONVAL] 큐 비어있음, 처리 종료");
                         break;
                     }
-                    
+
                     // 큐가 비어있으면 잠시 대기
                     await Task.Delay(50, cancellationToken);
                 }
@@ -267,7 +317,7 @@ namespace ConvalServiceApi.Models
                         System.Diagnostics.Debug.WriteLine($"[CONVAL] CONVAL 엔진이 설치되지 않음: {fileName}");
                         return false;
                     }
-                    
+
                     try
                     {
                         // 30초 타임아웃으로 CONVAL 처리
@@ -335,11 +385,11 @@ namespace ConvalServiceApi.Models
 #if CONVAL_AVAILABLE
                 System.Diagnostics.Debug.WriteLine("[CONVAL] CONVAL COM 객체 생성 시작");
                 System.Diagnostics.Debug.WriteLine("[CONVAL] CONVAL COM 객체 생성 시작");
-                
+
                 var convalApp = new COMConval11.Conval11();
                 //System.Diagnostics.Debug.WriteLine("[CONVAL] CONVAL COM 객체 생성 완료");
                 System.Diagnostics.Debug.WriteLine("[CONVAL] CONVAL COM 객체 생성 완료");
-                
+
                 // CONVAL 객체 상태 확인
                 try
                 {
@@ -351,9 +401,9 @@ namespace ConvalServiceApi.Models
                 catch (Exception ex)
                 {
                     System.Diagnostics.Debug.WriteLine($"[CONVAL] CONVAL 객체 상태 확인 실패: {ex.Message}");
-                   // System.Diagnostics.Debug.WriteLine($"[CONVAL] CONVAL 객체 상태 확인 실패: {ex.Message}");
+                    // System.Diagnostics.Debug.WriteLine($"[CONVAL] CONVAL 객체 상태 확인 실패: {ex.Message}");
                 }
-                
+
                 // 각 작업마다 고유한 임시 .ccv 파일 생성
                 string tempDir = Path.Combine(Path.GetTempPath(), "ConvalTemp");
                 if (!Directory.Exists(tempDir))
@@ -361,21 +411,21 @@ namespace ConvalServiceApi.Models
                     Directory.CreateDirectory(tempDir);
                 }
                 string tempCcvPath = Path.Combine(tempDir, $"temp_{Guid.NewGuid().ToString()}.ccv");
-                
+
                 // 디버그용 로그 추가
                 System.Diagnostics.Debug.WriteLine($"[CONVAL] 임시 폴더 경로: {tempDir}");
-               // System.Diagnostics.Debug.WriteLine($"[CONVAL] 임시 CCV 파일 경로: {tempCcvPath}");
-               // System.Diagnostics.Debug.WriteLine($"[CONVAL] 임시 폴더 경로: {tempDir}");
+                // System.Diagnostics.Debug.WriteLine($"[CONVAL] 임시 CCV 파일 경로: {tempCcvPath}");
+                // System.Diagnostics.Debug.WriteLine($"[CONVAL] 임시 폴더 경로: {tempDir}");
                 System.Diagnostics.Debug.WriteLine($"[CONVAL] 임시 CCV 파일 경로: {tempCcvPath}");
 
                 // 원본 sample.CCV 파일을 임시 파일로 복사
                 string originalSamplePath = GetSampleCcvPath();
-                
+
                 if (!File.Exists(originalSamplePath))
                 {
                     System.Diagnostics.Debug.WriteLine($"[CONVAL] sample.CCV 파일을 찾을 수 없습니다: {originalSamplePath}");
                     //System.Diagnostics.Debug.WriteLine($"[CONVAL] sample.CCV 파일을 찾을 수 없습니다: {originalSamplePath}");
-                    
+
                     // 대안 경로 시도
                     var alternativePaths = new List<string>
                     {
@@ -383,18 +433,18 @@ namespace ConvalServiceApi.Models
                         Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "sample", "sample.CCV"),
                         Path.Combine(Directory.GetCurrentDirectory(), "sample", "sample.CCV")
                     };
-                    
+
                     foreach (var altPath in alternativePaths)
                     {
                         if (File.Exists(altPath))
                         {
                             originalSamplePath = altPath;
                             System.Diagnostics.Debug.WriteLine($"[CONVAL] 대안 경로에서 sample.CCV 발견: {altPath}");
-                           // System.Diagnostics.Debug.WriteLine($"[CONVAL] 대안 경로에서 sample.CCV 발견: {altPath}");
+                            // System.Diagnostics.Debug.WriteLine($"[CONVAL] 대안 경로에서 sample.CCV 발견: {altPath}");
                             break;
                         }
                     }
-                    
+
                     if (!File.Exists(originalSamplePath))
                     {
                         System.Diagnostics.Debug.WriteLine($"[CONVAL] 모든 경로에서 sample.CCV를 찾을 수 없습니다. CONVAL 처리 중단");
@@ -402,16 +452,16 @@ namespace ConvalServiceApi.Models
                         return false;
                     }
                 }
-                
+
                 System.Diagnostics.Debug.WriteLine($"[CONVAL] 사용할 sample.CCV 경로: {originalSamplePath}");
                 //.Diagnostics.Debug.WriteLine($"[CONVAL] 사용할 sample.CCV 경로: {originalSamplePath}");
-                
+
                 // 임시 파일로 복사 (파일 공유 문제 해결)
                 try
                 {
                     File.Copy(originalSamplePath, tempCcvPath, true);
                     System.Diagnostics.Debug.WriteLine($"[CONVAL] 임시 파일 복사 완료: {tempCcvPath}");
-                   // System.Diagnostics.Debug.WriteLine($"[CONVAL] 임시 파일 복사 완료: {tempCcvPath}");
+                    // System.Diagnostics.Debug.WriteLine($"[CONVAL] 임시 파일 복사 완료: {tempCcvPath}");
                 }
                 catch (Exception ex)
                 {
@@ -420,7 +470,7 @@ namespace ConvalServiceApi.Models
                     return false;
                 }
 
-                
+
                 try
                 {
                     //System.Diagnostics.Debug.WriteLine("[CONVAL] NewDialog(1) 호출 시작");
@@ -519,7 +569,7 @@ namespace ConvalServiceApi.Models
                         System.Diagnostics.Debug.WriteLine("[CONVAL] NewDialog(1) 성공, Open 메서드 호출 시작");
                         System.Diagnostics.Debug.WriteLine("[CONVAL] NewDialog(1) 성공, Open 메서드 호출 시작");
                     }
-                    
+
                     try
                     {
                         dialog.Open(tempCcvPath, true);
@@ -532,7 +582,7 @@ namespace ConvalServiceApi.Models
                         System.Diagnostics.Debug.WriteLine($"[CONVAL] Open 메서드 호출 실패: {ex.Message}");
                         return false;
                     }
-                    
+
                     System.Diagnostics.Debug.WriteLine("[CONVAL] Calculation 객체 접근 시작");
                     System.Diagnostics.Debug.WriteLine("[CONVAL] Calculation 객체 접근 시작");
 
@@ -542,21 +592,21 @@ namespace ConvalServiceApi.Models
 
                     System.Diagnostics.Debug.WriteLine("[CONVAL] Calculation 객체 접근 성공");
                     System.Diagnostics.Debug.WriteLine("[CONVAL] Calculation 객체 접근 성공");
-                    
+
                     // 데이터베이스에서 데이터 가져오기
                     System.Diagnostics.Debug.WriteLine("[CONVAL] 데이터베이스 조회 시작");
                     System.Diagnostics.Debug.WriteLine("[CONVAL] 데이터베이스 조회 시작");
-                    
+
                     var dbHelper = new DatabaseHelper();
                     var dbRow = dbHelper.GetConvalRowByFileName(estimateNo, sheetId);
-                    
+
                     if (dbRow == null || dbRow.Count == 0)
                     {
                         System.Diagnostics.Debug.WriteLine($"[CONVAL] 데이터베이스에서 데이터를 찾을 수 없음: {estimateNo}_{sheetId}");
                         System.Diagnostics.Debug.WriteLine($"[CONVAL] 데이터베이스에서 데이터를 찾을 수 없음: {estimateNo}_{sheetId}");
                         return false;
                     }
-                    
+
                     System.Diagnostics.Debug.WriteLine($"[CONVAL] DB 데이터 조회 완료: {estimateNo}_{sheetId}, 데이터 개수: {dbRow.Count}");
                     System.Diagnostics.Debug.WriteLine($"[CONVAL] DB 데이터 조회 완료: {estimateNo}_{sheetId}, 데이터 개수: {dbRow.Count}");
 
@@ -571,8 +621,8 @@ namespace ConvalServiceApi.Models
                         //try
                         //{
                         SetConvalInputsFromDbRow(Calculation, cData, dbRow);
-                            System.Diagnostics.Debug.WriteLine("[CONVAL] CONVAL 입력값 설정 완료");
-                            //System.Diagnostics.Debug.WriteLine("[CONVAL] CONVAL 입력값 설정 완료");
+                        System.Diagnostics.Debug.WriteLine("[CONVAL] CONVAL 입력값 설정 완료");
+                        //System.Diagnostics.Debug.WriteLine("[CONVAL] CONVAL 입력값 설정 완료");
                         //}
                         //finally
                         //{
@@ -604,10 +654,10 @@ namespace ConvalServiceApi.Models
                     // 결과 파일 생성
                     System.Diagnostics.Debug.WriteLine("[CONVAL] 결과 파일 생성 시작");
                     System.Diagnostics.Debug.WriteLine("[CONVAL] 결과 파일 생성 시작");
-                    
+
                     string resultPath = Path.Combine(GetSampleCcvPath(), "..", "..", "TestData", "Results");
                     resultPath = Path.GetFullPath(resultPath);
-                    
+
                     try
                     {
                         Directory.CreateDirectory(resultPath);
@@ -619,10 +669,10 @@ namespace ConvalServiceApi.Models
                         System.Diagnostics.Debug.WriteLine($"[CONVAL] 결과 디렉토리 생성 실패: {ex.Message}");
                         System.Diagnostics.Debug.WriteLine($"[CONVAL] 결과 디렉토리 생성 실패: {ex.Message}");
                     }
-                    
+
                     string ccvFile = Path.Combine(resultPath, $"{estimateNo}.ccv");
                     string pdfFile = Path.Combine(resultPath, $"{estimateNo}.pdf");
-                    
+
                     try
                     {
                         convalApp.Dialogs[1].SaveAs(ccvFile, true);
@@ -635,7 +685,7 @@ namespace ConvalServiceApi.Models
                         System.Diagnostics.Debug.WriteLine($"[CONVAL] CCV 파일 저장 실패: {ex.Message}");
                         // CCV 파일 저장 실패가 있어도 계속 진행
                     }
-                    
+
                     bool pdfCreated = CreatePdfFile(convalApp.Dialogs[1], pdfFile);
                     if (pdfCreated)
                     {
@@ -647,33 +697,33 @@ namespace ConvalServiceApi.Models
                         System.Diagnostics.Debug.WriteLine($"[CONVAL] PDF 파일 생성 실패: {pdfFile}");
                         System.Diagnostics.Debug.WriteLine($"[CONVAL] PDF 파일 생성 실패: {pdfFile}");
                     }
-                    
+
                     System.Diagnostics.Debug.WriteLine($"[CONVAL] 결과 파일 생성 완료: {estimateNo}_{sheetId}");
                     System.Diagnostics.Debug.WriteLine($"[CONVAL] 결과 파일 생성 완료: {estimateNo}_{sheetId}");
 
                     // 결과값을 데이터베이스에 저장
                     System.Diagnostics.Debug.WriteLine("[CONVAL] 결과값 추출 시작");
                     System.Diagnostics.Debug.WriteLine("[CONVAL] 결과값 추출 시작");
-                    
+
                     var valueDic = ExtractConvalResultsToDictionary(cData, oData, dbRow);
-                    
+
                     System.Diagnostics.Debug.WriteLine($"[CONVAL] 추출된 결과값 개수: {valueDic.Count}");
                     System.Diagnostics.Debug.WriteLine($"[CONVAL] 결과값 키들: {string.Join(", ", valueDic.Keys)}");
                     System.Diagnostics.Debug.WriteLine($"[CONVAL] 추출된 결과값 개수: {valueDic.Count}");
                     System.Diagnostics.Debug.WriteLine($"[CONVAL] 결과값 키들: {string.Join(", ", valueDic.Keys)}");
-                    
+
                     System.Diagnostics.Debug.WriteLine("[CONVAL] 결과값 데이터베이스 저장 시작");
                     System.Diagnostics.Debug.WriteLine("[CONVAL] 결과값 데이터베이스 저장 시작");
-                    
+
                     var dbHelper2 = new DatabaseHelper();
                     bool dbSaveOk = dbHelper2.SaveConvalResults(estimateNo, valueDic, sheetId);
                     System.Diagnostics.Debug.WriteLine($"[CONVAL] 결과값 DB 저장: {estimateNo}_{sheetId}, 성공: {dbSaveOk}");
                     System.Diagnostics.Debug.WriteLine($"[CONVAL] 결과값 DB 저장: {estimateNo}_{sheetId}, 성공: {dbSaveOk}");
-                    
+
                     // CONVAL 엔진 완전 종료
                     System.Diagnostics.Debug.WriteLine("[CONVAL] CONVAL 엔진 종료 시작");
                     System.Diagnostics.Debug.WriteLine("[CONVAL] CONVAL 엔진 종료 시작");
-                    
+
                     try
                     {
                         convalApp.Dialogs[1].Close();
@@ -685,7 +735,7 @@ namespace ConvalServiceApi.Models
                         System.Diagnostics.Debug.WriteLine($"[CONVAL] Dialog 닫기 실패: {ex.Message}");
                         System.Diagnostics.Debug.WriteLine($"[CONVAL] Dialog 닫기 실패: {ex.Message}");
                     }
-                    
+
                     try
                     {
                         convalApp.Close();
@@ -697,7 +747,7 @@ namespace ConvalServiceApi.Models
                         System.Diagnostics.Debug.WriteLine($"[CONVAL] CONVAL 앱 닫기 실패: {ex.Message}");
                         System.Diagnostics.Debug.WriteLine($"[CONVAL] CONVAL 앱 닫기 실패: {ex.Message}");
                     }
-                    
+
                     try
                     {
                         convalApp.Exit();
@@ -709,7 +759,7 @@ namespace ConvalServiceApi.Models
                         System.Diagnostics.Debug.WriteLine($"[CONVAL] CONVAL 앱 종료 실패: {ex.Message}");
                         System.Diagnostics.Debug.WriteLine($"[CONVAL] CONVAL 앱 종료 실패: {ex.Message}");
                     }
-                    
+
                     // COM 객체 해제
                     try
                     {
@@ -723,7 +773,7 @@ namespace ConvalServiceApi.Models
                         System.Diagnostics.Debug.WriteLine($"[CONVAL] COM 객체 해제 실패: {ex.Message}");
                         System.Diagnostics.Debug.WriteLine($"[CONVAL] COM 객체 해제 실패: {ex.Message}");
                     }
-                    
+
                     // GC 강제 실행 (메모리 정리)
                     try
                     {
@@ -737,10 +787,10 @@ namespace ConvalServiceApi.Models
                         System.Diagnostics.Debug.WriteLine($"[CONVAL] 가비지 컬렉션 실패: {ex.Message}");
                         System.Diagnostics.Debug.WriteLine($"[CONVAL] 가비지 컬렉션 실패: {ex.Message}");
                     }
-                    
+
                     System.Diagnostics.Debug.WriteLine($"[CONVAL] 전체 CONVAL 처리 성공: {estimateNo}_{sheetId}");
                     System.Diagnostics.Debug.WriteLine($"[CONVAL] 전체 CONVAL 처리 성공: {estimateNo}_{sheetId}");
-                    
+
                     return true;
                 }
                 finally
@@ -1011,6 +1061,7 @@ namespace ConvalServiceApi.Models
         }
 
         // sample.CCV 파일 경로 찾기 메서드
+        
         private string GetSampleCcvPath()
         {
             // 여러 경로에서 sample.CCV 파일을 찾기
@@ -1238,9 +1289,29 @@ namespace ConvalServiceApi.Models
         {
             if (dbRow == null || dbRow.Count == 0) return;
 
-            try
-            {
-                cData.WantOrderedList = false;
+            // ⭐ 디버깅 로그 추가
+            Debug.WriteLine("=== DB에서 읽은 데이터 확인 ===");
+            Debug.WriteLine($"dbRow.Count: {dbRow.Count}");
+
+            if (dbRow.ContainsKey("QNMax"))
+                Debug.WriteLine($"✅ QNMax 존재: {dbRow["QNMax"]}");
+            else
+                Debug.WriteLine($"❌ QNMax 키 없음!");
+
+            if (dbRow.ContainsKey("QNNor"))
+                Debug.WriteLine($"✅ QNNor 존재: {dbRow["QNNor"]}");
+            else
+                Debug.WriteLine($"❌ QNNor 키 없음!");
+
+            if (dbRow.ContainsKey("QNMin"))
+                Debug.WriteLine($"✅ QNMin 존재: {dbRow["QNMin"]}");
+            else
+                Debug.WriteLine($"❌ QNMin 키 없음!");
+
+            Debug.WriteLine("=== 확인 완료 ===");
+
+
+            cData.WantOrderedList = false;
                 System.Diagnostics.Debug.WriteLine("[DEBUG] WantOrderedList = false 설정 완료");
 
 
@@ -1253,6 +1324,8 @@ namespace ConvalServiceApi.Models
                 System.Diagnostics.Debug.WriteLine("[DEBUG] ===== Phase 설정 시작 =====");
 
                 Calculation.BeginUpdate();
+                try 
+                { 
 
                 cData.ParamByName["ChangePhase"].Text = "nein";
 
@@ -1286,7 +1359,7 @@ namespace ConvalServiceApi.Models
                 }
 
                 Calculation.EndUpdate();
-
+                /******************************************/
                 System.Threading.Thread.Sleep(500);
 
                 // ⭐ Phase 설정 직후 확인
@@ -1308,24 +1381,21 @@ namespace ConvalServiceApi.Models
                 // ========================================
                 System.Diagnostics.Debug.WriteLine("[DEBUG] ===== 시스템 유체 확인 =====");
 
-                var fluidParam = cData.ParamByName["FluidName"];
-                if (fluidParam != null)
-                {
-                    bool hasDensityValue = dbRow.ContainsKey("Density") &&
-                                           dbRow["Density"] != null &&
-                                           dbRow["Density"] != DBNull.Value &&
-                                           !string.IsNullOrWhiteSpace(dbRow["Density"].ToString()) &&
-                                           Convert.ToDouble(dbRow["Density"]) > 0;
+                // 유체명, Density, Molecular 가져오기
+                string fluidName = dbRow.TryGetValue("Medium", out object mediumObj) ?
+                                   mediumObj?.ToString() ?? "" : "";
+                double density = dbRow.TryGetValue("Density", out object densityObj) ?
+                                 Convert.ToDouble(densityObj) : 0;
+                double molecular = dbRow.TryGetValue("MolecularWeight", out object molecularObj) ?
+                                   Convert.ToDouble(molecularObj) : 0;
 
-                    bool hasMolecularValue = dbRow.ContainsKey("MolecularWeight") &&
-                                             dbRow["MolecularWeight"] != null &&
-                                             dbRow["MolecularWeight"] != DBNull.Value &&
-                                             !string.IsNullOrWhiteSpace(dbRow["MolecularWeight"].ToString()) &&
-                                             Convert.ToDouble(dbRow["MolecularWeight"]) > 0;
+                // 시스템 유체 여부 판단
+                isSystemFluid = IsSystemFluid(fluidName, cData) &&
+                                (Math.Abs(density) < 0.0001 && Math.Abs(molecular) < 0.0001);
 
-                    isSystemFluid = (fluidParam.SwitchStateCount > 0) && !hasDensityValue && !hasMolecularValue;
-                    System.Diagnostics.Debug.WriteLine($"[DEBUG] 시스템 유체 여부: {isSystemFluid}");
-                }
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] 유체명: {fluidName}");
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] Density: {density}, Molecular: {molecular}");
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] 시스템 유체 여부: {isSystemFluid}");
 
 
                 // ========================================
@@ -1337,16 +1407,52 @@ namespace ConvalServiceApi.Models
                 bool isViscosityType = dbRow.TryGetValue("IsN1", out object isViscosityTypeObj) && Convert.ToBoolean(isViscosityTypeObj);
 
                 System.Diagnostics.Debug.WriteLine("[DEBUG] === InputSwitch (Density 라디오버튼) 설정 ===");
-                if (!isSystemFluid && isDensityMode)
+                if (!isSystemFluid)
                 {
-                    try
+                    if (isDensityMode)
                     {
-                        cData.ParamByName["InputSwitch"].SwitchState = 0;
-                        System.Diagnostics.Debug.WriteLine("[DEBUG] ✅ InputSwitch = 0 (Density)");
+                        try
+                        {
+                            cData.ParamByName["InputSwitch"].SwitchState = 0;
+                            System.Diagnostics.Debug.WriteLine("[DEBUG] ✅ InputSwitch = 0 (Density)");
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[DEBUG] ❌ InputSwitch 실패: {ex.Message}");
+                        }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        System.Diagnostics.Debug.WriteLine($"[DEBUG] ❌ InputSwitch 실패: {ex.Message}");
+                        // ===== Molecular 설정 ===== ⭐ 추가!
+                        System.Diagnostics.Debug.WriteLine("[DEBUG] ===== Molecular 설정 시작 =====");
+
+                        System.Diagnostics.Debug.WriteLine($"[DEBUG] molecular 값 확인: {molecular}");  
+
+
+                        try
+                        {
+                            if (Math.Abs(molecular) > 0.0001)
+                            {
+                                var mParam = cData.ParamByName["M"];
+
+                                // DB에서 Unit 가져오기
+                                string molecularUnit = dbRow.TryGetValue("MolecularWeightUnit", out object molUnitObj) ?
+                                                      molUnitObj?.ToString() ?? "kg/kmol" : "kg/kmol";
+
+                                mParam.CalcUnit.UnitName = molecularUnit;
+                                System.Diagnostics.Debug.WriteLine($"[DEBUG] M Unit 설정: {molecularUnit}");
+
+                                mParam.Value = molecular;
+                                System.Diagnostics.Debug.WriteLine($"[DEBUG] ⭐ Molecular 설정: {molecular} {molecularUnit}");
+                            }
+                        }
+
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[DEBUG] ❌ Molecular 설정 실패: {ex.Message}");
+                        }
+
+                        System.Diagnostics.Debug.WriteLine("[DEBUG] ===== Molecular 설정 완료 =====");
                     }
                 }
 
@@ -1390,8 +1496,8 @@ namespace ConvalServiceApi.Models
                 // 다른 스위치들
                 try
                 {
-                    cData.ParamByName["P2OrDp"].SwitchState = isP2OrDp ? 0 : 1;
-                    System.Diagnostics.Debug.WriteLine($"[DEBUG] P2OrDp SwitchState: {(isP2OrDp ? 0 : 1)}");
+                    cData.ParamByName["P2OrDp"].SwitchState = isP2OrDp ? 1 : 2;
+                    System.Diagnostics.Debug.WriteLine($"[DEBUG] P2OrDp SwitchState: {(isP2OrDp ? 1 : 2)}");
                 }
                 catch
                 {
@@ -1400,8 +1506,8 @@ namespace ConvalServiceApi.Models
 
                 try
                 {
-                    cData.ParamByName["QmOrQv"].SwitchState = isQmOrQv ? 0 : 1;
-                    System.Diagnostics.Debug.WriteLine($"[DEBUG] QmOrQv SwitchState: {(isQmOrQv ? 0 : 1)}");
+                    cData.ParamByName["QmOrQv"].SwitchState = isQmOrQv ? 1 : 2;
+                    System.Diagnostics.Debug.WriteLine($"[DEBUG] QmOrQv SwitchState: {(isQmOrQv ? 1 : 2)}");
                 }
                 catch
                 {
@@ -1410,8 +1516,8 @@ namespace ConvalServiceApi.Models
 
                 try
                 {
-                    cData.ParamByName["ViscosityType"].SwitchState = isViscosityType ? 0 : 1;
-                    System.Diagnostics.Debug.WriteLine($"[DEBUG] ViscosityType SwitchState: {(isViscosityType ? 0 : 1)}");
+                    cData.ParamByName["ViscosityType"].SwitchState = isViscosityType ? 1 : 2;
+                    System.Diagnostics.Debug.WriteLine($"[DEBUG] ViscosityType SwitchState: {(isViscosityType ? 1 : 2)}");
                 }
                 catch
                 {
@@ -1461,19 +1567,59 @@ namespace ConvalServiceApi.Models
 
                 SafeSetParameter(cData, dbRow, "SizePressureClass", "PipeClass", "Text");
 
+                // ⭐ ValveType 변환
                 if (dbRow.TryGetValue("ValveType", out object vtObj) && vtObj is string vtStr && ValveTypeDbToConval.ContainsKey(vtStr))
                 {
                     cData.ParamByName["ValveType"].Text = ValveTypeDbToConval[vtStr];
                 }
 
-                if (dbRow.TryGetValue("BodySize", out object svsObj) && svsObj is string svsStr)
+                // ⭐⭐⭐ BodySize 변환 (코드 → 실제 크기)
+                if (dbRow.TryGetValue("BodySize", out object svsObj) && svsObj is string bodySizeCode)
                 {
-                    cData.ParamByName["ListDN"].Text = svsStr;
+                    System.Diagnostics.Debug.WriteLine($"[DEBUG] BodySize 원본 값: '{bodySizeCode}'");
+
+                    if (SelectedValveSizeDbToConval.TryGetValue(bodySizeCode, out string actualSize))
+                    {
+                        // Dictionary에서 변환
+                        cData.ParamByName["ListDN"].Text = actualSize;
+                        System.Diagnostics.Debug.WriteLine($"[DEBUG] ✅ BodySize 변환: {bodySizeCode} → {actualSize}");
+                    }
+                    else
+                    {
+                        // Dictionary에 없으면 그대로 사용 (이미 변환된 값일 수 있음)
+                        cData.ParamByName["ListDN"].Text = bodySizeCode;
+                        System.Diagnostics.Debug.WriteLine($"[DEBUG] ⚠️ BodySize Dictionary에 없음, 그대로 사용: {bodySizeCode}");
+                    }
                 }
 
-                if (dbRow.TryGetValue("Rating", out object pcObj) && pcObj is string pcStr)
+                // ⭐⭐⭐ PressureClass 변환 (코드 → 실제 클래스)
+                // "Rating" 또는 "PressureClass" 키 모두 확인
+                string pressureClassCode = null;
+                if (dbRow.TryGetValue("PressureClass", out object pc1Obj) && pc1Obj != null)
                 {
-                    cData.ParamByName["ListPN"].Text = pcStr;
+                    pressureClassCode = pc1Obj.ToString();
+                }
+                else if (dbRow.TryGetValue("Rating", out object pc2Obj) && pc2Obj != null)
+                {
+                    pressureClassCode = pc2Obj.ToString();
+                }
+
+                if (!string.IsNullOrEmpty(pressureClassCode))
+                {
+                    System.Diagnostics.Debug.WriteLine($"[DEBUG] PressureClass 원본 값: '{pressureClassCode}'");
+
+                    if (PressureClassDbToConval.TryGetValue(pressureClassCode, out string actualClass))
+                    {
+                        // Dictionary에서 변환
+                        cData.ParamByName["ListPN"].Text = actualClass;
+                        System.Diagnostics.Debug.WriteLine($"[DEBUG] ✅ PressureClass 변환: {pressureClassCode} → {actualClass}");
+                    }
+                    else
+                    {
+                        // Dictionary에 없으면 그대로 사용
+                        cData.ParamByName["ListPN"].Text = pressureClassCode;
+                        System.Diagnostics.Debug.WriteLine($"[DEBUG] ⚠️ PressureClass Dictionary에 없음, 그대로 사용: {pressureClassCode}");
+                    }
                 }
 
                 SafeSetParameter(cData, dbRow, "CONVALTrim", "GlobeType", "Text");
@@ -1483,7 +1629,6 @@ namespace ConvalServiceApi.Models
                 SafeSetParameter(cData, dbRow, "BasicCharacter", "CharacteristicType", "Text");
 
                 System.Diagnostics.Debug.WriteLine("[DEBUG] ===== Text 파라미터 설정 완료 =====");
-
 
                 // ========================================
                 // ⭐⭐⭐ 5단계: Density 설정 (가장 중요!)
@@ -1596,6 +1741,13 @@ namespace ConvalServiceApi.Models
                     SafeSetParameter(cData, dbRow, "QMMax", "Qm", "Value");
                     SafeSetParameter(cData, dbRow, "QMNor", "QmAp2", "Value");
                     SafeSetParameter(cData, dbRow, "QMMin", "QmAp3", "Value");
+
+                    if (dbRow.TryGetValue("Fluid", out object displayPhaseObj) && displayPhaseObj is string displayPhase)
+                    {
+                        string qParam = (displayPhase == "Gas" || displayPhase == "Gaseous") ? "Qn" : "Qv";
+                        SafeSetParameter(cData, dbRow, "QNUnit", qParam, "Unit");
+                    }
+
                 }
                 else
                 {
@@ -1606,6 +1758,8 @@ namespace ConvalServiceApi.Models
                         SafeSetParameter(cData, dbRow, "QNMax", qParam, "Value");
                         SafeSetParameter(cData, dbRow, "QNNor", $"{qParam}Ap2", "Value");
                         SafeSetParameter(cData, dbRow, "QNMin", $"{qParam}Ap3", "Value");
+
+                        SafeSetParameter(cData, dbRow, "QMUnit", "Qm", "Unit");
                     }
                 }
 
@@ -1714,7 +1868,7 @@ namespace ConvalServiceApi.Models
 
                 System.Diagnostics.Debug.WriteLine("[DEBUG] ===== CONVAL 계산 수행 완료 =====");
 
-            } // ← 이 괄호는 원래 있던 catch 블록의 닫는 괄호
+            }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"[ERROR] SetConvalInputsFromDbRow 실패: {ex.Message}");
@@ -1732,6 +1886,8 @@ namespace ConvalServiceApi.Models
 
             object value = dbRow[dbKey];
             if (value == null || value == DBNull.Value) return;
+
+
 
             try
             {
