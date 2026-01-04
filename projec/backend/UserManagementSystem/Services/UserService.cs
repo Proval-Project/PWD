@@ -225,7 +225,7 @@ namespace UserManagementSystem.Services
         {
             return await _context.Users
                 .Include(u => u.Role)
-                .Where(u => u.IsApproved && (
+                .Where(u => u.IsApproved && u.IsActive && (
                     u.UserID.Contains(searchTerm) ||
                     u.Email.Contains(searchTerm) ||
                     u.Name.Contains(searchTerm) ||
