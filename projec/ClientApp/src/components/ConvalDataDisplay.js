@@ -745,50 +745,72 @@ const ConvalDataDisplay = ({ data, isLoading, onServerReset, onRecalculate, isPr
                 </tr>
                 <tr>
                   <td className="text-center" style={{ backgroundColor: '#DFDFDF' }}>pv1</td>
-                  <td><Form.Control size="sm" value={formData.FluidPV1Max || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
-                  <td><Form.Control size="sm" value={formData.FluidPV1Nor || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
-                  <td><Form.Control size="sm" value={formData.FluidPV1Min || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
                   <td>
-                    <Form.Select size="sm" value={formData.FluidPV1Unit || 'bar(a)'} onChange={(e) => handleInputChange('FluidPV1Unit', e.target.value)}>
-                    <option value="">단위 선택</option>
-                    <option value="bar(a)">bar(a)</option>
-                    <option value="mbar(a)">mbar(a)</option>
-                    <option value="Pa(a)">Pa(a)</option>
-                    <option value="kPa(a)">kPa(a)</option>
-                    <option value="MPa(a)">MPa(a)</option>
-                    <option value="at(a)">at(a)</option>
-                    <option value="atm(a)">atm(a)</option>
-                    <option value="kp/cm²(a)">kp/cm²(a)</option>
-                    <option value="N/m²(a)">N/m²(a)</option>
-                    <option value="N/mm²(a)">N/mm²(a)</option>
-                    <option value="Torr(a)">Torr(a)</option>
-                    <option value="mmHg(a)">mmHg(a)</option>
-                    <option value="mmH2O(a)">mmH2O(a)</option>
-                    <option value="psi(a)">psi(a)</option>
-                    <option value="ftH2O(a)">ftH2O(a)</option>
-                    <option value="inHg(a)">inHg(a)</option>
-                    <option value="inH2O(a)">inH2O(a)</option>
-                    <option value="lbf/ft²(a)">lbf/ft²(a)</option>
-                    <option value="bar(g)">bar(g)</option>
-                    <option value="mbar(g)">mbar(g)</option>
-                    <option value="Pa(g)">Pa(g)</option>
-                    <option value="kPa(g)">kPa(g)</option>
-                    <option value="MPa(g)">MPa(g)</option>
-                    <option value="at(g)">at(g)</option>
-                    <option value="atm(g)">atm(g)</option>
-                    <option value="kp/cm²(g)">kp/cm²(g)</option>
-                    <option value="N/m²(g)">N/m²(g)</option>
-                    <option value="N/mm²(g)">N/mm²(g)</option>
-                    <option value="Torr(g)">Torr(g)</option>
-                    <option value="mmHg(g)">mmHg(g)</option>
-                    <option value="mmH2O(g)">mmH2O(g)</option>
-                    <option value="psi(g)">psi(g)</option>
-                    <option value="ftH2O(g)">ftH2O(g)</option>
-                    <option value="inHg(g)">inHg(g)</option>
-                    <option value="inH2O(g)">inH2O(g)</option>
-                    <option value="lbf/ft²(g)">lbf/ft²(g)</option>
-                    <option value="kgf/cm²(a)">kgf/cm²(a)</option>
-                    <option value="kgf/cm²(g)">kgf/cm²(g)</option>
+                    <Form.Control 
+                      size="sm" 
+                      value={formData.FluidPV1Max || ''} 
+                      onChange={(e) => handleInputChange('FluidPV1Max', e.target.value)}
+                    />
+                  </td>
+                  <td>
+                    <Form.Control 
+                      size="sm" 
+                      value={formData.FluidPV1Nor || ''} 
+                      onChange={(e) => handleInputChange('FluidPV1Nor', e.target.value)}
+                    />
+                  </td>
+                  <td>
+                    <Form.Control 
+                      size="sm" 
+                      value={formData.FluidPV1Min || ''} 
+                      onChange={(e) => handleInputChange('FluidPV1Min', e.target.value)}
+                    />
+                  </td>
+                  <td>
+                    <Form.Select 
+                      size="sm" 
+                      value={formData.FluidPV1Unit || 'bar(a)'} 
+                      onChange={(e) => handleInputChange('FluidPV1Unit', e.target.value)}
+                    >
+                      <option value="">단위 선택</option>
+                      <option value="bar(a)">bar(a)</option>
+                      <option value="mbar(a)">mbar(a)</option>
+                      <option value="Pa(a)">Pa(a)</option>
+                      <option value="kPa(a)">kPa(a)</option>
+                      <option value="MPa(a)">MPa(a)</option>
+                      <option value="at(a)">at(a)</option>
+                      <option value="atm(a)">atm(a)</option>
+                      <option value="kp/cm²(a)">kp/cm²(a)</option>
+                      <option value="N/m²(a)">N/m²(a)</option>
+                      <option value="N/mm²(a)">N/mm²(a)</option>
+                      <option value="Torr(a)">Torr(a)</option>
+                      <option value="mmHg(a)">mmHg(a)</option>
+                      <option value="mmH2O(a)">mmH2O(a)</option>
+                      <option value="psi(a)">psi(a)</option>
+                      <option value="ftH2O(a)">ftH2O(a)</option>
+                      <option value="inHg(a)">inHg(a)</option>
+                      <option value="inH2O(a)">inH2O(a)</option>
+                      <option value="lbf/ft²(a)">lbf/ft²(a)</option>
+                      <option value="bar(g)">bar(g)</option>
+                      <option value="mbar(g)">mbar(g)</option>
+                      <option value="Pa(g)">Pa(g)</option>
+                      <option value="kPa(g)">kPa(g)</option>
+                      <option value="MPa(g)">MPa(g)</option>
+                      <option value="at(g)">at(g)</option>
+                      <option value="atm(g)">atm(g)</option>
+                      <option value="kp/cm²(g)">kp/cm²(g)</option>
+                      <option value="N/m²(g)">N/m²(g)</option>
+                      <option value="N/mm²(g)">N/mm²(g)</option>
+                      <option value="Torr(g)">Torr(g)</option>
+                      <option value="mmHg(g)">mmHg(g)</option>
+                      <option value="mmH2O(g)">mmH2O(g)</option>
+                      <option value="psi(g)">psi(g)</option>
+                      <option value="ftH2O(g)">ftH2O(g)</option>
+                      <option value="inHg(g)">inHg(g)</option>
+                      <option value="inH2O(g)">inH2O(g)</option>
+                      <option value="lbf/ft²(g)">lbf/ft²(g)</option>
+                      <option value="kgf/cm²(a)">kgf/cm²(a)</option>
+                      <option value="kgf/cm²(g)">kgf/cm²(g)</option>
                     </Form.Select>
                   </td>
                 </tr>
@@ -810,22 +832,44 @@ const ConvalDataDisplay = ({ data, isLoading, onServerReset, onRecalculate, isPr
                 </tr>
                 <tr>
                   <td className="text-center" style={{ backgroundColor: '#DFDFDF' }}>cF1</td>
-                  <td><Form.Control size="sm" value={formData.FluidCF1Max || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
-                  <td><Form.Control size="sm" value={formData.FluidCF1Nor || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
-                  <td><Form.Control size="sm" value={formData.FluidCF1Min || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
                   <td>
-                    <Form.Select size="sm" value={formData.FluidCF1Unit || 'm/s'} onChange={(e) => handleInputChange('FluidCF1Unit', e.target.value)}>
-                    <option value="">단위 선택</option>
-                    <option value="m/s">m/s</option>
-                    <option value="ft/s">ft/s</option>
-                    <option value="mile/h">mile/h</option>
-                    <option value="ft/h">ft/h</option>
-                    <option value="ft/min">ft/min</option>
-                    <option value="in/s">in/s</option>
-                    <option value="km/h">km/h</option>
-                    <option value="in/min">in/min</option>
-                    <option value="cm/min">cm/min</option>
-                    <option value="mm/s">mm/s</option>
+                    <Form.Control 
+                      size="sm" 
+                      value={formData.FluidCF1Max || ''} 
+                      onChange={(e) => handleInputChange('FluidCF1Max', e.target.value)}
+                    />
+                  </td>
+                  <td>
+                    <Form.Control 
+                      size="sm" 
+                      value={formData.FluidCF1Nor || ''} 
+                      onChange={(e) => handleInputChange('FluidCF1Nor', e.target.value)}
+                    />
+                  </td>
+                  <td>
+                    <Form.Control 
+                      size="sm" 
+                      value={formData.FluidCF1Min || ''} 
+                      onChange={(e) => handleInputChange('FluidCF1Min', e.target.value)}
+                    />
+                  </td>
+                  <td>
+                    <Form.Select 
+                      size="sm" 
+                      value={formData.FluidCF1Unit || 'm/s'} 
+                      onChange={(e) => handleInputChange('FluidCF1Unit', e.target.value)}
+                    >
+                      <option value="">단위 선택</option>
+                      <option value="m/s">m/s</option>
+                      <option value="ft/s">ft/s</option>
+                      <option value="mile/h">mile/h</option>
+                      <option value="ft/h">ft/h</option>
+                      <option value="ft/min">ft/min</option>
+                      <option value="in/s">in/s</option>
+                      <option value="km/h">km/h</option>
+                      <option value="in/min">in/min</option>
+                      <option value="cm/min">cm/min</option>
+                      <option value="mm/s">mm/s</option>
                     </Form.Select>
                   </td>
                 </tr>

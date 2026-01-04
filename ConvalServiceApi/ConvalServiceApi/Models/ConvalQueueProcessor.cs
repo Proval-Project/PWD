@@ -903,13 +903,34 @@ namespace ConvalServiceApi.Models
                 SafeAddParameter(result, cData, "LpAa", "LpAeMax", "Value");
                 SafeAddParameter(result, cData, "LpAaAp2", "LpAeNor", "Value");
                 SafeAddParameter(result, cData, "LpAaAp3", "LpAeMin", "Value");
+
+                // ⭐ Warning 추출 부분에 상세 로깅
+                Debug.WriteLine("[EXTRACT] ===== Warning 추출 시작 =====");
+
+                // FlowState (WarningState)
+                Debug.WriteLine("[EXTRACT] FlowState 추출 시도...");
                 SafeAddParameter(result, cData, "FlowState", "WarningStateMax", "Text");
+                Debug.WriteLine($"[EXTRACT] WarningStateMax 추출 결과: {(result.ContainsKey("WarningStateMax") ? result["WarningStateMax"]?.ToString() ?? "null" : "키 없음")}");
+
                 SafeAddParameter(result, cData, "FlowStateAp2", "WarningStateNor", "Text");
+                Debug.WriteLine($"[EXTRACT] WarningStateNor 추출 결과: {(result.ContainsKey("WarningStateNor") ? result["WarningStateNor"]?.ToString() ?? "null" : "키 없음")}");
+
                 SafeAddParameter(result, cData, "FlowStateAp3", "WarningStateMin", "Text");
+                Debug.WriteLine($"[EXTRACT] WarningStateMin 추출 결과: {(result.ContainsKey("WarningStateMin") ? result["WarningStateMin"]?.ToString() ?? "null" : "키 없음")}");
+
+                // FlowType (WarningType)
+                Debug.WriteLine("[EXTRACT] FlowType 추출 시도...");
                 SafeAddParameter(result, cData, "FlowType", "WarningTypeMax", "Text");
+                Debug.WriteLine($"[EXTRACT] WarningTypeMax 추출 결과: {(result.ContainsKey("WarningTypeMax") ? result["WarningTypeMax"]?.ToString() ?? "null" : "키 없음")}");
+
                 SafeAddParameter(result, cData, "FlowTypeAp2", "WarningTypeNor", "Text");
+                Debug.WriteLine($"[EXTRACT] WarningTypeNor 추출 결과: {(result.ContainsKey("WarningTypeNor") ? result["WarningTypeNor"]?.ToString() ?? "null" : "키 없음")}");
+
                 SafeAddParameter(result, cData, "FlowTypeAp3", "WarningTypeMin", "Text");
-                
+                Debug.WriteLine($"[EXTRACT] WarningTypeMin 추출 결과: {(result.ContainsKey("WarningTypeMin") ? result["WarningTypeMin"]?.ToString() ?? "null" : "키 없음")}");
+
+                Debug.WriteLine("[EXTRACT] ===== Warning 추출 완료 =====");
+
                 // 69-78: Valve 상세 정보
                 // SafeAddParameter(result, cData, "GlobeType", "CONVALTrim", "Text");
                 // SafeAddParameter(result, cData, "InwardFlow", "FlowDirection", "Text");
@@ -1246,41 +1267,75 @@ namespace ConvalServiceApi.Models
         {
             try
             {
+                Debug.WriteLine($"[SafeAdd] 시작: paramName={paramName}, resultKey={resultKey}, type={propertyType}");
+
                 // 이미 존재하는 키인지 확인
                 if (result.ContainsKey(resultKey))
                 {
+                    Debug.WriteLine($"[SafeAdd] ⚠️ 이미 존재하는 키: {resultKey}");
                     return;
                 }
-                
-                var param = cData.ParamByName[paramName];
-                if (param != null)
+
+                object value = null;
+
+                try
                 {
-                    object value = null;
-                    switch (propertyType.ToLower())
+                    var param = cData.ParamByName[paramName];
+                    Debug.WriteLine($"[SafeAdd] param 접근 성공: {paramName}, param null? {param == null}");
+
+                    if (param != null)
                     {
-                        case "text":
-                            value = param.Text;
-                            break;
-                        case "value":
-                            value = param.Value;
-                            break;
-                        case "unit":
-                            value = param.CalcUnit.UnitName;
-                            break;
-                        default:
-                            value = param.Text;
-                            break;
+                        switch (propertyType.ToLower())
+                        {
+                            case "text":
+                                value = param.Text;
+                                Debug.WriteLine($"[SafeAdd] param.Text 읽기: '{value}'");
+                                break;
+                            case "value":
+                                value = param.Value;
+                                Debug.WriteLine($"[SafeAdd] param.Value 읽기: {value}");
+                                break;
+                            case "unit":
+                                value = param.CalcUnit.UnitName;
+                                Debug.WriteLine($"[SafeAdd] param.Unit 읽기: '{value}'");
+                                break;
+                            default:
+                                value = param.Text;
+                                Debug.WriteLine($"[SafeAdd] param.Text (default) 읽기: '{value}'");
+                                break;
+                        }
                     }
-                    
-                    if (value != null)
+                    else
                     {
-                        result.Add(resultKey, value);
+                        Debug.WriteLine($"[SafeAdd] ⚠️ param is null: {paramName}");
                     }
                 }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"[SafeAdd] ❌ param 접근 실패: {paramName}, 오류: {ex.Message}");
+                }
+
+                // Text 타입의 경우 null을 빈 문자열로 변환
+                if (propertyType.ToLower() == "text" && value == null)
+                {
+                    Debug.WriteLine($"[SafeAdd] ⭐ Text 타입 null → 빈 문자열 변환");
+                    value = "";
+                }
+
+                // value가 null이 아니면 추가
+                if (value != null)
+                {
+                    result.Add(resultKey, value);
+                    Debug.WriteLine($"[SafeAdd] ✅ Dictionary 추가 성공: {resultKey} = '{value}'");
+                }
+                else
+                {
+                    Debug.WriteLine($"[SafeAdd] ⚠️ value가 null이라 추가 안 됨: {resultKey}");
+                }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // 파라미터 추가 실패
+                Debug.WriteLine($"[SafeAdd] ❌ 최종 실패: {resultKey}, 오류: {ex.Message}");
             }
         }
 
@@ -1791,6 +1846,11 @@ namespace ConvalServiceApi.Models
                 SafeSetParameter(cData, dbRow, "FluidCF1Max", "Cf", "Value");
                 SafeSetParameter(cData, dbRow, "FluidCF1Nor", "CfAp2", "Value");
                 SafeSetParameter(cData, dbRow, "FluidCF1Min", "CfAp3", "Value");
+
+                SafeSetParameter(cData, dbRow, "FluidPV1Max", "Pv1", "Value");
+                SafeSetParameter(cData, dbRow, "FluidPV1Nor", "Pv1Ap2", "Value");
+                SafeSetParameter(cData, dbRow, "FluidPV1Min", "Pv1Ap3", "Value");
+
                 SafeSetParameter(cData, dbRow, "FluidKMax", "Kappa1", "Value");
                 SafeSetParameter(cData, dbRow, "FluidKNor", "Kappa1Ap2", "Value");
                 SafeSetParameter(cData, dbRow, "FluidKMin", "Kappa1Ap3", "Value");
