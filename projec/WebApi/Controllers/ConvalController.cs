@@ -129,6 +129,8 @@ namespace ConvalWebApi.Controllers
                 {
                     ["CurEstimateNo"] = curEstimateNo,
                     ["EstimateNo"] = estimateNoToDisplay,
+                    ["ProjectName"] = GetValueOrDash(customerData.GetValueOrDefault("Project", null)),
+                    ["TagNo"] = GetValueOrDash(customerData.GetValueOrDefault("Tagno", null)),
                     ["CustomerName"] = GetValueOrDash(customerData.GetValueOrDefault("CustomerName", null)),
                     ["Requester"] = GetValueOrDash(customerData.GetValueOrDefault("Requester", null)),
                     ["Engineer"] = GetValueOrDash(customerData.GetValueOrDefault("Engineer", null)),
@@ -851,6 +853,7 @@ namespace ConvalWebApi.Controllers
                             er.*,
                             es.TempEstimateNo AS TempEstimateNo,
                             es.CurEstimateNo AS CurEstimateNo,
+                            es.Project AS Project,
                             COALESCE(es.CurEstimateNo, es.TempEstimateNo) AS EstimateNo,
                             c.CompanyName AS CustomerName,
                             c.Name AS Requester,

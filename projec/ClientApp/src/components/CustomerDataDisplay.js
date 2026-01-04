@@ -25,6 +25,23 @@ const CustomerDataDisplay = ({ data, isLoading }) => {
   const labelStyle = { width: '35%', color: '#666', backgroundColor: '#DFDFDF', padding: '8px' };
   const valueStyle = { fontWeight: '500', padding: '8px' };
   const rowBorder = { borderBottom: `1px solid ${borderColor}` };
+  
+  // Estimate data 섹션 전용 스타일 (줄바꿈 지원)
+  const estimateLabelStyle = { 
+    width: '35%', 
+    color: '#666', 
+    backgroundColor: '#DFDFDF', 
+    padding: '8px',
+    verticalAlign: 'top'
+  };
+  const estimateValueStyle = { 
+    fontWeight: '500', 
+    padding: '8px',
+    wordWrap: 'break-word',
+    wordBreak: 'break-word',
+    overflowWrap: 'break-word',
+    whiteSpace: 'normal'
+  };
 
   return (
     <div style={{ fontSize: '0.85rem' }}>
@@ -47,31 +64,31 @@ const CustomerDataDisplay = ({ data, isLoading }) => {
           {/* Estimate data */}
           <div className="mb-4">
             <div style={{ fontSize: '1.05rem', fontWeight: '700' }} className="mb-2">Estimate data</div>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
               <tbody>
                 <tr>
-                  <td style={{ ...labelStyle, ...rowBorder }}>견적번호</td>
-                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.CurEstimateNo || data?.EstimateNo || '-'}</td>
+                  <td style={{ ...estimateLabelStyle, ...rowBorder }}>견적번호</td>
+                  <td style={{ ...estimateValueStyle, ...rowBorder }}>{data?.CurEstimateNo || data?.EstimateNo || '-'}</td>
                 </tr>
                 <tr>
-                  <td style={{ ...labelStyle, ...rowBorder }}>프로젝트명</td>
-                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.ProjectName || '-'}</td>
+                  <td style={{ ...estimateLabelStyle, ...rowBorder }}>프로젝트명</td>
+                  <td style={{ ...estimateValueStyle, ...rowBorder }}>{data?.ProjectName || '-'}</td>
                 </tr>
                 <tr>
-                  <td style={{ ...labelStyle, ...rowBorder }}>Tag No</td>
-                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.TagNo || '-'}</td>
+                  <td style={{ ...estimateLabelStyle, ...rowBorder }}>Tag No</td>
+                  <td style={{ ...estimateValueStyle, ...rowBorder }}>{data?.TagNo || '-'}</td>
                 </tr>
                 <tr>
-                  <td style={{ ...labelStyle, ...rowBorder }}>회사명</td>
-                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.CustomerName || '-'}</td>
+                  <td style={{ ...estimateLabelStyle, ...rowBorder }}>회사명</td>
+                  <td style={{ ...estimateValueStyle, ...rowBorder }}>{data?.CustomerName || '-'}</td>
                 </tr>
                 <tr>
-                  <td style={{ ...labelStyle, ...rowBorder }}>요청자</td>
-                  <td style={{ ...valueStyle, ...rowBorder }}>{data?.Requester || '-'}</td>
+                  <td style={{ ...estimateLabelStyle, ...rowBorder }}>요청자</td>
+                  <td style={{ ...estimateValueStyle, ...rowBorder }}>{data?.Requester || '-'}</td>
                 </tr>
                 <tr>
-                  <td style={{ ...labelStyle }}>담당자</td>
-                  <td style={{ ...valueStyle }}>{data?.Engineer || '-'}</td>
+                  <td style={{ ...estimateLabelStyle }}>담당자</td>
+                  <td style={{ ...estimateValueStyle }}>{data?.Engineer || '-'}</td>
                 </tr>
               </tbody>
             </table>
