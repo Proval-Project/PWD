@@ -631,7 +631,7 @@ const ConvalDataDisplay = ({ data, isLoading, onServerReset, onRecalculate, isPr
                   <td className="text-center" style={{ backgroundColor: '#DFDFDF' }}>ϱ1</td>
                   <td><Form.Control size="sm" value={formData.FluidP1Max || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
                   <td><Form.Control size="sm" value={formData.FluidP1Nor || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
-                  <td><Form.Control size="sm" value={formData.FluidP1Min || ''} readOnly style={{ backgroundColor: '#e9ecef' }} disabled /></td>
+                  <td><Form.Control size="sm" value={formData.FluidP1Min || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
                   <td>
                     <Form.Select size="sm" value={formData.FluidPUnit || 'kg/m³'} onChange={(e) => handleInputChange('FluidPUnit', e.target.value)}>
                     <option value="">단위 선택</option>
