@@ -2509,6 +2509,23 @@ const NewEstimateRequestPage: React.FC = () => {
     });
   }, [currentValve]);
 
+  // Fluid 조건 입력 핸들러 (문자열로 관리하여 첫 자리 0 입력 가능)
+  const handleFluidConditionInput = useCallback((condition: string, field: string, inputValue: string) => {
+    // 숫자, 소수점, 음수 기호만 허용하는 정규식
+    const numericPattern = /^-?\d*\.?\d*$/;
+    
+    // 빈 문자열이거나 유효한 숫자 패턴인 경우만 허용
+    if (inputValue === '' || numericPattern.test(inputValue)) {
+      handleFluidConditionChange(condition, field, inputValue);
+    }
+  }, [handleFluidConditionChange]);
+
+  // Fluid 조건 blur 핸들러 (숫자로 변환하여 저장)
+  const handleFluidConditionBlur = useCallback((condition: string, field: string, inputValue: string) => {
+    const numValue = inputValue === '' || inputValue === '-' || inputValue === '.' ? 0 : parseFloat(inputValue) || 0;
+    handleFluidConditionChange(condition, field, numValue);
+  }, [handleFluidConditionChange]);
+
   // 통합된 단위 필드 업데이트 함수
   const handleUnitChange = useCallback((field: string, value: string) => {
     if (!currentValve) return;
@@ -2938,9 +2955,9 @@ const NewEstimateRequestPage: React.FC = () => {
                     <tbody>
                       <tr>
                         <td>t1</td>
-                        <td><input id="t1-max" name="t1Max" type="number" value={currentValve.fluid.t1.max === 0 ? '' : currentValve.fluid.t1.max} onChange={(e) => handleFluidConditionChange('t1', 'max', parseFloat(e.target.value) || 0)} disabled={isReadOnly} /></td>
-                        <td><input id="t1-normal" name="t1Normal" type="number" value={currentValve.fluid.t1.normal === 0 ? '' : currentValve.fluid.t1.normal} onChange={(e) => handleFluidConditionChange('t1', 'normal', parseFloat(e.target.value) || 0)} disabled={isReadOnly} /></td>
-                        <td><input id="t1-min" name="t1Min" type="number" value={currentValve.fluid.t1.min === 0 ? '' : currentValve.fluid.t1.min} onChange={(e) => handleFluidConditionChange('t1', 'min', parseFloat(e.target.value) || 0)} disabled={isReadOnly} /></td>
+                        <td><input id="t1-max" name="t1Max" type="text" value={typeof currentValve.fluid.t1.max === 'string' ? currentValve.fluid.t1.max : (currentValve.fluid.t1.max === 0 ? '' : String(currentValve.fluid.t1.max))} onChange={(e) => handleFluidConditionInput('t1', 'max', e.target.value)} onBlur={(e) => handleFluidConditionBlur('t1', 'max', e.target.value)} disabled={isReadOnly} /></td>
+                        <td><input id="t1-normal" name="t1Normal" type="text" value={typeof currentValve.fluid.t1.normal === 'string' ? currentValve.fluid.t1.normal : (currentValve.fluid.t1.normal === 0 ? '' : String(currentValve.fluid.t1.normal))} onChange={(e) => handleFluidConditionInput('t1', 'normal', e.target.value)} onBlur={(e) => handleFluidConditionBlur('t1', 'normal', e.target.value)} disabled={isReadOnly} /></td>
+                        <td><input id="t1-min" name="t1Min" type="text" value={typeof currentValve.fluid.t1.min === 'string' ? currentValve.fluid.t1.min : (currentValve.fluid.t1.min === 0 ? '' : String(currentValve.fluid.t1.min))} onChange={(e) => handleFluidConditionInput('t1', 'min', e.target.value)} onBlur={(e) => handleFluidConditionBlur('t1', 'min', e.target.value)} disabled={isReadOnly} /></td>
                         <td>
                           <select 
                             id="t1-unit" 
@@ -2959,9 +2976,9 @@ const NewEstimateRequestPage: React.FC = () => {
                       </tr>
                       <tr>
                         <td>p1</td>
-                        <td><input id="p1-max" name="p1Max" type="number" value={currentValve.fluid.p1.max === 0 ? '' : currentValve.fluid.p1.max} onChange={(e) => handleFluidConditionChange('p1', 'max', parseFloat(e.target.value) || 0)} disabled={isReadOnly} /></td>
-                        <td><input id="p1-normal" name="p1Normal" type="number" value={currentValve.fluid.p1.normal === 0 ? '' : currentValve.fluid.p1.normal} onChange={(e) => handleFluidConditionChange('p1', 'normal', parseFloat(e.target.value) || 0)} disabled={isReadOnly} /></td>
-                        <td><input id="p1-min" name="p1Min" type="number" value={currentValve.fluid.p1.min === 0 ? '' : currentValve.fluid.p1.min} onChange={(e) => handleFluidConditionChange('p1', 'min', parseFloat(e.target.value) || 0)} disabled={isReadOnly} /></td>
+                        <td><input id="p1-max" name="p1Max" type="text" value={typeof currentValve.fluid.p1.max === 'string' ? currentValve.fluid.p1.max : (currentValve.fluid.p1.max === 0 ? '' : String(currentValve.fluid.p1.max))} onChange={(e) => handleFluidConditionInput('p1', 'max', e.target.value)} onBlur={(e) => handleFluidConditionBlur('p1', 'max', e.target.value)} disabled={isReadOnly} /></td>
+                        <td><input id="p1-normal" name="p1Normal" type="text" value={typeof currentValve.fluid.p1.normal === 'string' ? currentValve.fluid.p1.normal : (currentValve.fluid.p1.normal === 0 ? '' : String(currentValve.fluid.p1.normal))} onChange={(e) => handleFluidConditionInput('p1', 'normal', e.target.value)} onBlur={(e) => handleFluidConditionBlur('p1', 'normal', e.target.value)} disabled={isReadOnly} /></td>
+                        <td><input id="p1-min" name="p1Min" type="text" value={typeof currentValve.fluid.p1.min === 'string' ? currentValve.fluid.p1.min : (currentValve.fluid.p1.min === 0 ? '' : String(currentValve.fluid.p1.min))} onChange={(e) => handleFluidConditionInput('p1', 'min', e.target.value)} onBlur={(e) => handleFluidConditionBlur('p1', 'min', e.target.value)} disabled={isReadOnly} /></td>
                         <td>
                           <select 
                             id="p1-unit" 
@@ -3016,9 +3033,9 @@ const NewEstimateRequestPage: React.FC = () => {
                           <input type="checkbox" checked={currentValve.isP2} onChange={(e) => handleRadioChange('isP2', e.target.checked)} disabled={isReadOnly} />
                           p2
                         </td>
-                        <td><input id="p2-max" name="p2Max" type="number" value={currentValve.fluid.p2.max === 0 ? '' : currentValve.fluid.p2.max} onChange={(e) => handleFluidConditionChange('p2', 'max', parseFloat(e.target.value) || 0)} disabled={!currentValve.isP2 || isReadOnly} className={!currentValve.isP2 ? 'disabled-input' : ''} /></td>
-                        <td><input id="p2-normal" name="p2Normal" type="number" value={currentValve.fluid.p2.normal === 0 ? '' : currentValve.fluid.p2.normal} onChange={(e) => handleFluidConditionChange('p2', 'normal', parseFloat(e.target.value) || 0)} disabled={!currentValve.isP2 || isReadOnly} className={!currentValve.isP2 ? 'disabled-input' : ''} /></td>
-                        <td><input id="p2-min" name="p2Min" type="number" value={currentValve.fluid.p2.min === 0 ? '' : currentValve.fluid.p2.min} onChange={(e) => handleFluidConditionChange('p2', 'min', parseFloat(e.target.value) || 0)} disabled={!currentValve.isP2 || isReadOnly} className={!currentValve.isP2 ? 'disabled-input' : ''} /></td>
+                        <td><input id="p2-max" name="p2Max" type="text" value={typeof currentValve.fluid.p2.max === 'string' ? currentValve.fluid.p2.max : (currentValve.fluid.p2.max === 0 ? '' : String(currentValve.fluid.p2.max))} onChange={(e) => handleFluidConditionInput('p2', 'max', e.target.value)} onBlur={(e) => handleFluidConditionBlur('p2', 'max', e.target.value)} disabled={!currentValve.isP2 || isReadOnly} className={!currentValve.isP2 ? 'disabled-input' : ''} /></td>
+                        <td><input id="p2-normal" name="p2Normal" type="text" value={typeof currentValve.fluid.p2.normal === 'string' ? currentValve.fluid.p2.normal : (currentValve.fluid.p2.normal === 0 ? '' : String(currentValve.fluid.p2.normal))} onChange={(e) => handleFluidConditionInput('p2', 'normal', e.target.value)} onBlur={(e) => handleFluidConditionBlur('p2', 'normal', e.target.value)} disabled={!currentValve.isP2 || isReadOnly} className={!currentValve.isP2 ? 'disabled-input' : ''} /></td>
+                        <td><input id="p2-min" name="p2Min" type="text" value={typeof currentValve.fluid.p2.min === 'string' ? currentValve.fluid.p2.min : (currentValve.fluid.p2.min === 0 ? '' : String(currentValve.fluid.p2.min))} onChange={(e) => handleFluidConditionInput('p2', 'min', e.target.value)} onBlur={(e) => handleFluidConditionBlur('p2', 'min', e.target.value)} disabled={!currentValve.isP2 || isReadOnly} className={!currentValve.isP2 ? 'disabled-input' : ''} /></td>
                         <td>
                           <select 
                             id="p2-unit" 
@@ -3074,9 +3091,9 @@ const NewEstimateRequestPage: React.FC = () => {
                           <input type="checkbox" checked={!currentValve.isP2} onChange={(e) => handleRadioChange('isP2', !e.target.checked)} disabled={isReadOnly} />
                           Δp
                         </td>
-                        <td><input id="dp-max" name="dpMax" type="number" value={currentValve.fluid.dp.max === 0 ? '' : currentValve.fluid.dp.max} onChange={(e) => handleFluidConditionChange('dp', 'max', parseFloat(e.target.value) || 0)} disabled={currentValve.isP2 || isReadOnly} className={currentValve.isP2 ? 'disabled-input' : ''} /></td>
-                        <td><input id="dp-normal" name="dpNormal" type="number" value={currentValve.fluid.dp.normal === 0 ? '' : currentValve.fluid.dp.normal} onChange={(e) => handleFluidConditionChange('dp', 'normal', parseFloat(e.target.value) || 0)} disabled={currentValve.isP2 || isReadOnly} className={currentValve.isP2 ? 'disabled-input' : ''} /></td>
-                        <td><input id="dp-min" name="dpMin" type="number" value={currentValve.fluid.dp.min === 0 ? '' : currentValve.fluid.dp.min} onChange={(e) => handleFluidConditionChange('dp', 'min', parseFloat(e.target.value) || 0)} disabled={currentValve.isP2 || isReadOnly} className={currentValve.isP2 ? 'disabled-input' : ''} /></td>
+                        <td><input id="dp-max" name="dpMax" type="text" value={typeof currentValve.fluid.dp.max === 'string' ? currentValve.fluid.dp.max : (currentValve.fluid.dp.max === 0 ? '' : String(currentValve.fluid.dp.max))} onChange={(e) => handleFluidConditionInput('dp', 'max', e.target.value)} onBlur={(e) => handleFluidConditionBlur('dp', 'max', e.target.value)} disabled={currentValve.isP2 || isReadOnly} className={currentValve.isP2 ? 'disabled-input' : ''} /></td>
+                        <td><input id="dp-normal" name="dpNormal" type="text" value={typeof currentValve.fluid.dp.normal === 'string' ? currentValve.fluid.dp.normal : (currentValve.fluid.dp.normal === 0 ? '' : String(currentValve.fluid.dp.normal))} onChange={(e) => handleFluidConditionInput('dp', 'normal', e.target.value)} onBlur={(e) => handleFluidConditionBlur('dp', 'normal', e.target.value)} disabled={currentValve.isP2 || isReadOnly} className={currentValve.isP2 ? 'disabled-input' : ''} /></td>
+                        <td><input id="dp-min" name="dpMin" type="text" value={typeof currentValve.fluid.dp.min === 'string' ? currentValve.fluid.dp.min : (currentValve.fluid.dp.min === 0 ? '' : String(currentValve.fluid.dp.min))} onChange={(e) => handleFluidConditionInput('dp', 'min', e.target.value)} onBlur={(e) => handleFluidConditionBlur('dp', 'min', e.target.value)} disabled={currentValve.isP2 || isReadOnly} className={currentValve.isP2 ? 'disabled-input' : ''} /></td>
                         <td>
                           <select 
                             id="dp-unit" 
@@ -3132,9 +3149,9 @@ const NewEstimateRequestPage: React.FC = () => {
                           <input type="checkbox" checked={currentValve.isQM} onChange={(e) => handleRadioChange('isQM', e.target.checked)} disabled={isReadOnly} />
                           qm
                         </td>
-                        <td><input id="qm-max" name="qmMax" type="number" value={currentValve.fluid.qm.max === 0 ? '' : currentValve.fluid.qm.max} onChange={(e) => handleFluidConditionChange('qm', 'max', parseFloat(e.target.value) || 0)} disabled={!currentValve.isQM || isReadOnly} className={!currentValve.isQM ? 'disabled-input' : ''} /></td>
-                        <td><input id="qm-normal" name="qmNormal" type="number" value={currentValve.fluid.qm.normal === 0 ? '' : currentValve.fluid.qm.normal} onChange={(e) => handleFluidConditionChange('qm', 'normal', parseFloat(e.target.value) || 0)} disabled={!currentValve.isQM || isReadOnly} className={!currentValve.isQM ? 'disabled-input' : ''} /></td>
-                        <td><input id="qm-min" name="qmMin" type="number" value={currentValve.fluid.qm.min === 0 ? '' : currentValve.fluid.qm.min} onChange={(e) => handleFluidConditionChange('qm', 'min', parseFloat(e.target.value) || 0)} disabled={!currentValve.isQM || isReadOnly} className={!currentValve.isQM ? 'disabled-input' : ''} /></td>
+                        <td><input id="qm-max" name="qmMax" type="text" value={typeof currentValve.fluid.qm.max === 'string' ? currentValve.fluid.qm.max : (currentValve.fluid.qm.max === 0 ? '' : String(currentValve.fluid.qm.max))} onChange={(e) => handleFluidConditionInput('qm', 'max', e.target.value)} onBlur={(e) => handleFluidConditionBlur('qm', 'max', e.target.value)} disabled={!currentValve.isQM || isReadOnly} className={!currentValve.isQM ? 'disabled-input' : ''} /></td>
+                        <td><input id="qm-normal" name="qmNormal" type="text" value={typeof currentValve.fluid.qm.normal === 'string' ? currentValve.fluid.qm.normal : (currentValve.fluid.qm.normal === 0 ? '' : String(currentValve.fluid.qm.normal))} onChange={(e) => handleFluidConditionInput('qm', 'normal', e.target.value)} onBlur={(e) => handleFluidConditionBlur('qm', 'normal', e.target.value)} disabled={!currentValve.isQM || isReadOnly} className={!currentValve.isQM ? 'disabled-input' : ''} /></td>
+                        <td><input id="qm-min" name="qmMin" type="text" value={typeof currentValve.fluid.qm.min === 'string' ? currentValve.fluid.qm.min : (currentValve.fluid.qm.min === 0 ? '' : String(currentValve.fluid.qm.min))} onChange={(e) => handleFluidConditionInput('qm', 'min', e.target.value)} onBlur={(e) => handleFluidConditionBlur('qm', 'min', e.target.value)} disabled={!currentValve.isQM || isReadOnly} className={!currentValve.isQM ? 'disabled-input' : ''} /></td>
                         <td>
                           <select 
                             id="qm-unit" 
@@ -3166,9 +3183,9 @@ const NewEstimateRequestPage: React.FC = () => {
                           <input type="checkbox" checked={!currentValve.isQM} onChange={(e) => handleRadioChange('isQM', !e.target.checked)} disabled={isReadOnly} />
                           qn
                         </td>
-                        <td><input id="qn-max" name="qnMax" type="number" value={currentValve.fluid.qn.max === 0 ? '' : currentValve.fluid.qn.max} onChange={(e) => handleFluidConditionChange('qn', 'max', parseFloat(e.target.value) || 0)} disabled={currentValve.isQM || isReadOnly} className={currentValve.isQM ? 'disabled-input' : ''} /></td>
-                        <td><input id="qn-normal" name="qnNormal" type="number" value={currentValve.fluid.qn.normal === 0 ? '' : currentValve.fluid.qn.normal} onChange={(e) => handleFluidConditionChange('qn', 'normal', parseFloat(e.target.value) || 0)} disabled={currentValve.isQM || isReadOnly} className={currentValve.isQM ? 'disabled-input' : ''} /></td>
-                        <td><input id="qn-min" name="qnMin" type="number" value={currentValve.fluid.qn.min === 0 ? '' : currentValve.fluid.qn.min} onChange={(e) => handleFluidConditionChange('qn', 'min', parseFloat(e.target.value) || 0)} disabled={currentValve.isQM || isReadOnly} className={currentValve.isQM ? 'disabled-input' : ''} /></td>
+                        <td><input id="qn-max" name="qnMax" type="text" value={typeof currentValve.fluid.qn.max === 'string' ? currentValve.fluid.qn.max : (currentValve.fluid.qn.max === 0 ? '' : String(currentValve.fluid.qn.max))} onChange={(e) => handleFluidConditionInput('qn', 'max', e.target.value)} onBlur={(e) => handleFluidConditionBlur('qn', 'max', e.target.value)} disabled={currentValve.isQM || isReadOnly} className={currentValve.isQM ? 'disabled-input' : ''} /></td>
+                        <td><input id="qn-normal" name="qnNormal" type="text" value={typeof currentValve.fluid.qn.normal === 'string' ? currentValve.fluid.qn.normal : (currentValve.fluid.qn.normal === 0 ? '' : String(currentValve.fluid.qn.normal))} onChange={(e) => handleFluidConditionInput('qn', 'normal', e.target.value)} onBlur={(e) => handleFluidConditionBlur('qn', 'normal', e.target.value)} disabled={currentValve.isQM || isReadOnly} className={currentValve.isQM ? 'disabled-input' : ''} /></td>
+                        <td><input id="qn-min" name="qnMin" type="text" value={typeof currentValve.fluid.qn.min === 'string' ? currentValve.fluid.qn.min : (currentValve.fluid.qn.min === 0 ? '' : String(currentValve.fluid.qn.min))} onChange={(e) => handleFluidConditionInput('qn', 'min', e.target.value)} onBlur={(e) => handleFluidConditionBlur('qn', 'min', e.target.value)} disabled={currentValve.isQM || isReadOnly} className={currentValve.isQM ? 'disabled-input' : ''} /></td>
                         <td>
                           <select 
                             id="qn-unit" 

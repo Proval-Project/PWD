@@ -343,7 +343,7 @@ const EstimateDetailPage: React.FC = () => {
   const buildSaveSpecFromSelections = (sel: { body:any; trim:any; act:any; acc:any; valveTypeCode?:string }) => ({
     valveId: sel.valveTypeCode || '',
     body: { bonnetType: sel.body?.bonnetType || '', materialBody: sel.body?.materialBody || '', rating: sel.body?.ratingCode || '', ratingUnit: sel.body?.ratingUnitCode || '', connection: sel.body?.connection || '', sizeUnit: sel.body?.sizeBodyUnitCode || '', size: sel.body?.sizeBodyCode || '' },
-    trim: { type: sel.trim?.trimType || '', series: sel.trim?.trimSeries || '', portSize: sel.trim?.sizePortCode || '', portSizeUnit: sel.trim?.sizePortUnitCode || '', form: sel.trim?.formCode || sel.trim?.form || '', materialTrim: sel.trim?.materialTrim || '', option: sel.trim?.option || '' },
+    trim: { type: sel.trim?.trimTypeCode || sel.trim?.trimType || '', typeCode: sel.trim?.trimTypeCode || '', series: sel.trim?.trimSeries || '', seriesCode: sel.trim?.trimSeriesCode || '', portSize: sel.trim?.sizePortCode || '', portSizeUnit: sel.trim?.sizePortUnitCode || '', form: sel.trim?.form || '', formCode: sel.trim?.formCode || '', materialTrim: sel.trim?.materialTrim || '', materialTrimCode: sel.trim?.materialTrimCode || '', option: sel.trim?.option || '' },
     actuator: { type: sel.act?.actionType || '', series: sel.act?.series || '', size: sel.act?.size || '', hw: sel.act?.hw || '' },
     accessories: {
       PosCode: sel.acc?.positioner?.modelCode || null, PosMakerCode: sel.acc?.positioner?.makerCode || null,
@@ -874,9 +874,23 @@ const EstimateDetailPage: React.FC = () => {
                         const selectedItem = trimTypeList.find(item => item.trimTypeCode === value);
                         if (selectedItem) newSelections.trimTypeCode = selectedItem.trimTypeCode;
                       }
+                      if (field === 'trimSeries' || field === 'trimSeriesCode') {
+                        const selectedItem = trimSeriesList.find(item => item.trimSeriesCode === value);
+                        if (selectedItem) {
+                          newSelections.trimSeries = selectedItem.trimSeries;
+                          newSelections.trimSeriesCode = selectedItem.trimSeriesCode;
+                        }
+                      }
                       if (field === 'materialTrim') {
                         const selectedItem = trimMatList.find(item => item.trimMatCode === value);
                         if (selectedItem) newSelections.materialTrimCode = selectedItem.trimMatCode;
+                      }
+                      if (field === 'form' || field === 'formCode') {
+                        const selectedItem = trimFormList.find(item => item.trimFormCode === value);
+                        if (selectedItem) {
+                          newSelections.form = selectedItem.trimForm;
+                          newSelections.formCode = selectedItem.trimFormCode;
+                        }
                       }
                       if (field === 'sizePortUnit') { 
                         newSelections.sizePort = ''; 
@@ -2198,12 +2212,16 @@ useEffect(() => {
         size: bodySelections.sizeBodyCode || ''
       },
       trim: {
-        type: trimSelections.trimType || '',
+        type: trimSelections.trimTypeCode || trimSelections.trimType || '',
+        typeCode: trimSelections.trimTypeCode || '',
         series: trimSelections.trimSeries || '',
+        seriesCode: trimSelections.trimSeriesCode || '',
         portSize: trimSelections.sizePortCode || '',
         portSizeUnit: trimSelections.sizePortUnitCode || '',
         form: trimSelections.form || '',
+        formCode: trimSelections.formCode || '',
         materialTrim: trimSelections.materialTrim || '',
+        materialTrimCode: trimSelections.materialTrimCode || '',
         option: trimSelections.option || ''
       },
       actuator: {
@@ -2859,20 +2877,31 @@ const handleSaveSpecification = async () => {
         // Trim 사양 데이터 설정 (초기값만) - null 처리 개선
         if (specificationData.trim) {
           // console.log('Trim 데이터:', specificationData.trim); // Trim 데이터 로그 추가
+          const seriesCode = specificationData.trim.seriesCode || '';
+          const formCode = specificationData.trim.formCode || '';
+          
+          // trimSeriesList에서 해당 코드의 이름 찾기
+          const trimSeriesItem = trimSeriesList.find(item => item.trimSeriesCode === seriesCode);
+          const trimSeriesName = trimSeriesItem ? trimSeriesItem.trimSeries : '';
+          
+          // trimFormList에서 해당 코드의 이름 찾기
+          const trimFormItem = trimFormList.find(item => item.trimFormCode === formCode);
+          const trimFormName = trimFormItem ? trimFormItem.trimForm : '';
+          
           setTrimSelections(prev => ({
             ...prev,
             trimType: specificationData.trim.typeCode || '',
             trimTypeCode: specificationData.trim.typeCode || '',
-            trimSeries: specificationData.trim.seriesCode || '',
-            trimSeriesCode: specificationData.trim.seriesCode || '',
+            trimSeries: trimSeriesName,
+            trimSeriesCode: seriesCode,
             materialTrim: specificationData.body?.materialTrimCode || '',
             materialTrimCode: specificationData.body?.materialTrimCode || '',
             sizePortUnit: specificationData.trim.portSizeUnit || '',
             sizePort: specificationData.trim.portSizeCode || '',
             sizePortUnitCode: specificationData.trim.portSizeUnit || '', // Code 값 추가
             sizePortCode: specificationData.trim.portSizeCode || '', // Code 값 추가
-            form: specificationData.trim.formCode || '',
-            formCode: specificationData.trim.formCode || '',
+            form: trimFormName,
+            formCode: formCode,
             option: specificationData.body?.optionCode || '' // Body에서 Option 값을 가져옴
           }));
         }
@@ -3312,7 +3341,7 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                     <tr>
                       <td>Trim Series</td>
                       <td>
-                        <select value={trimSelections.trimSeries} onChange={(e) => handleTrimChange('trimSeries', e.target.value)} disabled={isReadOnly}>
+                        <select value={trimSelections.trimSeriesCode} onChange={(e) => handleTrimChange('trimSeriesCode', e.target.value)} disabled={isReadOnly}>
                           <option value="">선택하세요</option>
                           {trimSeriesList && trimSeriesList.length > 0 && trimSeriesList.map((item: any) => (
                             <option key={item.trimSeriesCode} value={item.trimSeriesCode}>
@@ -3392,7 +3421,7 @@ const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
                     <tr>
                       <td>Form</td>
                       <td>
-                        <select value={trimSelections.form} onChange={(e) => handleTrimChange('form', e.target.value)} disabled={isReadOnly}>
+                        <select value={trimSelections.formCode} onChange={(e) => handleTrimChange('formCode', e.target.value)} disabled={isReadOnly}>
                           <option value="">선택하세요</option>
                           {trimFormList && trimFormList.length > 0 && trimFormList.map((item: any) => (
                             <option key={item.trimFormCode} value={item.trimFormCode}>
