@@ -10,6 +10,8 @@ const ConvalDataDisplay = ({ data, isLoading, onServerReset, onRecalculate, isPr
   const [pressureType, setPressureType] = useState('p2');
   const [flowType, setFlowType] = useState('qm');
   const [massType, setMassType] = useState('density');
+  const [enableCf1, setEnableCf1] = useState(false);
+  const [enablePv1, setEnablePv1] = useState(false);
   
   useEffect(() => {
     if (data) {
@@ -36,7 +38,11 @@ const ConvalDataDisplay = ({ data, isLoading, onServerReset, onRecalculate, isPr
     if (n1 !== undefined) setFluidType(n1 ? 'n1' : 'v1');
     const dens = toBool(data.IsDensity);
     if (dens !== undefined) setMassType(dens ? 'density' : 'molecular');
-  }, [data?.IsQM, data?.IsP2, data?.IsN1, data?.IsDensity]);
+    
+    // cf1, pv1 체크박스 상태 초기화 (값이 있으면 체크, 없으면 체크 해제)
+    setEnableCf1(!!(data.FluidCF1Max || data.FluidCF1Nor || data.FluidCF1Min));
+    setEnablePv1(!!(data.FluidPV1Max || data.FluidPV1Nor || data.FluidPV1Min));
+  }, [data?.IsQM, data?.IsP2, data?.IsN1, data?.IsDensity, data?.FluidCF1Max, data?.FluidCF1Nor, data?.FluidCF1Min, data?.FluidPV1Max, data?.FluidPV1Nor, data?.FluidPV1Min]);
 
   useEffect(() => {
     setFormData((prev) => prev ? { ...prev, IsP2: pressureType === 'p2' } : prev);
@@ -159,6 +165,23 @@ const ConvalDataDisplay = ({ data, isLoading, onServerReset, onRecalculate, isPr
         IsN1: fluidType === 'n1',
         IsDensity: massType === 'density'
       };
+      
+      // cf1 체크박스가 꺼져있으면 값만 null로 설정 (Unit은 유지)
+      if (!enableCf1) {
+        currentData.FluidCF1Max = null;
+        currentData.FluidCF1Nor = null;
+        currentData.FluidCF1Min = null;
+        // FluidCF1Unit은 체크박스와 관계없이 그대로 전달
+      }
+      
+      // pv1 체크박스가 꺼져있으면 값만 null로 설정 (Unit은 유지)
+      if (!enablePv1) {
+        currentData.FluidPV1Max = null;
+        currentData.FluidPV1Nor = null;
+        currentData.FluidPV1Min = null;
+        // FluidPV1Unit은 체크박스와 관계없이 그대로 전달
+      }
+      
       await onRecalculate(currentData);
     }
   };
@@ -744,12 +767,23 @@ const ConvalDataDisplay = ({ data, isLoading, onServerReset, onRecalculate, isPr
                   </td>
                 </tr>
                 <tr>
-                  <td className="text-center" style={{ backgroundColor: '#DFDFDF' }}>pv1</td>
+                  <td style={{ backgroundColor: '#DFDFDF' }}>
+                    <div className="d-flex align-items-center justify-content-center">
+                      <Form.Check 
+                        type="checkbox" 
+                        checked={enablePv1} 
+                        onChange={(e) => setEnablePv1(e.target.checked)} 
+                        className="me-1" 
+                      />
+                      pv1
+                    </div>
+                  </td>
                   <td>
                     <Form.Control 
                       size="sm" 
                       value={formData.FluidPV1Max || ''} 
                       onChange={(e) => handleInputChange('FluidPV1Max', e.target.value)}
+                      disabled={!enablePv1}
                     />
                   </td>
                   <td>
@@ -757,6 +791,7 @@ const ConvalDataDisplay = ({ data, isLoading, onServerReset, onRecalculate, isPr
                       size="sm" 
                       value={formData.FluidPV1Nor || ''} 
                       onChange={(e) => handleInputChange('FluidPV1Nor', e.target.value)}
+                      disabled={!enablePv1}
                     />
                   </td>
                   <td>
@@ -764,6 +799,7 @@ const ConvalDataDisplay = ({ data, isLoading, onServerReset, onRecalculate, isPr
                       size="sm" 
                       value={formData.FluidPV1Min || ''} 
                       onChange={(e) => handleInputChange('FluidPV1Min', e.target.value)}
+                      disabled={!enablePv1}
                     />
                   </td>
                   <td>
@@ -831,12 +867,23 @@ const ConvalDataDisplay = ({ data, isLoading, onServerReset, onRecalculate, isPr
                   </td>
                 </tr>
                 <tr>
-                  <td className="text-center" style={{ backgroundColor: '#DFDFDF' }}>cF1</td>
+                  <td style={{ backgroundColor: '#DFDFDF' }}>
+                    <div className="d-flex align-items-center justify-content-center">
+                      <Form.Check 
+                        type="checkbox" 
+                        checked={enableCf1} 
+                        onChange={(e) => setEnableCf1(e.target.checked)} 
+                        className="me-1" 
+                      />
+                      cF1
+                    </div>
+                  </td>
                   <td>
                     <Form.Control 
                       size="sm" 
                       value={formData.FluidCF1Max || ''} 
                       onChange={(e) => handleInputChange('FluidCF1Max', e.target.value)}
+                      disabled={!enableCf1}
                     />
                   </td>
                   <td>
@@ -844,6 +891,7 @@ const ConvalDataDisplay = ({ data, isLoading, onServerReset, onRecalculate, isPr
                       size="sm" 
                       value={formData.FluidCF1Nor || ''} 
                       onChange={(e) => handleInputChange('FluidCF1Nor', e.target.value)}
+                      disabled={!enableCf1}
                     />
                   </td>
                   <td>
@@ -851,6 +899,7 @@ const ConvalDataDisplay = ({ data, isLoading, onServerReset, onRecalculate, isPr
                       size="sm" 
                       value={formData.FluidCF1Min || ''} 
                       onChange={(e) => handleInputChange('FluidCF1Min', e.target.value)}
+                      disabled={!enableCf1}
                     />
                   </td>
                   <td>
