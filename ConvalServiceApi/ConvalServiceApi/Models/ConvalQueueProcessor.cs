@@ -18,12 +18,12 @@ namespace ConvalServiceApi.Models
         private readonly ConcurrentQueue<string> fileNameQueue;
         private readonly SemaphoreSlim convalSemaphore;
         private readonly object processingLock = new object();
-        
+
         private bool isProcessing = false;
         private CancellationTokenSource cancellationTokenSource;
         private int successCount = 0;
         private int errorCount = 0;
-        
+
         // 데이터베이스 컬럼명을 CONVAL 태그명으로 매핑하는 딕셔너리
 
         // ValveType 매핑 Dictionary
@@ -156,7 +156,7 @@ namespace ConvalServiceApi.Models
         // 버튼 클릭 시 호출되는 메서드
         public void ProcessButtonClicked(string fileName)
         {
-            fileNameQueue.Enqueue(fileName);            System.Diagnostics.Debug.WriteLine($"[CONVAL] 큐에 추가됨: {fileName}");
+            fileNameQueue.Enqueue(fileName); System.Diagnostics.Debug.WriteLine($"[CONVAL] 큐에 추가됨: {fileName}");
         }
 
         // 여러 파일을 한 번에 처리
@@ -847,19 +847,19 @@ namespace ConvalServiceApi.Models
                 SafeAddParameter(result, cData, "RhoN", "DensityUnit", "Unit");
                 SafeAddParameter(result, cData, "M", "MolecularWeight", "Value");
                 SafeAddParameter(result, cData, "M", "MolecularWeightUnit", "Unit");
-                
+
                 // 28-31: Temperature 관련
                 // SafeAddParameter(result, cData, "T1", "InletTemperatureQ", "Value");
                 // SafeAddParameter(result, cData, "T1Ap2", "InletTemperatureNorQ", "Value");
                 // SafeAddParameter(result, cData, "T1Ap3", "InletTemperatureMinQ", "Value");
                 // SafeAddParameter(result, cData, "T1", "InletTemperatureUnit", "Unit");
-                
+
                 // // 32-35: Pressure 관련
                 // SafeAddParameter(result, cData, "P1", "InletPressureMaxQ", "Value");
                 // SafeAddParameter(result, cData, "P1Ap2", "InletPressureNorQ", "Value");
                 // SafeAddParameter(result, cData, "P1Ap3", "InletPressureMinQ", "Value");
                 // SafeAddParameter(result, cData, "P1", "PressureUnit", "Unit");
-                
+
                 // 36-39: Delta Pressure 관련
                 SafeAddParameter(result, cData, "P2", "OutletPressureMaxQ", "Value");
                 SafeAddParameter(result, cData, "P2Ap2", "OutletPressureNorQ", "Value");
@@ -868,20 +868,23 @@ namespace ConvalServiceApi.Models
                 SafeAddParameter(result, cData, "dpinAp2", "DifferentialPressureNorQ", "Value");
                 SafeAddParameter(result, cData, "dpinAp3", "DifferentialPressureMinQ", "Value");
 
-                
+
                 // 44-51: Flow 관련
                 SafeAddParameter(result, cData, "Qm", "QMMax", "Value");
                 SafeAddParameter(result, cData, "QmAp2", "QMNor", "Value");
                 SafeAddParameter(result, cData, "QmAp3", "QMMin", "Value");
                 // SafeAddParameter(result, cData, "Qm", "QMUnit", "Unit");
-                if (dbRow.TryGetValue("Fluid", out object displayPhaseObj) && displayPhaseObj is string displayPhase) {
-                    if (displayPhase == "Gas") {
+                if (dbRow.TryGetValue("Fluid", out object displayPhaseObj) && displayPhaseObj is string displayPhase)
+                {
+                    if (displayPhase == "Gas")
+                    {
                         SafeAddParameter(result, cData, "Qn", "QNMax", "Value");
                         SafeAddParameter(result, cData, "QnAp2", "QNNor", "Value");
                         SafeAddParameter(result, cData, "QnAp3", "QNMin", "Value");
                         // SafeAddParameter(result, cData, "Qn", "QNUnit", "Unit");
                     }
-                    else {
+                    else
+                    {
                         SafeAddParameter(result, cData, "Qv", "QNMax", "Value");
                         SafeAddParameter(result, cData, "QvAp2", "QNNor", "Value");
                         SafeAddParameter(result, cData, "QvAp3", "QNMin", "Value");
@@ -889,7 +892,7 @@ namespace ConvalServiceApi.Models
                     }
                 }
 
-                
+
                 // 56-62: CV 관련
                 SafeAddParameter(result, cData, "kv", "CalculatedCvMaxQ", "Value");
                 SafeAddParameter(result, cData, "kvAp2", "CalculatedCvNorQ", "Value");
@@ -898,7 +901,7 @@ namespace ConvalServiceApi.Models
                 SafeAddParameter(result, cData, "h", "SS100Max", "Value");
                 SafeAddParameter(result, cData, "hAp2", "SS100Nor", "Value");
                 SafeAddParameter(result, cData, "hAp3", "SS100Min", "Value");
-                
+
                 // 63-68: LpAe 관련
                 SafeAddParameter(result, cData, "LpAa", "LpAeMax", "Value");
                 SafeAddParameter(result, cData, "LpAaAp2", "LpAeNor", "Value");
@@ -941,7 +944,7 @@ namespace ConvalServiceApi.Models
                 SafeAddParameter(result, cData, "kv", "FlowCoeff", "Value");
                 // SafeAddParameter(result, cData, "kv", "FlowCoeffUnit", "Unit");
                 // SafeAddParameter(result, cData, "kvs", "NorFlowCoeff", "Value");
-                
+
                 // 79-84: Size 관련
                 // SafeAddParameter(result, cData, "PipeClass", "SizePressureClass", "Text");
                 SafeAddParameter(result, cData, "MinDN", "SuggestedValveSize", "Value");
@@ -949,12 +952,12 @@ namespace ConvalServiceApi.Models
                 SafeAddParameter(result, cData, "Rho1Ap2", "FluidP1Nor", "Value");
                 SafeAddParameter(result, cData, "Rho1Ap3", "FluidP1Min", "Value");
                 // SafeAddParameter(result, cData, "Rho1", "FluidPUnit", "Unit");
-                
+
                 // 85-88: P2 관련
                 SafeAddParameter(result, cData, "rho2", "FluidP2Max", "Value");
                 SafeAddParameter(result, cData, "rho2Ap2", "FluidP2Nor", "Value");
                 SafeAddParameter(result, cData, "rho2Ap3", "FluidP2Min", "Value");
-                
+
                 // 89-96: N1, V1 관련
                 SafeAddParameter(result, cData, "Eta1", "FluidN1Max", "Value");
                 SafeAddParameter(result, cData, "Eta1Ap2", "FluidN1Nor", "Value");
@@ -964,7 +967,7 @@ namespace ConvalServiceApi.Models
                 SafeAddParameter(result, cData, "Ny1Ap2", "FluidV1Nor", "Value");
                 SafeAddParameter(result, cData, "Ny1Ap3", "FluidV1Min", "Value");
                 SafeAddParameter(result, cData, "Ny1", "FluidV1Unit", "Unit");
-                
+
                 // 97-104: PV1, TV1 관련
                 SafeAddParameter(result, cData, "Pv1", "FluidPV1Max", "Value");
                 SafeAddParameter(result, cData, "Pv1Ap2", "FluidPV1Nor", "Value");
@@ -977,13 +980,13 @@ namespace ConvalServiceApi.Models
                 SafeAddParameter(result, cData, "Kappa1", "FluidKMax", "Value");
                 SafeAddParameter(result, cData, "Kappa1Ap2", "FluidKNor", "Value");
                 SafeAddParameter(result, cData, "Kappa1Ap3", "FluidKMin", "Value");
-                
+
                 // 105-111: CF1, SS100 관련
                 SafeAddParameter(result, cData, "Cf", "FluidCF1Max", "Value");
                 SafeAddParameter(result, cData, "CfAp2", "FluidCF1Nor", "Value");
                 SafeAddParameter(result, cData, "CfAp3", "FluidCF1Min", "Value");
                 //SafeAddParameter(result, cData, "Cf", "FluidCF1Unit", "Unit");
-                
+
                 // 112-122: U1, U2, LpAe 관련
                 SafeAddParameter(result, cData, "u", "U1Max", "Value");
                 SafeAddParameter(result, cData, "uAp2", "U1Nor", "Value");
@@ -992,7 +995,7 @@ namespace ConvalServiceApi.Models
                 SafeAddParameter(result, cData, "u2", "U2Max", "Value");
                 SafeAddParameter(result, cData, "u2Ap2", "U2Nor", "Value");
                 SafeAddParameter(result, cData, "u2Ap3", "U2Min", "Value");
-                
+
             }
             catch (Exception ex)
             {
@@ -1034,7 +1037,7 @@ namespace ConvalServiceApi.Models
         {
             return Environment.OSVersion.Platform == PlatformID.Win32NT;
         }
-        
+
         // CONVAL 엔진 설치 여부 확인
         private bool IsConvalEngineInstalled()
         {
@@ -1050,7 +1053,7 @@ namespace ConvalServiceApi.Models
                         return true;
                     }
                 }
-                
+
                 // COM 객체 생성 시도
                 try
                 {
@@ -1068,7 +1071,7 @@ namespace ConvalServiceApi.Models
                     System.Diagnostics.Debug.WriteLine($"[CONVAL] COM 객체 생성 테스트 실패: {ex.Message}");
                     System.Diagnostics.Debug.WriteLine($"[CONVAL] COM 객체 생성 테스트 실패: {ex.Message}");
                 }
-                
+
                 System.Diagnostics.Debug.WriteLine("[CONVAL] CONVAL 엔진이 설치되지 않았습니다");
                 System.Diagnostics.Debug.WriteLine("[CONVAL] CONVAL 엔진이 설치되지 않았습니다");
                 return false;
@@ -1082,16 +1085,16 @@ namespace ConvalServiceApi.Models
         }
 
         // sample.CCV 파일 경로 찾기 메서드
-        
+
         private string GetSampleCcvPath()
         {
             // 여러 경로에서 sample.CCV 파일을 찾기
             var possiblePaths = new List<string>();
-            
+
             // 1. 현재 실행 디렉토리 기준
             var currentDir = Directory.GetCurrentDirectory();
             possiblePaths.Add(Path.Combine(currentDir, "sample", "sample.CCV"));
-            
+
             // 2. bin\Debug 또는 bin\Release 폴더에서 실행 중인 경우 상위로 이동
             if (currentDir.EndsWith("Debug") || currentDir.EndsWith("Release"))
             {
@@ -1099,7 +1102,7 @@ namespace ConvalServiceApi.Models
                 var projectRoot = binDir?.Parent?.FullName ?? currentDir;
                 possiblePaths.Add(Path.Combine(projectRoot, "sample", "sample.CCV"));
             }
-            
+
             // 3. IIS 환경에서 웹 애플리케이션 루트 찾기
             try
             {
@@ -1113,7 +1116,7 @@ namespace ConvalServiceApi.Models
             {
                 // HostingEnvironment를 사용할 수 없는 경우 무시
             }
-            
+
             // 4. 프로젝트 파일이 있는 디렉토리 찾기
             try
             {
@@ -1128,7 +1131,7 @@ namespace ConvalServiceApi.Models
             {
                 // 프로젝트 파일을 찾을 수 없는 경우 무시
             }
-            
+
             // 5. AppDomain.BaseDirectory 사용
             try
             {
@@ -1148,7 +1151,7 @@ namespace ConvalServiceApi.Models
             {
                 // AppDomain.BaseDirectory를 사용할 수 없는 경우 무시
             }
-            
+
             // 6. Environment.CurrentDirectory 사용
             try
             {
@@ -1162,18 +1165,18 @@ namespace ConvalServiceApi.Models
             {
                 // Environment.CurrentDirectory를 사용할 수 없는 경우 무시
             }
-            
+
             // 7. 상위 디렉토리들에서 찾기
             var searchDir = currentDir;
             for (int i = 0; i < 5; i++) // 최대 5단계 상위로 검색
             {
                 var parentDir = Directory.GetParent(searchDir);
                 if (parentDir == null) break;
-                
+
                 searchDir = parentDir.FullName;
                 possiblePaths.Add(Path.Combine(searchDir, "sample", "sample.CCV"));
             }
-            
+
             // 8. 워크스페이스 루트에서 찾기 (IIS 환경에서 유용)
             try
             {
@@ -1187,7 +1190,7 @@ namespace ConvalServiceApi.Models
             {
                 // 워크스페이스 루트를 찾을 수 없는 경우 무시
             }
-            
+
             // 존재하는 경로 찾기
             foreach (var path in possiblePaths)
             {
@@ -1198,7 +1201,7 @@ namespace ConvalServiceApi.Models
                     return path;
                 }
             }
-            
+
             // 모든 경로에서 파일을 찾지 못한 경우
             System.Diagnostics.Debug.WriteLine($"[CONVAL] sample.CCV 파일을 찾을 수 없습니다. 검색한 경로들:");
             System.Diagnostics.Debug.WriteLine($"[CONVAL] sample.CCV 파일을 찾을 수 없습니다. 검색한 경로들:");
@@ -1207,11 +1210,11 @@ namespace ConvalServiceApi.Models
                 System.Diagnostics.Debug.WriteLine($"[CONVAL] - {path}");
                 System.Diagnostics.Debug.WriteLine($"[CONVAL] - {path}");
             }
-            
+
             // 기본값으로 첫 번째 경로 반환 (파일이 존재하지 않을 수 있음)
             return possiblePaths.FirstOrDefault() ?? Path.Combine(currentDir, "sample", "sample.CCV");
         }
-        
+
         // 워크스페이스 루트 디렉토리를 찾는 메서드
         private string GetWorkspaceRoot()
         {
@@ -1220,7 +1223,7 @@ namespace ConvalServiceApi.Models
                 // 현재 디렉토리에서 .sln 파일을 찾아 워크스페이스 루트 찾기
                 var currentDir = Directory.GetCurrentDirectory();
                 var searchDir = currentDir;
-                
+
                 for (int i = 0; i < 10; i++) // 최대 10단계 상위로 검색
                 {
                     var solutionFiles = Directory.GetFiles(searchDir, "*.sln");
@@ -1228,7 +1231,7 @@ namespace ConvalServiceApi.Models
                     {
                         return searchDir;
                     }
-                    
+
                     var parentDir = Directory.GetParent(searchDir);
                     if (parentDir == null) break;
                     searchDir = parentDir.FullName;
@@ -1238,10 +1241,10 @@ namespace ConvalServiceApi.Models
             {
                 // 워크스페이스 루트를 찾을 수 없는 경우
             }
-            
+
             return null;
         }
-        
+
         // 프로젝트 파일(.csproj)을 찾는 헬퍼 메서드
         private string FindProjectFile(string startDirectory)
         {
@@ -1253,7 +1256,7 @@ namespace ConvalServiceApi.Models
                 {
                     return projectFiles[0];
                 }
-                
+
                 var parentDir = Directory.GetParent(currentDir);
                 if (parentDir == null) break;
                 currentDir = parentDir.FullName;
@@ -1367,20 +1370,20 @@ namespace ConvalServiceApi.Models
 
 
             cData.WantOrderedList = false;
-                System.Diagnostics.Debug.WriteLine("[DEBUG] WantOrderedList = false 설정 완료");
+            System.Diagnostics.Debug.WriteLine("[DEBUG] WantOrderedList = false 설정 완료");
 
 
 
-                bool isSystemFluid = false;
+            bool isSystemFluid = false;
 
-                // ========================================
-                // ⭐ 1단계: Phase 설정 (가장 중요!)
-                // ========================================
-                System.Diagnostics.Debug.WriteLine("[DEBUG] ===== Phase 설정 시작 =====");
+            // ========================================
+            // ⭐ 1단계: Phase 설정 (가장 중요!)
+            // ========================================
+            System.Diagnostics.Debug.WriteLine("[DEBUG] ===== Phase 설정 시작 =====");
 
-                Calculation.BeginUpdate();
-                try 
-                { 
+            Calculation.BeginUpdate();
+            try
+            {
 
                 cData.ParamByName["ChangePhase"].Text = "nein";
 
@@ -1481,7 +1484,7 @@ namespace ConvalServiceApi.Models
                         // ===== Molecular 설정 ===== ⭐ 추가!
                         System.Diagnostics.Debug.WriteLine("[DEBUG] ===== Molecular 설정 시작 =====");
 
-                        System.Diagnostics.Debug.WriteLine($"[DEBUG] molecular 값 확인: {molecular}");  
+                        System.Diagnostics.Debug.WriteLine($"[DEBUG] molecular 값 확인: {molecular}");
 
 
                         try
@@ -1822,38 +1825,97 @@ namespace ConvalServiceApi.Models
                 SafeSetParameter(cData, dbRow, "TheoreticalRangeability", "Phi0", "Value");
                 SafeSetParameter(cData, dbRow, "FlowCoeffUnit", "kvs", "Unit");
                 SafeSetParameter(cData, dbRow, "NorFlowCoeff", "kvs", "Value");
-                SafeSetParameter(cData, dbRow, "FluidP1Max", "Rho1", "Value");
-                SafeSetParameter(cData, dbRow, "FluidP1Nor", "Rho1Ap2", "Value");
-                SafeSetParameter(cData, dbRow, "FluidP1Min", "Rho1Ap3", "Value");
+                //SafeSetParameter(cData, dbRow, "FluidP1Max", "Rho1", "Value");
+                //SafeSetParameter(cData, dbRow, "FluidP1Nor", "Rho1Ap2", "Value");
+                //SafeSetParameter(cData, dbRow, "FluidP1Min", "Rho1Ap3", "Value");
 
-                if (isViscosityType)
+                // ⭐⭐⭐ Eta1, Ny1, Cf 설정을 BeginUpdate/EndUpdate로 감싸서 계산 트리거
+                Calculation.BeginUpdate();
+                try
                 {
-                    SafeSetParameter(cData, dbRow, "FluidN1Unit", "Eta1", "Unit");
-                    SafeSetParameter(cData, dbRow, "FluidN1Max", "Eta1", "Value");
-                    SafeSetParameter(cData, dbRow, "FluidN1Nor", "Eta1Ap2", "Value");
-                    SafeSetParameter(cData, dbRow, "FluidN1Min", "Eta1Ap3", "Value");
+                    if (isViscosityType)
+                    {
+                        SafeSetParameter(cData, dbRow, "FluidN1Unit", "Eta1", "Unit");
+                        SafeSetParameter(cData, dbRow, "FluidN1Max", "Eta1", "Value");
+                        SafeSetParameter(cData, dbRow, "FluidN1Nor", "Eta1Ap2", "Value");
+                        SafeSetParameter(cData, dbRow, "FluidN1Min", "Eta1Ap3", "Value");
+                        System.Diagnostics.Debug.WriteLine("[DEBUG] Eta1 (점성계수) 설정 완료");
+                    }
+                    else
+                    {
+                        SafeSetParameter(cData, dbRow, "FluidV1Unit", "Ny1", "Unit");
+                        SafeSetParameter(cData, dbRow, "FluidV1Max", "Ny1", "Value");
+                        SafeSetParameter(cData, dbRow, "FluidV1Nor", "Ny1Ap2", "Value");
+                        SafeSetParameter(cData, dbRow, "FluidV1Min", "Ny1Ap3", "Value");
+                        System.Diagnostics.Debug.WriteLine("[DEBUG] Ny1 (동점성계수) 설정 완료");
+                    }
+
+                    SafeSetParameter(cData, dbRow, "FluidPV1Unit", "Pv1", "Unit");
+                    SafeSetParameter(cData, dbRow, "FluidTV1Unit", "Tv1", "Unit");
+                    SafeSetParameter(cData, dbRow, "FluidCF1Unit", "Cf", "Unit");
+
+
+                    if (dbRow["FluidCF1Max"] != DBNull.Value && dbRow["FluidCF1Max"] != null)
+                    {
+                        SafeSetParameter(cData, dbRow, "FluidCF1Max", "Cf", "Value");
+                        SafeSetParameter(cData, dbRow, "FluidCF1Nor", "CfAp2", "Value");
+                        SafeSetParameter(cData, dbRow, "FluidCF1Min", "CfAp3", "Value");
+                    }
+                    System.Diagnostics.Debug.WriteLine("[DEBUG] Cf (음속) 설정 완료");
+
+                    if (dbRow["FluidPV1Max"] != DBNull.Value && dbRow["FluidPV1Max"] != null)
+                    {
+                        SafeSetParameter(cData, dbRow, "FluidPV1Max", "Pv1", "Value");
+                        SafeSetParameter(cData, dbRow, "FluidPV1Nor", "Pv1Ap2", "Value");
+                        SafeSetParameter(cData, dbRow, "FluidPV1Min", "Pv1Ap3", "Value");
+                    }
+
+                    SafeSetParameter(cData, dbRow, "FluidKMax", "Kappa1", "Value");
+                    SafeSetParameter(cData, dbRow, "FluidKNor", "Kappa1Ap2", "Value");
+                    SafeSetParameter(cData, dbRow, "FluidKMin", "Kappa1Ap3", "Value");
                 }
-                else
+                finally
                 {
-                    SafeSetParameter(cData, dbRow, "FluidV1Unit", "Ny1", "Unit");
-                    SafeSetParameter(cData, dbRow, "FluidV1Max", "Ny1", "Value");
-                    SafeSetParameter(cData, dbRow, "FluidV1Nor", "Ny1Ap2", "Value");
-                    SafeSetParameter(cData, dbRow, "FluidV1Min", "Ny1Ap3", "Value");
+                    Calculation.EndUpdate();
+                    System.Diagnostics.Debug.WriteLine("[DEBUG] Eta1/Ny1/Cf 설정 후 EndUpdate 호출 완료");
                 }
 
-                SafeSetParameter(cData, dbRow, "FluidPV1Unit", "Pv1", "Unit");
-                SafeSetParameter(cData, dbRow, "FluidTV1Unit", "Tv1", "Unit");
-                SafeSetParameter(cData, dbRow, "FluidCF1Max", "Cf", "Value");
-                SafeSetParameter(cData, dbRow, "FluidCF1Nor", "CfAp2", "Value");
-                SafeSetParameter(cData, dbRow, "FluidCF1Min", "CfAp3", "Value");
+                // ⭐⭐⭐ 파라미터 설정 후 계산 트리거를 위한 대기
+                System.Threading.Thread.Sleep(300);
 
-                SafeSetParameter(cData, dbRow, "FluidPV1Max", "Pv1", "Value");
-                SafeSetParameter(cData, dbRow, "FluidPV1Nor", "Pv1Ap2", "Value");
-                SafeSetParameter(cData, dbRow, "FluidPV1Min", "Pv1Ap3", "Value");
+                // ⭐⭐⭐ Eta1, Ny1, Cf 값 설정 확인
+                try
+                {
+                    if (isViscosityType)
+                    {
+                        double eta1Value = cData.ParamByName["Eta1"].Value;
+                        System.Diagnostics.Debug.WriteLine($"[DEBUG] ⭐ Eta1 설정 확인: {eta1Value}");
+                        if (Math.Abs(eta1Value) < 0.0001)
+                        {
+                            System.Diagnostics.Debug.WriteLine("[DEBUG] ⚠️ Eta1 값이 0입니다! DB에서 값이 제대로 전달되었는지 확인 필요");
+                        }
+                    }
+                    else
+                    {
+                        double ny1Value = cData.ParamByName["Ny1"].Value;
+                        System.Diagnostics.Debug.WriteLine($"[DEBUG] ⭐ Ny1 설정 확인: {ny1Value}");
+                        if (Math.Abs(ny1Value) < 0.0001)
+                        {
+                            System.Diagnostics.Debug.WriteLine("[DEBUG] ⚠️ Ny1 값이 0입니다! DB에서 값이 제대로 전달되었는지 확인 필요");
+                        }
+                    }
 
-                SafeSetParameter(cData, dbRow, "FluidKMax", "Kappa1", "Value");
-                SafeSetParameter(cData, dbRow, "FluidKNor", "Kappa1Ap2", "Value");
-                SafeSetParameter(cData, dbRow, "FluidKMin", "Kappa1Ap3", "Value");
+                    double cfValue = cData.ParamByName["Cf"].Value;
+                    System.Diagnostics.Debug.WriteLine($"[DEBUG] ⭐ Cf 설정 확인: {cfValue}");
+                    if (Math.Abs(cfValue) < 0.0001)
+                    {
+                        System.Diagnostics.Debug.WriteLine("[DEBUG] ⚠️ Cf 값이 0입니다! DB에서 값이 제대로 전달되었는지 확인 필요");
+                    }
+                }
+                catch (Exception checkEx)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[DEBUG] Eta1/Ny1/Cf 확인 실패: {checkEx.Message}");
+                }
 
                 System.Diagnostics.Debug.WriteLine("[DEBUG] ===== 모든 파라미터 설정 완료 =====");
 
@@ -1898,14 +1960,55 @@ namespace ConvalServiceApi.Models
                         }
                     }
 
-                    // 계산 후 대기
-                    System.Threading.Thread.Sleep(500);
+                    // ⭐⭐⭐ 계산 후 대기 시간 증가 (Eta1, Ny1, Cf 변경 시 계산 시간이 더 필요할 수 있음)
+                    System.Threading.Thread.Sleep(1000);
 
-                    // 계산 결과 확인
+                    // ⭐⭐⭐ 계산 결과 확인 (kv뿐만 아니라 Rho1도 확인)
                     try
                     {
                         double calcKv = cData.ParamByName["kv"].Value;
                         System.Diagnostics.Debug.WriteLine($"[DEBUG] 계산 후 kv: {calcKv}");
+
+                        // ⭐⭐⭐ Rho1 값 확인 (결과값이 0으로 변경되는지 확인)
+                        try
+                        {
+                            double calcRho1 = cData.ParamByName["Rho1"].Value;
+                            System.Diagnostics.Debug.WriteLine($"[DEBUG] 계산 후 Rho1: {calcRho1}");
+
+                            if (Math.Abs(calcRho1) < 0.0001)
+                            {
+                                System.Diagnostics.Debug.WriteLine("[DEBUG] ⚠️⚠️⚠️ Rho1이 0입니다! 계산이 제대로 수행되지 않았을 수 있습니다.");
+
+                                // ⭐⭐⭐ 재계산 시도
+                                System.Diagnostics.Debug.WriteLine("[DEBUG] 재계산 시도 중...");
+                                System.Threading.Thread.Sleep(500);
+
+                                try
+                                {
+                                    Calculation.Calculate();
+                                    System.Threading.Thread.Sleep(500);
+                                    double retryRho1 = cData.ParamByName["Rho1"].Value;
+                                    System.Diagnostics.Debug.WriteLine($"[DEBUG] 재계산 후 Rho1: {retryRho1}");
+
+                                    if (Math.Abs(retryRho1) > 0.0001)
+                                    {
+                                        System.Diagnostics.Debug.WriteLine("[DEBUG] ✅✅✅ 재계산 성공! Rho1 값 복구됨");
+                                    }
+                                }
+                                catch (Exception retryEx)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"[DEBUG] 재계산 실패: {retryEx.Message}");
+                                }
+                            }
+                            else
+                            {
+                                System.Diagnostics.Debug.WriteLine($"[DEBUG] ✅ Rho1 값 정상: {calcRho1}");
+                            }
+                        }
+                        catch (Exception rho1Ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[DEBUG] Rho1 확인 실패: {rho1Ex.Message}");
+                        }
 
                         if (Math.Abs(calcKv) > 0.0001)
                         {
@@ -1937,10 +2040,10 @@ namespace ConvalServiceApi.Models
             }
         }
 
-            // 안전한 CONVAL 파라미터 설정 헬퍼 메서드
-            // 안전한 CONVAL 파라미터 설정 헬퍼 메서드 (수정 버전)
-            private void SafeSetParameter(dynamic cData, Dictionary<string, object> dbRow,
-            string dbKey, string convalParam, string propertyType)
+        // 안전한 CONVAL 파라미터 설정 헬퍼 메서드
+        // 안전한 CONVAL 파라미터 설정 헬퍼 메서드 (수정 버전)
+        private void SafeSetParameter(dynamic cData, Dictionary<string, object> dbRow,
+        string dbKey, string convalParam, string propertyType)
         {
             if (!dbRow.ContainsKey(dbKey)) return;
 
