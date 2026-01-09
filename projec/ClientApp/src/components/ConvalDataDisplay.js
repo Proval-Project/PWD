@@ -12,6 +12,7 @@ const ConvalDataDisplay = ({ data, isLoading, onServerReset, onRecalculate, isPr
   const [massType, setMassType] = useState('density');
   const [enableCf1, setEnableCf1] = useState(false);
   const [enablePv1, setEnablePv1] = useState(false);
+  const [enableRho1, setEnableRho1] = useState(false);
   
   useEffect(() => {
     if (data) {
@@ -39,10 +40,25 @@ const ConvalDataDisplay = ({ data, isLoading, onServerReset, onRecalculate, isPr
     const dens = toBool(data.IsDensity);
     if (dens !== undefined) setMassType(dens ? 'density' : 'molecular');
     
-    // cf1, pv1 체크박스 상태 초기화 (값이 있으면 체크, 없으면 체크 해제)
+    // ρ1, cf1, pv1 체크박스 상태 초기화 (값이 있으면 체크, 없으면 체크 해제)
+    setEnableRho1(!!(data.FluidP1Max || data.FluidP1Nor || data.FluidP1Min));
     setEnableCf1(!!(data.FluidCF1Max || data.FluidCF1Nor || data.FluidCF1Min));
     setEnablePv1(!!(data.FluidPV1Max || data.FluidPV1Nor || data.FluidPV1Min));
-  }, [data?.IsQM, data?.IsP2, data?.IsN1, data?.IsDensity, data?.FluidCF1Max, data?.FluidCF1Nor, data?.FluidCF1Min, data?.FluidPV1Max, data?.FluidPV1Nor, data?.FluidPV1Min]);
+  }, [
+    data?.IsQM,
+    data?.IsP2,
+    data?.IsN1,
+    data?.IsDensity,
+    data?.FluidP1Max,
+    data?.FluidP1Nor,
+    data?.FluidP1Min,
+    data?.FluidCF1Max,
+    data?.FluidCF1Nor,
+    data?.FluidCF1Min,
+    data?.FluidPV1Max,
+    data?.FluidPV1Nor,
+    data?.FluidPV1Min
+  ]);
 
   useEffect(() => {
     setFormData((prev) => prev ? { ...prev, IsP2: pressureType === 'p2' } : prev);
@@ -165,6 +181,14 @@ const ConvalDataDisplay = ({ data, isLoading, onServerReset, onRecalculate, isPr
         IsN1: fluidType === 'n1',
         IsDensity: massType === 'density'
       };
+      
+      // ρ1 체크박스가 꺼져있으면 값만 null로 설정 (Unit은 유지)
+      if (!enableRho1) {
+        currentData.FluidP1Max = null;
+        currentData.FluidP1Nor = null;
+        currentData.FluidP1Min = null;
+        // FluidPUnit은 체크박스와 관계없이 그대로 전달
+      }
       
       // cf1 체크박스가 꺼져있으면 값만 null로 설정 (Unit은 유지)
       if (!enableCf1) {
@@ -651,10 +675,41 @@ const ConvalDataDisplay = ({ data, isLoading, onServerReset, onRecalculate, isPr
               </thead>
               <tbody>
                 <tr>
-                  <td className="text-center" style={{ backgroundColor: '#DFDFDF' }}>ϱ1</td>
-                  <td><Form.Control size="sm" value={formData.FluidP1Max || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
-                  <td><Form.Control size="sm" value={formData.FluidP1Nor || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
-                  <td><Form.Control size="sm" value={formData.FluidP1Min || ''} readOnly style={{ backgroundColor: '#e9ecef' }} /></td>
+                  <td style={{ backgroundColor: '#DFDFDF' }}>
+                    <div className="d-flex align-items-center justify-content-center">
+                      <Form.Check
+                        type="checkbox"
+                        checked={enableRho1}
+                        onChange={(e) => setEnableRho1(e.target.checked)}
+                        className="me-1"
+                      />
+                      ϱ1
+                    </div>
+                  </td>
+                  <td>
+                    <Form.Control
+                      size="sm"
+                      value={formData.FluidP1Max || ''}
+                      onChange={(e) => handleInputChange('FluidP1Max', e.target.value)}
+                      disabled={!enableRho1}
+                    />
+                  </td>
+                  <td>
+                    <Form.Control
+                      size="sm"
+                      value={formData.FluidP1Nor || ''}
+                      onChange={(e) => handleInputChange('FluidP1Nor', e.target.value)}
+                      disabled={!enableRho1}
+                    />
+                  </td>
+                  <td>
+                    <Form.Control
+                      size="sm"
+                      value={formData.FluidP1Min || ''}
+                      onChange={(e) => handleInputChange('FluidP1Min', e.target.value)}
+                      disabled={!enableRho1}
+                    />
+                  </td>
                   <td>
                     <Form.Select size="sm" value={formData.FluidPUnit || 'kg/m³'} onChange={(e) => handleInputChange('FluidPUnit', e.target.value)}>
                     <option value="">단위 선택</option>

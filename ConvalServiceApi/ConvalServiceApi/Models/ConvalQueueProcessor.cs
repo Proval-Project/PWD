@@ -1869,6 +1869,9 @@ namespace ConvalServiceApi.Models
                         SafeSetParameter(cData, dbRow, "FluidPV1Nor", "Pv1Ap2", "Value");
                         SafeSetParameter(cData, dbRow, "FluidPV1Min", "Pv1Ap3", "Value");
                     }
+                    SafeSetParameter(cData, dbRow, "FluidP1Max", "Rho1", "Value");
+                    SafeSetParameter(cData, dbRow, "FluidP1Nor", "Rho1Ap2", "Value");
+                    SafeSetParameter(cData, dbRow, "FluidP1Min", "Rho1Ap3", "Value");
 
                     SafeSetParameter(cData, dbRow, "FluidKMax", "Kappa1", "Value");
                     SafeSetParameter(cData, dbRow, "FluidKNor", "Kappa1Ap2", "Value");
